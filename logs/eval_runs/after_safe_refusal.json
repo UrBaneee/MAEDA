@@ -1,0 +1,2147 @@
+{
+  "timestamp": 1783790429.959229,
+  "n_cases": 20,
+  "overall_aggregate": 0.7952346138506492,
+  "cases": [
+    {
+      "test_case_id": "D01",
+      "eval_result": {
+        "run_id": "D01",
+        "query": "Show total sales by region",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing total sales by region, specifying the highest and lowest revenues along with the products sold. Each claim is supported by the analysis findings, which detail the revenue figures for each region.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing total sales by region, specifying the highest and lowest revenues along with the products sold. Each claim is supported by the analysis findings, which detail the revenue figures for each region.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.47058823529411764,
+            "label": "warn",
+            "reasoning": "4/17 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 100%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "33.7s",
+            "raw_value": 33.67430138587952
+          }
+        ],
+        "aggregate_score": 0.9161764705882354,
+        "timestamp": 1783789702.9338949,
+        "test_case_id": "D01"
+      },
+      "meta": {
+        "elapsed_s": 31.94,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "D02",
+      "eval_result": {
+        "run_id": "D02",
+        "query": "What is the average order value per product category?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing the average order values for each product category with specific and accurate details. Additionally, every claim made in the report is traceable to the analysis findings, ensuring that all information is grounded in the provided data.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing the average order values for each product category with specific and accurate details. Additionally, every claim made in the report is traceable to the analysis findings, ensuring that all information is grounded in the provided data.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "0/6 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "28.6s",
+            "raw_value": 28.64620614051819
+          }
+        ],
+        "aggregate_score": 0.8373287671232876,
+        "timestamp": 1783789731.58171,
+        "test_case_id": "D02"
+      },
+      "meta": {
+        "elapsed_s": 27.01,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": true
+      }
+    },
+    {
+      "test_case_id": "D03",
+      "eval_result": {
+        "run_id": "D03",
+        "query": "How many customers do we have per country?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing specific customer counts per country, including the top countries with the highest customer numbers. Additionally, all claims made in the report are supported by the analysis findings, which detail the customer counts for each country.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing specific customer counts per country, including the top countries with the highest customer numbers. Additionally, all claims made in the report are supported by the analysis findings, which detail the customer counts for each country.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "3/6 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The numbers 189 and 186 for Canada and France respectively appear to be fabricated as they are not supported by the analysis findings.",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The numbers 189 and 186 for Canada and France respectively appear to be fabricated as they are not supported by the analysis findings.",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "36.4s",
+            "raw_value": 36.35766816139221
+          }
+        ],
+        "aggregate_score": 0.9681506849315069,
+        "timestamp": 1783789767.940995,
+        "test_case_id": "D03"
+      },
+      "meta": {
+        "elapsed_s": 34.52,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The numbers 189 and 186 for Canada and France respectively appear to be fabricated as they are not supported by the analysis findings.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "D04",
+      "eval_result": {
+        "run_id": "D04",
+        "query": "What are the top 10 products by revenue?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question by providing details on the top products by revenue, but it only lists four products instead of the requested ten. However, all claims made in the report are supported by the analysis findings, which provide specific revenue figures for each product mentioned.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report partially answers the user's question by providing details on the top products by revenue, but it only lists four products instead of the requested ten. However, all claims made in the report are supported by the analysis findings, which provide specific revenue figures for each product mentioned.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.6666666666666666,
+            "label": "pass",
+            "reasoning": "6/18 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 100%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "30.5s",
+            "raw_value": 30.49989914894104
+          }
+        ],
+        "aggregate_score": 0.840296803652968,
+        "timestamp": 1783789798.442376,
+        "test_case_id": "D04"
+      },
+      "meta": {
+        "elapsed_s": 28.32,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "D05",
+      "eval_result": {
+        "run_id": "D05",
+        "query": "Show monthly order volume for the last 12 months",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question by discussing daily order quantities and highlighting a peak order quantity, but it does not provide a clear monthly breakdown of order volume for the last 12 months as requested. Additionally, while some claims are supported by the analysis findings, the lack of specific monthly data means that not all claims are fully grounded.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question by discussing daily order quantities and highlighting a peak order quantity, but it does not provide a clear monthly breakdown of order volume for the last 12 months as requested. Additionally, while some claims are supported by the analysis findings, the lack of specific monthly data means that not all claims are fully grounded.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.2222222222222222,
+            "label": "fail",
+            "reasoning": "5/45 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "2 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "3/3 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "35.7s",
+            "raw_value": 35.70586180686951
+          }
+        ],
+        "aggregate_score": 0.6561263318112632,
+        "timestamp": 1783789834.149776,
+        "test_case_id": "D05"
+      },
+      "meta": {
+        "elapsed_s": 33.47,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "DG01",
+      "eval_result": {
+        "run_id": "DG01",
+        "query": "Why did revenue drop in Q3?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question about the revenue drop in Q3 by indicating that data aggregation issues and missing revenue entries hindered a full analysis. However, it does not provide specific reasons or insights into the actual causes of the revenue drop, which are key aspects of the user's query. Additionally, while some claims are supported by the analysis findings, the lack of comprehensive data limits the grounding of the conclusions.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question about the revenue drop in Q3 by indicating that data aggregation issues and missing revenue entries hindered a full analysis. However, it does not provide specific reasons or insights into the actual causes of the revenue drop, which are key aspects of the user's query. Additionally, while some claims are supported by the analysis findings, the lack of comprehensive data limits the grounding of the conclusions.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.35294117647058826,
+            "label": "fail",
+            "reasoning": "3/17 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: diagnostic; metrics overlap: 100%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "1/2 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "2 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "30.7s",
+            "raw_value": 30.656163692474365
+          }
+        ],
+        "aggregate_score": 0.660334407735697,
+        "timestamp": 1783789864.8078022,
+        "test_case_id": "DG01"
+      },
+      "meta": {
+        "elapsed_s": 28.51,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "DG02",
+      "eval_result": {
+        "run_id": "DG02",
+        "query": "What caused the spike in customer churn last month?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question about the spike in customer churn by providing specific details about the number of churned customers and highlighting the engagement issues of a Premium plan customer. However, it mentions an incomplete analysis due to a data query issue, which leaves some claims about the causes of churn unsupported.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report directly answers the user's question about the spike in customer churn by providing specific details about the number of churned customers and highlighting the engagement issues of a Premium plan customer. However, it mentions an incomplete analysis due to a data query issue, which leaves some claims about the causes of churn unsupported.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.46153846153846156,
+            "label": "warn",
+            "reasoning": "6/26 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "query_type correct: diagnostic; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 0.6666666666666667,
+            "label": "pass",
+            "reasoning": "1/3 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "3 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "3/3 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.3,
+            "label": "fail",
+            "reasoning": "69.4s",
+            "raw_value": 69.42522025108337
+          }
+        ],
+        "aggregate_score": 0.7554618897084651,
+        "timestamp": 1783789934.2348852,
+        "test_case_id": "DG02"
+      },
+      "meta": {
+        "elapsed_s": 66.86,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "DG03",
+      "eval_result": {
+        "run_id": "DG03",
+        "query": "Why is the North region underperforming?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially addresses the user's question about the North region's underperformance by stating that it generated significant revenue but lacks a complete analysis of units sold due to missing data. This omission is a key aspect of understanding performance. While some claims are grounded in the analysis findings, the lack of complete data on units sold leaves major aspects unsupported.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially addresses the user's question about the North region's underperformance by stating that it generated significant revenue but lacks a complete analysis of units sold due to missing data. This omission is a key aspect of understanding performance. While some claims are grounded in the analysis findings, the lack of complete data on units sold leaves major aspects unsupported.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.2,
+            "label": "fail",
+            "reasoning": "2/20 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "query_type correct: diagnostic; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 0.6666666666666667,
+            "label": "pass",
+            "reasoning": "1/3 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "3 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "3/3 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "43.4s",
+            "raw_value": 43.43607187271118
+          }
+        ],
+        "aggregate_score": 0.6251141552511416,
+        "timestamp": 1783789977.672717,
+        "test_case_id": "DG03"
+      },
+      "meta": {
+        "elapsed_s": 41.33,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "DG04",
+      "eval_result": {
+        "run_id": "DG04",
+        "query": "What factors correlate with high customer lifetime value?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question by discussing factors like customer tenure, support calls, and login activity in relation to customer lifetime value. However, it does not provide a comprehensive overview of all potential factors that could correlate with high customer lifetime value, missing key aspects such as customer demographics or purchasing behavior. All claims made in the report are supported by the correlation analysis results.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report partially answers the user's question by discussing factors like customer tenure, support calls, and login activity in relation to customer lifetime value. However, it does not provide a comprehensive overview of all potential factors that could correlate with high customer lifetime value, missing key aspects such as customer demographics or purchasing behavior. All claims made in the report are supported by the correlation analysis results.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "No numbers to cross-check",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.6,
+            "label": "pass",
+            "reasoning": "query_type correct: diagnostic; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.3,
+            "label": "fail",
+            "reasoning": "67.2s",
+            "raw_value": 67.244961977005
+          }
+        ],
+        "aggregate_score": 0.8143835616438356,
+        "timestamp": 1783790044.922415,
+        "test_case_id": "DG04"
+      },
+      "meta": {
+        "elapsed_s": 65.16,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": true
+      }
+    },
+    {
+      "test_case_id": "C01",
+      "eval_result": {
+        "run_id": "C01",
+        "query": "Compare sales performance across Q1, Q2, Q3, Q4",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "The report does not answer the user's question about comparing sales performance across the quarters, as it states that no significant insights were found. Additionally, there are no claims supported by analysis results or RAG sources, leading to a lack of groundedness.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "The report does not answer the user's question about comparing sales performance across the quarters, as it states that no significant insights were found. Additionally, there are no claims supported by analysis results or RAG sources, leading to a lack of groundedness.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "No numbers to cross-check",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "1/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "No charts generated",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "48.6s",
+            "raw_value": 48.59556484222412
+          }
+        ],
+        "aggregate_score": 0.46472602739726027,
+        "timestamp": 1783790093.5194309,
+        "test_case_id": "C01"
+      },
+      "meta": {
+        "elapsed_s": 47.21,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "C02",
+      "eval_result": {
+        "run_id": "C02",
+        "query": "How does conversion rate differ by marketing channel?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question by providing the number of conversions for each marketing channel, but it does not provide conversion rates due to missing data, which is a key aspect of the user's query. Additionally, while the claims about conversion numbers are grounded in the analysis findings, the inability to determine conversion rates leaves some claims unsupported.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question by providing the number of conversions for each marketing channel, but it does not provide conversion rates due to missing data, which is a key aspect of the user's query. Additionally, while the claims about conversion numbers are grounded in the analysis findings, the inability to determine conversion rates leaves some claims unsupported.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "0/6 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 0.25,
+            "label": "fail",
+            "reasoning": "3/4 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "4 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "35.1s",
+            "raw_value": 35.12608599662781
+          }
+        ],
+        "aggregate_score": 0.5948630136986301,
+        "timestamp": 1783790128.6465988,
+        "test_case_id": "C02"
+      },
+      "meta": {
+        "elapsed_s": 33.38,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "C03",
+      "eval_result": {
+        "run_id": "C03",
+        "query": "Compare average order value between new and returning customers",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly addresses the user's query by stating that no insights could be generated due to the absence of data, which is a relevant and accurate response. Additionally, every claim made in the report is supported by the context provided, confirming that the analysis could not be performed.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly addresses the user's query by stating that no insights could be generated due to the absence of data, which is a relevant and accurate response. Additionally, every claim made in the report is supported by the context provided, confirming that the analysis could not be performed.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "No numbers to cross-check",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "1/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "No charts generated",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "19.2s",
+            "raw_value": 19.16526198387146
+          }
+        ],
+        "aggregate_score": 0.8613013698630136,
+        "timestamp": 1783790147.812896,
+        "test_case_id": "C03"
+      },
+      "meta": {
+        "elapsed_s": 17.56,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": true
+      }
+    },
+    {
+      "test_case_id": "C04",
+      "eval_result": {
+        "run_id": "C04",
+        "query": "Which product categories have the highest and lowest margins?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by identifying the product categories with the highest and lowest margins, specifically stating that Books has the highest average margin and Office Supplies has the lowest. However, the claim about Office Supplies having a margin of approximately 43.67 is unsupported by the provided analysis findings, which do not mention this figure. Therefore, while the main question is answered, some claims lack grounding.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report directly answers the user's question by identifying the product categories with the highest and lowest margins, specifically stating that Books has the highest average margin and Office Supplies has the lowest. However, the claim about Office Supplies having a margin of approximately 43.67 is unsupported by the provided analysis findings, which do not mention this figure. Therefore, while the main question is answered, some claims lack grounding.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.6153846153846154,
+            "label": "pass",
+            "reasoning": "8/26 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "2 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "3/3 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "39.4s",
+            "raw_value": 39.395161151885986
+          }
+        ],
+        "aggregate_score": 0.8332718651211802,
+        "timestamp": 1783790187.209965,
+        "test_case_id": "C04"
+      },
+      "meta": {
+        "elapsed_s": 36.93,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "P01",
+      "eval_result": {
+        "run_id": "P01",
+        "query": "What will revenue look like next quarter based on current trends?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question about revenue projections for the next quarter by providing a specific forecast value and explaining the basis of the prediction. Additionally, all claims made in the report are supported by the analysis findings, specifically the increasing trend and the naive linear forecast.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question about revenue projections for the next quarter by providing a specific forecast value and explaining the basis of the prediction. Additionally, all claims made in the report are supported by the analysis findings, specifically the increasing trend and the naive linear forecast.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: predictive; metrics overlap: 100%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "35.4s",
+            "raw_value": 35.4101288318634
+          }
+        ],
+        "aggregate_score": 0.9886986301369863,
+        "timestamp": 1783790222.6213892,
+        "test_case_id": "P01"
+      },
+      "meta": {
+        "elapsed_s": 33.75,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "P02",
+      "eval_result": {
+        "run_id": "P02",
+        "query": "Forecast customer churn for the next 30 days",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly addresses the user's request for a forecast of customer churn for the next 30 days by providing a specific churn rate of 0.1907 and discussing the increasing trend. Additionally, all claims made in the report are supported by the analysis findings, including the statistical significance of the trend and the method of forecasting.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly addresses the user's request for a forecast of customer churn for the next 30 days by providing a specific churn rate of 0.1907 and discussing the increasing trend. Additionally, all claims made in the report are supported by the analysis findings, including the statistical significance of the trend and the method of forecasting.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: predictive; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The forecasted churn rate of 0.1907 appears to be fabricated as it is not supported by the provided analysis results.",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The forecasted churn rate of 0.1907 appears to be fabricated as it is not supported by the provided analysis results.",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "49.7s",
+            "raw_value": 49.73740100860596
+          }
+        ],
+        "aggregate_score": 0.9681506849315069,
+        "timestamp": 1783790272.360617,
+        "test_case_id": "P02"
+      },
+      "meta": {
+        "elapsed_s": 47.08,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The forecasted churn rate of 0.1907 appears to be fabricated as it is not supported by the provided analysis results.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "P03",
+      "eval_result": {
+        "run_id": "P03",
+        "query": "Which customers are most likely to upgrade their plan?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "The report does not answer the user's question about which customers are most likely to upgrade their plan, as it states that no insights were found. However, it is grounded in the analysis findings that no relevant data was available.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report does not answer the user's question about which customers are most likely to upgrade their plan, as it states that no insights were found. However, it is grounded in the analysis findings that no relevant data was available.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "No numbers to cross-check",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.6,
+            "label": "pass",
+            "reasoning": "query_type correct: predictive; metrics overlap: 0%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "1/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "No charts generated",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "24.4s",
+            "raw_value": 24.396939039230347
+          }
+        ],
+        "aggregate_score": 0.6404109589041096,
+        "timestamp": 1783790296.7592509,
+        "test_case_id": "P03"
+      },
+      "meta": {
+        "elapsed_s": 23.04,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": true
+      }
+    },
+    {
+      "test_case_id": "E01",
+      "eval_result": {
+        "run_id": "E01",
+        "query": "Give me an overview of this dataset",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report provides a comprehensive overview of the dataset, directly addressing the user's request by summarizing key findings, including revenue figures, product performance, and regional insights. Every claim made in the report is supported by the analysis findings, ensuring that the information is traceable and grounded in the data provided.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report provides a comprehensive overview of the dataset, directly addressing the user's request by summarizing key findings, including revenue figures, product performance, and regional insights. Every claim made in the report is supported by the analysis findings, ensuring that the information is traceable and grounded in the data provided.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.47058823529411764,
+            "label": "warn",
+            "reasoning": "4/17 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.55,
+            "label": "warn",
+            "reasoning": "query_type correct: exploratory",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "38.2s",
+            "raw_value": 38.16703987121582
+          }
+        ],
+        "aggregate_score": 0.8750805801772764,
+        "timestamp": 1783790334.927765,
+        "test_case_id": "E01"
+      },
+      "meta": {
+        "elapsed_s": 36.63,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "E02",
+      "eval_result": {
+        "run_id": "E02",
+        "query": "Are there any anomalies or outliers in the sales data?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question about anomalies or outliers in the sales data by providing specific numbers of outliers for both revenue and units sold. Additionally, every claim made in the report is supported by the analysis findings, which detail the methods used and the results obtained.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question about anomalies or outliers in the sales data by providing specific numbers of outliers for both revenue and units sold. Additionally, every claim made in the report is supported by the analysis findings, which detail the methods used and the results obtained.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "2/2 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.6000000000000001,
+            "label": "pass",
+            "reasoning": "query_type mismatch: got diagnostic expected exploratory; metrics overlap: 100%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "2 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "3/3 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "34.9s",
+            "raw_value": 34.88347601890564
+          }
+        ],
+        "aggregate_score": 0.9527397260273973,
+        "timestamp": 1783790369.812901,
+        "test_case_id": "E02"
+      },
+      "meta": {
+        "elapsed_s": 33.16,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "E03",
+      "eval_result": {
+        "run_id": "E03",
+        "query": "What patterns exist in customer purchasing behavior?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question about patterns in customer purchasing behavior by highlighting the peak activity on January 1, 2022, and the diversity of products purchased. However, it lacks deeper insights into specific purchasing patterns, such as trends over time or customer segmentation. Additionally, while some claims are supported by the analysis results, others, like the suggestion of targeted marketing strategies, are not directly grounded in the provided data.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question about patterns in customer purchasing behavior by highlighting the peak activity on January 1, 2022, and the diversity of products purchased. However, it lacks deeper insights into specific purchasing patterns, such as trends over time or customer segmentation. Additionally, while some claims are supported by the analysis results, others, like the suggestion of targeted marketing strategies, are not directly grounded in the provided data.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.6153846153846154,
+            "label": "pass",
+            "reasoning": "4/13 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "query_type correct: exploratory",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "30.5s",
+            "raw_value": 30.46132779121399
+          }
+        ],
+        "aggregate_score": 0.7048472075869336,
+        "timestamp": 1783790400.2756789,
+        "test_case_id": "E03"
+      },
+      "meta": {
+        "elapsed_s": 27.48,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "E04",
+      "eval_result": {
+        "run_id": "E04",
+        "query": "Explore the relationship between marketing spend and revenue",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly addresses the user's query by exploring the relationship between marketing spend and revenue, providing specific examples and details from the analysis findings. Every claim made in the report is supported by the data provided, demonstrating a clear correlation between marketing spend and revenue generation.",
+            "raw_value": null
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly addresses the user's query by exploring the relationship between marketing spend and revenue, providing specific examples and details from the analysis findings. Every claim made in the report is supported by the data provided, demonstrating a clear correlation between marketing spend and revenue generation.",
+            "raw_value": null
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.7272727272727273,
+            "label": "pass",
+            "reasoning": "4/11 numbers overlap",
+            "raw_value": null
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.85,
+            "label": "pass",
+            "reasoning": "query_type correct: exploratory; metrics overlap: 50%",
+            "raw_value": null
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null
+          },
+          {
+            "metric": "plan_efficiency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1 analysis steps",
+            "raw_value": null
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 charts valid",
+            "raw_value": null
+          },
+          {
+            "metric": "token_cost",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "$0.0000",
+            "raw_value": 0
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null
+          },
+          {
+            "metric": "total_latency",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "29.7s",
+            "raw_value": 29.679899215698242
+          }
+        ],
+        "aggregate_score": 0.9472291407222915,
+        "timestamp": 1783790429.957373,
+        "test_case_id": "E04"
+      },
+      "meta": {
+        "elapsed_s": 27.93,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    }
+  ]
+}
