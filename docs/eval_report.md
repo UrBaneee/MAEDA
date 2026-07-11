@@ -149,6 +149,14 @@ Five instances of the same family of bug, all in [src/tools/stats_tool.py](../sr
 
 **Verified:** 9 new regression tests, one per bug (`tests/unit/test_phase5.py`), including a case (`test_compare_segments_top_segment_respects_agg`) with data specifically constructed so mean-ranking and sum-ranking disagree. A live 20-case run stayed flat (0.71→0.73, 4→3 safe refusals) — expected, since these fixes turn wrong-but-silent behavior into loud failures rather than turning failures into successes.
 
+### 19. Eval ran the LLM judge twice per harness case
+**Root cause:** `run_eval_node` scores every pipeline run inside the graph itself (CLAUDE.md's "eval runs on every execution" rule), and `scripts/run_eval.py` scores the same completed state again afterward with the golden `test_case` attached for ground-truth comparison. `answer_relevance`/`groundedness` don't depend on `test_case` at all — [src/eval/metrics.py](../src/eval/metrics.py)'s `score_relevance_and_groundedness()` signature never takes one — so the second pass was calling the exact same judge with the exact same inputs a second time. After #17 added 3-sample median scoring, that meant 6 judge calls per case through the harness instead of 3, for zero additional signal.
+**Fix:** `EvalRunner.score()` ([src/eval/runner.py](../src/eval/runner.py)) now checks whether `state["eval_scores"]` already has `answer_relevance`/`groundedness` (i.e. `run_eval_node` already ran) and reuses those `MetricScore`s directly instead of re-invoking the judge. `factual_accuracy`/`intent_accuracy` (which *do* need `test_case`, and are cheap — no LLM call) are still computed fresh.
+**Verified:** `test_eval_runner_reuses_existing_relevance_groundedness_instead_of_rejudging` wires the mock judge to raise if called at all, and passes. Live: `run_eval.py --case D01` shows identical `answer_relevance=1.00 groundedness=1.00` on both the in-graph and harness scoring log lines — the harness pass is now free.
+
+### 20. `tests/integration/` was empty; no CI
+**Fix:** Added `.github/workflows/ci.yml` with two jobs: `unit-tests` (the 357 mocked unit tests, no secrets needed, runs on every push/PR) and `integration-tests` (the live judge-calibration tests from #17 plus a single-case eval smoke run through the real pipeline, gated on `secrets.OPENAI_API_KEY`). The integration job skips gracefully via `_looks_like_real_key()` if the secret isn't configured (e.g. PRs from forks never receive repo secrets). Added a CI status badge to the README.
+
 ## Known limitations (not yet fixed)
 
 - **`factual_accuracy` is still a brittle exact-match proxy.** Large numbers formatted with thousands separators (e.g. an LLM writing `$1,363,760.55`) won't match the raw ground-truth value `1363760.55` via the current regex-based extraction — several of the `0%` scores are this, not a real analysis error. Needs a tolerant numeric-match (strip separators, allow rounding) rather than exact string equality.
@@ -157,4 +165,4 @@ Five instances of the same family of bug, all in [src/tools/stats_tool.py](../sr
 - **4 golden cases are data mismatches** (D02, DG04, C03, P03 ask for data — order value by category via joins, customer LTV — that doesn't exist in the single-table demo datasets) and will never score well regardless of code quality.
 - **The `_select_input_dataframe` fix only handles single-parent chaining.** A step depending on multiple prior steps (`depends_on=[1, 2]`) gets the *last* listed dependency's dataframe, not a merge of both — there's no real multi-input join support yet (see roadmap #1).
 
-All reports referenced above are archived in `logs/eval_runs/`. 357 unit tests (plus 4 live judge-calibration tests in `tests/integration/`) passed throughout this entire sequence of changes.
+All reports referenced above are archived in `logs/eval_runs/`. 358 unit tests (plus 4 live judge-calibration tests in `tests/integration/`) passed throughout this entire sequence of changes.

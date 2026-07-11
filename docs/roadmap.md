@@ -98,12 +98,16 @@ and the natural continuation of the eval-first narrative.
     completion — not acceptable for an interactive user. LangGraph's
     `.stream()` mode should push node progress and intermediate artifacts to
     the UI as they're produced.
-15. **Stop double-running eval.** `run_eval_node` (inside the graph) and the
-    harness (`scripts/run_eval.py`) each make their own LLM-judge call today,
-    doubling eval cost per case.
-16. **Integration tests + CI.** `tests/integration/` is currently empty. Add a
-    GitHub Actions workflow running the 331 unit tests plus one eval smoke
-    case — a public repo can carry that as a badge.
+15. ✅ **Done — stop double-running eval.** See eval_report.md #19.
+    `EvalRunner.score()` now reuses `run_eval_node`'s in-graph
+    answer_relevance/groundedness scores instead of re-invoking the judge,
+    since neither depends on `test_case`. Only the cheap, test_case-aware
+    metrics (factual_accuracy, intent_accuracy) get recomputed.
+16. ✅ **Done — integration tests + CI.** See eval_report.md #20.
+    `.github/workflows/ci.yml`: a free `unit-tests` job (357 mocked tests,
+    no secrets) and an `integration-tests` job (live judge calibration +
+    a 1-case eval smoke run, gated on `secrets.OPENAI_API_KEY`, skips
+    gracefully without it). README has a CI status badge.
 17. **Multi-turn conversation memory.** `src/memory/` is an empty
     `__init__.py`. Follow-up questions ("now break that down by region")
     aren't supported at all, but real analysis is inherently conversational.
@@ -131,10 +135,11 @@ and the natural continuation of the eval-first narrative.
 
 For a solo effort, roughly 2–4 weeks per phase:
 
-**Phase A — Make "trustworthy" solid** (#6, #7, #8, #9, #15, #16): all eval/quality
-work, cheap, no external dependencies, directly strengthens the interview
-narrative, and is the safety net for every later change — without reliable
-eval, touching the data layer next is just guessing.
+**Phase A — Make "trustworthy" solid** (#6, #7, #8, #9, #15, #16): ✅ done.
+All six eval/quality items completed — see eval_report.md #11–20. This was
+the safety net for every later change. #10 rolls into Phase B below; #11
+and #12 (retry-loop feedback, harder population-claim guardrail) are
+smaller Tier 2 items not bundled into a named phase — pick up opportunistically.
 
 **Phase B — Make "real data" actually work** (#1, #2, #4, #10): joins, pushdown,
 baseline B. Only after this does MAEDA earn the right to say "usable" instead
