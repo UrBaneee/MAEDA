@@ -158,6 +158,12 @@ def _aggregate_score(scores: list[MetricScore]) -> float:
         "retry_count": 0.5,
         "error_rate": 2.0,
         "total_latency": 0.3,
+        # Informational only — a safe refusal is neither good nor bad in
+        # isolation, so it must not move the aggregate score in either
+        # direction. It still appears in the report and in regression
+        # detection (a refusal rate that changes across runs is worth
+        # seeing), just not folded into this weighted average.
+        "safe_refusal": 0.0,
     }
     total_w = total_wv = 0.0
     for s in scores:
@@ -239,74 +245,114 @@ def load_golden_suite(path: Optional[str] = None) -> list[GoldenTestCase]:
 
 
 def _builtin_golden_suite() -> list[GoldenTestCase]:
-    """20 built-in golden test cases covering all 5 query types."""
+    """
+    20 built-in golden test cases covering all 5 query types.
+
+    ground_truth values are computed directly from data/demo/*.csv|db (see
+    tests/eval/test_suite.json, which this mirrors, for the exact pandas
+    computation each figure came from). Four cases (D02, DG04, C03, P03) are
+    known data mismatches — the query asks for something the demo datasets
+    don't contain — and carry a "_note" instead of a checkable numeric fact;
+    two predictive cases (P01, P02) have no ground truth by nature (they ask
+    about the future).
+    """
     return [
         # ── Descriptive ───────────────────────────────────────────────────────
         GoldenTestCase("D01", "Show total sales by region",
-                       "descriptive", ["sales"], ["region"], {}, tags=["descriptive"]),
+                       "descriptive", ["sales"], ["region"],
+                       {"north_region_revenue": 1363760.55, "central_region_revenue": 821174.97},
+                       tags=["descriptive"]),
         GoldenTestCase("D02", "What is the average order value per product category?",
                        "descriptive", ["order_value"], ["category"],
-                       {}, tags=["descriptive"]),
+                       {"_note": "data_mismatch: no 'order value' concept exists in products "
+                                 "table; closest proxy is avg unit_price by category",
+                        "books_avg_unit_price": 313.05},
+                       tags=["descriptive"]),
         GoldenTestCase("D03", "How many customers do we have per country?",
                        "descriptive", ["customers"], ["country"],
-                       {}, tags=["descriptive"]),
+                       {"canada_customers": 189, "france_customers": 186, "total_customers": 1000},
+                       tags=["descriptive"]),
         GoldenTestCase("D04", "What are the top 10 products by revenue?",
                        "descriptive", ["revenue"], ["product"],
-                       {}, tags=["descriptive", "top_n"]),
+                       {"top_product_revenue": 1195178.74, "n_products": 5},
+                       tags=["descriptive", "top_n"]),
         GoldenTestCase("D05", "Show monthly order volume for the last 12 months",
                        "descriptive", ["orders"], ["month"],
-                       {}, tags=["descriptive", "time_series"]),
+                       {"dec_2024_orders": 324, "jan_2024_orders": 279},
+                       tags=["descriptive", "time_series"]),
 
         # ── Diagnostic ────────────────────────────────────────────────────────
         GoldenTestCase("DG01", "Why did revenue drop in Q3?",
                        "diagnostic", ["revenue"], ["quarter"],
-                       {}, tags=["diagnostic"]),
+                       {"q3_2023_revenue": 314480.57, "q2_2023_revenue": 422976.68,
+                        "q4_2023_revenue": 581966.52},
+                       tags=["diagnostic"]),
         GoldenTestCase("DG02", "What caused the spike in customer churn last month?",
                        "diagnostic", ["churn"], ["month"],
-                       {}, tags=["diagnostic"]),
+                       {"march_2024_churned": 118, "march_2024_total": 302,
+                        "march_2024_churn_rate_pct": 39.07},
+                       tags=["diagnostic"]),
         GoldenTestCase("DG03", "Why is the North region underperforming?",
                        "diagnostic", ["sales"], ["region"],
-                       {}, tags=["diagnostic"]),
+                       {"north_region_revenue": 1363760.55,
+                        "_note": "North is actually the HIGHEST-revenue region, not underperforming"},
+                       tags=["diagnostic"]),
         GoldenTestCase("DG04", "What factors correlate with high customer lifetime value?",
                        "diagnostic", ["ltv"], [],
-                       {}, tags=["diagnostic", "correlation"]),
+                       {"_note": "data_mismatch: no customer_lifetime_value column exists in "
+                                 "churn_data.csv"},
+                       tags=["diagnostic", "correlation"]),
 
         # ── Comparative ───────────────────────────────────────────────────────
         GoldenTestCase("C01", "Compare sales performance across Q1, Q2, Q3, Q4",
                        "comparative", ["sales"], ["quarter"],
-                       {}, tags=["comparative"]),
+                       {"q1_2023_revenue": 438310.73, "q2_2023_revenue": 422976.68,
+                        "q3_2023_revenue": 314480.57, "q4_2023_revenue": 581966.52},
+                       tags=["comparative"]),
         GoldenTestCase("C02", "How does conversion rate differ by marketing channel?",
                        "comparative", ["conversion_rate"], ["channel"],
-                       {}, tags=["comparative"]),
+                       {"search_conversion_rate_pct": 6.41, "display_conversion_rate_pct": 1.22},
+                       tags=["comparative"]),
         GoldenTestCase("C03", "Compare average order value between new and returning customers",
                        "comparative", ["order_value"], ["customer_type"],
-                       {}, tags=["comparative"]),
+                       {"_note": "data_mismatch: no new/returning customer_type field exists "
+                                 "in orders/customers tables"},
+                       tags=["comparative"]),
         GoldenTestCase("C04", "Which product categories have the highest and lowest margins?",
                        "comparative", ["margin"], ["category"],
-                       {}, tags=["comparative"]),
+                       {"books_avg_margin": 217.83, "office_supplies_avg_margin": 43.67},
+                       tags=["comparative"]),
 
         # ── Predictive ────────────────────────────────────────────────────────
         GoldenTestCase("P01", "What will revenue look like next quarter based on current trends?",
                        "predictive", ["revenue"], ["quarter"],
-                       {}, tags=["predictive"]),
+                       {"_note": "predictive query — no ground truth exists for a future value; "
+                                 "only historical trend direction is checkable"},
+                       tags=["predictive"]),
         GoldenTestCase("P02", "Forecast customer churn for the next 30 days",
                        "predictive", ["churn"], ["day"],
-                       {}, tags=["predictive"]),
+                       {"_note": "predictive query — no ground truth exists for future churn"},
+                       tags=["predictive"]),
         GoldenTestCase("P03", "Which customers are most likely to upgrade their plan?",
                        "predictive", ["upgrade_probability"], ["customer"],
-                       {}, tags=["predictive"]),
+                       {"_note": "data_mismatch: no upgrade/plan-change history exists; also predictive"},
+                       tags=["predictive"]),
 
         # ── Exploratory ───────────────────────────────────────────────────────
         GoldenTestCase("E01", "Give me an overview of this dataset",
                        "exploratory", [], [],
-                       {}, tags=["exploratory"]),
+                       {"n_rows": 12240, "n_columns": 7},
+                       tags=["exploratory"]),
         GoldenTestCase("E02", "Are there any anomalies or outliers in the sales data?",
                        "exploratory", ["sales"], [],
-                       {}, tags=["exploratory", "anomaly"]),
+                       {"revenue_outliers_iqr": 187, "units_outliers_iqr": 470},
+                       tags=["exploratory", "anomaly"]),
         GoldenTestCase("E03", "What patterns exist in customer purchasing behavior?",
                        "exploratory", [], ["customer"],
-                       {}, tags=["exploratory"]),
+                       {"n_orders": 10000, "n_customers": 1000},
+                       tags=["exploratory"]),
         GoldenTestCase("E04", "Explore the relationship between marketing spend and revenue",
                        "exploratory", ["revenue", "marketing_spend"], [],
-                       {}, tags=["exploratory", "correlation"]),
+                       {"spend_revenue_correlation": 0.3536},
+                       tags=["exploratory", "correlation"]),
     ]

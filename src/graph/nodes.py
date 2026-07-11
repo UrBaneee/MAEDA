@@ -256,15 +256,24 @@ def run_eval_node(state: MAEDAState) -> MAEDAState:
 
 
 def handle_error_node(state: MAEDAState) -> MAEDAState:
-    # If guardrails failed without an explicit error message, set a default
+    checks = state.get("guardrail_checks") or []
+    # Reaching handle_error via route_after_guardrails' "fail" branch means the
+    # guardrail correctly blocked an unsafe/ungrounded output after exhausting
+    # retries — a safe refusal, not a system crash. Any other path here (e.g.
+    # no data source, connection failure) is a genuine pipeline error. This
+    # distinction is what eval's error_rate/safe_refusal metrics key off of.
+    is_safe_refusal = bool(checks) and checks[-1].get("overall_verdict") == "fail"
+    state["error_type"] = "safe_refusal" if is_safe_refusal else "pipeline_error"
+
     if not state.get("error"):
-        checks = state.get("guardrail_checks") or []
-        if checks:
+        if is_safe_refusal:
             reason = checks[-1].get("retry_reason") or "Guardrail checks failed after maximum retries"
             state["error"] = reason
         else:
             state["error"] = "Pipeline terminated due to unrecoverable error"
-    logger.error("Node: handle_error | error=%s", state.get("error"))
+
+    logger.error("Node: handle_error | error_type=%s | error=%s", state["error_type"], state.get("error"))
     state["current_phase"] = "error"
-    state = _trace(state, "orchestrator", "handle_error", f"Unrecoverable error: {state.get('error')}")
+    state = _trace(state, "orchestrator", "handle_error",
+                    f"{state['error_type']}: {state.get('error')}")
     return state

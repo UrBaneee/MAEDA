@@ -201,6 +201,40 @@ def test_router_guardrails_fail():
     assert route_after_guardrails(state) == "fail"
 
 
+# ─── handle_error_node: safe_refusal vs pipeline_error classification ────────
+
+def test_handle_error_node_classifies_guardrail_fail_as_safe_refusal():
+    from src.graph.nodes import handle_error_node
+    from src.state.graph_state import initial_state
+    state = initial_state("q")
+    state["guardrail_checks"] = [{
+        "overall_verdict": "fail",
+        "retry_reason": "Hallucinated revenue figure",
+    }]
+    result = handle_error_node(state)
+    assert result["error_type"] == "safe_refusal"
+    assert result["error"] == "Hallucinated revenue figure"
+
+
+def test_handle_error_node_classifies_missing_datasource_as_pipeline_error():
+    from src.graph.nodes import handle_error_node
+    from src.state.graph_state import initial_state
+    state = initial_state("q")
+    state["error"] = "No data source provided. Please upload a file or specify a data path."
+    # No guardrail_checks — this path never reached guardrails
+    result = handle_error_node(state)
+    assert result["error_type"] == "pipeline_error"
+
+
+def test_handle_error_node_defaults_to_pipeline_error_with_no_signal():
+    from src.graph.nodes import handle_error_node
+    from src.state.graph_state import initial_state
+    state = initial_state("q")
+    result = handle_error_node(state)
+    assert result["error_type"] == "pipeline_error"
+    assert result["error"] == "Pipeline terminated due to unrecoverable error"
+
+
 # ─── 1.5 Logger ──────────────────────────────────────────────────────────────
 
 def test_logger_returns_logger():

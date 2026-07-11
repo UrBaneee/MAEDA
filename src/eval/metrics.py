@@ -17,7 +17,11 @@ System metrics (derived from state):
   total_latency          — from state timestamps if available
   token_cost             — from cost_tracker
   retry_count            — iteration_count
-  error_rate             — 1 if error else 0
+  error_rate             — 1 unless a genuine pipeline crash occurred
+  safe_refusal           — 1 if guardrail correctly blocked an unsafe/
+                            ungrounded output (informational — excluded
+                            from the weighted aggregate score, see
+                            runner._aggregate_score)
 """
 from __future__ import annotations
 
@@ -258,11 +262,20 @@ def score_system_metrics(state: dict, start_time: Optional[float] = None) -> lis
     metrics.append(MetricScore("retry_count", retry_score, _label(retry_score),
                                f"{retries} retries", raw_value=retries))
 
-    # Error rate
-    has_error = bool(state.get("error"))
-    metrics.append(MetricScore("error_rate", 0.0 if has_error else 1.0,
-                               "fail" if has_error else "pass",
+    # Error rate — a guardrail-blocked "safe refusal" (state["error_type"] ==
+    # "safe_refusal") is the pipeline correctly declining to deliver an
+    # ungrounded/unsafe report, not a system failure. Only a genuine crash
+    # (data connection failure, unhandled exception, etc.) should count
+    # against error_rate; refusals are tracked separately below so the two
+    # aren't conflated in regression detection or the aggregate score.
+    is_safe_refusal = state.get("error_type") == "safe_refusal"
+    has_crash = bool(state.get("error")) and not is_safe_refusal
+    metrics.append(MetricScore("error_rate", 0.0 if has_crash else 1.0,
+                               "fail" if has_crash else "pass",
                                state.get("error") or "No errors"))
+    metrics.append(MetricScore("safe_refusal", 1.0 if is_safe_refusal else 0.0,
+                               "info",
+                               state.get("error") or "" if is_safe_refusal else "No refusal"))
 
     # Latency (if start_time provided)
     if start_time:

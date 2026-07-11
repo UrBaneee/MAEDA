@@ -52,6 +52,7 @@ class MAEDAState(TypedDict):
     token_usage: dict            # {agent_name: {input, output, cost}}
     current_phase: Literal["plan", "execute", "synthesize", "guardrail", "complete", "error"]
     error: Optional[str]
+    error_type: Optional[Literal["safe_refusal", "pipeline_error"]]  # what kind of failure `error` represents
     iteration_count: int         # For data-cleaning retry loops
     guardrail_retry_count: int   # For guardrail retry loops (separate counter)
     clarification_count: int     # For clarification loops (cap at 1)
@@ -87,6 +88,7 @@ def initial_state(user_query: str, data_sources: Optional[list[dict]] = None) ->
         token_usage={},
         current_phase="plan",
         error=None,
+        error_type=None,
         iteration_count=0,
         guardrail_retry_count=0,
         clarification_count=0,

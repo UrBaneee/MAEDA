@@ -76,6 +76,7 @@ def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[Ev
         result_state = state
         run_error = f"graph.invoke raised: {exc}"
         result_state["error"] = run_error
+        result_state["error_type"] = "pipeline_error"  # an uncaught exception is never a safe refusal
     elapsed = time.time() - t0
 
     eval_result = asyncio.run(
@@ -86,6 +87,7 @@ def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[Ev
         "guardrail_passed": result_state.get("guardrail_passed"),
         "current_phase": result_state.get("current_phase"),
         "error": run_error,
+        "error_type": result_state.get("error_type"),
         "mcp_modes": sorted({c.get("mode", "mcp") for c in (result_state.get("mcp_call_log") or [])}),
         "data_mismatch": tc.id in KNOWN_DATA_MISMATCH,
     }
@@ -119,7 +121,9 @@ def main():
         tags = []
         if meta["data_mismatch"]:
             tags.append("DATA MISMATCH")
-        if meta["error"]:
+        if meta["error_type"] == "safe_refusal":
+            tags.append(f"SAFE REFUSAL: {meta['error']}")
+        elif meta["error"]:
             tags.append(f"ERROR: {meta['error']}")
         if any(m == "fallback" for m in meta["mcp_modes"]):
             tags.append("fallback")
@@ -149,16 +153,20 @@ def main():
 
 
 def _print_summary(rows, overall):
-    print("\n" + "=" * 84)
+    print("\n" + "=" * 92)
     print(f"{'ID':6s} {'aggregate':>9s} {'relevance':>10s} {'grounded':>9s} {'factual':>8s} {'errrate':>8s}  notes")
-    print("-" * 84)
+    print("-" * 92)
+    n_refusals = 0
     for r in rows:
         er = r["eval_result"]
         by = {s["metric"]: s["score"] for s in er["scores"]}
         notes = []
         if r["meta"]["data_mismatch"]:
             notes.append("data_mismatch")
-        if r["meta"]["error"]:
+        if r["meta"]["error_type"] == "safe_refusal":
+            notes.append("safe_refusal")
+            n_refusals += 1
+        elif r["meta"]["error"]:
             notes.append("error")
         if any(m == "fallback" for m in r["meta"]["mcp_modes"]):
             notes.append("fallback")
@@ -169,9 +177,9 @@ def _print_summary(rows, overall):
             f"{by.get('factual_accuracy', float('nan')):8.2f} "
             f"{by.get('error_rate', float('nan')):8.2f}  {','.join(notes)}"
         )
-    print("-" * 84)
-    print(f"{'OVERALL':6s} {overall:9.2f}")
-    print("=" * 84)
+    print("-" * 92)
+    print(f"{'OVERALL':6s} {overall:9.2f}   safe_refusals={n_refusals}/{len(rows)}")
+    print("=" * 92)
 
 
 def _print_regressions(baseline_path: Path, rows, overall):

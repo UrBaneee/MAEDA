@@ -163,6 +163,43 @@ def test_system_metrics_with_error():
     assert error_m.label == "fail"
 
 
+def test_system_metrics_safe_refusal_does_not_count_as_error_rate_failure():
+    from src.eval.metrics import score_system_metrics
+    state = {
+        "token_usage": {}, "iteration_count": 1,
+        "error": "Hallucinated revenue figure", "error_type": "safe_refusal",
+    }
+    metrics = score_system_metrics(state)
+    error_m = next(m for m in metrics if m.metric == "error_rate")
+    refusal_m = next(m for m in metrics if m.metric == "safe_refusal")
+    assert error_m.score == 1.0
+    assert error_m.label == "pass"
+    assert refusal_m.score == 1.0
+    assert refusal_m.label == "info"
+
+
+def test_system_metrics_safe_refusal_absent_when_no_error():
+    from src.eval.metrics import score_system_metrics
+    state = {"token_usage": {}, "iteration_count": 1, "error": None}
+    metrics = score_system_metrics(state)
+    refusal_m = next(m for m in metrics if m.metric == "safe_refusal")
+    assert refusal_m.score == 0.0
+
+
+def test_system_metrics_genuine_crash_still_fails_error_rate():
+    from src.eval.metrics import score_system_metrics
+    state = {
+        "token_usage": {}, "iteration_count": 1,
+        "error": "No data source provided", "error_type": "pipeline_error",
+    }
+    metrics = score_system_metrics(state)
+    error_m = next(m for m in metrics if m.metric == "error_rate")
+    refusal_m = next(m for m in metrics if m.metric == "safe_refusal")
+    assert error_m.score == 0.0
+    assert error_m.label == "fail"
+    assert refusal_m.score == 0.0
+
+
 def test_system_metrics_retries():
     from src.eval.metrics import score_system_metrics
     state = {"token_usage": {}, "iteration_count": 3, "error": None}
@@ -299,6 +336,27 @@ def test_eval_result_to_dict():
     assert len(d["scores"]) == 1
 
 
+def test_safe_refusal_excluded_from_aggregate_score():
+    """safe_refusal is informational — it must not move the aggregate score."""
+    from src.eval.runner import _aggregate_score
+    from src.eval.metrics import MetricScore
+
+    base_scores = [
+        MetricScore("answer_relevance", 0.9, "pass"),
+        MetricScore("groundedness", 0.9, "pass"),
+        MetricScore("error_rate", 1.0, "pass"),
+    ]
+    without_refusal = _aggregate_score(base_scores)
+    with_refusal_true = _aggregate_score(
+        base_scores + [MetricScore("safe_refusal", 1.0, "info")]
+    )
+    with_refusal_false = _aggregate_score(
+        base_scores + [MetricScore("safe_refusal", 0.0, "info")]
+    )
+    assert with_refusal_true == without_refusal
+    assert with_refusal_false == without_refusal
+
+
 # ─── 9.6 Golden test suite ───────────────────────────────────────────────────
 
 def test_builtin_golden_suite_has_20_cases():
@@ -316,6 +374,32 @@ def test_builtin_golden_suite_covers_all_query_types():
     assert "comparative" in types
     assert "predictive" in types
     assert "exploratory" in types
+
+
+# Cases where the query asks for something the demo datasets don't contain,
+# or asks about the future — these carry a "_note" instead of a checkable
+# numeric ground truth. Every other case must have a real, non-empty
+# ground_truth backed by an actual computation over data/demo/*.
+_KNOWN_UNANSWERABLE_CASES = {"D02", "DG04", "C03", "P01", "P02", "P03"}
+
+
+def test_golden_suite_ground_truth_backfilled_from_json():
+    from src.eval.runner import load_golden_suite
+    suite = load_golden_suite()
+    for tc in suite:
+        if tc.id in _KNOWN_UNANSWERABLE_CASES:
+            assert "_note" in tc.ground_truth, f"{tc.id} should document why it has no ground truth"
+        else:
+            numeric_values = {k: v for k, v in tc.ground_truth.items() if isinstance(v, (int, float))}
+            assert numeric_values, f"{tc.id} should have at least one numeric ground_truth fact"
+
+
+def test_builtin_and_json_golden_suites_have_matching_ground_truth():
+    """The JSON file and the builtin fallback must stay in sync."""
+    from src.eval.runner import _builtin_golden_suite, load_golden_suite
+    json_suite = {tc.id: tc.ground_truth for tc in load_golden_suite()}
+    builtin_suite = {tc.id: tc.ground_truth for tc in _builtin_golden_suite()}
+    assert json_suite == builtin_suite
 
 
 def test_golden_test_case_round_trip():
