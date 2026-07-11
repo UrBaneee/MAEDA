@@ -2,6 +2,9 @@
 
 > A production-grade multi-agent system that takes a natural language question about enterprise data, autonomously connects to data sources, performs analysis, generates visualizations, and delivers an insight report — with built-in evaluation, guardrails, and full decision tracing.
 
+<!-- Demo recording: save as docs/demo.gif (or .mp4) and uncomment the line below -->
+<!-- ![MAEDA demo](docs/demo.gif) -->
+
 ---
 
 ## Architecture
