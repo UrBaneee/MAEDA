@@ -104,10 +104,26 @@ class EvalRunner:
 
         scores: list[MetricScore] = []
 
-        # 9.2 / 9.3 LLM-as-judge (single call for both)
-        rel, gnd = await score_relevance_and_groundedness(
-            query, report, analysis_results, rag_context, llm=self._llm
-        )
+        # 9.2 / 9.3 LLM-as-judge. answer_relevance/groundedness don't depend
+        # on test_case at all, so if run_eval_node already scored this same
+        # state inside the graph (CLAUDE.md #8: eval runs on every
+        # execution), reuse those scores instead of re-invoking the judge —
+        # with EVAL_JUDGE_SAMPLES=3 (see metrics.py), scoring a harness case
+        # twice meant 6 judge calls instead of 3 for zero additional signal.
+        existing = state.get("eval_scores") or {}
+        if "answer_relevance" in existing and "groundedness" in existing:
+            rel = MetricScore(
+                "answer_relevance", existing["answer_relevance"]["score"],
+                existing["answer_relevance"]["label"], existing["answer_relevance"]["reasoning"],
+            )
+            gnd = MetricScore(
+                "groundedness", existing["groundedness"]["score"],
+                existing["groundedness"]["label"], existing["groundedness"]["reasoning"],
+            )
+        else:
+            rel, gnd = await score_relevance_and_groundedness(
+                query, report, analysis_results, rag_context, llm=self._llm
+            )
         scores.extend([rel, gnd])
 
         # 9.4 Factual accuracy

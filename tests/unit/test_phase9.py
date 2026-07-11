@@ -363,6 +363,42 @@ def test_eval_runner_with_test_case():
     assert result.aggregate_score > 0.5
 
 
+def test_eval_runner_reuses_existing_relevance_groundedness_instead_of_rejudging():
+    """
+    If run_eval_node already scored this state inside the graph,
+    EvalRunner.score() must reuse those answer_relevance/groundedness
+    values (they don't depend on test_case) instead of calling the judge a
+    second time — verified by never wiring up ainvoke at all; a second
+    judge call would error since there's no mock configured for it.
+    """
+    from src.eval.runner import EvalRunner, GoldenTestCase
+
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=AssertionError("judge should not be called again"))
+
+    runner = EvalRunner(llm=mock_llm)
+    tc = GoldenTestCase(
+        id="T02", query="Show sales by region", query_type="descriptive",
+        expected_metrics=["sales"], expected_dimensions=["region"], ground_truth={},
+    )
+    state = initial_state("Show sales by region")
+    state["report"] = "# Report\n\n## Findings\nNorth leads.\n\n## Rec\n- x"
+    state["analysis_results"] = [{"method": "groupby", "result_summary": "North leads", "failed": False}]
+    state["parsed_intent"] = {"query_type": "descriptive", "confidence": 0.9, "target_metrics": ["sales"]}
+    state["rag_context"] = []
+    state["charts"] = []
+    # Simulate run_eval_node having already scored this state in-graph.
+    state["eval_scores"] = {
+        "answer_relevance": {"score": 0.8, "label": "pass", "reasoning": "from graph run"},
+        "groundedness": {"score": 0.7, "label": "pass", "reasoning": "from graph run"},
+    }
+
+    result = asyncio.run(runner.score(state, test_case=tc))
+    assert result.score_by_metric("answer_relevance") == 0.8
+    assert result.score_by_metric("groundedness") == 0.7
+    mock_llm.ainvoke.assert_not_called()
+
+
 def test_eval_result_score_by_metric():
     from src.eval.runner import EvalResult
     from src.eval.metrics import MetricScore
