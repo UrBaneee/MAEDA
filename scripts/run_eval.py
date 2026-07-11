@@ -31,12 +31,19 @@ REPORT_DIR = Path("logs/eval_runs")
 
 # Map golden case id -> data source descriptor.
 #
-# MAEDA's DataConnector loads a single flat DataFrame per query (no cross-table
-# joins across the ecommerce_orders.db tables), so cases that would need a join
-# (order value by category, new-vs-returning customers, upgrade likelihood) are
-# assigned the closest single table and flagged as a known data mismatch below.
-# This is intentional: it surfaces the single-table limitation as a finding
-# rather than papering over it by rewriting the golden queries.
+# The Analysis Planner can now write real cross-table JOINs against a SQL
+# source (Phase B #1/#2 — see docs/eval_report.md) when it's told the
+# connection string and other tables' schemas, so cases needing a join
+# across ecommerce_orders.db tables are no longer structurally unanswerable.
+# D02 (order value by category) is fully resolved this way. C03 (new vs
+# returning customers) still executes a real join but there's no literal
+# "new/returning" flag in the data — the Planner substitutes the closest
+# available dimension (customer segment) instead, which answers a related
+# but not identical question, so it stays flagged. DG04 (customer LTV) and
+# P03 (upgrade likelihood) remain genuinely unanswerable: no LTV column
+# exists anywhere, and P03 needs plan-change history that was never
+# collected. This is intentional: it surfaces real data-coverage gaps as a
+# finding rather than papering over them by rewriting the golden queries.
 CASE_DATA_SOURCES: dict[str, dict] = {
     "D01": {"type": "csv", "path": "data/demo/sales_data.csv"},
     "D02": {"type": "sql", "path": "sqlite:///data/demo/ecommerce_orders.db", "table_name": "products"},
@@ -60,7 +67,7 @@ CASE_DATA_SOURCES: dict[str, dict] = {
     "E04": {"type": "csv", "path": "data/demo/marketing_campaigns.csv"},
 }
 
-KNOWN_DATA_MISMATCH = {"D02", "DG04", "C03", "P03"}
+KNOWN_DATA_MISMATCH = {"DG04", "C03", "P03"}
 
 
 def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[EvalResult, dict]:

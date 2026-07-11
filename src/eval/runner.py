@@ -280,9 +280,7 @@ def _builtin_golden_suite() -> list[GoldenTestCase]:
                        tags=["descriptive"]),
         GoldenTestCase("D02", "What is the average order value per product category?",
                        "descriptive", ["order_value"], ["category"],
-                       {"_note": "data_mismatch: no 'order value' concept exists in products "
-                                 "table; closest proxy is avg unit_price by category",
-                        "books_avg_unit_price": 313.05},
+                       {"books_avg_order_value": 1543.26, "office_supplies_avg_order_value": 770.88},
                        tags=["descriptive"]),
         GoldenTestCase("D03", "How many customers do we have per country?",
                        "descriptive", ["customers"], ["country"],

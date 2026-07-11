@@ -25,8 +25,8 @@
       "category"
     ],
     "ground_truth": {
-      "_note": "data_mismatch: no 'order value' concept exists in products table; closest proxy is avg unit_price by category",
-      "books_avg_unit_price": 313.05
+      "books_avg_order_value": 1543.26,
+      "office_supplies_avg_order_value": 770.88
     }
   },
   {

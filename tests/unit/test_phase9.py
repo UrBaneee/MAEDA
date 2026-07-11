@@ -469,7 +469,9 @@ def test_builtin_golden_suite_covers_all_query_types():
 # or asks about the future — these carry a "_note" instead of a checkable
 # numeric ground truth. Every other case must have a real, non-empty
 # ground_truth backed by an actual computation over data/demo/*.
-_KNOWN_UNANSWERABLE_CASES = {"D02", "DG04", "C03", "P01", "P02", "P03"}
+# D02 was here too until Phase B #1/#2 (cross-table joins) made it fully
+# answerable via a real orders-JOIN-products query — see docs/eval_report.md.
+_KNOWN_UNANSWERABLE_CASES = {"DG04", "C03", "P01", "P02", "P03"}
 
 
 def test_golden_suite_ground_truth_backfilled_from_json():
