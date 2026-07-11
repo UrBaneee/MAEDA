@@ -64,10 +64,13 @@ and the natural continuation of the eval-first narrative.
    (`guardrail_agent.py`) still uses the agent's model with a single
    sample — deliberately deferred since it affects every live run's
    cost/latency, not just eval runs.
-9. **Audit the remaining tools for the same silent-default pattern** fixed in
-   `pandas_tool`/`sql_tool` this session — `statistical_tool` (silently drops
-   requested columns that don't exist rather than erroring), `anomaly_tool`,
-   and `comparison_tool` haven't been checked yet.
+9. ✅ **Done — audited the remaining tools for the same silent-default
+   pattern.** See eval_report.md #18. Found and fixed 5 instances across
+   `statistical_tool`, `anomaly_tool`, and `comparison_tool`: a silently
+   defaulted `test` type, `compute_correlation` dropping nonexistent
+   columns, two "soft error dict" results getting reported as successful
+   steps, an unhelpful `anomaly_tool` error on a bad column, and
+   `compare_segments` ranking `top_segment` by the wrong aggregation.
 10. **A real "baseline B" with MCP sub-systems online.** Every baseline run so
     far has both Data Cleaner and RAG-MCP-Server offline. The original
     question this debugging pass set out to answer — how much of the
