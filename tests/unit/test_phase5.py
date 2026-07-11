@@ -255,7 +255,30 @@ class TestStatisticalTools:
                                   {"test": "correlation", "method": "pearson"},
                                   prior_results={})
         assert "result" in result
-        assert "matrix" in result["result"]
+
+    def test_correlation_raises_on_nonexistent_column(self, sales_df):
+        with pytest.raises(ValueError, match="not found among numeric columns"):
+            compute_correlation(sales_df, ["revenue", "customer_lifetime_value"])
+
+    def test_statistical_tool_infers_ttest_from_keys_without_explicit_test(self, sales_df):
+        # No "test" key given — must infer "ttest" from group_col/value_col,
+        # not silently default to "correlation" the way it used to.
+        result = statistical_tool(
+            sales_df, {"group_col": "region", "value_col": "revenue"}, prior_results={},
+        )
+        assert result["result_summary"] == "stats/ttest complete"
+
+    def test_statistical_tool_raises_when_test_undeterminable(self, sales_df):
+        with pytest.raises(ValueError, match="cannot determine a test"):
+            statistical_tool(sales_df, {"metric": "revenue", "grouping_variable": "region"}, prior_results={})
+
+    def test_statistical_tool_ttest_insufficient_groups_raises(self):
+        # run_ttest() itself returns {"error": ...} (see
+        # test_ttest_insufficient_groups above) — but through the dispatcher
+        # that must become a real failure, not a silently "successful" step.
+        df = pd.DataFrame({"group": ["A"] * 5, "value": [1, 2, 3, 4, 5]})
+        with pytest.raises(ValueError, match="Need"):
+            statistical_tool(df, {"test": "ttest", "group_col": "group", "value_col": "value"}, prior_results={})
 
 
 # ─── 5.5 Anomaly detection ────────────────────────────────────────────────────
@@ -299,6 +322,14 @@ class TestAnomalyDetection:
         assert result["method"] == "isolation_forest"
         assert result["n_anomalies"] > 0
 
+    def test_anomaly_tool_requires_column(self, anomaly_df):
+        with pytest.raises(ValueError, match="requires a 'column'"):
+            anomaly_tool(anomaly_df, {"method": "iqr"}, {})
+
+    def test_anomaly_tool_raises_on_nonexistent_column(self, anomaly_df):
+        with pytest.raises(ValueError, match="not found in dataframe"):
+            anomaly_tool(anomaly_df, {"method": "iqr", "column": "nonexistent"}, {})
+
 
 # ─── Time-series and comparison ───────────────────────────────────────────────
 
@@ -319,11 +350,36 @@ class TestTimeSeriesAndComparison:
         result = analyze_time_series(df, "date", "val")
         assert "error" in result
 
+    def test_timeseries_tool_too_few_points_raises(self):
+        # analyze_time_series() itself returns {"error": ...} (see above) —
+        # through the dispatcher that must become a real failure.
+        from src.tools.stats_tool import timeseries_tool
+        df = pd.DataFrame({"date": ["2024-01", "2024-02"], "val": [1.0, 2.0]})
+        with pytest.raises(ValueError, match="at least 3 data points"):
+            timeseries_tool(df, {"date_col": "date", "value_col": "val"}, {})
+
     def test_compare_segments(self, sales_df):
         result = compare_segments(sales_df, "region", "revenue")
         assert len(result["segments"]) == 4
         assert "top_segment" in result
-        assert "significance_test" in result
+
+    def test_compare_segments_top_segment_respects_agg(self):
+        # A segment with the highest *sum* isn't necessarily the one with
+        # the highest *mean* — top_segment must rank by whichever agg was
+        # actually requested, not be hardcoded to "mean". A: 100 rows of 10
+        # (sum=1000, mean=10). B: 2 rows of 20 (sum=40, mean=20).
+        df = pd.DataFrame({
+            "segment": ["A"] * 100 + ["B"] * 2,
+            "value": [10.0] * 100 + [20.0] * 2,
+        })
+        by_mean = compare_segments(df, "segment", "value", agg="mean")
+        by_sum = compare_segments(df, "segment", "value", agg="sum")
+        assert by_mean["top_segment"] == "B"   # highest mean
+        assert by_sum["top_segment"] == "A"    # highest sum
+
+    def test_compare_segments_rejects_unknown_agg(self, sales_df):
+        with pytest.raises(ValueError, match="unsupported agg"):
+            compare_segments(sales_df, "region", "revenue", agg="avg")
 
     def test_compare_segments_two_groups_ttest(self):
         df = pd.DataFrame({

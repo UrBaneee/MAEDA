@@ -25,12 +25,24 @@ def compute_correlation(
     method: str = "pearson",
 ) -> dict:
     """
-    Compute a correlation matrix for numeric columns.
+    Compute a correlation matrix for numeric columns. With columns=None, uses
+    every numeric column. With columns given, every one of them must exist —
+    silently dropping unrecognized names would make "correlate X with Y"
+    quietly turn into "correlate whatever happened to match," which is how a
+    query for a nonexistent metric (e.g. an LTV column that isn't in the
+    data) used to come back with a plausible-looking correlation matrix that
+    had quietly excluded LTV entirely.
     method: 'pearson' | 'spearman' | 'kendall'
     """
     num_df = df.select_dtypes(include="number")
     if columns:
-        num_df = num_df[[c for c in columns if c in num_df.columns]]
+        missing = [c for c in columns if c not in num_df.columns]
+        if missing:
+            raise ValueError(
+                f"correlation: column(s) {missing} not found among numeric columns. "
+                f"Available numeric columns: {list(num_df.columns)}"
+            )
+        num_df = num_df[columns]
     corr = num_df.corr(method=method)
     # Find top pairs (abs corr > 0.5, excluding diagonal)
     strong_pairs = []
@@ -303,6 +315,9 @@ def analyze_time_series(
 
 # ─── Segment comparison ───────────────────────────────────────────────────────
 
+_SEGMENT_AGG_FUNCS = {"mean", "sum", "median", "count"}
+
+
 def compare_segments(
     df: pd.DataFrame,
     segment_col: str,
@@ -313,7 +328,8 @@ def compare_segments(
     Compare metric across segments. Returns per-segment stats plus
     ANOVA test if ≥3 groups, t-test if 2 groups.
     """
-    agg_fn = {"mean": "mean", "sum": "sum", "median": "median", "count": "count"}.get(agg, "mean")
+    if agg not in _SEGMENT_AGG_FUNCS:
+        raise ValueError(f"comparison: unsupported agg {agg!r}, must be one of {sorted(_SEGMENT_AGG_FUNCS)}")
     grouped = df.groupby(segment_col)[value_col].agg(["mean", "sum", "median", "count", "std"])
     segments = grouped.reset_index().to_dict(orient="records")
 
@@ -328,7 +344,11 @@ def compare_segments(
         significance = {"test": "one-way ANOVA", "statistic": round(float(f), 4),
                         "p_value": round(float(p), 6), "significant": bool(p < 0.05)}
 
-    top_segment = grouped["mean"].idxmax()
+    # Was hardcoded to grouped["mean"] regardless of the requested `agg` —
+    # asking "which channel has the highest total spend" (agg="sum") would
+    # silently rank segments by their *average* instead, since the "sum"
+    # value was computed but never actually used to pick the top segment.
+    top_segment = grouped[agg].idxmax()
     return {
         "segment_col": segment_col,
         "value_col": value_col,
@@ -560,41 +580,119 @@ def pandas_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> dict
     }
 
 
+_CORRELATION_KEYS = {"columns", "method"}
+_REGRESSION_KEYS = {"target", "features"}
+_TTEST_KEYS = {"group_col", "value_col"}
+_CHI_SQUARE_KEYS = {"col_a", "col_b"}
+
+
+def _infer_test(parameters: dict) -> Optional[str]:
+    keys = set(parameters.keys())
+    # Check the more specific tests first — "method"/"columns" alone is too
+    # generic to safely infer "correlation" from if a more specific set of
+    # keys (target/features, group_col/value_col, ...) is also present.
+    if keys & _REGRESSION_KEYS:
+        return "regression"
+    if keys & _TTEST_KEYS:
+        return "ttest"
+    if keys & _CHI_SQUARE_KEYS:
+        return "chi_square"
+    if keys & _CORRELATION_KEYS:
+        return "correlation"
+    return None
+
+
 def statistical_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> dict:
-    test = parameters.get("test", "correlation")
+    # "test" used to default to "correlation" whenever the key was omitted —
+    # which was most of the time, since the Planner routinely sent
+    # semantically-named keys (e.g. "metric"/"grouping_variable") that don't
+    # match any recognized parameter here. That silently turned "is there a
+    # significant difference in churn between plans" into "correlate every
+    # numeric column with every other one," which happens to never raise.
+    test = parameters.get("test") or _infer_test(parameters)
+    if not test:
+        raise ValueError(
+            f"statistical_test: cannot determine a test from parameters {parameters!r}. "
+            f"Provide a 'test' key ('correlation'|'regression'|'ttest'|'chi_square') or "
+            f"one of the recognized keys for that test "
+            f"(correlation: {_CORRELATION_KEYS}, regression: {_REGRESSION_KEYS}, "
+            f"ttest: {_TTEST_KEYS}, chi_square: {_CHI_SQUARE_KEYS})."
+        )
+
     if test == "correlation":
         r = compute_correlation(df, parameters.get("columns"), parameters.get("method", "pearson"))
     elif test == "regression":
+        missing_keys = [k for k in ("target", "features") if k not in parameters]
+        if missing_keys:
+            raise ValueError(f"regression: missing required parameter(s) {missing_keys}")
+        _require_columns(df, [parameters["target"], *parameters["features"]], "regression")
         r = run_linear_regression(df, parameters["target"], parameters["features"])
     elif test == "ttest":
+        missing_keys = [k for k in ("group_col", "value_col") if k not in parameters]
+        if missing_keys:
+            raise ValueError(f"ttest: missing required parameter(s) {missing_keys}")
+        _require_columns(df, [parameters["group_col"], parameters["value_col"]], "ttest")
         r = run_ttest(df, parameters["group_col"], parameters["value_col"])
     elif test == "chi_square":
+        missing_keys = [k for k in ("col_a", "col_b") if k not in parameters]
+        if missing_keys:
+            raise ValueError(f"chi_square: missing required parameter(s) {missing_keys}")
+        _require_columns(df, [parameters["col_a"], parameters["col_b"]], "chi_square")
         r = run_chi_square(df, parameters["col_a"], parameters["col_b"])
     else:
         raise ValueError(f"Unknown statistical test: {test!r}")
+
+    if isinstance(r, dict) and r.get("error"):
+        # run_ttest (and other stats helpers) return {"error": ...} instead
+        # of raising for things like "fewer than 2 groups" — a caller
+        # inspecting the dict directly can handle that gracefully, but
+        # through this dispatcher it must become a real failure, or
+        # _execute_step defaults "failed" to False and the pipeline reports
+        # a statistical test as having succeeded when it didn't run at all.
+        raise ValueError(f"statistical_test/{test}: {r['error']}")
+
     return {"result": r, "result_df": None, "result_summary": f"stats/{test} complete", "warnings": []}
 
 
 def anomaly_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> dict:
+    # Defaulting the detection *method* to "iqr" is fine — every method
+    # answers the same question ("are there outliers"), unlike e.g.
+    # pandas_tool's "operation" where the wrong default silently answers a
+    # different question entirely. But the *column* to check has no safe
+    # default, and passing None/a typo through unchecked used to reach
+    # pandas as a bare KeyError with no indication of what to fix.
     method = parameters.get("method", "iqr")
-    col = parameters.get("column")
-    if method == "zscore":
-        r = detect_anomalies_zscore(df, col, parameters.get("threshold", 3.0))
-    elif method == "iqr":
-        r = detect_anomalies_iqr(df, col, parameters.get("multiplier", 1.5))
-    elif method == "isolation_forest":
-        r = detect_anomalies_isolation_forest(df, parameters.get("columns", [col]),
-                                              parameters.get("contamination", 0.05))
+    if method == "isolation_forest":
+        cols = parameters.get("columns") or ([parameters["column"]] if "column" in parameters else None)
+        if not cols:
+            raise ValueError("anomaly_detection/isolation_forest: requires 'columns' (or 'column')")
+        _require_columns(df, cols, "anomaly_detection/isolation_forest")
+        r = detect_anomalies_isolation_forest(df, cols, parameters.get("contamination", 0.05))
     else:
-        raise ValueError(f"Unknown anomaly method: {method!r}")
+        col = parameters.get("column")
+        if not col:
+            raise ValueError(f"anomaly_detection/{method}: requires a 'column' parameter")
+        _require_columns(df, [col], f"anomaly_detection/{method}")
+        if method == "zscore":
+            r = detect_anomalies_zscore(df, col, parameters.get("threshold", 3.0))
+        elif method == "iqr":
+            r = detect_anomalies_iqr(df, col, parameters.get("multiplier", 1.5))
+        else:
+            raise ValueError(f"Unknown anomaly method: {method!r}")
     return {"result": r, "result_df": None,
             "result_summary": f"anomaly/{method}: {r.get('n_outliers', '?')} outliers", "warnings": []}
 
 
 def timeseries_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> dict:
+    _require_columns(df, [parameters["date_col"], parameters["value_col"]], "time_series")
     r = analyze_time_series(df, parameters["date_col"], parameters["value_col"],
                             parameters.get("freq"),
                             parameters.get("forecast_periods", 0))
+    if r.get("error"):
+        # analyze_time_series returns {"error": ...} instead of raising for
+        # "too few data points" — must become a real failure here or
+        # _execute_step defaults "failed" to False.
+        raise ValueError(f"time_series: {r['error']}")
     summary = f"timeseries: {r.get('trend', {}).get('direction', '?')} trend"
     if r.get("forecast"):
         summary += f" | naive linear forecast for {len(r['forecast']['periods'])} period(s)"
@@ -602,6 +700,10 @@ def timeseries_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> 
 
 
 def comparison_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> dict:
+    missing_keys = [k for k in ("segment_col", "value_col") if k not in parameters]
+    if missing_keys:
+        raise ValueError(f"comparison: missing required parameter(s) {missing_keys}")
+    _require_columns(df, [parameters["segment_col"], parameters["value_col"]], "comparison")
     r = compare_segments(df, parameters["segment_col"], parameters["value_col"],
                          parameters.get("agg", "mean"))
     return {"result": r, "result_df": None,
