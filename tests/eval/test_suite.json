@@ -9,7 +9,10 @@
     "expected_dimensions": [
       "region"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "north_region_revenue": 1363760.55,
+      "central_region_revenue": 821174.97
+    }
   },
   {
     "id": "D02",
@@ -21,7 +24,10 @@
     "expected_dimensions": [
       "category"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "_note": "data_mismatch: no 'order value' concept exists in products table; closest proxy is avg unit_price by category",
+      "books_avg_unit_price": 313.05
+    }
   },
   {
     "id": "D03",
@@ -33,7 +39,11 @@
     "expected_dimensions": [
       "country"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "canada_customers": 189,
+      "france_customers": 186,
+      "total_customers": 1000
+    }
   },
   {
     "id": "D04",
@@ -45,7 +55,10 @@
     "expected_dimensions": [
       "product"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "top_product_revenue": 1195178.74,
+      "n_products": 5
+    }
   },
   {
     "id": "D05",
@@ -57,7 +70,10 @@
     "expected_dimensions": [
       "month"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "dec_2024_orders": 324,
+      "jan_2024_orders": 279
+    }
   },
   {
     "id": "DG01",
@@ -69,7 +85,11 @@
     "expected_dimensions": [
       "quarter"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "q3_2023_revenue": 314480.57,
+      "q2_2023_revenue": 422976.68,
+      "q4_2023_revenue": 581966.52
+    }
   },
   {
     "id": "DG02",
@@ -81,7 +101,11 @@
     "expected_dimensions": [
       "month"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "march_2024_churned": 118,
+      "march_2024_total": 302,
+      "march_2024_churn_rate_pct": 39.07
+    }
   },
   {
     "id": "DG03",
@@ -93,7 +117,10 @@
     "expected_dimensions": [
       "region"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "north_region_revenue": 1363760.55,
+      "_note": "North is actually the HIGHEST-revenue region, not underperforming"
+    }
   },
   {
     "id": "DG04",
@@ -103,7 +130,9 @@
       "ltv"
     ],
     "expected_dimensions": [],
-    "ground_truth": {}
+    "ground_truth": {
+      "_note": "data_mismatch: no customer_lifetime_value column exists in churn_data.csv"
+    }
   },
   {
     "id": "C01",
@@ -115,7 +144,12 @@
     "expected_dimensions": [
       "quarter"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "q1_2023_revenue": 438310.73,
+      "q2_2023_revenue": 422976.68,
+      "q3_2023_revenue": 314480.57,
+      "q4_2023_revenue": 581966.52
+    }
   },
   {
     "id": "C02",
@@ -127,7 +161,10 @@
     "expected_dimensions": [
       "channel"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "search_conversion_rate_pct": 6.41,
+      "display_conversion_rate_pct": 1.22
+    }
   },
   {
     "id": "C03",
@@ -139,7 +176,9 @@
     "expected_dimensions": [
       "customer_type"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "_note": "data_mismatch: no new/returning customer_type field exists in orders/customers tables"
+    }
   },
   {
     "id": "C04",
@@ -151,7 +190,10 @@
     "expected_dimensions": [
       "category"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "books_avg_margin": 217.83,
+      "office_supplies_avg_margin": 43.67
+    }
   },
   {
     "id": "P01",
@@ -163,7 +205,9 @@
     "expected_dimensions": [
       "quarter"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "_note": "predictive query \u2014 no ground truth exists for a future value; only historical trend direction is checkable"
+    }
   },
   {
     "id": "P02",
@@ -175,7 +219,9 @@
     "expected_dimensions": [
       "day"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "_note": "predictive query \u2014 no ground truth exists for future churn"
+    }
   },
   {
     "id": "P03",
@@ -187,7 +233,9 @@
     "expected_dimensions": [
       "customer"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "_note": "data_mismatch: no upgrade/plan-change history exists; also predictive"
+    }
   },
   {
     "id": "E01",
@@ -195,7 +243,10 @@
     "query_type": "exploratory",
     "expected_metrics": [],
     "expected_dimensions": [],
-    "ground_truth": {}
+    "ground_truth": {
+      "n_rows": 12240,
+      "n_columns": 7
+    }
   },
   {
     "id": "E02",
@@ -205,7 +256,10 @@
       "sales"
     ],
     "expected_dimensions": [],
-    "ground_truth": {}
+    "ground_truth": {
+      "revenue_outliers_iqr": 187,
+      "units_outliers_iqr": 470
+    }
   },
   {
     "id": "E03",
@@ -215,7 +269,10 @@
     "expected_dimensions": [
       "customer"
     ],
-    "ground_truth": {}
+    "ground_truth": {
+      "n_orders": 10000,
+      "n_customers": 1000
+    }
   },
   {
     "id": "E04",
@@ -226,6 +283,8 @@
       "marketing_spend"
     ],
     "expected_dimensions": [],
-    "ground_truth": {}
+    "ground_truth": {
+      "spend_revenue_correlation": 0.3536
+    }
   }
 ]
