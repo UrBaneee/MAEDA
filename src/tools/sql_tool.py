@@ -19,6 +19,7 @@ logger = get_logger("maeda.tools.sql")
 
 _BARE_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _SORT_DIRECTION_RE = re.compile(r"\s+(ASC|DESC)$", re.IGNORECASE)
+_ALIAS_RE = re.compile(r"\bAS\s+([A-Za-z_][A-Za-z0-9_]*)\s*$", re.IGNORECASE)
 
 
 def _is_bare_identifier(value: object) -> bool:
@@ -28,6 +29,22 @@ def _is_bare_identifier(value: object) -> bool:
 
 def _strip_sort_direction(order_by: str) -> str:
     return _SORT_DIRECTION_RE.sub("", order_by)
+
+
+def _select_aliases(select_cols: Optional[list]) -> set[str]:
+    """
+    Names introduced by "<expr> AS alias" entries in select_columns — e.g.
+    "SUM(revenue) AS total_revenue" defines "total_revenue". These are valid
+    to reference in ORDER BY even though they're not columns on the original
+    dataframe; column-existence validation must not reject them.
+    """
+    aliases = set()
+    for c in select_cols or []:
+        if isinstance(c, str):
+            m = _ALIAS_RE.search(c.strip())
+            if m:
+                aliases.add(m.group(1))
+    return aliases
 
 
 def execute_sql(
@@ -120,16 +137,39 @@ def sql_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> dict:
         select_cols = parameters.get("select_columns") or parameters.get("columns")
         group_by = parameters.get("group_by")
         order_by = parameters.get("order_by")
-        limit = parameters.get("limit", 100)
+        # A JSON "limit": null becomes Python None, and dict.get() only falls
+        # back to the default when the key is *absent* — an explicit None
+        # would otherwise reach the query as the literal text "LIMIT None".
+        limit = parameters.get("limit")
+        if limit is None:
+            limit = 100
+
+        # A GROUP BY with no explicit select_columns is meaningless — there's
+        # no way to know what to aggregate, and defaulting to "SELECT *" lets
+        # SQLite silently return one arbitrary row per group instead of an
+        # actual aggregate. Require the caller to specify what to select.
+        if group_by and not select_cols:
+            raise ValueError(
+                "sql_query: 'group_by' was given without 'select_columns' — "
+                "specify the columns/aggregate expressions to select "
+                "(e.g. ['region', 'SUM(revenue) AS total']) rather than "
+                "relying on an implicit SELECT *."
+            )
 
         # select_columns/order_by may legitimately be raw SQL expressions
         # (e.g. "AVG(unit_price - cost) AS margin"), not bare column names —
         # only validate entries that actually look like a plain identifier.
+        # order_by may also legitimately reference an alias defined in
+        # select_columns (e.g. "... AS total_revenue ... ORDER BY
+        # total_revenue") rather than an original dataframe column.
+        aliases = _select_aliases(select_cols)
         candidate_cols = [c for c in (select_cols or []) if _is_bare_identifier(c)]
         if group_by:
             candidate_cols += group_by if isinstance(group_by, list) else [group_by]
-        if order_by and _is_bare_identifier(_strip_sort_direction(order_by)):
-            candidate_cols.append(_strip_sort_direction(order_by))
+        if order_by:
+            sort_col = _strip_sort_direction(order_by)
+            if _is_bare_identifier(sort_col) and sort_col not in aliases:
+                candidate_cols.append(sort_col)
         missing = [c for c in candidate_cols if c not in df.columns]
         if missing:
             raise ValueError(

@@ -110,6 +110,44 @@ class TestSQLTool:
         assert "result" in result
         assert result.get("failed") is not True
 
+    def test_sql_tool_null_limit_defaults_instead_of_breaking_query(self, sales_df):
+        # {"limit": null} in JSON becomes Python None; must not literally
+        # render as "LIMIT None" in the generated SQL.
+        result = sql_tool(sales_df, {"limit": None}, prior_results={})
+        assert "result" in result
+
+    def test_sql_tool_group_by_without_select_columns_raises(self, sales_df):
+        # A GROUP BY with nothing explicit to select can't safely default to
+        # SELECT * — that lets SQLite return an arbitrary row per group
+        # instead of an actual aggregate.
+        with pytest.raises(ValueError, match="group_by.*without.*select_columns"):
+            sql_tool(sales_df, {"group_by": "region"}, prior_results={})
+
+    def test_sql_tool_group_by_with_select_columns_succeeds(self, sales_df):
+        result = sql_tool(
+            sales_df,
+            {"select_columns": ["region", "SUM(revenue) AS total"], "group_by": "region"},
+            prior_results={},
+        )
+        assert result.get("failed") is not True
+        assert len(result["result"]) == 4  # 4 distinct regions in sales_df fixture
+
+    def test_sql_tool_order_by_select_alias_does_not_raise(self, sales_df):
+        # ORDER BY referencing an alias defined in select_columns (a normal,
+        # valid SQL pattern) must not be rejected as a missing column — the
+        # alias only exists within this query, not on the original dataframe.
+        result = sql_tool(
+            sales_df,
+            {
+                "select_columns": ["region", "SUM(revenue) AS total_revenue"],
+                "group_by": "region",
+                "order_by": "total_revenue",
+            },
+            prior_results={},
+        )
+        assert result.get("failed") is not True
+        assert len(result["result"]) == 4
+
 
 # ─── 5.3 Pandas transform tool ───────────────────────────────────────────────
 
@@ -403,6 +441,36 @@ class TestStepExecutor:
         result = asyncio.run(agent.execute(state))
         assert len(result["analysis_results"]) == 2
         assert all(not r["failed"] for r in result["analysis_results"])
+
+    def test_execute_independent_steps_each_get_original_dataframe(self, sales_df, tmp_path):
+        """
+        Two independent steps (depends_on=[]) must each see the full
+        original dataset, not whatever the immediately-preceding step left
+        behind. Step 1 groups by region+revenue, collapsing away 'quarter'
+        and 'units'; step 2 is unrelated (depends_on=[]) and needs 'quarter'
+        and 'units' — it must succeed against the original data, not fail
+        with a 'column not found' error caused by step 1's leftover df.
+        """
+        csv = tmp_path / "sales.csv"
+        sales_df.to_csv(str(csv), index=False)
+
+        plan_data = [
+            {"step_number": 1, "method": "groupby_region", "tool": "pandas_transform",
+             "parameters": {"operation": "groupby", "group_by": ["region"],
+                             "agg_col": "revenue", "agg_func": "sum"},
+             "depends_on": [], "expected_output": "revenue by region", "rationale": ""},
+            {"step_number": 2, "method": "groupby_quarter", "tool": "pandas_transform",
+             "parameters": {"operation": "groupby", "group_by": ["quarter"],
+                             "agg_col": "units", "agg_func": "sum"},
+             "depends_on": [], "expected_output": "units by quarter", "rationale": ""},
+        ]
+        agent = AnalysisAgent(llm=_mock_llm(plan_data))
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(csv)}])
+        state["active_source"] = {"type": "csv", "path": str(csv)}
+        state["analysis_plan"] = plan_data
+        result = asyncio.run(agent.execute(state))
+        assert len(result["analysis_results"]) == 2
+        assert all(not r["failed"] for r in result["analysis_results"]), result["analysis_results"]
 
     def test_execute_unknown_tool_marks_failed(self, sales_df, tmp_path):
         csv = tmp_path / "d.csv"

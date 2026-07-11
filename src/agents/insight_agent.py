@@ -74,15 +74,21 @@ def _score_to_impact(confidence: float) -> Literal["high", "medium", "low"]:
 # ─── LLM factory ─────────────────────────────────────────────────────────────
 
 def _build_llm():
+    # Was hardcoded to temperature=0.3, bypassing settings.llm_temperature —
+    # the only agent introducing real sampling variance. Reproduced a case
+    # where that variance made the same real, non-empty analysis result
+    # produce zero insights (and a report falsely claiming "no data") on one
+    # call but three grounded insights on a replay of the identical prompt.
+    # Insight generation should be as deterministic as every other agent.
     if settings.llm_provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
         return ChatAnthropic(
-            model=settings.llm_model, temperature=0.3,
+            model=settings.llm_model, temperature=settings.llm_temperature,
             max_tokens=settings.max_tokens_per_call, api_key=settings.anthropic_api_key or "sk-no-key",
         )
     from langchain_openai import ChatOpenAI
     return ChatOpenAI(
-        model=settings.llm_model, temperature=0.3,
+        model=settings.llm_model, temperature=settings.llm_temperature,
         max_tokens=settings.max_tokens_per_call, api_key=settings.openai_api_key or "sk-no-key",
     )
 

@@ -36,15 +36,18 @@ _CHARTS_DIR = "./data/charts"
 # ─── LLM factory ─────────────────────────────────────────────────────────────
 
 def _build_llm():
+    # Was hardcoded to temperature=0.2, bypassing settings.llm_temperature —
+    # see insight_agent.py for why non-zero temperature caused a real
+    # eval-visible failure. Kept consistent with the rest of the pipeline.
     if settings.llm_provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
         return ChatAnthropic(
-            model=settings.llm_model, temperature=0.2,
+            model=settings.llm_model, temperature=settings.llm_temperature,
             max_tokens=256, api_key=settings.anthropic_api_key or "sk-no-key",
         )
     from langchain_openai import ChatOpenAI
     return ChatOpenAI(
-        model=settings.llm_model, temperature=0.2,
+        model=settings.llm_model, temperature=settings.llm_temperature,
         max_tokens=256, api_key=settings.openai_api_key or "sk-no-key",
     )
 

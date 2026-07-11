@@ -199,14 +199,16 @@ class AnalysisAgent(BaseAgent):
             return state
 
         steps = [AnalysisStep.from_dict(d) for d in plan_dicts]
-        df = _load_dataframe(state)
+        original_df = _load_dataframe(state)
 
         results: dict[int, dict] = {}  # step_number → result
+        result_dfs: dict[int, pd.DataFrame] = {}  # step_number → its output DataFrame, if any
         analysis_results: list[dict] = []
 
         for step in _execution_order(steps):
             prior = {n: results[n] for n in step.depends_on if n in results}
-            step_result = await self._execute_step(step, df, prior)
+            step_df = _select_input_dataframe(step, result_dfs, original_df)
+            step_result = await self._execute_step(step, step_df, prior)
             results[step.step_number] = step_result
             analysis_results.append({
                 "step": step.step_number,
@@ -219,9 +221,8 @@ class AnalysisAgent(BaseAgent):
                 "failed": step_result.get("failed", False),
             })
 
-            # Persist intermediate DataFrames so later steps can use them
             if step_result.get("result_df") is not None:
-                df = step_result["result_df"]  # rolling update for dependent steps
+                result_dfs[step.step_number] = step_result["result_df"]
 
         state["analysis_results"] = analysis_results
         # 5.8 Aggregate: store a compact intermediate_data for insight generation
@@ -296,6 +297,30 @@ def _column_manifest(active_source: Optional[dict]) -> str:
         f"- {c.get('name')} ({c.get('dtype')})"
         for c in columns
     )
+
+
+def _select_input_dataframe(
+    step: "AnalysisStep", result_dfs: dict[int, pd.DataFrame], original_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    A step with no declared dependencies (depends_on=[]) always operates on
+    the original, full dataset — never on whatever an unrelated preceding
+    step happened to leave behind. Previously a single `df` variable was
+    reassigned after every step regardless of dependencies, so an
+    independent step could silently receive a different, already-aggregated
+    (and column-reduced) DataFrame from whichever step ran immediately
+    before it in plan order, causing spurious "column not found" failures
+    on legitimately independent analysis facets (e.g. an "overview" query
+    planning "revenue by region" and "units by product" as two unrelated
+    steps).
+
+    A step that does declare dependencies chains off the most recent
+    dependency (in depends_on order) that actually produced a DataFrame.
+    """
+    for dep in reversed(step.depends_on):
+        if dep in result_dfs:
+            return result_dfs[dep]
+    return original_df
 
 
 def _load_dataframe(state: MAEDAState) -> pd.DataFrame:
