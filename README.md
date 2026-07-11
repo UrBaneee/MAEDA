@@ -1,5 +1,7 @@
 # MAEDA — Multi-Agent Enterprise Data Analyst
 
+[![CI](https://github.com/UrBaneee/MAEDA/actions/workflows/ci.yml/badge.svg)](https://github.com/UrBaneee/MAEDA/actions/workflows/ci.yml)
+
 > A production-grade multi-agent system that takes a natural language question about enterprise data, autonomously connects to data sources, performs analysis, generates visualizations, and delivers an insight report — with built-in evaluation, guardrails, and full decision tracing.
 
 <!-- Demo recording: save as docs/demo.gif (or .mp4) and uncomment the line below -->
