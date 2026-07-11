@@ -150,14 +150,18 @@ class AnalysisAgent(BaseAgent):
     async def plan(self, state: MAEDAState) -> MAEDAState:
         intent = state.get("parsed_intent") or {}
         schema = state.get("schema_summary", "No schema available")
-        columns = _column_manifest(state.get("active_source"))
+        active_source = state.get("active_source")
+        columns = _column_manifest(active_source)
+        related_tables = _related_tables_manifest(active_source)
 
         prompt = (
             f"### Parsed Intent\n{json.dumps(intent, indent=2)}\n\n"
             f"### Data Schema\n{schema}\n\n"
             f"### Available Columns (authoritative — use these exact names)\n{columns}\n\n"
-            "Generate a step-by-step analysis plan."
         )
+        if related_tables:
+            prompt += f"### Related Tables\n{related_tables}\n\n"
+        prompt += "Generate a step-by-step analysis plan."
         messages = [
             SystemMessage(content=ANALYSIS_PLANNER_SYSTEM),
             HumanMessage(content=prompt),
@@ -297,6 +301,46 @@ def _column_manifest(active_source: Optional[dict]) -> str:
         f"- {c.get('name')} ({c.get('dtype')})"
         for c in columns
     )
+
+
+def _related_tables_manifest(active_source: Optional[dict]) -> str:
+    """
+    For a SQL-backed source, list every OTHER table in the database and its
+    columns, so the Planner knows a cross-table JOIN is possible instead of
+    only ever seeing the single "active" table's flat schema. Returns "" for
+    non-SQL sources or if introspection fails for any reason — this is
+    purely additive context; its absence must not block planning against
+    the single active table the way it always has.
+    """
+    active = active_source or {}
+    if active.get("type") != "sql":
+        return ""
+    connection_string = active.get("path")
+    if not connection_string:
+        return ""
+    try:
+        from src.tools.data_connector import list_related_tables
+        tables = list_related_tables(connection_string, exclude_table=active.get("table_name"))
+    except Exception as exc:
+        logger.warning("Could not introspect related tables for %s: %s", connection_string, exc)
+        return ""
+    if not tables:
+        return ""
+
+    lines = [
+        f'Other tables in this database (connection_string: "{connection_string}"). '
+        f"To JOIN across tables, use tool \"sql_query\" with a raw \"query\" string "
+        f"(real SQL, real table names below) and \"connection_string\": "
+        f'"{connection_string}" in parameters — this runs directly against the '
+        f"database. A \"pandas_transform\" step only ever sees the single active "
+        f"table above; it cannot join.",
+        "",
+    ]
+    for table_name, columns in tables.items():
+        lines.append(f"Table: {table_name}")
+        lines.extend(f"  - {c}" for c in columns)
+        lines.append("")
+    return "\n".join(lines).rstrip()
 
 
 def _select_input_dataframe(

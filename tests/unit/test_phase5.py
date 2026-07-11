@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sqlite3
 from unittest.mock import AsyncMock, MagicMock
 
 import numpy as np
@@ -19,7 +20,9 @@ from src.agents.analysis_agent import (
     AnalysisStep,
     TOOL_REGISTRY,
     _aggregate,
+    _column_manifest,
     _execution_order,
+    _related_tables_manifest,
     _simplify_step,
 )
 from src.state.graph_state import initial_state
@@ -67,6 +70,19 @@ def anomaly_df():
     np.random.seed(42)
     normal = np.random.normal(100, 10, 50).tolist()
     return pd.DataFrame({"value": normal + [500.0, -200.0]})  # 2 obvious outliers
+
+
+@pytest.fixture
+def multi_table_sqlite_db(tmp_path):
+    db_path = tmp_path / "multi.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("CREATE TABLE orders (order_id INTEGER, customer_id INTEGER, revenue REAL)")
+    conn.execute("CREATE TABLE customers (customer_id INTEGER, country TEXT)")
+    conn.execute("INSERT INTO orders VALUES (1, 1, 100.0)")
+    conn.execute("INSERT INTO customers VALUES (1, 'Canada')")
+    conn.commit()
+    conn.close()
+    return f"sqlite:///{db_path}"
 
 
 def _mock_llm(plan_data) -> MagicMock:
@@ -515,6 +531,32 @@ class TestPlanGenerator:
         result = asyncio.run(agent.plan(state))
         assert "analysis_agent" in result["token_usage"]
 
+    def test_plan_prompt_includes_related_tables_for_sql_source(self, multi_table_sqlite_db):
+        mock_llm = _mock_llm([])
+        agent = AnalysisAgent(llm=mock_llm)
+        state = initial_state("test")
+        state["active_source"] = {
+            "type": "sql", "path": multi_table_sqlite_db, "table_name": "orders",
+            "schema": {"columns": [{"name": "order_id", "dtype": "INTEGER"}]},
+        }
+        asyncio.run(agent.plan(state))
+        prompt = mock_llm.ainvoke.call_args[0][0][1].content
+        assert "### Related Tables" in prompt
+        assert "customers" in prompt
+        assert multi_table_sqlite_db in prompt
+
+    def test_plan_prompt_omits_related_tables_for_csv_source(self):
+        mock_llm = _mock_llm([])
+        agent = AnalysisAgent(llm=mock_llm)
+        state = initial_state("test")
+        state["active_source"] = {
+            "type": "csv", "path": "data/demo/sales_data.csv",
+            "schema": {"columns": [{"name": "revenue", "dtype": "float64"}]},
+        }
+        asyncio.run(agent.plan(state))
+        prompt = mock_llm.ainvoke.call_args[0][0][1].content
+        assert "### Related Tables" not in prompt
+
     @pytest.mark.parametrize("query_type,expected_tool", [
         ("descriptive",  "pandas_transform"),
         ("diagnostic",   "statistical_test"),
@@ -532,6 +574,30 @@ class TestPlanGenerator:
         state["parsed_intent"] = {"query_type": query_type}
         result = asyncio.run(agent.plan(state))
         assert result["analysis_plan"][0]["tool"] == expected_tool
+
+
+# ─── Related tables manifest (cross-table join support) ───────────────────────
+
+class TestRelatedTablesManifest:
+    def test_lists_other_tables_for_sql_source(self, multi_table_sqlite_db):
+        active = {"type": "sql", "path": multi_table_sqlite_db, "table_name": "orders"}
+        manifest = _related_tables_manifest(active)
+        assert "customers" in manifest
+        assert "orders" not in manifest.split("Other tables")[1].split("Table:")[0]  # excluded, only mentioned in the intro sentence
+        assert multi_table_sqlite_db in manifest
+
+    def test_empty_for_non_sql_source(self):
+        active = {"type": "csv", "path": "data/demo/sales_data.csv"}
+        assert _related_tables_manifest(active) == ""
+
+    def test_empty_for_none_source(self):
+        assert _related_tables_manifest(None) == ""
+
+    def test_empty_on_bad_connection_string(self):
+        active = {"type": "sql", "path": "sqlite:///nonexistent/path/does/not/exist.db"}
+        # Must degrade gracefully — a broken connection string must not
+        # block planning against the single active table.
+        assert _related_tables_manifest(active) == ""
 
 
 # ─── 5.6 Step executor ────────────────────────────────────────────────────────

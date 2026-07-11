@@ -97,13 +97,38 @@ column silently matches zero rows instead of raising an error, so this
 mistake is easy to miss: double-check the value type matches what the
 derive step actually produces before filtering on it.
 
+## Cross-table joins
+
+The Available Columns list above is ONLY the single "active" table. If the
+user's message also includes a "### Related Tables" section, other tables
+exist in the same database and can be joined. Recognize when a query needs
+data that spans tables — e.g. "average order value per product category"
+needs an orders table joined to a products table; a customer attribute
+crossed with their order history needs customers joined to orders. Do NOT
+try to answer a cross-table question by only looking at whichever table
+happens to be active — a "pandas_transform" step can only ever see that one
+table's data, columns from other tables simply won't exist on it.
+
+To join, use a single "sql_query" step with a raw SQL "query" (real JOIN
+syntax, the real table/column names from "### Related Tables") AND
+"connection_string" set to the exact string shown in that section, e.g.:
+{"query": "SELECT p.category, AVG(o.revenue) AS avg_order_value FROM orders o JOIN products p ON o.product_id = p.product_id GROUP BY p.category",
+ "connection_string": "sqlite:///data/demo/ecommerce_orders.db"}
+This executes directly against the real database (the join and the
+aggregation both happen there, not by loading every row into pandas), and
+its result becomes a normal dataframe any later dependent step can build on.
+If no "### Related Tables" section is present, there is only one table —
+do not fabricate a join.
+
 ## Tool parameter contracts (exact — extra/misspelled keys will raise an error)
 
-- "sql_query": either {"query": "<raw SQL, table name is 'data'>"} OR
-  {"select_columns"|"columns": [str], "group_by": str|[str], "order_by": str,
-  "limit": int} — every bare column name referenced must be in Available
-  Columns (SQL expressions like "AVG(unit_price - cost) AS margin" are fine
-  inside select_columns).
+- "sql_query": either {"query": "<raw SQL — table name is 'data' unless
+  joining, see Cross-table joins above>", "connection_string": str
+  (optional, required for a cross-table join)} OR {"select_columns"|
+  "columns": [str], "group_by": str|[str], "order_by": str, "limit": int}
+  (single-table fallback builder, no "connection_string") — every bare
+  column name referenced must be in Available Columns (SQL expressions
+  like "AVG(unit_price - cost) AS margin" are fine inside select_columns).
 - "pandas_transform": {"operation": "groupby", "group_by": str|[str],
   "agg_col": str, "agg_func": "sum"|"mean"|"count"|"median"|"min"|"max"|"std",
   "sort_desc": bool} OR {"operation": "pivot", "index": str, "columns": str,

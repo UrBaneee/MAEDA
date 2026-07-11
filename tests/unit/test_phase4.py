@@ -23,6 +23,7 @@ from src.tools.data_connector import (
     connect_sql,
     extract_schema,
     generate_nl_summary,
+    list_related_tables,
 )
 from src.tools.source_registry import SourceRegistry, _infer_name
 
@@ -88,6 +89,19 @@ def sqlite_db(tmp_path):
     conn.execute("CREATE TABLE customers (id INTEGER, name TEXT, spend REAL)")
     conn.execute("INSERT INTO customers VALUES (1,'Alice',500.0)")
     conn.execute("INSERT INTO customers VALUES (2,'Bob',300.0)")
+    conn.commit()
+    conn.close()
+    return str(db_path), f"sqlite:///{db_path}"
+
+
+@pytest.fixture
+def multi_table_sqlite_db(tmp_path):
+    db_path = tmp_path / "multi.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("CREATE TABLE customers (customer_id INTEGER, name TEXT)")
+    conn.execute("CREATE TABLE orders (order_id INTEGER, customer_id INTEGER, revenue REAL)")
+    conn.execute("INSERT INTO customers VALUES (1, 'Alice')")
+    conn.execute("INSERT INTO orders VALUES (1, 1, 100.0)")
     conn.commit()
     conn.close()
     return str(db_path), f"sqlite:///{db_path}"
@@ -182,6 +196,25 @@ class TestSQLConnector:
         _, conn_str = sqlite_db
         with pytest.raises(Exception):
             connect_sql(conn_str, table_name="nonexistent_table")
+
+    def test_list_related_tables(self, multi_table_sqlite_db):
+        _, conn_str = multi_table_sqlite_db
+        tables = list_related_tables(conn_str)
+        assert set(tables.keys()) == {"customers", "orders"}
+        assert any(c.startswith("customer_id") for c in tables["customers"])
+        assert any(c.startswith("revenue") for c in tables["orders"])
+
+    def test_list_related_tables_excludes_active_table(self, multi_table_sqlite_db):
+        _, conn_str = multi_table_sqlite_db
+        tables = list_related_tables(conn_str, exclude_table="orders")
+        assert set(tables.keys()) == {"customers"}
+
+    def test_list_related_tables_no_data_loaded(self, multi_table_sqlite_db):
+        # Schema-only introspection — must not pull any rows into memory.
+        _, conn_str = multi_table_sqlite_db
+        tables = list_related_tables(conn_str)
+        assert isinstance(tables["orders"], list)
+        assert all(isinstance(c, str) for c in tables["orders"])
 
 
 # ─── 4.5 JSON / Excel connectors ─────────────────────────────────────────────

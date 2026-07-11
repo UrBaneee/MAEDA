@@ -218,6 +218,28 @@ def connect_sql(
     return df, table_name
 
 
+def list_related_tables(connection_string: str, exclude_table: Optional[str] = None) -> dict[str, list[str]]:
+    """
+    Enumerate every table in a SQL database and its column names/types —
+    schema only, no rows loaded (unlike connect_sql, which pulls a full
+    table into memory). Used to tell the Analysis Planner what else is
+    available for a cross-table JOIN beyond the single "active" table it
+    already has a preview of.
+    """
+    from sqlalchemy import create_engine, inspect
+
+    engine = create_engine(connection_string)
+    inspector = inspect(engine)
+    tables: dict[str, list[str]] = {}
+    for table_name in inspector.get_table_names():
+        if table_name == exclude_table:
+            continue
+        tables[table_name] = [
+            f"{col['name']} ({col['type']})" for col in inspector.get_columns(table_name)
+        ]
+    return tables
+
+
 # ─── NL Schema Summarizer ─────────────────────────────────────────────────────
 
 async def generate_nl_summary(schema: SchemaInfo, llm=None) -> str:
