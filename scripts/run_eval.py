@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -150,6 +151,18 @@ def main():
 
     if args.compare:
         _print_regressions(Path(args.compare), rows, overall)
+
+    # A safe_refusal (guardrail correctly blocking a bad output) is a normal,
+    # expected outcome for a golden suite run — it must not fail the script.
+    # A genuine pipeline_error (uncaught exception, auth failure, etc.) is
+    # not: this script previously always exited 0 regardless, so a CI step
+    # running it could go green even when every case actually crashed (as
+    # happened when the eval smoke case ran without a configured API key —
+    # it printed "401 AuthenticationError" and still exited success).
+    crashed = [r["test_case_id"] for r in rows if r["meta"]["error_type"] == "pipeline_error"]
+    if crashed:
+        print(f"\n{len(crashed)} case(s) hit a genuine pipeline error (not a safe refusal): {crashed}")
+        sys.exit(1)
 
 
 def _print_summary(rows, overall):
