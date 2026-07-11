@@ -52,12 +52,18 @@ and the natural continuation of the eval-first narrative.
    bugs (eval_report.md #13, #14) that empty ground truth had been hiding.
    Remaining gap: the exact-string-match scoring is brittle against
    thousands-separator formatting — see eval_report.md's known limitations.
-8. **LLM-judge reliability.** The same case scores inconsistently run to run
-   (`answer_relevance` swinging 0.5↔1.0), and the final baseline run had one
-   confirmed judge false-positive (flagged an already-verified-correct
-   forecast value as "fabricated"). Needs a judge model independent from the
-   agent being evaluated, multi-sample scoring, and a calibration check on the
-   judge itself.
+8. ✅ **Done (eval judge only) — LLM-judge reliability.** See
+   eval_report.md #17. The eval harness's judge now auto-resolves to a
+   provider/model independent from the agent being evaluated (prefers a
+   different provider if a real key exists, else a stronger same-provider
+   model), scores via 3-sample median instead of one call, and flags
+   high inter-sample disagreement in the reasoning text. Backed by a live
+   calibration test (`tests/integration/test_eval_judge_calibration.py`)
+   that checks the judge actually ranks grounded > fabricated reports.
+   Explicitly NOT done: the guardrail's own live pass/fail judge
+   (`guardrail_agent.py`) still uses the agent's model with a single
+   sample — deliberately deferred since it affects every live run's
+   cost/latency, not just eval runs.
 9. **Audit the remaining tools for the same silent-default pattern** fixed in
    `pandas_tool`/`sql_tool` this session — `statistical_tool` (silently drops
    requested columns that don't exist rather than erroring), `anomaly_tool`,

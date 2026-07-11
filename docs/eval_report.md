@@ -29,6 +29,7 @@ Each run scores all 20 golden cases (`tests/eval/test_suite.json`) with
 | `after_safe_refusal.json` | 0.80 | 2 / 20 | Phase A #11: `error_rate` no longer conflates safe refusals with crashes |
 | `phase_a_ground_truth.json` | 0.70 | 5 / 20 | `ground_truth` backfilled with real computed values (see Phase A below) — score drop reflects `factual_accuracy` finally checking something real, and immediately catching bugs #12 and one instance of #14 |
 | `phase_a_final.json` | 0.76 | 3 / 20 | Bugs 12–15 fixed |
+| `phase_a_judge_calibration.json` | 0.71 | 4 / 20 | Phase A #17: judge upgraded to a stronger, independent model + 3-sample median scoring — see below |
 
 **The score dropping from 0.71 to 0.67 is not a regression.** The initial 0.71
 was inflated by silent failures: guardrail's own severity mapping hardcoded
@@ -132,13 +133,18 @@ the data layer.
 **Fix:** `_select_aliases()` extracts `AS <name>` aliases from `select_columns` and excludes them from the missing-column check.
 **Verified:** A regression test confirms `ORDER BY` on a `select_columns` alias no longer raises; this was the actual step-1 failure blocking one of the E01 runs in #15's verification.
 
+### 17. Eval judge reused the agent's own (weaker) model, and a single sample
+**Root cause:** `_build_eval_llm()` ([src/eval/metrics.py](../src/eval/metrics.py)) used `settings.llm_model`/`settings.llm_provider` — the exact same model that generates the reports it's judging (self-preference risk), with one judge call per check. DEV_SPEC's own env-var spec originally called for a separate `EVAL_MODEL`, but it was never wired up. A single sample meant the same case could score `relevance=0.5` one run and `1.0` the next on an identical report.
+**Fix:** Added `settings.resolved_eval_provider`/`resolved_eval_model` ([src/config/settings.py](../src/config/settings.py)) — prefers a provider *different* from the agent's own if a real (non-placeholder) API key exists for it, else falls back to a stronger model on the same provider (`gpt-4o` vs. the agents' `gpt-4o-mini`). `score_relevance_and_groundedness()` now makes `EVAL_JUDGE_SAMPLES` (default 3) independent calls in parallel and aggregates by median; when the spread across samples is ≥0.3 it's appended to the reasoning text so disagreement is visible in the report, not silently averaged away.
+**Verified:** `tests/integration/test_eval_judge_calibration.py` makes real judge calls against three hand-written reports (grounded/on-topic, fabricated numbers, off-topic) — the upgraded judge correctly scores grounded high, fabricated low on groundedness, off-topic low on relevance, and ranks grounded strictly above fabricated. A live 20-case run flagged judge disagreement (spread ≥0.3) on 6/20 cases — variance that was previously invisible under single-sample scoring. Overall aggregate moved 0.76→0.71; this reflects the stronger judge being more critical and multi-sample scoring surfacing real disagreement, not a system regression (no code outside `metrics.py`/`settings.py` changed between these two runs).
+
 ## Known limitations (not yet fixed)
 
-- **`factual_accuracy` is still a brittle exact-match proxy.** Large numbers formatted with thousands separators (e.g. an LLM writing `$1,363,760.55`) won't match the raw ground-truth value `1363760.55` via the current regex-based extraction — several of the `0%` scores in `phase_a_final.json` are this, not a real analysis error. Needs a tolerant numeric-match (strip separators, allow rounding) rather than exact string equality.
+- **`factual_accuracy` is still a brittle exact-match proxy.** Large numbers formatted with thousands separators (e.g. an LLM writing `$1,363,760.55`) won't match the raw ground-truth value `1363760.55` via the current regex-based extraction — several of the `0%` scores are this, not a real analysis error. Needs a tolerant numeric-match (strip separators, allow rounding) rather than exact string equality.
 - **All runs so far are fallback-mode** (Data Cleaner + RAG-MCP-Server offline). The precision impact of the actual MCP integration is still unmeasured.
 - **`statistical_tool`/`anomaly_tool`/`comparison_tool` likely have the same silent-default pattern** fixed in `pandas_tool`/`sql_tool` (e.g. `compute_correlation` silently drops requested columns that don't exist rather than erroring) — not yet audited.
-- **LLM-judge variance**: the same case can score differently across runs (e.g. `relevance` swinging 0.5↔1.0), and the guardrail occasionally false-positives.
+- **The guardrail's own LLM-as-judge is untouched.** #17 only fixed the eval harness's judge (`src/eval/metrics.py`); `guardrail_agent.py`'s live pass/fail judge still uses the agent's own model with a single sample. Deliberately out of scope here — changing it affects every live pipeline run's latency/cost, not just eval runs, and the guardrail already has its own retry loop as a partial mitigation.
 - **4 golden cases are data mismatches** (D02, DG04, C03, P03 ask for data — order value by category via joins, customer LTV — that doesn't exist in the single-table demo datasets) and will never score well regardless of code quality.
 - **The `_select_input_dataframe` fix only handles single-parent chaining.** A step depending on multiple prior steps (`depends_on=[1, 2]`) gets the *last* listed dependency's dataframe, not a merge of both — there's no real multi-input join support yet (see roadmap #1).
 
-All reports referenced above are archived in `logs/eval_runs/`. 345 unit tests passed throughout this entire sequence of changes.
+All reports referenced above are archived in `logs/eval_runs/`. 348 unit tests (plus 4 live judge-calibration tests in `tests/integration/`) passed throughout this entire sequence of changes.
