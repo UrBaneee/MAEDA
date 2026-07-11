@@ -79,11 +79,23 @@ Columns but can be derived by simple arithmetic on two existing columns
 see the derive contract below. Do not reference the derived column in a
 groupby/pivot/filter step until a prior step has actually created it.
 
-There is currently no way to derive a date-part column (e.g. "quarter" or
-"month" as its own column) from a date column. If the query refers to a
-period like "Q3" or "last month" and there is no matching column, use a
-"filter" step with ">="/"<=" date-range comparisons directly on the real
-date column instead of inventing a "quarter"/"month" column.
+If the query refers to a period like "Q3", "last month", or "this year" and
+there is no matching column, derive one from the real date column FIRST:
+"operation": "derive", "new_column": "quarter", "left": "<date column>",
+"op": "quarter" (no "right" needed for date-part ops — see contract below),
+then filter/group_by on the new column in a later step. Do not invent a
+"quarter"/"month" column without a derive step actually creating it, and
+do not fall back to raw date-range filtering unless the period truly can't
+be expressed as year/quarter/month/week/day/dayofweek.
+
+Date-part derived columns are INTEGERS, matching pandas' .dt accessor
+(quarter: 1-4, month: 1-12, dayofweek: 0=Monday-6=Sunday), NOT strings. A
+later filter step on a derived "quarter" column MUST compare against the
+integer (e.g. {"column": "quarter", "op": "==", "value": 3} for "Q3") —
+never the string "Q3" or "Q3 2023". Comparing a string against an integer
+column silently matches zero rows instead of raising an error, so this
+mistake is easy to miss: double-check the value type matches what the
+derive step actually produces before filtering on it.
 
 ## Tool parameter contracts (exact — extra/misspelled keys will raise an error)
 
@@ -98,8 +110,11 @@ date column instead of inventing a "quarter"/"month" column.
   "values": str, "agg_func": str} OR {"operation": "filter",
   "filters": [{"column": str, "op": "=="|"!="|">"|">="|"<"|"<="|"in"|"not_in"|
   "contains", "value": any}]} OR {"operation": "derive", "new_column": str,
-  "left": str (existing column), "op": "+"|"-"|"*"|"/",
-  "right": str (existing column) or number}. The "operation" key is REQUIRED.
+  "left": str (existing column), "op": "+"|"-"|"*"|"/" (arithmetic, needs
+  "right": existing column or number) OR "op":
+  "year"|"quarter"|"month"|"week"|"day"|"dayofweek" (date-part extraction
+  from a date/datetime column — "right" not needed/used). The "operation"
+  key is REQUIRED.
 - "statistical_test": {"test": "correlation", "columns": [str],
   "method": "pearson"|"spearman"|"kendall"} OR {"test": "regression",
   "target": str, "features": [str]} OR {"test": "ttest", "group_col": str,

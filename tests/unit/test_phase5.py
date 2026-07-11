@@ -30,6 +30,7 @@ from src.tools.stats_tool import (
     compute_correlation,
     detect_anomalies_iqr,
     detect_anomalies_zscore,
+    pandas_derive,
     pandas_filter,
     pandas_groupby,
     pandas_pivot,
@@ -203,6 +204,82 @@ class TestPandasTools:
                              prior_results={})
         assert "result_summary" in result
         assert "groupby" in result["result_summary"]
+
+
+# ─── Derived columns (arithmetic + date-part) ─────────────────────────────────
+
+class TestDerive:
+    def test_derive_arithmetic_subtraction(self):
+        df = pd.DataFrame({"unit_price": [100.0, 50.0], "cost": [60.0, 20.0]})
+        result = pandas_derive(df, "margin", "unit_price", "-", "cost")
+        assert result["result_df"]["margin"].tolist() == [40.0, 30.0]
+
+    def test_derive_arithmetic_constant(self):
+        df = pd.DataFrame({"revenue": [100.0, 200.0]})
+        result = pandas_derive(df, "revenue_x2", "revenue", "*", 2)
+        assert result["result_df"]["revenue_x2"].tolist() == [200.0, 400.0]
+
+    def test_derive_quarter_from_date(self):
+        df = pd.DataFrame({"date": ["2023-01-15", "2023-04-01", "2023-07-20", "2023-10-05"]})
+        result = pandas_derive(df, "quarter", "date", "quarter")
+        assert result["result_df"]["quarter"].tolist() == [1, 2, 3, 4]
+
+    def test_derive_year_and_month_from_date(self):
+        df = pd.DataFrame({"date": ["2022-03-10", "2024-11-01"]})
+        year = pandas_derive(df, "year", "date", "year")
+        month = pandas_derive(df, "month", "date", "month")
+        assert year["result_df"]["year"].tolist() == [2022, 2024]
+        assert month["result_df"]["month"].tolist() == [3, 11]
+
+    def test_derive_unsupported_op_raises(self):
+        df = pd.DataFrame({"a": [1, 2]})
+        with pytest.raises(ValueError, match="unsupported op"):
+            pandas_derive(df, "b", "a", "modulo", 2)
+
+    def test_derive_date_part_unparseable_column_raises(self):
+        df = pd.DataFrame({"a": ["not", "a", "date"]})
+        with pytest.raises(ValueError, match="could not be parsed as dates"):
+            pandas_derive(df, "quarter", "a", "quarter")
+
+    def test_pandas_tool_derive_quarter_dispatcher(self):
+        df = pd.DataFrame({"date": ["2023-01-15", "2023-07-20"]})
+        result = pandas_tool(
+            df, {"operation": "derive", "new_column": "quarter", "left": "date", "op": "quarter"},
+            prior_results={},
+        )
+        assert result["result_df"]["quarter"].tolist() == [1, 3]
+
+    def test_pandas_tool_derive_quarter_does_not_require_right(self):
+        # Date-part ops are unary — "right" must not be a required parameter.
+        df = pd.DataFrame({"date": ["2023-01-15"]})
+        result = pandas_tool(
+            df, {"new_column": "quarter", "left": "date", "op": "quarter"},  # no "operation", no "right"
+            prior_results={},
+        )
+        assert result["result_df"]["quarter"].tolist() == [1]
+
+    def test_pandas_tool_derive_arithmetic_still_requires_right(self):
+        df = pd.DataFrame({"a": [1], "b": [2]})
+        with pytest.raises(ValueError, match="missing required parameter"):
+            pandas_tool(df, {"operation": "derive", "new_column": "c", "left": "a", "op": "+"}, {})
+
+    def test_derive_quarter_then_groupby_chain(self):
+        # The realistic two-step flow: derive quarter, then group revenue by it.
+        df = pd.DataFrame({
+            "date": ["2023-01-01", "2023-02-01", "2023-04-01", "2023-04-15"],
+            "revenue": [100.0, 200.0, 300.0, 400.0],
+        })
+        derived = pandas_tool(
+            df, {"operation": "derive", "new_column": "quarter", "left": "date", "op": "quarter"}, {},
+        )
+        grouped = pandas_tool(
+            derived["result_df"],
+            {"operation": "groupby", "group_by": ["quarter"], "agg_col": "revenue", "agg_func": "sum"},
+            {},
+        )
+        totals = {r["quarter"]: r["revenue"] for r in grouped["result"]}
+        assert totals[1] == 300.0
+        assert totals[2] == 700.0
 
 
 # ─── 5.4 Statistical tool ─────────────────────────────────────────────────────

@@ -405,29 +405,56 @@ _DERIVE_OPS = {
     "/": lambda a, b: a / b,
 }
 
+# Unary date-part extraction — operates on `left` alone, `right` is ignored.
+# This is the answer to "quarter"/"month" not existing as real columns: the
+# Planner derives it once (e.g. new_column="quarter", left="date",
+# op="quarter") instead of being told to work around it with date-range
+# filters, or — worse — referencing a "quarter" column that was never
+# created and getting a "column not found" failure.
+_DATE_PART_OPS = {
+    "year": lambda s: s.dt.year,
+    "quarter": lambda s: s.dt.quarter,
+    "month": lambda s: s.dt.month,
+    "week": lambda s: s.dt.isocalendar().week.astype(int),
+    "day": lambda s: s.dt.day,
+    "dayofweek": lambda s: s.dt.dayofweek,
+}
+
 
 def pandas_derive(
     df: pd.DataFrame,
     new_column: str,
     left: str,
     op: str,
-    right: "str | float | int",
+    right: "str | float | int | None" = None,
 ) -> dict:
     """
-    Compute a new column as a simple binary arithmetic expression over an
-    existing column and either another column or a constant, e.g.
-    new_column="margin", left="unit_price", op="-", right="cost".
+    Compute a new column. Two forms:
+      - Binary arithmetic over an existing column and either another column
+        or a constant, e.g. new_column="margin", left="unit_price", op="-",
+        right="cost".
+      - Unary date-part extraction from a date/datetime column, e.g.
+        new_column="quarter", left="date", op="quarter" (right ignored).
 
-    Deliberately restricted to +,-,*,/ between two operands (no eval() of
-    arbitrary expressions) — this is the only derived-column capability
-    the planner may rely on.
+    Deliberately restricted to this fixed set of operations (no eval() of
+    arbitrary expressions) — this is the only derived-column capability the
+    planner may rely on.
     """
-    if op not in _DERIVE_OPS:
-        raise ValueError(f"derive: unsupported op {op!r}, must be one of {sorted(_DERIVE_OPS)}")
-    left_series = df[left]
-    right_val = df[right] if isinstance(right, str) and right in df.columns else right
     result = df.copy()
-    result[new_column] = _DERIVE_OPS[op](left_series, right_val)
+    if op in _DATE_PART_OPS:
+        left_series = pd.to_datetime(df[left], errors="coerce")
+        if left_series.isna().all():
+            raise ValueError(f"derive: column {left!r} could not be parsed as dates")
+        result[new_column] = _DATE_PART_OPS[op](left_series)
+    elif op in _DERIVE_OPS:
+        left_series = df[left]
+        right_val = df[right] if isinstance(right, str) and right in df.columns else right
+        result[new_column] = _DERIVE_OPS[op](left_series, right_val)
+    else:
+        raise ValueError(
+            f"derive: unsupported op {op!r}, must be one of "
+            f"{sorted(_DERIVE_OPS)} (arithmetic) or {sorted(_DATE_PART_OPS)} (date part)"
+        )
     return {
         "result": result.to_dict(orient="records"),
         "result_df": result,
@@ -522,13 +549,18 @@ def pandas_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> dict
         )
 
     if op == "derive":
-        missing_keys = [k for k in ("new_column", "left", "op", "right") if k not in parameters]
+        # "right" is only required for binary arithmetic ops (+,-,*,/); date-
+        # part ops (year/quarter/month/...) are unary over "left" alone.
+        derive_op = parameters.get("op")
+        required = ("new_column", "left", "op") if derive_op in _DATE_PART_OPS else \
+                   ("new_column", "left", "op", "right")
+        missing_keys = [k for k in required if k not in parameters]
         if missing_keys:
             raise ValueError(f"derive: missing required parameter(s) {missing_keys}")
-        left, right = parameters["left"], parameters["right"]
+        left, right = parameters["left"], parameters.get("right")
         cols_to_check = [left] + ([right] if isinstance(right, str) else [])
         _require_columns(df, cols_to_check, "derive")
-        r = pandas_derive(df, parameters["new_column"], left, parameters["op"], right)
+        r = pandas_derive(df, parameters["new_column"], left, derive_op, right)
     elif op == "groupby":
         group_by = parameters.get("group_by")
         agg_col = parameters.get("agg_col")
