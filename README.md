@@ -35,7 +35,7 @@
 
 ### 1. Install
 ```bash
-git clone https://github.com/yourhandle/MAEDA.git
+git clone https://github.com/UrBaneee/MAEDA.git
 cd MAEDA
 pip install poetry && poetry install
 cp .env.example .env   # add your API key
@@ -107,7 +107,7 @@ src/
 ui/                 Streamlit app (Phase 11)
 scripts/            Demo data generator, demo scenarios
 tests/
-├── unit/           217+ tests, all phases covered
+├── unit/           331 tests, all phases covered
 └── eval/           Golden test suite JSON
 data/demo/          Sales, churn, marketing, ecommerce datasets
 ```
@@ -154,7 +154,8 @@ Final Report + Charts + Eval Scores
 
 ## Evaluation
 
-Every run is automatically scored:
+Every run is automatically scored against the 20-case golden suite via
+`scripts/run_eval.py`:
 
 | Metric | Method |
 |--------|--------|
@@ -171,12 +172,29 @@ Every run is automatically scored:
 
 Regression detection alerts on any metric drop > 5% vs baseline.
 
+### Baseline results (fallback mode — sub-systems offline)
+
+An eval-first debugging pass found and fixed 10 root-caused bugs — silent
+tool-parameter mismatches, a guardrail severity misclassification that let
+hallucinated reports through, and an ungrounded Planner/Insight Agent
+context that caused fabricated numbers. Each fix is documented with root
+cause, code location, and before/after verification in
+**[docs/eval_report.md](docs/eval_report.md)**.
+
+| Baseline | Aggregate score | Cases blocked by guardrail |
+|---|---|---|
+| Before fixes | 0.71 | 0 / 20 *(inflated — guardrail wasn't actually catching fabrication)* |
+| After guardrail severity fix | 0.67 | 7 / 20 *(score drop = guardrail correctly blocking hallucinated reports for the first time)* |
+| After all 10 fixes | 0.76 | 2 / 20 *(both benign — a completeness complaint and a judge false-positive)* |
+
+Full run history and archived reports: `logs/eval_runs/`.
+
 ---
 
 ## Tests
 
 ```bash
-pytest tests/unit/ -v          # 251 tests, all phases
+pytest tests/unit/ -v          # 331 tests, all phases
 pytest tests/unit/test_phase9.py -v   # eval module only
 ```
 
