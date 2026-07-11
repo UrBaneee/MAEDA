@@ -11,24 +11,32 @@ matter once a specific scenario is picked.
 
 This is the hardest ceiling today. Nothing else matters much until this moves.
 
-1. **Cross-table joins.** A query today only ever operates on one flat
-   DataFrame. ~20% of the golden suite (queries needing customer↔order↔product
-   joins) is structurally unanswerable. Real enterprise questions ("which
-   customer segment has the highest order value?") almost always need a join.
-   Requires exposing multi-table schema to the Planner and letting `sql_tool`
-   run real multi-table queries instead of loading one table into pandas.
-2. **Compute pushdown.** The whole table is currently read into pandas before
-   any aggregation happens. Fine at demo scale (5k–12k rows); falls over on a
-   real warehouse (millions of rows). Aggregation should push down to
-   SQL/warehouse execution; pandas should only touch the already-aggregated
-   result.
+1. ✅ **Done — cross-table joins.** See eval_report.md #22. The Planner now
+   sees a `### Related Tables` section (real table names, columns, and
+   connection string) for SQL-backed sources and can write a single
+   `sql_query` step with a raw JOIN executed directly against the database.
+   D02 ("average order value per product category") went from a structural
+   data mismatch to a real, correctly-joined, stable answer
+   (aggregate=0.91). C03 ("new vs returning customers") now executes a real
+   join too, but the data has no literal new/returning flag — the Planner
+   substitutes the closest available dimension (segment), so it stays a
+   partial (not structural) mismatch. Scoped to SQL sources only — CSV/JSON/
+   Excel have no "other tables" concept.
+2. ✅ **Done (for SQL sources) — compute pushdown.** See eval_report.md #22.
+   Fell out of #1 for free: once the Planner writes real SQL against the
+   real database via `connection_string`, the JOIN and the aggregation both
+   execute inside SQLite, not by loading every row into pandas first. Not a
+   separate mechanism — doesn't apply to flat CSV/JSON/Excel sources, which
+   have no external engine to push down to (see #3, still open, for
+   Postgres/warehouse-scale pushdown).
 3. **Real data source connectors.** Postgres is nominally P1 in DEV_SPEC but
    was never actually exercised. Needs Snowflake/BigQuery support, incremental
    pulls, connection pooling, and schema caching.
-4. **Date-part derivation.** Today's workaround is telling the Planner to use
-   date-range filters instead of a "quarter" column. The `derive` operation
-   should support extracting year/quarter/month directly — this is one of the
-   most common derived-column needs in analysis.
+4. ✅ **Done — date-part derivation.** See eval_report.md #21. `derive` now
+   supports unary date-part extraction (year/quarter/month/week/day/
+   dayofweek) via pandas' `.dt` accessor, not just binary arithmetic. DG01
+   ("why did revenue drop in Q3") now reliably derives quarter, filters,
+   and aggregates to the correct, ground-truth-matching total.
 5. **A semantic layer over schema.** Real production columns look like
    `cust_seg_cd`, not `customer_segment`. Without a mapping from column names
    to business meaning and metric definitions, Intent Parser and Planner
@@ -141,9 +149,12 @@ the safety net for every later change. #10 rolls into Phase B below; #11
 and #12 (retry-loop feedback, harder population-claim guardrail) are
 smaller Tier 2 items not bundled into a named phase — pick up opportunistically.
 
-**Phase B — Make "real data" actually work** (#1, #2, #4, #10): joins, pushdown,
-baseline B. Only after this does MAEDA earn the right to say "usable" instead
-of "demoable."
+**Phase B — Make "real data" actually work** (#1, #2, #4, #10): #1, #2, #4
+✅ done (joins, pushdown, date-part derivation — see eval_report.md
+#21–22). #10 (baseline B with MCP sub-systems online) remains — that's the
+one that actually answers this debugging pass's original question: how
+much of the precision problem came from sub-system coordination versus
+MAEDA's own bugs.
 
 **Phase C — Make it pleasant to use** (#13, #14, #17): streaming, multi-turn,
 async cleanup.
