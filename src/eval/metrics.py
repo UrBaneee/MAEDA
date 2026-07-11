@@ -25,8 +25,10 @@ System metrics (derived from state):
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import re
+import statistics
 import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Optional
@@ -63,20 +65,42 @@ def _label(score: float, warn: float = 0.6, fail: float = 0.4) -> str:
 # ─── LLM factory ─────────────────────────────────────────────────────────────
 
 def _build_eval_llm():
-    if settings.llm_provider == "anthropic":
+    """
+    The eval judge deliberately does NOT reuse settings.llm_provider/llm_model
+    (the agent pipeline's own model) — a judge sharing weights/training with
+    what it's scoring is a self-preference risk. resolved_eval_provider/
+    resolved_eval_model prefer a different provider (if a real key exists for
+    one) and a stronger model, falling back to the agent's own settings only
+    when nothing else is configured.
+    """
+    if settings.resolved_eval_provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
         return ChatAnthropic(
-            model=settings.llm_model, temperature=0.0,
+            model=settings.resolved_eval_model, temperature=0.0,
             max_tokens=256, api_key=settings.anthropic_api_key or "sk-no-key",
         )
     from langchain_openai import ChatOpenAI
     return ChatOpenAI(
-        model=settings.llm_model, temperature=0.0,
+        model=settings.resolved_eval_model, temperature=0.0,
         max_tokens=256, api_key=settings.openai_api_key or "sk-no-key",
     )
 
 
 # ─── 9.2 / 9.3 LLM-as-judge ─────────────────────────────────────────────────
+
+async def _judge_once(_llm, prompt: str) -> dict:
+    """Single judge call, returning the parsed {"answer_relevance", "groundedness", "reasoning"} dict."""
+    response = await _llm.ainvoke([
+        SystemMessage(content=EVAL_RELEVANCE_SYSTEM),
+        HumanMessage(content=prompt),
+    ])
+    raw = _parse_json(response.content.strip())
+    return {
+        "answer_relevance": float(raw.get("answer_relevance", 0.5)),
+        "groundedness": float(raw.get("groundedness", 0.5)),
+        "reasoning": raw.get("reasoning", ""),
+    }
+
 
 async def score_relevance_and_groundedness(
     query: str,
@@ -84,9 +108,18 @@ async def score_relevance_and_groundedness(
     analysis_results: list[dict],
     rag_context: list[dict],
     llm=None,
+    n_samples: Optional[int] = None,
 ) -> tuple[MetricScore, MetricScore]:
-    """Single LLM call that scores both answer_relevance and groundedness."""
+    """
+    Scores both answer_relevance and groundedness via n_samples independent
+    judge calls (default settings.eval_judge_samples), aggregated by median.
+    A single judge call is noisy enough that the same case can score 0.5 on
+    one run and 1.0 on the next; the median of several calls is far more
+    stable while still being cheap relative to the rest of the pipeline.
+    """
     _llm = llm or _build_eval_llm()
+    n = n_samples if n_samples is not None else settings.eval_judge_samples
+    n = max(1, n)
 
     findings = "; ".join(
         r.get("result_summary", "") for r in analysis_results if not r.get("failed")
@@ -104,14 +137,18 @@ async def score_relevance_and_groundedness(
     )
 
     try:
-        response = await _llm.ainvoke([
-            SystemMessage(content=EVAL_RELEVANCE_SYSTEM),
-            HumanMessage(content=prompt),
-        ])
-        raw = _parse_json(response.content.strip())
-        rel = float(raw.get("answer_relevance", 0.5))
-        gnd = float(raw.get("groundedness", 0.5))
-        reasoning = raw.get("reasoning", "")
+        samples = await asyncio.gather(*[_judge_once(_llm, prompt) for _ in range(n)])
+        rel = statistics.median(s["answer_relevance"] for s in samples)
+        gnd = statistics.median(s["groundedness"] for s in samples)
+        reasoning = samples[0]["reasoning"]
+        if n > 1:
+            rel_spread = max(s["answer_relevance"] for s in samples) - min(s["answer_relevance"] for s in samples)
+            gnd_spread = max(s["groundedness"] for s in samples) - min(s["groundedness"] for s in samples)
+            if rel_spread >= 0.3 or gnd_spread >= 0.3:
+                reasoning += (
+                    f" [judge disagreement across {n} samples: "
+                    f"relevance spread={rel_spread:.2f}, groundedness spread={gnd_spread:.2f}]"
+                )
         return (
             MetricScore("answer_relevance", rel, _label(rel), reasoning),
             MetricScore("groundedness", gnd, _label(gnd), reasoning),

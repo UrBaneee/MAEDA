@@ -54,6 +54,19 @@ class MAEDASettings(BaseSettings):
     eval_golden_suite: str = Field(
         default="./tests/eval/test_suite.json", alias="EVAL_GOLDEN_SUITE"
     )
+    # Explicit overrides for the eval judge model. Left unset by default so
+    # the judge can be resolved automatically (see resolved_eval_provider/
+    # resolved_eval_model below) — a judge sharing weights/training with the
+    # agent it's scoring is a self-preference risk, and DEV_SPEC originally
+    # called for a distinct EVAL_MODEL that was never actually wired up.
+    eval_llm_provider: Optional[Literal["openai", "anthropic"]] = Field(
+        default=None, alias="EVAL_LLM_PROVIDER"
+    )
+    eval_llm_model: Optional[str] = Field(default=None, alias="EVAL_MODEL")
+    # How many independent judge calls to make per relevance/groundedness
+    # check, aggregated by median. Mitigates single-sample judge variance
+    # (the same case scoring 0.5 one run and 1.0 the next).
+    eval_judge_samples: int = Field(default=3, alias="EVAL_JUDGE_SAMPLES")
 
     @field_validator("llm_temperature")
     @classmethod
@@ -65,6 +78,37 @@ class MAEDASettings(BaseSettings):
         if self.llm_provider == "openai":
             return bool(self.openai_api_key)
         return bool(self.anthropic_api_key)
+
+    @property
+    def resolved_eval_provider(self) -> str:
+        """
+        Prefer a provider *different* from the agent's own (llm_provider) so
+        the judge isn't scoring output from a sibling of itself — falls back
+        to the agent's provider if no usable key exists for the other one.
+        """
+        if self.eval_llm_provider:
+            return self.eval_llm_provider
+        other = "anthropic" if self.llm_provider == "openai" else "openai"
+        other_key = self.anthropic_api_key if other == "anthropic" else self.openai_api_key
+        if _looks_like_real_key(other_key):
+            return other
+        return self.llm_provider
+
+    @property
+    def resolved_eval_model(self) -> str:
+        """Default to a stronger model than the (typically cost-optimized) agent model."""
+        if self.eval_llm_model:
+            return self.eval_llm_model
+        return "claude-3-5-sonnet-20241022" if self.resolved_eval_provider == "anthropic" else "gpt-4o"
+
+
+def _looks_like_real_key(key: Optional[str]) -> bool:
+    """
+    Rejects unset keys and this project's own .env.example placeholder
+    convention (e.g. "sk-ant-...") — good enough to avoid silently trying to
+    call a provider with a key that was never actually filled in.
+    """
+    return bool(key) and not key.endswith("...")
 
 
 # Singleton — import this everywhere

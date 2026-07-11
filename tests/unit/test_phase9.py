@@ -248,6 +248,59 @@ def test_score_relevance_fallback_on_llm_error():
     assert rel.label == "warn"
 
 
+def _mock_judge_response(relevance, groundedness, reasoning="r"):
+    resp = MagicMock()
+    resp.content = json.dumps({
+        "answer_relevance": relevance, "groundedness": groundedness, "reasoning": reasoning,
+    })
+    resp.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
+    return resp
+
+
+def test_score_relevance_makes_n_samples_judge_calls():
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=_mock_judge_response(0.8, 0.8))
+
+    from src.eval.metrics import score_relevance_and_groundedness
+    asyncio.run(score_relevance_and_groundedness(
+        "q", "report", [], [], llm=mock_llm, n_samples=5,
+    ))
+    assert mock_llm.ainvoke.await_count == 5
+
+
+def test_score_relevance_aggregates_by_median_not_mean():
+    # Median of [0.2, 0.9, 0.9] is 0.9, not the mean (~0.67) — a single
+    # noisy low outlier shouldn't drag the score down as much as a mean would.
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _mock_judge_response(0.2, 0.2),
+        _mock_judge_response(0.9, 0.9),
+        _mock_judge_response(0.9, 0.9),
+    ])
+
+    from src.eval.metrics import score_relevance_and_groundedness
+    rel, gnd = asyncio.run(score_relevance_and_groundedness(
+        "q", "report", [], [], llm=mock_llm, n_samples=3,
+    ))
+    assert rel.score == 0.9
+    assert gnd.score == 0.9
+
+
+def test_score_relevance_flags_high_judge_disagreement():
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _mock_judge_response(0.1, 0.1),
+        _mock_judge_response(0.9, 0.9),
+        _mock_judge_response(0.5, 0.5),
+    ])
+
+    from src.eval.metrics import score_relevance_and_groundedness
+    rel, gnd = asyncio.run(score_relevance_and_groundedness(
+        "q", "report", [], [], llm=mock_llm, n_samples=3,
+    ))
+    assert "disagreement" in rel.reasoning
+
+
 # ─── 9.1 EvalRunner ──────────────────────────────────────────────────────────
 
 def test_eval_runner_scores_state():
