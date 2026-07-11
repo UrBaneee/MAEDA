@@ -41,13 +41,17 @@ This is the hardest ceiling today. Nothing else matters much until this moves.
 These are the loose ends this session's debugging pass explicitly left open,
 and the natural continuation of the eval-first narrative.
 
-6. **`safe_refusal` classification.** `error_rate` currently scores "guardrail
-   correctly blocked a fabricated report" identically to "the pipeline
-   crashed." Regression detection is noisy until these are split apart.
-7. **Backfill `ground_truth`.** All 20 golden cases have an empty
-   `ground_truth`, so `factual_accuracy` is still a number-overlap proxy, not
-   a real accuracy check. Compute real ground truth directly from the demo
-   datasets with pandas.
+6. ✅ **Done — `safe_refusal` classification.** See eval_report.md #11.
+   `error_rate` no longer scores a correctly-blocked fabricated report the
+   same as a pipeline crash; a separate informational `safe_refusal` metric
+   (excluded from the weighted aggregate) tracks refusal rate on its own.
+7. ✅ **Done — backfilled `ground_truth`.** See eval_report.md #12. All 16
+   answerable golden cases now have real values computed from
+   `data/demo/*`; the 4 unanswerable ones (data mismatch / predictive)
+   carry an explicit `"_note"` instead. This immediately caught two live
+   bugs (eval_report.md #13, #14) that empty ground truth had been hiding.
+   Remaining gap: the exact-string-match scoring is brittle against
+   thousands-separator formatting — see eval_report.md's known limitations.
 8. **LLM-judge reliability.** The same case scores inconsistently run to run
    (`answer_relevance` swinging 0.5↔1.0), and the final baseline run had one
    confirmed judge false-positive (flagged an already-verified-correct

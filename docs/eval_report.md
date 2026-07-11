@@ -26,6 +26,9 @@ Each run scores all 20 golden cases (`tests/eval/test_suite.json`) with
 | `after_all_fixes.json` | 0.77 | 2 / 20 | Bugs 4–6 fixed: Planner grounded in real columns, honest predictive boundary, derived columns |
 | `after_insight_fix.json` | 0.78 | 3 / 20 | Bug 7 fixed: Insight Agent sees real tool output instead of a one-line summary |
 | `final_baseline.json` | 0.76 | 2 / 20 | Bugs 8–10 fixed: anomaly/groupby data surfaced, filter op validated, evidence-level classification |
+| `after_safe_refusal.json` | 0.80 | 2 / 20 | Phase A #11: `error_rate` no longer conflates safe refusals with crashes |
+| `phase_a_ground_truth.json` | 0.70 | 5 / 20 | `ground_truth` backfilled with real computed values (see Phase A below) — score drop reflects `factual_accuracy` finally checking something real, and immediately catching bugs #12 and one instance of #14 |
+| `phase_a_final.json` | 0.76 | 3 / 20 | Bugs 12–15 fixed |
 
 **The score dropping from 0.71 to 0.67 is not a regression.** The initial 0.71
 was inflated by silent failures: guardrail's own severity mapping hardcoded
@@ -92,13 +95,50 @@ Each entry: root cause, fix location, how it was verified.
 **Fix:** `_format_findings()` now tags every successful step `[AGGREGATE]`, `[ROW-LEVEL SAMPLE]`, or `[UNKNOWN]` based on the tool/operation that produced it (groupby/pivot/statistical_test/anomaly_detection/time_series/comparison → aggregate; filter/derive → row-level). `INSIGHT_GENERATOR_SYSTEM` explicitly restricts group-level claims to `[AGGREGATE]`-tagged evidence and requires `[ROW-LEVEL SAMPLE]` data to be framed as an example, never a pattern. Failed steps are now included in the findings text (previously filtered out entirely) so the Insight Agent knows what wasn't answered instead of silently substituting something else.
 **Verified:** Re-running DG02 across two plan variations — one where the aggregate step failed (report now says "one customer... insufficient data to analyze churn factors" instead of a population claim) and one where a real `comparison` (ANOVA) step succeeded (report correctly cites "p-value of 0.0, test statistic of 32.8209").
 
+## Phase A — trustworthiness follow-ups (see [roadmap.md](roadmap.md))
+
+Continuation of the same debugging methodology, working through Phase A of
+the roadmap: make the eval numbers themselves trustworthy before touching
+the data layer.
+
+### 11. `error_rate` conflated safe refusals with crashes
+**Root cause:** [src/graph/nodes.py](../src/graph/nodes.py) `handle_error_node()` set `state["error"]` for two entirely different situations — guardrail exhausting retries on a genuinely bad output (a correct, safe refusal) and a real pipeline failure (no data source, unhandled exception) — with no way to tell them apart downstream.
+**Fix:** Added `state["error_type"]` (`"safe_refusal"` | `"pipeline_error"`), set based on whether `handle_error_node` was reached via the guardrail "fail" path. `score_system_metrics()` ([src/eval/metrics.py](../src/eval/metrics.py)) now only fails `error_rate` for genuine crashes, and reports a separate informational `safe_refusal` metric (weight 0 in the aggregate — see `_aggregate_score` in [src/eval/runner.py](../src/eval/runner.py)).
+**Verified:** A live run with 2 guardrail-blocked cases showed `error_rate=1.0 (pass)` + `safe_refusal=1.0` for both, instead of the old `error_rate=0.0 (fail)`; overall aggregate rose from 0.76 to 0.80 purely from this reclassification, with regression detection showing no false alarms.
+
+### 12. `ground_truth` was empty for all 20 golden cases
+**Root cause:** `tests/eval/test_suite.json` shipped with `"ground_truth": {}` everywhere, so `factual_accuracy` always fell back to a loose number-overlap heuristic (or an automatic 0.8 "no numbers to check" pass) instead of checking against a real value.
+**Fix:** Computed real ground truth directly from `data/demo/*` with pandas for all 16 answerable cases (e.g. `north_region_revenue: 1363760.55`, `books_avg_margin: 217.83`); the 4 known data-mismatch/predictive cases (D02, DG04, C03, P03/P01/P02) carry an explicit `"_note"` explaining why instead. `src/eval/runner.py`'s `_builtin_golden_suite()` fallback mirrors the same values; a test asserts the two stay in sync.
+**Verified:** `factual_accuracy` now reports real overlap percentages ("Ground truth overlap: 67%") instead of the old heuristic messages. This single change is what surfaced bugs #13 and one instance of #14 below — both were invisible under the old empty-ground-truth scoring.
+
+### 13. SQL fallback builder: null `limit` and ambiguous `GROUP BY *`
+**Root cause A:** `{"limit": null}` in the Planner's JSON output becomes Python `None`; `parameters.get("limit", 100)` only applies its default when the key is *absent*, so an explicit `None` rendered as the literal (invalid) SQL text `LIMIT None`.
+**Root cause B:** A `group_by` with no `select_columns` had no earlier check, so a step whose parameters got stripped down by the retry-simplification logic could silently degrade into `SELECT * FROM data GROUP BY x` — valid but meaningless SQLite (one arbitrary row per group, not an aggregate). This is exactly how ground-truth backfill caught D01: the report confidently cited *per-transaction* revenue values as if they were the region-level `SUM(revenue)` totals the plan asked for.
+**Fix:** [src/tools/sql_tool.py](../src/tools/sql_tool.py) treats an explicit `None` limit the same as a missing one, and raises if `group_by` is given without `select_columns`.
+**Verified:** D01 now fails loudly at the tool level with a message naming exactly what's missing, and the report honestly states no data was available — instead of confidently citing wrong numbers.
+
+### 14. Insight/Viz Agents used a hardcoded non-zero temperature
+**Root cause:** Every other agent either hardcodes `temperature=0.0` or reads `settings.llm_temperature` (which defaults to 0.0); `insight_agent.py` and `viz_agent.py` hardcoded `0.3` and `0.2` respectively, bypassing the setting entirely. Replaying an identical prompt (real, non-empty, 100-row analysis result) against the Insight Agent's LLM reproduced both a correct 3-insight response and, on other calls, an empty `[]` — from the exact same input.
+**Fix:** Both agents now build their LLM with `temperature=settings.llm_temperature` like the rest of the pipeline.
+**Verified:** The same replay prompt at `temperature=0.0` produced consistent, grounded insights across 3 repeated calls (previously flaky at 0.3).
+
+### 15. `execute()` didn't respect `depends_on` when passing dataframes between steps
+**Root cause:** [src/agents/analysis_agent.py](../src/agents/analysis_agent.py) `execute()` kept one shared `df` variable, unconditionally reassigned after *every* step regardless of that step's declared `depends_on`. An independent step (`depends_on=[]`) — e.g. planning "revenue by region" and "units by product" as two unrelated facets of an "overview" query — would silently receive whatever column-reduced dataframe the *previous* step in plan order happened to leave behind, rather than the original dataset, and fail with a spurious "column not found."
+**Fix:** Track each step's output dataframe by step number (`result_dfs: dict[int, pd.DataFrame]`). A new `_select_input_dataframe()` gives independent steps the original full dataset and dependent steps the most recent declared dependency's output — actually implementing what the old code's comment ("rolling update for dependent steps") claimed it already did.
+**Verified:** A new regression test (`test_execute_independent_steps_each_get_original_dataframe`) constructs exactly this shape and fails without the fix. Live: E01 went from succeeding roughly 1 run in 4 to 4/4 clean runs with real insights.
+
+### 16. Fixing #13 introduced its own false positive: `ORDER BY` on a `SELECT`-defined alias
+**Root cause:** The column-existence check added for #13 validated `order_by` as a bare identifier against the dataframe's real columns — but `ORDER BY total_revenue` after `SELECT ..., SUM(revenue) AS total_revenue` is valid SQL referencing an alias defined earlier in the same query, not an original column. The validator rejected it as "not found."
+**Fix:** `_select_aliases()` extracts `AS <name>` aliases from `select_columns` and excludes them from the missing-column check.
+**Verified:** A regression test confirms `ORDER BY` on a `select_columns` alias no longer raises; this was the actual step-1 failure blocking one of the E01 runs in #15's verification.
+
 ## Known limitations (not yet fixed)
 
-- **`error_rate` can't distinguish a correct refusal from a crash.** Both score 0. A `safe_refusal` classification is needed before regression detection is trustworthy on its own.
-- **`factual_accuracy` is a weak proxy** (number-overlap heuristic) because all 20 golden cases have empty `ground_truth`. Needs real ground truth computed from the demo datasets.
+- **`factual_accuracy` is still a brittle exact-match proxy.** Large numbers formatted with thousands separators (e.g. an LLM writing `$1,363,760.55`) won't match the raw ground-truth value `1363760.55` via the current regex-based extraction — several of the `0%` scores in `phase_a_final.json` are this, not a real analysis error. Needs a tolerant numeric-match (strip separators, allow rounding) rather than exact string equality.
 - **All runs so far are fallback-mode** (Data Cleaner + RAG-MCP-Server offline). The precision impact of the actual MCP integration is still unmeasured.
 - **`statistical_tool`/`anomaly_tool`/`comparison_tool` likely have the same silent-default pattern** fixed in `pandas_tool`/`sql_tool` (e.g. `compute_correlation` silently drops requested columns that don't exist rather than erroring) — not yet audited.
-- **LLM-judge variance**: the same case can score differently across runs (e.g. `relevance` swinging 0.5↔1.0), and the guardrail occasionally false-positives (final run's P01 flagged an already-verified-correct forecast number as "fabricated").
+- **LLM-judge variance**: the same case can score differently across runs (e.g. `relevance` swinging 0.5↔1.0), and the guardrail occasionally false-positives.
 - **4 golden cases are data mismatches** (D02, DG04, C03, P03 ask for data — order value by category via joins, customer LTV — that doesn't exist in the single-table demo datasets) and will never score well regardless of code quality.
+- **The `_select_input_dataframe` fix only handles single-parent chaining.** A step depending on multiple prior steps (`depends_on=[1, 2]`) gets the *last* listed dependency's dataframe, not a merge of both — there's no real multi-input join support yet (see roadmap #1).
 
-All reports referenced above are archived in `logs/eval_runs/`. 331 unit tests passed throughout this entire sequence of changes.
+All reports referenced above are archived in `logs/eval_runs/`. 345 unit tests passed throughout this entire sequence of changes.
