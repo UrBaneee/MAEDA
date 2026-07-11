@@ -1,0 +1,104 @@
+# MAEDA Eval Report
+
+This is a record of an eval-first debugging pass: establish a baseline on the
+golden suite, find out why the score is what it is, fix root causes, and
+re-measure. All numbers below come from real `graph.invoke()` runs (fallback
+mode — both sub-system MCP servers offline), not unit tests with mocked LLMs.
+
+## How to reproduce
+
+```bash
+poetry run python scripts/run_eval.py                       # full 20-case suite
+poetry run python scripts/run_eval.py --limit 3              # smoke test
+poetry run python scripts/run_eval.py --case DG01 --case C04
+poetry run python scripts/run_eval.py --compare logs/eval_runs/baseline_fallback.json
+```
+
+Each run scores all 20 golden cases (`tests/eval/test_suite.json`) with
+`EvalRunner` and writes a timestamped report to `logs/eval_runs/`.
+
+## Baseline timeline
+
+| Report | Overall aggregate | Cases blocked by guardrail | What changed |
+|---|---|---|---|
+| `baseline_fallback.json` | 0.71 | 0 / 20 | Starting point — no fixes applied |
+| `after_fixes.json` | 0.67 | 7 / 20 | Bugs 1–3 fixed: guardrail starts correctly catching fabrication it previously waved through |
+| `after_all_fixes.json` | 0.77 | 2 / 20 | Bugs 4–6 fixed: Planner grounded in real columns, honest predictive boundary, derived columns |
+| `after_insight_fix.json` | 0.78 | 3 / 20 | Bug 7 fixed: Insight Agent sees real tool output instead of a one-line summary |
+| `final_baseline.json` | 0.76 | 2 / 20 | Bugs 8–10 fixed: anomaly/groupby data surfaced, filter op validated, evidence-level classification |
+
+**The score dropping from 0.71 to 0.67 is not a regression.** The initial 0.71
+was inflated by silent failures: guardrail's own severity mapping hardcoded
+hallucination to "warning" (never blocking), so fabricated reports were
+delivered and scored by lenient proxy metrics. Once guardrail started
+correctly blocking those reports, `error_rate` — which cannot distinguish "the
+pipeline correctly refused a fabricated answer" from "the pipeline crashed" —
+penalized both identically. The subsequent climb to 0.76–0.78 reflects real
+quality improvement: by the final run, only 2/20 cases are blocked, and both
+are benign (one completeness complaint, one guardrail false-positive on an
+already-verified-correct forecast number) rather than genuine fabrication.
+
+## Bugs found and fixed
+
+Each entry: root cause, fix location, how it was verified.
+
+### 1. `pandas_tool` silently defaulted on parameter mismatch
+**Root cause:** `pandas_transform` dispatched on `parameters.get("operation", "groupby")`. When the Planner's step parameters didn't include an `"operation"` key (which was most of the time — the Planner used semantically-named keys like `filter_column`, `current_quarter`, `target_columns` that don't match the tool's contract), every step silently fell into the "groupby" branch with heuristically-guessed columns, ignoring the step's actual intent. Only steps that happened to pass a real column name under a recognized key (`group_by`) surfaced as a hard `KeyError`.
+**Fix:** [src/tools/stats_tool.py](../src/tools/stats_tool.py) — `_infer_operation()` only recognizes an explicit `operation` key or a known key for that operation; unrecognized parameter sets raise `ValueError` instead of defaulting. `_require_columns()` validates every referenced column exists.
+**Verified:** DG01/C01/C04 steps that previously produced identical, wrong default output now fail loudly with a message naming the exact bad parameter/column.
+
+### 2. `sql_tool` fallback query builder had the same disease
+**Root cause:** When no raw `query` was given, the builder silently ignored unrecognized keys (e.g. `"aggregate"`, `"table"` instead of `"table_name"`) and built a degraded `SELECT * ... LIMIT 100` that dropped the intended aggregation.
+**Fix:** [src/tools/sql_tool.py](../src/tools/sql_tool.py) — `_SQL_BUILDER_KEYS` whitelist raises on unrecognized keys; referenced columns are validated against the dataframe. Column validation only applies to bare identifiers (`_is_bare_identifier`), so legitimate SQL expressions like `"AVG(unit_price - cost) AS margin"` in `select_columns` aren't rejected — this was a self-inflicted false-positive caught during verification and fixed the same day.
+**Verified:** C01/C04 SQL steps now fail clearly instead of silently degrading; the fixed version still executes a valid aggregate query with expressions in `select_columns`.
+
+### 3. Guardrail hardcoded hallucination to "warning" severity
+**Root cause:** [src/agents/guardrail_agent.py](../src/agents/guardrail_agent.py) `_parse_llm_checks()` only escalated `pii`/`safety`-named checks to `critical`; hallucination/fabrication findings were always `warning` (caveat + deliver), contradicting DEV_SPEC's own failure-handling table ("Critical fail (hallucination): Block output, retry"). A pre-existing unit test (`test_llm_judge_flags_hallucination`) explicitly asserted the warning behavior with a comment noting it was a deliberate prior change — not an oversight, but still spec-violating.
+**Fix:** Added `_CRITICAL_CHECK_KEYWORDS` (`hallucin`, `fabricat`, `claim_ground`, `grounding`, plus existing `pii`/`safety`) so these checks escalate to critical and correctly trigger the retry/fail path. Updated the test to assert the spec-correct behavior.
+**Verified:** A direct test constructing a failed "Hallucination" check now produces `overall_verdict="retry"` via `_aggregate()`. In the DG01 case that originally exposed this, the guardrail's own findings (fabricated Q3/Q4 comparison) had been correctly identified but not acted on; after the fix, equivalent fabrication is blocked.
+
+### 4. Analysis Planner never saw real column names
+**Root cause:** [src/agents/analysis_agent.py](../src/agents/analysis_agent.py) `plan()` only passed `state["schema_summary"]` (an LLM-generated prose paragraph) to the Planner — never the actual column list. The Planner had to guess/paraphrase identifiers from prose, producing plausible-but-wrong names (`category`→`product_category`, `channel`→`marketing_channel`, `tenure_months`→`"tenure in months"`).
+**Fix:** Added `_column_manifest()` which renders `state["active_source"]["schema"]["columns"]` (name + dtype) and injects it as an "### Available Columns" section, explicitly marked authoritative. `ANALYSIS_PLANNER_SYSTEM` ([src/config/agent_prompts.py](../src/config/agent_prompts.py)) now instructs the Planner to use these names verbatim and never invent one.
+**Verified:** Re-running C04/DG04/D05 after the fix showed correct real column names (`category`, `unit_price`, `cost`, `tenure_months`, `order_date`, etc.) in every generated plan across multiple regenerations.
+
+### 5. Predictive queries always invented a nonexistent ML pipeline
+**Root cause:** MAEDA has no model-training capability, but nothing told the Planner that. For every "predictive" query it planned a `feature_engineering → train_test_split → model_training → model_evaluation → forecast` sequence with no corresponding tool implementation — 100% failure rate on this query type (P01–P03, 15% of the golden suite).
+**Fix:** Extended `analyze_time_series()` ([src/tools/stats_tool.py](../src/tools/stats_tool.py)) with a `forecast_periods` parameter that extrapolates the already-computed linear trend (slope/intercept), returning predicted values plus an explicit caveat that this is a naive extrapolation, not a trained model. `ANALYSIS_PLANNER_SYSTEM` now states plainly that no ML training exists and predictive queries must use `time_series` + `forecast_periods`.
+**Verified:** P02 now plans a single honest `time_series` step with `forecast_periods=30` instead of a 5-step fake ML pipeline.
+
+### 6. No way to compute a derived column before aggregating on it
+**Root cause:** Queries like "which product categories have the highest margin" require `margin = unit_price - cost` before grouping by category — a two-step reasoning chain the tool set didn't support at all.
+**Fix:** Added a `"derive"` operation to `pandas_tool` ([src/tools/stats_tool.py](../src/tools/stats_tool.py)) supporting `+`,`-`,`*`,`/` between two columns or a column and a constant (deliberately not a general `eval()` — no arbitrary expressions). Documented in the Planner's tool contract with an explicit instruction to derive before referencing.
+**Verified:** C04 now reliably plans `derive(margin = unit_price - cost) → groupby(category, mean(margin))` and produces correct, verifiable output (Books highest at 217.83, Office Supplies lowest at 43.67 — checked against the raw data by hand).
+
+### 7. Insight Agent only saw a one-line summary, not real tool output
+**Root cause:** `_format_findings()` ([src/agents/insight_agent.py](../src/agents/insight_agent.py)) passed only `result_summary` to the Insight Agent — a terse paraphrase that dropped the actual forecast values, trend statistics, and tool-emitted caveats living in the full `result` dict. With nothing concrete to cite, the LLM invented plausible-sounding numbers (a fabricated "85% confidence level" appeared in both P01 and P02, unconnected to anything in the data).
+**Fix:** Added `_extract_result_detail()` to surface `trend`, `forecast` (with caveat), `significance_test`, and a bounded generic fallback into the findings text. Strengthened `INSIGHT_GENERATOR_SYSTEM`/`REPORT_WRITER_SYSTEM` to forbid stating any number not present in the findings, and to require carrying tool caveats forward verbatim.
+**Verified:** P01 aggregate score 0.85→0.99, P02 0.83→0.87. Both reports now cite the real predicted value and the "naive linear extrapolation, not a trained model" caveat, with confidence scores (0.3–0.4) explicitly justified by low r².
+
+### 8. `_extract_result_detail` didn't cover anomaly detection or groupby/filter results
+**Root cause:** The fix in #7 only special-cased `trend`/`forecast`/`caveat`/`significance_test` keys. Anomaly detection results (`n_outliers`, `outlier_values`) had no special case and only survived via a generic "<400 chars, dump verbatim" fallback — anything larger was silently dropped. List-shaped results (groupby/filter/sql — the majority of steps) hit `isinstance(result, dict)` and returned empty immediately.
+**Fix:** Added explicit handling for list results (bounded row sample) and anomaly-shaped dicts (`n_outliers`, `outlier_pct`, sample `outlier_values`). The generic fallback now truncates instead of silently dropping when over the length threshold.
+**Verified:** E02 (anomaly detection) and E03 (customer purchasing patterns, groupby-heavy) both went from guardrail-blocked (fabricated outlier/date claims) to clean, correctly-grounded reports.
+
+### 9. `pandas_filter` silently no-opped on unrecognized operators
+**Root cause:** The Planner used `"op": "="` (single equals); `pandas_filter`'s if/elif chain only matches `"=="` and has no `else`, so the condition was silently skipped and the "filtered" dataframe stayed unfiltered — discovered while investigating DG02's "last month" filter, which returned all 5,000 rows instead of a filtered subset.
+**Fix:** Replaced the if/elif chain with an `_FILTER_OPS` dict lookup that raises `ValueError` for any unrecognized operator.
+**Verified:** Unrecognized ops now fail the step (caught by the existing retry/failure path) instead of silently returning unfiltered data. Column-existence behavior for `pandas_filter` itself was left untouched — that's validated one layer up by `pandas_tool`, and an existing test intentionally covers the direct-call case.
+
+### 10. Insight Agent generalized single sample rows into population claims
+**Root cause:** When an aggregate step failed, the Insight Agent still had access to raw preview rows from an earlier successful filter/derive step (which include real column values for a handful of individual records). It would cite one customer's plan type or one product's price as if it were evidence of a group-wide pattern ("churned customers are more likely to be on the Premium plan") — not fabricating numbers, but treating an anecdote as a statistic.
+**Fix:** `_format_findings()` now tags every successful step `[AGGREGATE]`, `[ROW-LEVEL SAMPLE]`, or `[UNKNOWN]` based on the tool/operation that produced it (groupby/pivot/statistical_test/anomaly_detection/time_series/comparison → aggregate; filter/derive → row-level). `INSIGHT_GENERATOR_SYSTEM` explicitly restricts group-level claims to `[AGGREGATE]`-tagged evidence and requires `[ROW-LEVEL SAMPLE]` data to be framed as an example, never a pattern. Failed steps are now included in the findings text (previously filtered out entirely) so the Insight Agent knows what wasn't answered instead of silently substituting something else.
+**Verified:** Re-running DG02 across two plan variations — one where the aggregate step failed (report now says "one customer... insufficient data to analyze churn factors" instead of a population claim) and one where a real `comparison` (ANOVA) step succeeded (report correctly cites "p-value of 0.0, test statistic of 32.8209").
+
+## Known limitations (not yet fixed)
+
+- **`error_rate` can't distinguish a correct refusal from a crash.** Both score 0. A `safe_refusal` classification is needed before regression detection is trustworthy on its own.
+- **`factual_accuracy` is a weak proxy** (number-overlap heuristic) because all 20 golden cases have empty `ground_truth`. Needs real ground truth computed from the demo datasets.
+- **All runs so far are fallback-mode** (Data Cleaner + RAG-MCP-Server offline). The precision impact of the actual MCP integration is still unmeasured.
+- **`statistical_tool`/`anomaly_tool`/`comparison_tool` likely have the same silent-default pattern** fixed in `pandas_tool`/`sql_tool` (e.g. `compute_correlation` silently drops requested columns that don't exist rather than erroring) — not yet audited.
+- **LLM-judge variance**: the same case can score differently across runs (e.g. `relevance` swinging 0.5↔1.0), and the guardrail occasionally false-positives (final run's P01 flagged an already-verified-correct forecast number as "fabricated").
+- **4 golden cases are data mismatches** (D02, DG04, C03, P03 ask for data — order value by category via joins, customer LTV — that doesn't exist in the single-table demo datasets) and will never score well regardless of code quality.
+
+All reports referenced above are archived in `logs/eval_runs/`. 331 unit tests passed throughout this entire sequence of changes.

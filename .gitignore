@@ -1,0 +1,37 @@
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+
+# Caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS
+.DS_Store
+
+# Runtime logs (eval reports under logs/eval_runs/ are intentionally kept)
+logs/*.log
+logs/maeda.log
+
+# Large / real user-uploaded data — not synthetic demo data, don't publish
+data/uploads/
+
+# Streamlit
+.streamlit/
+
+# Charts generated at runtime
+data/charts/

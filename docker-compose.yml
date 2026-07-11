@@ -1,0 +1,88 @@
+version: "3.9"
+
+# MAEDA Ecosystem — start everything with:  docker-compose up
+#
+# Services:
+#   maeda          — MAEDA Streamlit UI (this project)
+#   data-cleaner   — Agentic Data Cleaner MCP server (Project 1)
+#   rag-server     — RAG-MCP-Server (Project 2)
+
+services:
+
+  # ── MAEDA (this project) ───────────────────────────────────────────────────
+  maeda:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"    # Streamlit UI
+      - "8000:8000"    # MAEDA MCP server (optional)
+    environment:
+      - MAEDA_LLM_PROVIDER=${MAEDA_LLM_PROVIDER:-openai}
+      - MAEDA_LLM_MODEL=${MAEDA_LLM_MODEL:-gpt-4o-mini}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATA_CLEANER_MCP_URL=http://data-cleaner:8001
+      - RAG_SERVER_MCP_URL=http://rag-server:8002
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - data-cleaner
+      - rag-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Agentic Data Cleaner (Project 1) ───────────────────────────────────────
+  data-cleaner:
+    image: maeda-ecosystem/data-cleaner:latest   # built from Project 1
+    # For local dev without the image, comment above and uncomment:
+    # build:
+    #   context: ../agentic-data-cleaner
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    # If the image isn't available, MAEDA falls back to built-in profiling
+    profiles:
+      - full-ecosystem
+
+  # ── RAG-MCP-Server (Project 2) ─────────────────────────────────────────────
+  rag-server:
+    image: maeda-ecosystem/rag-mcp-server:latest  # built from Project 2
+    # For local dev without the image, comment above and uncomment:
+    # build:
+    #   context: ../rag-mcp-server
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - LOG_LEVEL=INFO
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./data/knowledge_base:/knowledge_base:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - full-ecosystem
+
+# ── Standalone mode (MAEDA only, no sub-systems) ───────────────────────────
+# docker-compose up maeda
+#
+# Full ecosystem mode (requires sub-system images):
+# docker-compose --profile full-ecosystem up

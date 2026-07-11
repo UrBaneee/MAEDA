@@ -1,0 +1,231 @@
+[
+  {
+    "id": "D01",
+    "query": "Show total sales by region",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "sales"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "D02",
+    "query": "What is the average order value per product category?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "order_value"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "D03",
+    "query": "How many customers do we have per country?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "customers"
+    ],
+    "expected_dimensions": [
+      "country"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "D04",
+    "query": "What are the top 10 products by revenue?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "D05",
+    "query": "Show monthly order volume for the last 12 months",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "orders"
+    ],
+    "expected_dimensions": [
+      "month"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "DG01",
+    "query": "Why did revenue drop in Q3?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "DG02",
+    "query": "What caused the spike in customer churn last month?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "month"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "DG03",
+    "query": "Why is the North region underperforming?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "sales"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "DG04",
+    "query": "What factors correlate with high customer lifetime value?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "ltv"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {}
+  },
+  {
+    "id": "C01",
+    "query": "Compare sales performance across Q1, Q2, Q3, Q4",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "sales"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "C02",
+    "query": "How does conversion rate differ by marketing channel?",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "conversion_rate"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "C03",
+    "query": "Compare average order value between new and returning customers",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "order_value"
+    ],
+    "expected_dimensions": [
+      "customer_type"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "C04",
+    "query": "Which product categories have the highest and lowest margins?",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "margin"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "P01",
+    "query": "What will revenue look like next quarter based on current trends?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "P02",
+    "query": "Forecast customer churn for the next 30 days",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "day"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "P03",
+    "query": "Which customers are most likely to upgrade their plan?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "upgrade_probability"
+    ],
+    "expected_dimensions": [
+      "customer"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "E01",
+    "query": "Give me an overview of this dataset",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [],
+    "ground_truth": {}
+  },
+  {
+    "id": "E02",
+    "query": "Are there any anomalies or outliers in the sales data?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "sales"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {}
+  },
+  {
+    "id": "E03",
+    "query": "What patterns exist in customer purchasing behavior?",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [
+      "customer"
+    ],
+    "ground_truth": {}
+  },
+  {
+    "id": "E04",
+    "query": "Explore the relationship between marketing spend and revenue",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "revenue",
+      "marketing_spend"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {}
+  }
+]

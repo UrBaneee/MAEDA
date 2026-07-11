@@ -1,0 +1,1354 @@
+Running eval harness on 20 golden case(s)...
+
+  [D01] 'Show total sales by region' ... [32m[18:15:16] INFO    [0m maeda.nodes — Node: parse_intent | query=Show total sales by region
+[32m[18:15:18] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:15:18] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[18:15:22] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:15:22] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:15:24] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:15:24] WARNING [0m maeda.agent.analysis — Step 1 (sql_query) attempt 1 failed: sql_query: column(s) ['total_sales'] not found in dataframe. Available columns: ['date', 'region', 'product', 'channel', 'revenue', 'units', 'rep_id']
+[32m[18:15:24] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:15:26] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:15:28] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:15:28] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:15:41] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:15:44] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:15:46] INFO    [0m maeda.eval.runner — Eval run=2f88f570 aggregate=0.94 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.45
+[32m[18:15:47] INFO    [0m maeda.eval.runner — Eval run=D01 aggregate=0.97 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.75
+aggregate=0.97 [fallback]
+  [D02] 'What is the average order value per product category?' ... [32m[18:15:47] INFO    [0m maeda.nodes — Node: parse_intent | query=What is the average order value per product category?
+Task exception was never retrieved
+future: <Task finished name='Task-82' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:15:49] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:15:49] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=100 cols=5
+Task exception was never retrieved
+future: <Task finished name='Task-89' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[33m[18:15:52] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:15:52] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:15:55] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:15:55] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:15:56] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:15:58] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:15:58] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:16:11] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:16:16] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:16:17] INFO    [0m maeda.eval.runner — Eval run=257f50e3 aggregate=0.80 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=0.00 intent_accuracy=0.45
+Task exception was never retrieved
+future: <Task finished name='Task-158' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:16:19] INFO    [0m maeda.eval.runner — Eval run=D02 aggregate=0.83 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=0.00 intent_accuracy=0.75
+aggregate=0.83 [DATA MISMATCH, fallback]
+  [D03] 'How many customers do we have per country?' ... [32m[18:16:19] INFO    [0m maeda.nodes — Node: parse_intent | query=How many customers do we have per country?
+[32m[18:16:21] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:16:21] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=1000 cols=6
+[33m[18:16:24] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:16:24] INFO    [0m maeda.nodes — Node: plan_analysis
+Task exception was never retrieved
+future: <Task finished name='Task-186' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:16:26] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:16:26] INFO    [0m maeda.nodes — Node: generate_viz
+Task exception was never retrieved
+future: <Task finished name='Task-196' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:16:40] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:16:41] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:16:41] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:16:51] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:16:55] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:16:55] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:16:56] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:16:58] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:16:58] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:17:08] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:17:11] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:17:13] INFO    [0m maeda.eval.runner — Eval run=71bcfe38 aggregate=0.94 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.45
+[32m[18:17:14] INFO    [0m maeda.eval.runner — Eval run=D03 aggregate=0.97 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.75
+aggregate=0.97 [fallback]
+  [D04] 'What are the top 10 products by revenue?' ... [32m[18:17:14] INFO    [0m maeda.nodes — Node: parse_intent | query=What are the top 10 products by revenue?
+[32m[18:17:16] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:17:16] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[18:17:49] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:17:49] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:17:52] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:17:52] WARNING [0m maeda.agent.analysis — Step 1 (sql_query) attempt 1 failed: sql_query: column(s) ['total_revenue'] not found in dataframe. Available columns: ['date', 'region', 'product', 'channel', 'revenue', 'units', 'rep_id']
+[32m[18:17:52] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:17:53] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:17:55] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:17:55] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:18:08] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:18:12] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:18:14] INFO    [0m maeda.eval.runner — Eval run=2a1dfde0 aggregate=0.79 | answer_relevance=0.50 groundedness=1.00 factual_accuracy=0.67 intent_accuracy=0.45
+[32m[18:18:15] INFO    [0m maeda.eval.runner — Eval run=D04 aggregate=0.83 | answer_relevance=0.50 groundedness=1.00 factual_accuracy=0.67 intent_accuracy=0.95
+aggregate=0.83 [fallback]
+  [D05] 'Show monthly order volume for the last 12 months' ... [32m[18:18:15] INFO    [0m maeda.nodes — Node: parse_intent | query=Show monthly order volume for the last 12 months
+Task exception was never retrieved
+future: <Task finished name='Task-363' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:18:17] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:18:17] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=10000 cols=7
+Task exception was never retrieved
+future: <Task finished name='Task-370' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[33m[18:18:21] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:18:21] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:18:25] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:18:25] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:18:32] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:18:34] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:18:34] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:18:44] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:18:47] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:18:49] INFO    [0m maeda.eval.runner — Eval run=2d18bc28 aggregate=0.64 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.36 intent_accuracy=0.45
+Task exception was never retrieved
+future: <Task finished name='Task-441' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:18:51] INFO    [0m maeda.eval.runner — Eval run=D05 aggregate=0.67 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.36 intent_accuracy=0.75
+aggregate=0.67 [fallback]
+  [DG01] 'Why did revenue drop in Q3?' ... [32m[18:18:51] INFO    [0m maeda.nodes — Node: parse_intent | query=Why did revenue drop in Q3?
+[32m[18:18:53] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:18:53] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[18:18:58] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:18:58] INFO    [0m maeda.nodes — Node: plan_analysis
+Task exception was never retrieved
+future: <Task finished name='Task-470' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:19:02] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:19:02] WARNING [0m maeda.agent.analysis — Step 2 (sql_query) attempt 1 failed: sql_query: column(s) ['quarter', 'total_revenue'] not found in dataframe. Available columns: ['date', 'region', 'product', 'channel', 'revenue', 'units', 'rep_id']
+[33m[18:19:02] WARNING [0m maeda.agent.analysis — Step 2 (sql_query) attempt 2 failed: sql_query: column(s) ['quarter'] not found in dataframe. Available columns: ['date', 'region', 'product', 'channel', 'revenue', 'units', 'rep_id']
+[32m[18:19:02] INFO    [0m maeda.nodes — Node: generate_viz
+Task exception was never retrieved
+future: <Task finished name='Task-480' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:19:04] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:19:05] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:19:05] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:19:15] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:19:18] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:19:20] INFO    [0m maeda.eval.runner — Eval run=9b112e7d aggregate=0.61 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.35 intent_accuracy=0.45
+Task exception was never retrieved
+future: <Task finished name='Task-524' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:19:22] INFO    [0m maeda.eval.runner — Eval run=DG01 aggregate=0.66 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.35 intent_accuracy=0.95
+aggregate=0.66 [fallback]
+  [DG02] 'What caused the spike in customer churn last month?' ... [32m[18:19:22] INFO    [0m maeda.nodes — Node: parse_intent | query=What caused the spike in customer churn last month?
+[32m[18:19:24] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:19:24] INFO    [0m maeda.tools.data_connector — Connected to data/demo/churn_data.csv | rows=5000 cols=8
+[33m[18:19:28] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:19:28] INFO    [0m maeda.nodes — Node: plan_analysis
+Task exception was never retrieved
+future: <Task finished name='Task-552' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:19:38] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:19:38] WARNING [0m maeda.agent.analysis — Step 4 (pandas_transform) attempt 1 failed: groupby: group_by: column(s) ['support_calls_last_90d'] not found in dataframe. Available columns: ['churned', 'customer_id']
+[33m[18:19:38] WARNING [0m maeda.agent.analysis — Step 4 (pandas_transform) attempt 2 failed: groupby: group_by: column(s) ['support_calls_last_90d'] not found in dataframe. Available columns: ['churned', 'customer_id']
+[33m[18:19:38] WARNING [0m maeda.agent.analysis — Step 5 (pandas_transform) attempt 1 failed: groupby: group_by: column(s) ['login_days_last_30d'] not found in dataframe. Available columns: ['churned', 'customer_id']
+[33m[18:19:38] WARNING [0m maeda.agent.analysis — Step 5 (pandas_transform) attempt 2 failed: groupby: group_by: column(s) ['login_days_last_30d'] not found in dataframe. Available columns: ['churned', 'customer_id']
+Task exception was never retrieved
+future: <Task finished name='Task-559' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:19:38] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[18:19:50] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+/Users/yintianyi/MAEDA/src/tools/chart_tool.py:309: RankWarning:
+
+Polyfit may be poorly conditioned
+
+/Users/yintianyi/MAEDA/src/tools/chart_tool.py:309: RankWarning:
+
+Polyfit may be poorly conditioned
+
+[32m[18:20:08] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:20:10] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:20:10] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:20:22] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:20:25] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:20:27] INFO    [0m maeda.eval.runner — Eval run=0dca94b2 aggregate=0.84 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=0.54 intent_accuracy=0.40
+Task exception was never retrieved
+future: <Task finished name='Task-612' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:20:29] INFO    [0m maeda.eval.runner — Eval run=DG02 aggregate=0.76 | answer_relevance=0.50 groundedness=1.00 factual_accuracy=0.54 intent_accuracy=0.70
+aggregate=0.76 [fallback]
+  [DG03] 'Why is the North region underperforming?' ... [32m[18:20:29] INFO    [0m maeda.nodes — Node: parse_intent | query=Why is the North region underperforming?
+[32m[18:20:31] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:20:31] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[18:20:34] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:20:34] INFO    [0m maeda.nodes — Node: plan_analysis
+Task exception was never retrieved
+future: <Task finished name='Task-640' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:20:40] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:20:40] WARNING [0m maeda.agent.analysis — Step 3 (pandas_transform) attempt 1 failed: groupby: agg_col: column(s) ['units'] not found in dataframe. Available columns: ['region', 'revenue']
+[33m[18:20:40] WARNING [0m maeda.agent.analysis — Step 3 (pandas_transform) attempt 2 failed: groupby: agg_col: column(s) ['units'] not found in dataframe. Available columns: ['region', 'revenue']
+[32m[18:20:40] INFO    [0m maeda.nodes — Node: generate_viz
+Task exception was never retrieved
+future: <Task finished name='Task-650' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:20:48] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:20:49] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:20:49] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:21:03] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:21:06] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:21:08] INFO    [0m maeda.eval.runner — Eval run=ab368f58 aggregate=0.40 | answer_relevance=0.00 groundedness=0.00 factual_accuracy=0.30 intent_accuracy=0.40
+Task exception was never retrieved
+future: <Task finished name='Task-697' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:21:10] INFO    [0m maeda.eval.runner — Eval run=DG03 aggregate=0.43 | answer_relevance=0.00 groundedness=0.00 factual_accuracy=0.30 intent_accuracy=0.70
+aggregate=0.43 [fallback]
+  [DG04] 'What factors correlate with high customer lifetime value?' ... [32m[18:21:10] INFO    [0m maeda.nodes — Node: parse_intent | query=What factors correlate with high customer lifetime value?
+[32m[18:21:13] INFO    [0m maeda.nodes — Node: ask_clarification
+[32m[18:21:13] INFO    [0m maeda.nodes — Node: parse_intent | query=What factors correlate with high customer lifetime value?
+[32m[18:21:16] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:21:16] INFO    [0m maeda.tools.data_connector — Connected to data/demo/churn_data.csv | rows=5000 cols=8
+[33m[18:21:49] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:21:49] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:21:55] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:21:55] INFO    [0m maeda.nodes — Node: generate_viz
+Task exception was never retrieved
+future: <Task finished name='Task-751' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:21:57] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:21:58] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:21:58] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:22:05] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:22:09] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:22:11] INFO    [0m maeda.eval.runner — Eval run=23b0e8d1 aggregate=0.69 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.80 intent_accuracy=0.30
+[32m[18:22:13] INFO    [0m maeda.eval.runner — Eval run=DG04 aggregate=0.71 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.80 intent_accuracy=0.60
+aggregate=0.71 [DATA MISMATCH, fallback]
+  [C01] 'Compare sales performance across Q1, Q2, Q3, Q4' ... [32m[18:22:13] INFO    [0m maeda.nodes — Node: parse_intent | query=Compare sales performance across Q1, Q2, Q3, Q4
+[32m[18:22:15] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:22:15] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[18:22:18] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:22:18] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:22:24] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:22:24] WARNING [0m maeda.agent.analysis — Step 2 (pandas_transform) attempt 1 failed: derive: unsupported op 'extract_quarter', must be one of ['*', '+', '-', '/']
+[33m[18:22:24] WARNING [0m maeda.agent.analysis — Step 2 (pandas_transform) attempt 2 failed: derive: missing required parameter(s) ['new_column', 'left', 'op', 'right']
+[33m[18:22:24] WARNING [0m maeda.agent.analysis — Step 3 (pandas_transform) attempt 1 failed: groupby: group_by: column(s) ['quarter'] not found in dataframe. Available columns: ['date', 'region', 'product', 'channel', 'revenue', 'units', 'rep_id']
+[33m[18:22:24] WARNING [0m maeda.agent.analysis — Step 3 (pandas_transform) attempt 2 failed: groupby: group_by: column(s) ['quarter'] not found in dataframe. Available columns: ['date', 'region', 'product', 'channel', 'revenue', 'units', 'rep_id']
+[32m[18:22:24] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:22:30] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:22:32] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:22:32] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:22:43] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:22:47] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:22:49] INFO    [0m maeda.eval.runner — Eval run=d29b02a4 aggregate=0.58 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.22 intent_accuracy=0.45
+Task exception was never retrieved
+future: <Task finished name='Task-875' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:22:50] INFO    [0m maeda.eval.runner — Eval run=C01 aggregate=0.63 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.22 intent_accuracy=0.95
+aggregate=0.63 [fallback]
+  [C02] 'How does conversion rate differ by marketing channel?' ... [32m[18:22:51] INFO    [0m maeda.nodes — Node: parse_intent | query=How does conversion rate differ by marketing channel?
+[32m[18:22:53] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:22:53] INFO    [0m maeda.tools.data_connector — Connected to data/demo/marketing_campaigns.csv | rows=2000 cols=9
+[33m[18:22:56] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:22:56] INFO    [0m maeda.nodes — Node: plan_analysis
+Task exception was never retrieved
+future: <Task finished name='Task-903' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:23:03] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:23:03] WARNING [0m maeda.agent.analysis — Step 2 (pandas_transform) attempt 1 failed: groupby: agg_col: column(s) ['impressions'] not found in dataframe. Available columns: ['channel', 'conversions']
+[33m[18:23:03] WARNING [0m maeda.agent.analysis — Step 2 (pandas_transform) attempt 2 failed: groupby: agg_col: column(s) ['impressions'] not found in dataframe. Available columns: ['channel', 'conversions']
+[33m[18:23:03] WARNING [0m maeda.agent.analysis — Step 3 (pandas_transform) attempt 1 failed: derive: column(s) ['impressions'] not found in dataframe. Available columns: ['channel', 'conversions']
+[33m[18:23:03] WARNING [0m maeda.agent.analysis — Step 3 (pandas_transform) attempt 2 failed: derive: missing required parameter(s) ['new_column', 'left', 'op', 'right']
+[33m[18:23:03] WARNING [0m maeda.agent.analysis — Step 4 (comparison) attempt 1 failed: 'Column not found: conversion_rate'
+[33m[18:23:03] WARNING [0m maeda.agent.analysis — Step 4 (comparison) attempt 2 failed: 'Column not found: conversion_rate'
+[32m[18:23:03] INFO    [0m maeda.nodes — Node: generate_viz
+Task exception was never retrieved
+future: <Task finished name='Task-913' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:23:04] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:23:06] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:23:06] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:23:16] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:23:28] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:23:30] INFO    [0m maeda.eval.runner — Eval run=3087b3a7 aggregate=0.75 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=0.00 intent_accuracy=0.45
+[32m[18:23:32] INFO    [0m maeda.eval.runner — Eval run=C02 aggregate=0.80 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=0.00 intent_accuracy=0.95
+aggregate=0.80 [fallback]
+  [C03] 'Compare average order value between new and returning customers' ... [32m[18:23:32] INFO    [0m maeda.nodes — Node: parse_intent | query=Compare average order value between new and returning customers
+[32m[18:23:34] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:23:34] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=10000 cols=7
+[33m[18:23:37] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:23:37] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:23:44] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:23:44] WARNING [0m maeda.agent.analysis — Step 2 (pandas_transform) attempt 1 failed: only list-like objects are allowed to be passed to isin(), you passed a `str`
+[33m[18:23:44] WARNING [0m maeda.agent.analysis — Step 3 (pandas_transform) attempt 1 failed: only list-like objects are allowed to be passed to isin(), you passed a `str`
+[33m[18:23:44] WARNING [0m maeda.agent.analysis — Step 4 (comparison) attempt 1 failed: 'customer_type'
+[33m[18:23:44] WARNING [0m maeda.agent.analysis — Step 4 (comparison) attempt 2 failed: 'customer_type'
+[32m[18:23:44] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[18:23:44] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[33m[18:23:46] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[33m[18:23:47] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[32m[18:23:48] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:23:50] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:23:50] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:24:00] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:24:05] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:24:07] INFO    [0m maeda.eval.runner — Eval run=06b1d5bf aggregate=0.68 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.73 intent_accuracy=0.45
+Task exception was never retrieved
+future: <Task finished name='Task-1042' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:24:08] INFO    [0m maeda.eval.runner — Eval run=C03 aggregate=0.71 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.73 intent_accuracy=0.75
+aggregate=0.71 [DATA MISMATCH, fallback]
+  [C04] 'Which product categories have the highest and lowest margins?' ... [32m[18:24:08] INFO    [0m maeda.nodes — Node: parse_intent | query=Which product categories have the highest and lowest margins?
+[32m[18:24:10] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:24:10] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=100 cols=5
+[33m[18:24:13] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:24:13] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:24:20] INFO    [0m maeda.nodes — Node: execute_analysis
+/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/scipy/stats/_axis_nan_policy.py:586: SmallSampleWarning:
+
+all input arrays have length 1.  f_oneway requires that at least one input has length greater than 1.
+
+/Users/yintianyi/MAEDA/src/tools/stats_tool.py:327: SmallSampleWarning:
+
+One or more sample arguments is too small; all returned values will be NaN. See documentation for sample size requirements.
+
+[32m[18:24:20] INFO    [0m maeda.nodes — Node: generate_viz
+Task exception was never retrieved
+future: <Task finished name='Task-1081' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[33m[18:24:22] WARNING [0m maeda.tools.chart — Chart generation failed for bar: 'margin'
+[33m[18:24:22] WARNING [0m maeda.tools.chart — Plotly chart failed for bar: Value of 'y' is not the name of a column in 'data_frame'. Expected one of ['category', 'mean', 'sum', 'median', 'count', 'std'] but received: margin
+[32m[18:24:26] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:24:28] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:24:28] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:24:41] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:24:46] INFO    [0m maeda.nodes — Node: execute_analysis
+/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/scipy/stats/_axis_nan_policy.py:586: SmallSampleWarning:
+
+all input arrays have length 1.  f_oneway requires that at least one input has length greater than 1.
+
+/Users/yintianyi/MAEDA/src/tools/stats_tool.py:327: SmallSampleWarning:
+
+One or more sample arguments is too small; all returned values will be NaN. See documentation for sample size requirements.
+
+[32m[18:24:46] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[18:24:48] WARNING [0m maeda.tools.chart — Chart generation failed for bar: 'margin'
+[33m[18:24:48] WARNING [0m maeda.tools.chart — Plotly chart failed for bar: Value of 'y' is not the name of a column in 'data_frame'. Expected one of ['category', 'mean', 'sum', 'median', 'count', 'std'] but received: margin
+[32m[18:24:49] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:24:51] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:24:51] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:25:00] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:25:05] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:25:07] INFO    [0m maeda.eval.runner — Eval run=69cab82e aggregate=0.65 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.38 intent_accuracy=0.45
+Task exception was never retrieved
+future: <Task finished name='Task-1173' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:25:09] INFO    [0m maeda.eval.runner — Eval run=C04 aggregate=0.69 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.38 intent_accuracy=0.95
+aggregate=0.69 [fallback]
+  [P01] 'What will revenue look like next quarter based on current trends?' ... [32m[18:25:09] INFO    [0m maeda.nodes — Node: parse_intent | query=What will revenue look like next quarter based on current trends?
+[32m[18:25:11] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:25:11] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[18:25:14] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:25:14] INFO    [0m maeda.nodes — Node: plan_analysis
+Task exception was never retrieved
+future: <Task finished name='Task-1202' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:25:17] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:25:17] INFO    [0m maeda.nodes — Node: generate_viz
+Task exception was never retrieved
+future: <Task finished name='Task-1212' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:25:20] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:25:21] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:25:21] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:25:28] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:25:32] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:25:32] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:25:35] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:25:36] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:25:36] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:25:42] INFO    [0m maeda.nodes — Node: run_guardrails
+[31m[18:25:46] ERROR   [0m maeda.nodes — Node: handle_error | error=The report includes a fabricated confidence level of 85%, which is not mentioned in the analysis findings.
+[32m[18:25:48] INFO    [0m maeda.eval.runner — Eval run=P01 aggregate=0.85 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.95
+aggregate=0.85 [ERROR: The report includes a fabricated confidence level of 85%, which is not mentioned in the analysis findings., fallback]
+  [P02] 'Forecast customer churn for the next 30 days' ... [32m[18:25:48] INFO    [0m maeda.nodes — Node: parse_intent | query=Forecast customer churn for the next 30 days
+[32m[18:25:50] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:25:50] INFO    [0m maeda.tools.data_connector — Connected to data/demo/churn_data.csv | rows=5000 cols=8
+[33m[18:25:53] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:25:53] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:25:56] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:25:56] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:25:58] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:26:00] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:26:00] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:26:06] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:26:10] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:26:10] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:26:11] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:26:13] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:26:13] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:26:21] INFO    [0m maeda.nodes — Node: run_guardrails
+[31m[18:26:24] ERROR   [0m maeda.nodes — Node: handle_error | error=The report mentions a confidence level of 85% and a significant increase in churn without specific numerical data or visual evidence to support these claims.
+[32m[18:26:27] INFO    [0m maeda.eval.runner — Eval run=P02 aggregate=0.83 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.75
+aggregate=0.83 [ERROR: The report mentions a confidence level of 85% and a significant increase in churn without specific numerical data or visual evidence to support these claims., fallback]
+  [P03] 'Which customers are most likely to upgrade their plan?' ... [32m[18:26:27] INFO    [0m maeda.nodes — Node: parse_intent | query=Which customers are most likely to upgrade their plan?
+Task exception was never retrieved
+future: <Task finished name='Task-1402' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:26:29] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:26:29] INFO    [0m maeda.tools.data_connector — Connected to data/demo/churn_data.csv | rows=5000 cols=8
+[33m[18:26:32] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:26:32] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:26:34] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:26:34] WARNING [0m maeda.agent.analysis — Step 1 (time_series) attempt 1 failed: "['upgrade_likelihood'] not in index"
+[33m[18:26:34] WARNING [0m maeda.agent.analysis — Step 1 (time_series) attempt 2 failed: "['upgrade_likelihood'] not in index"
+[32m[18:26:34] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:26:35] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:26:36] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:26:36] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:26:41] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:26:44] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:26:46] INFO    [0m maeda.eval.runner — Eval run=50b99204 aggregate=0.40 | answer_relevance=0.00 groundedness=0.00 factual_accuracy=0.80 intent_accuracy=0.40
+[32m[18:26:47] INFO    [0m maeda.eval.runner — Eval run=P03 aggregate=0.45 | answer_relevance=0.00 groundedness=0.00 factual_accuracy=0.80 intent_accuracy=0.70
+aggregate=0.45 [DATA MISMATCH, fallback]
+  [E01] 'Give me an overview of this dataset' ... [32m[18:26:47] INFO    [0m maeda.nodes — Node: parse_intent | query=Give me an overview of this dataset
+[32m[18:26:51] INFO    [0m maeda.nodes — Node: ask_clarification
+[32m[18:26:51] INFO    [0m maeda.nodes — Node: parse_intent | query=Give me an overview of this dataset
+[32m[18:26:54] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:26:54] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[18:26:57] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:26:57] INFO    [0m maeda.nodes — Node: plan_analysis
+Task exception was never retrieved
+future: <Task finished name='Task-1516' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:27:01] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[18:27:01] WARNING [0m maeda.agent.analysis — Step 1 (sql_query) attempt 1 failed: sql_query: column(s) ['total_revenue'] not found in dataframe. Available columns: ['date', 'region', 'product', 'channel', 'revenue', 'units', 'rep_id']
+[32m[18:27:01] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:27:05] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:27:06] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:27:06] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:27:18] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:27:21] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:27:23] INFO    [0m maeda.eval.runner — Eval run=38202870 aggregate=0.78 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=0.74 intent_accuracy=0.30
+[32m[18:27:26] INFO    [0m maeda.eval.runner — Eval run=E01 aggregate=0.81 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=0.74 intent_accuracy=0.60
+aggregate=0.81 [fallback]
+  [E02] 'Are there any anomalies or outliers in the sales data?' ... [32m[18:27:26] INFO    [0m maeda.nodes — Node: parse_intent | query=Are there any anomalies or outliers in the sales data?
+Task exception was never retrieved
+future: <Task finished name='Task-1578' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:27:28] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:27:28] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[18:27:31] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:27:31] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:27:35] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:27:35] INFO    [0m maeda.nodes — Node: generate_viz
+Task exception was never retrieved
+future: <Task finished name='Task-1610' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:27:38] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:27:39] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:27:39] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:27:48] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:27:52] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:27:53] INFO    [0m maeda.eval.runner — Eval run=a7992175 aggregate=0.94 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.40
+[32m[18:27:55] INFO    [0m maeda.eval.runner — Eval run=E02 aggregate=0.96 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.60
+aggregate=0.96 [fallback]
+  [E03] 'What patterns exist in customer purchasing behavior?' ... [32m[18:27:55] INFO    [0m maeda.nodes — Node: parse_intent | query=What patterns exist in customer purchasing behavior?
+[32m[18:27:57] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:27:57] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=10000 cols=7
+[33m[18:28:00] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:28:00] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:28:03] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:28:03] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[18:28:05] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:28:06] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:28:06] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:28:16] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:28:21] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:28:23] INFO    [0m maeda.eval.runner — Eval run=513112e7 aggregate=0.94 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.40
+[32m[18:28:25] INFO    [0m maeda.eval.runner — Eval run=E03 aggregate=0.97 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.70
+aggregate=0.97 [fallback]
+  [E04] 'Explore the relationship between marketing spend and revenue' ... [32m[18:28:25] INFO    [0m maeda.nodes — Node: parse_intent | query=Explore the relationship between marketing spend and revenue
+[32m[18:28:27] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[18:28:27] INFO    [0m maeda.tools.data_connector — Connected to data/demo/marketing_campaigns.csv | rows=2000 cols=9
+[33m[18:28:30] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: All connection attempts failed
+[32m[18:28:30] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[18:28:33] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[18:28:33] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[18:28:33] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+Task exception was never retrieved
+future: <Task finished name='Task-1773' coro=<AsyncClient.aclose() done, defined at /Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py:2024> exception=RuntimeError('Event loop is closed')>
+Traceback (most recent call last):
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_client.py", line 2031, in aclose
+    await self._transport.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpx/_transports/default.py", line 389, in aclose
+    await self._pool.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 353, in aclose
+    await self._close_connections(closing_connections)
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 345, in _close_connections
+    await connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/connection.py", line 173, in aclose
+    await self._connection.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_async/http11.py", line 258, in aclose
+    await self._network_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 53, in aclose
+    await self._stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/streams/tls.py", line 236, in aclose
+    await self.transport_stream.aclose()
+  File "/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1344, in aclose
+    self._transport.close()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/selector_events.py", line 860, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 761, in call_soon
+    self._check_closed()
+  File "/Users/yintianyi/anaconda3/lib/python3.11/asyncio/base_events.py", line 519, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+[32m[18:28:35] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[18:28:36] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: All connection attempts failed
+[32m[18:28:36] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[18:28:48] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[18:28:53] INFO    [0m maeda.nodes — Node: run_eval
+[32m[18:28:55] INFO    [0m maeda.eval.runner — Eval run=7d2a80cb aggregate=0.84 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.45
+[32m[18:28:56] INFO    [0m maeda.eval.runner — Eval run=E04 aggregate=0.88 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.85
+aggregate=0.88 [fallback]
+
+====================================================================================
+ID     aggregate  relevance  grounded  factual  errrate  notes
+------------------------------------------------------------------------------------
+D01         0.97       1.00      1.00     1.00     1.00  fallback
+D02         0.83       1.00      1.00     0.00     1.00  data_mismatch,fallback
+D03         0.97       1.00      1.00     1.00     1.00  fallback
+D04         0.83       0.50      1.00     0.67     1.00  fallback
+D05         0.67       0.50      0.50     0.36     1.00  fallback
+DG01        0.66       0.50      0.50     0.35     1.00  fallback
+DG02        0.76       0.50      1.00     0.54     1.00  fallback
+DG03        0.43       0.00      0.00     0.30     1.00  fallback
+DG04        0.71       0.50      0.50     0.80     1.00  data_mismatch,fallback
+C01         0.63       0.50      0.50     0.22     1.00  fallback
+C02         0.80       1.00      1.00     0.00     1.00  fallback
+C03         0.71       0.50      0.50     0.73     1.00  data_mismatch,fallback
+C04         0.69       0.50      0.50     0.38     1.00  fallback
+P01         0.85       1.00      1.00     1.00     0.00  error,fallback
+P02         0.83       1.00      1.00     1.00     0.00  error,fallback
+P03         0.45       0.00      0.00     0.80     1.00  data_mismatch,fallback
+E01         0.81       1.00      0.50     0.74     1.00  fallback
+E02         0.96       1.00      1.00     1.00     1.00  fallback
+E03         0.97       1.00      1.00     1.00     1.00  fallback
+E04         0.88       1.00      0.50     1.00     1.00  fallback
+------------------------------------------------------------------------------------
+OVERALL      0.77
+====================================================================================
+
+Report saved to logs/eval_runs/after_all_fixes.json
+
+--- Regression check vs logs/eval_runs/baseline_fallback.json ---
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: intent_accuracy baseline=0.95 current=0.75 drop=0.20 [warning]
+  [D01] intent_accuracy: 0.95 -> 0.75 (warning)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=0.80 current=0.00 drop=0.80 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: total_latency baseline=1.00 current=0.70 drop=0.30 [critical]
+  [D02] factual_accuracy: 0.80 -> 0.00 (critical)
+  [D02] total_latency: 1.00 -> 0.70 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=0.78 current=0.67 drop=0.11 [warning]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: intent_accuracy baseline=1.00 current=0.95 drop=0.05 [warning]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: total_latency baseline=0.70 current=0.30 drop=0.40 [critical]
+  [D04] factual_accuracy: 0.78 -> 0.67 (warning)
+  [D04] intent_accuracy: 1.00 -> 0.95 (warning)
+  [D04] total_latency: 0.70 -> 0.30 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=0.80 current=0.36 drop=0.44 [critical]
+  [D05] factual_accuracy: 0.80 -> 0.36 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: tool_selection baseline=0.80 current=0.50 drop=0.30 [critical]
+  [DG01] tool_selection: 0.80 -> 0.50 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=1.00 current=0.54 drop=0.46 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: tool_selection baseline=0.80 current=0.60 drop=0.20 [critical]
+  [DG02] factual_accuracy: 1.00 -> 0.54 (critical)
+  [DG02] tool_selection: 0.80 -> 0.60 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: answer_relevance baseline=1.00 current=0.00 drop=1.00 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: groundedness baseline=0.50 current=0.00 drop=0.50 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: tool_selection baseline=1.00 current=0.67 drop=0.33 [critical]
+  [DG03] answer_relevance: 1.00 -> 0.00 (critical)
+  [DG03] groundedness: 0.50 -> 0.00 (critical)
+  [DG03] tool_selection: 1.00 -> 0.67 (critical)
+  [DG03] aggregate_score: 0.75 -> 0.43 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: answer_relevance baseline=1.00 current=0.50 drop=0.50 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: groundedness baseline=1.00 current=0.50 drop=0.50 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=1.00 current=0.80 drop=0.20 [warning]
+  [DG04] answer_relevance: 1.00 -> 0.50 (critical)
+  [DG04] groundedness: 1.00 -> 0.50 (critical)
+  [DG04] factual_accuracy: 1.00 -> 0.80 (warning)
+  [DG04] aggregate_score: 0.92 -> 0.71 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=0.67 current=0.22 drop=0.44 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: tool_selection baseline=0.50 current=0.33 drop=0.17 [warning]
+  [C01] factual_accuracy: 0.67 -> 0.22 (critical)
+  [C01] tool_selection: 0.50 -> 0.33 (warning)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=0.80 current=0.00 drop=0.80 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: tool_selection baseline=0.50 current=0.25 drop=0.25 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: total_latency baseline=1.00 current=0.70 drop=0.30 [critical]
+  [C02] factual_accuracy: 0.80 -> 0.00 (critical)
+  [C02] tool_selection: 0.50 -> 0.25 (critical)
+  [C02] total_latency: 1.00 -> 0.70 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=1.00 current=0.73 drop=0.27 [critical]
+  [C03] factual_accuracy: 1.00 -> 0.73 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=1.00 current=0.38 drop=0.62 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: total_latency baseline=0.70 current=0.30 drop=0.40 [critical]
+  [C04] factual_accuracy: 1.00 -> 0.38 (critical)
+  [C04] total_latency: 0.70 -> 0.30 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: error_rate baseline=1.00 current=0.00 drop=1.00 [critical]
+  [P01] error_rate: 1.00 -> 0.00 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: error_rate baseline=1.00 current=0.00 drop=1.00 [critical]
+  [P02] error_rate: 1.00 -> 0.00 (critical)
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: answer_relevance baseline=1.00 current=0.00 drop=1.00 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: groundedness baseline=0.50 current=0.00 drop=0.50 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: factual_accuracy baseline=1.00 current=0.80 drop=0.20 [warning]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: tool_selection baseline=1.00 current=0.00 drop=1.00 [critical]
+[33m[18:28:56] WARNING [0m maeda.eval.runner — Regression detected: chart_appropriateness baseline=1.00 current=0.50 drop=0.50 [critical]
+  [P03] answer_relevance: 1.00 -> 0.00 (critical)
+  [P03] groundedness: 0.50 -> 0.00 (critical)
+  [P03] factual_accuracy: 1.00 -> 0.80 (warning)
+  [P03] tool_selection: 1.00 -> 0.00 (critical)
+  [P03] chart_appropriateness: 1.00 -> 0.50 (critical)
+  [P03] aggregate_score: 0.85 -> 0.45 (critical)
+
+  Overall aggregate: baseline=0.713 current=0.771
