@@ -79,12 +79,20 @@ and the natural continuation of the eval-first narrative.
    columns, two "soft error dict" results getting reported as successful
    steps, an unhelpful `anomaly_tool` error on a bad column, and
    `compare_segments` ranking `top_segment` by the wrong aggregation.
-10. **A real "baseline B" with MCP sub-systems online.** Every baseline run so
-    far has both Data Cleaner and RAG-MCP-Server offline. The original
-    question this debugging pass set out to answer — how much of the
-    precision problem comes from sub-system coordination — is still
-    unanswered. The MCP server (Phase 10) has also never been exercised by a
-    real client.
+10. ✅ **Done (partially, by choice) — real "baseline B" with RAG-MCP-Server
+    online.** See eval_report.md #23. Found and fixed a fundamental MCP
+    transport bug — `MCPClient` had never actually been protocol-tested
+    against a real server (406 → 400 errors); rewritten on the official
+    `mcp` SDK. Data Cleaner deliberately stays offline (not mature enough
+    yet — the user's call, not a bug). Result: aggregate flat (0.71→0.72),
+    with judge reasoning showing concrete noise-contamination harm on
+    queries unrelated to the one ingested document (shared, unscoped
+    knowledge base) and no comparably concrete evidence of grounding
+    benefit. Answers the original question partially: sub-system
+    coordination bugs (the transport layer) were real and now fixed, but
+    connecting a working RAG server didn't itself move precision — retrieval
+    scoping (blocked upstream in rag-framework) is the next lever, not
+    MAEDA's own code.
 11. **Close the error→retry loop with the actual error message.** Tool errors
     now include actionable detail (e.g. the exact list of available columns),
     but `_simplify_step`'s retry just strips parameters down rather than
@@ -149,12 +157,14 @@ the safety net for every later change. #10 rolls into Phase B below; #11
 and #12 (retry-loop feedback, harder population-claim guardrail) are
 smaller Tier 2 items not bundled into a named phase — pick up opportunistically.
 
-**Phase B — Make "real data" actually work** (#1, #2, #4, #10): #1, #2, #4
-✅ done (joins, pushdown, date-part derivation — see eval_report.md
-#21–22). #10 (baseline B with MCP sub-systems online) remains — that's the
-one that actually answers this debugging pass's original question: how
-much of the precision problem came from sub-system coordination versus
-MAEDA's own bugs.
+**Phase B — Make "real data" actually work** (#1, #2, #4, #10): ✅ done.
+#1, #2, #4 (joins, pushdown, date-part derivation — see eval_report.md
+#21–22). #10 (baseline B, see eval_report.md #23): RAG-MCP-Server connected
+and verified genuinely live; Data Cleaner intentionally still offline.
+Answer to this debugging pass's original question: the transport layer
+itself was a real bug (now fixed), but with it fixed, precision didn't
+move — the remaining gap is retrieval scoping upstream in rag-framework,
+not MAEDA's own orchestration.
 
 **Phase C — Make it pleasant to use** (#13, #14, #17): streaming, multi-turn,
 async cleanup.
