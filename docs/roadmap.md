@@ -79,20 +79,22 @@ and the natural continuation of the eval-first narrative.
    columns, two "soft error dict" results getting reported as successful
    steps, an unhelpful `anomaly_tool` error on a bad column, and
    `compare_segments` ranking `top_segment` by the wrong aggregation.
-10. ✅ **Done (partially, by choice) — real "baseline B" with RAG-MCP-Server
-    online.** See eval_report.md #23. Found and fixed a fundamental MCP
+10. ✅ **Done (partially, by choice) — real "baseline B/C" with RAG-MCP-Server
+    online.** See eval_report.md #23–24. Found and fixed a fundamental MCP
     transport bug — `MCPClient` had never actually been protocol-tested
     against a real server (406 → 400 errors); rewritten on the official
     `mcp` SDK. Data Cleaner deliberately stays offline (not mature enough
-    yet — the user's call, not a bug). Result: aggregate flat (0.71→0.72),
-    with judge reasoning showing concrete noise-contamination harm on
-    queries unrelated to the one ingested document (shared, unscoped
-    knowledge base) and no comparably concrete evidence of grounding
-    benefit. Answers the original question partially: sub-system
-    coordination bugs (the transport layer) were real and now fixed, but
-    connecting a working RAG server didn't itself move precision — retrieval
-    scoping (blocked upstream in rag-framework) is the next lever, not
-    MAEDA's own code.
+    yet — the user's call, not a bug). #23 found concrete noise-contamination
+    harm from an unscoped shared knowledge base; #24 fixed collection
+    isolation upstream in rag-framework (ingest never tagged chunks with
+    `collection`, so the filter that already existed on the retrieval side
+    had nothing to match) and added `settings.rag_collection` on MAEDA's
+    side to request it. Verified via reasoning-trace evidence that the
+    contamination is gone — but aggregate score still doesn't move at
+    MAEDA's current judge-noise level, since only 2/20 cases were affected.
+    Answers the original question: sub-system coordination bugs (transport,
+    then collection isolation) were both real and are now fixed; MAEDA's own
+    orchestration code was never the bottleneck here.
 11. **Close the error→retry loop with the actual error message.** Tool errors
     now include actionable detail (e.g. the exact list of available columns),
     but `_simplify_step`'s retry just strips parameters down rather than
