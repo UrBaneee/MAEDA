@@ -8,6 +8,15 @@ Tools exposed by the RAG-MCP-Server:
   retrieve               {query, top_k} → list[RAGChunk]
   retrieve_with_metadata {query, top_k} → list[RAGChunk]  (with source attribution)
   list_collections       {}             → list[Collection]
+
+retrieve/retrieve_with_metadata's arguments are sent wrapped as
+{"input": {query, top_k}} rather than flat {query, top_k} — the reference
+implementation (rag-framework, FastMCP-based) declares these tools as
+taking a single Pydantic-model parameter literally named `input`, and
+FastMCP maps MCP tool-call arguments onto Python parameter names, so the
+argument dict's top-level key must match. A different RAG-MCP-Server
+implementation using flat keyword parameters instead of one Pydantic model
+would need this changed back to unwrapped {query, top_k}.
 """
 from __future__ import annotations
 
@@ -27,7 +36,9 @@ class RAGServerClient:
     async def retrieve(self, query: str, top_k: int = 5) -> list[RAGChunk]:
         """Basic retrieval — returns chunks without detailed source metadata."""
         logger.debug("retrieve | query=%s top_k=%d", query[:60], top_k)
-        raw = await self._transport.call_tool("retrieve", {"query": query, "top_k": top_k})
+        raw = await self._transport.call_tool(
+            "retrieve", {"input": {"query": query, "top_k": top_k}}
+        )
         return [RAGChunk.from_mcp_response(c) for c in raw.get("chunks", [])]
 
     async def retrieve_with_metadata(
@@ -39,7 +50,7 @@ class RAGServerClient:
         """
         logger.debug("retrieve_with_metadata | query=%s top_k=%d", query[:60], top_k)
         raw = await self._transport.call_tool(
-            "retrieve_with_metadata", {"query": query, "top_k": top_k}
+            "retrieve_with_metadata", {"input": {"query": query, "top_k": top_k}}
         )
         return [RAGChunk.from_mcp_response(c) for c in raw.get("chunks", [])]
 

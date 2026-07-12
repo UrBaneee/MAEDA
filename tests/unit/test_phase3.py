@@ -104,97 +104,123 @@ class TestCleaningPlan:
 
 
 # ─── 3.1 MCPClient transport ─────────────────────────────────────────────────
+#
+# MCPClient speaks the real MCP streamable-http protocol via the official
+# `mcp` SDK (initialize handshake + session-scoped tool calls), so these
+# tests mock at the SDK boundary (streamable_http_client + ClientSession)
+# rather than at the old raw-httpx-POST level.
+
+from contextlib import asynccontextmanager
+
+from mcp.types import CallToolResult, TextContent
+
+
+class _FakeSession:
+    """Stands in for mcp.ClientSession — supports `async with`."""
+
+    def __init__(self, call_tool_result=None, call_tool_side_effect=None,
+                 list_tools_side_effect=None, initialize_side_effect=None):
+        self.initialize = AsyncMock(side_effect=initialize_side_effect)
+        self.call_tool = AsyncMock(
+            return_value=call_tool_result, side_effect=call_tool_side_effect,
+        )
+        self.list_tools = AsyncMock(side_effect=list_tools_side_effect)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc_info):
+        return False
+
+
+def _patch_mcp_sdk(session: _FakeSession):
+    """
+    Patches src.mcp_client.client.streamable_http_client (an async context
+    manager yielding (read, write, get_session_id)) and .ClientSession
+    (constructed with (read, write), used as an async context manager) so
+    call_tool()/health_check() drive `session` without a real network call.
+    """
+    @asynccontextmanager
+    async def fake_streamable_http(*args, **kwargs):
+        yield (MagicMock(), MagicMock(), MagicMock())
+
+    return (
+        patch("src.mcp_client.client.streamable_http_client", fake_streamable_http),
+        patch("src.mcp_client.client.ClientSession", return_value=session),
+    )
+
 
 class TestMCPClient:
     def test_call_tool_success(self):
         client = MCPClient("http://localhost:8001")
-        mock_http = AsyncMock()
-        mock_http.is_closed = False
-        mock_http.post = AsyncMock(return_value=MagicMock(
-            status_code=200,
-            json=lambda: {"jsonrpc": "2.0", "id": 1, "result": {"row_count": 500}},
+        session = _FakeSession(call_tool_result=CallToolResult(
+            content=[], structuredContent={"row_count": 500}, isError=False,
         ))
-        client._client = mock_http
-
-        result = asyncio.run(client.call_tool("profile_dataset", {"path": "/data/sales.csv"}))
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            result = asyncio.run(client.call_tool("profile_dataset", {"path": "/data/sales.csv"}))
         assert result["row_count"] == 500
+        session.initialize.assert_awaited_once()
 
-    def test_call_tool_mcp_content_block(self):
-        """MCPClient unwraps content-block responses correctly."""
+    def test_call_tool_text_content_block(self):
+        """MCPClient falls back to parsing a text content block as JSON when
+        structuredContent isn't populated."""
         client = MCPClient("http://localhost:8001")
-        mock_http = AsyncMock()
-        mock_http.is_closed = False
         inner = json.dumps({"row_count": 200})
-        mock_http.post = AsyncMock(return_value=MagicMock(
-            status_code=200,
-            json=lambda: {
-                "jsonrpc": "2.0", "id": 1,
-                "result": {"content": [{"type": "text", "text": inner}]}
-            },
+        session = _FakeSession(call_tool_result=CallToolResult(
+            content=[TextContent(type="text", text=inner)],
+            structuredContent=None, isError=False,
         ))
-        client._client = mock_http
-
-        result = asyncio.run(client.call_tool("profile_dataset", {"path": "x"}))
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            result = asyncio.run(client.call_tool("profile_dataset", {"path": "x"}))
         assert result["row_count"] == 200
 
     def test_call_tool_connection_error(self):
-        import httpx
         client = MCPClient("http://localhost:8001", max_retries=1)
-        mock_http = AsyncMock()
-        mock_http.is_closed = False
-        mock_http.post = AsyncMock(side_effect=httpx.ConnectError("refused"))
-        client._client = mock_http
+        session = _FakeSession(call_tool_side_effect=ConnectionRefusedError("refused"))
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            with pytest.raises(MCPConnectionError):
+                asyncio.run(client.call_tool("profile_dataset", {"path": "x"}))
 
-        with pytest.raises(MCPConnectionError):
-            asyncio.run(client.call_tool("profile_dataset", {"path": "x"}))
-
-    def test_call_tool_server_error_response(self):
+    def test_call_tool_handshake_failure(self):
+        """A failed initialize() handshake (e.g. protocol/session negotiation
+        error) must surface as MCPConnectionError, not propagate raw."""
         client = MCPClient("http://localhost:8001", max_retries=1)
-        mock_http = AsyncMock()
-        mock_http.is_closed = False
-        mock_http.post = AsyncMock(return_value=MagicMock(
-            status_code=500,
-            text="Internal server error",
-        ))
-        client._client = mock_http
-
-        with pytest.raises(MCPConnectionError):
-            asyncio.run(client.call_tool("profile_dataset", {"path": "x"}))
+        session = _FakeSession(initialize_side_effect=RuntimeError("400 Missing session ID"))
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            with pytest.raises(MCPConnectionError):
+                asyncio.run(client.call_tool("profile_dataset", {"path": "x"}))
 
     def test_call_tool_rpc_error(self):
         client = MCPClient("http://localhost:8001", max_retries=1)
-        mock_http = AsyncMock()
-        mock_http.is_closed = False
-        mock_http.post = AsyncMock(return_value=MagicMock(
-            status_code=200,
-            json=lambda: {"jsonrpc": "2.0", "id": 1,
-                          "error": {"code": -32601, "message": "Method not found"}},
+        session = _FakeSession(call_tool_result=CallToolResult(
+            content=[TextContent(type="text", text="Method not found")],
+            structuredContent=None, isError=True,
         ))
-        client._client = mock_http
-
-        with pytest.raises(MCPToolError):
-            asyncio.run(client.call_tool("nonexistent_tool", {}))
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            with pytest.raises(MCPToolError):
+                asyncio.run(client.call_tool("nonexistent_tool", {}))
 
     def test_health_check_ok(self):
         client = MCPClient("http://localhost:8001")
-        mock_http = AsyncMock()
-        mock_http.is_closed = False
-        mock_http.post = AsyncMock(return_value=MagicMock(status_code=200))
-        client._client = mock_http
-
-        ok, latency = asyncio.run(client.health_check())
+        session = _FakeSession()
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            ok, latency = asyncio.run(client.health_check())
         assert ok is True
         assert latency is not None and latency >= 0
+        session.list_tools.assert_awaited_once()
 
     def test_health_check_failure(self):
-        import httpx
         client = MCPClient("http://localhost:8001")
-        mock_http = AsyncMock()
-        mock_http.is_closed = False
-        mock_http.post = AsyncMock(side_effect=httpx.ConnectError("refused"))
-        client._client = mock_http
-
-        ok, latency = asyncio.run(client.health_check())
+        session = _FakeSession(initialize_side_effect=ConnectionRefusedError("refused"))
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            ok, latency = asyncio.run(client.health_check())
         assert ok is False
         assert latency is None
 

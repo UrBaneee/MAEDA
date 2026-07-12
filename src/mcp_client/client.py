@@ -1,18 +1,31 @@
 """
 Low-level async MCP transport client.
 
-MCP over HTTP uses JSON-RPC 2.0. Each tool call is a POST to the server's
-/mcp endpoint with method "tools/call" and params {name, arguments}.
+Uses the official `mcp` SDK's streamable-http client + ClientSession to
+speak the real MCP protocol: an "initialize" handshake that negotiates a
+session ID, followed by tool calls that carry that session ID on every
+request. An earlier hand-rolled implementation POSTed bare JSON-RPC to
+/mcp with no handshake at all — against a spec-compliant server (FastMCP's
+streamable-http transport) that gets a 406 Not Acceptable (missing the
+required Accept header), then a 400 Missing session ID once the header is
+fixed. This is presumably why "Phase 10: MAEDA MCP Server ... never
+exercised by a real client" was a standing known limitation — the
+integration layer had never actually been protocol-tested end to end.
 
-This client is intentionally thin — it handles HTTP, timeouts, retries,
-and health checks. High-level semantics live in data_cleaner.py / rag_server.py.
+This client is intentionally thin — it handles session lifecycle, timeouts,
+retries, and health checks. High-level semantics (including any
+tool-specific argument shape, e.g. some tools wrap their arguments under an
+"input" key depending on how the server's tool function is declared) live
+in data_cleaner.py / rag_server.py.
 """
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Optional
 
 import httpx
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.utils.logger import get_logger
@@ -27,7 +40,8 @@ class MCPError(Exception):
 
 
 class MCPConnectionError(MCPError):
-    """Server is unreachable or the connection was refused."""
+    """Server is unreachable, the connection was refused, or the protocol
+    handshake failed."""
 
 
 class MCPToolError(MCPError):
@@ -38,7 +52,15 @@ class MCPToolError(MCPError):
 
 class MCPClient:
     """
-    Async JSON-RPC client for a single MCP server.
+    Async client for a single MCP server over the streamable-http transport.
+
+    Opens a fresh session (initialize handshake included) per call rather
+    than holding one open across the whole pipeline run — MAEDA's graph
+    nodes each run under their own `asyncio.run()` (see roadmap #13), so a
+    session opened in one node's event loop couldn't safely be reused by
+    another node's anyway. The per-call handshake costs a network round
+    trip, which is a reasonable trade for correctness at MAEDA's call
+    volume (at most a handful of MCP calls per pipeline run).
 
     Supports:
     - Tool calls (call_tool)
@@ -55,92 +77,93 @@ class MCPClient:
         self.base_url = base_url.rstrip("/")
         self._timeout = timeout
         self._max_retries = max_retries
-        self._client: Optional[httpx.AsyncClient] = None
+
+    @property
+    def _mcp_url(self) -> str:
+        return f"{self.base_url}/mcp"
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
-    async def _get_client(self) -> httpx.AsyncClient:
-        if self._client is None or self._client.is_closed:
-            self._client = httpx.AsyncClient(
-                base_url=self.base_url,
-                timeout=self._timeout,
-                headers={"Content-Type": "application/json"},
-            )
-        return self._client
-
     async def close(self) -> None:
-        if self._client and not self._client.is_closed:
-            await self._client.aclose()
+        """No-op: sessions are opened and closed per call, nothing to hold open."""
 
     # ── Core tool call ─────────────────────────────────────────────────────────
 
     async def call_tool(self, tool_name: str, arguments: dict) -> dict:
         """
         Call an MCP tool and return the parsed result dict.
-        Raises MCPConnectionError on network failures, MCPToolError on server errors.
+        Raises MCPConnectionError on network/handshake failures, MCPToolError
+        on a tool-level error response.
         """
-        payload = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "tools/call",
-            "params": {"name": tool_name, "arguments": arguments},
-        }
-        return await self._post_with_retry(payload)
+        return await self._call_with_retry(tool_name, arguments)
 
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=0.5, min=0.5, max=4),
         reraise=True,
     )
-    async def _post_with_retry(self, payload: dict) -> dict:
-        client = await self._get_client()
+    async def _call_with_retry(self, tool_name: str, arguments: dict):
         try:
-            response = await client.post("/mcp", json=payload)
-        except (httpx.ConnectError, httpx.TimeoutException, httpx.NetworkError) as exc:
+            async with httpx.AsyncClient(timeout=self._timeout) as http_client, \
+                    streamable_http_client(self._mcp_url, http_client=http_client) as (
+                        read, write, _,
+                    ):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    result = await session.call_tool(tool_name, arguments)
+        except MCPError:
+            raise
+        except Exception as exc:
             raise MCPConnectionError(
                 f"Cannot reach MCP server at {self.base_url}: {exc}"
             ) from exc
 
-        if response.status_code != 200:
-            raise MCPConnectionError(
-                f"MCP server returned HTTP {response.status_code}: {response.text[:200]}"
-            )
+        if result.isError:
+            message = result.content[0].text if result.content else "Unknown tool error"
+            raise MCPToolError(f"MCP tool error: {message}")
 
-        body = response.json()
-        if "error" in body:
-            raise MCPToolError(
-                f"MCP tool error: {body['error'].get('message', body['error'])}"
-            )
-
-        result = body.get("result", {})
-        # MCP spec: result may be wrapped in {"content": [...]} for tool responses
-        if "content" in result and isinstance(result["content"], list):
-            # Extract the first text content block
-            for block in result["content"]:
-                if block.get("type") == "text":
-                    import json
-                    try:
-                        return json.loads(block["text"])
-                    except (json.JSONDecodeError, KeyError):
-                        return {"text": block.get("text", "")}
-        return result
+        return _parse_tool_result(result)
 
     # ── Health check ──────────────────────────────────────────────────────────
 
     async def health_check(self) -> tuple[bool, Optional[float]]:
         """
         Returns (is_available, latency_ms).
-        Sends a lightweight ping (tools/list) to test reachability.
+        Opens a session and lists tools to verify both reachability and that
+        the protocol handshake itself succeeds — a server that accepts TCP
+        connections but rejects the handshake is not actually usable.
         """
-        payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
-        client = await self._get_client()
         start = time.monotonic()
         try:
-            response = await client.post("/mcp", json=payload, timeout=5.0)
-            latency_ms = (time.monotonic() - start) * 1000
-            return response.status_code == 200, latency_ms
+            async with httpx.AsyncClient(timeout=5.0) as http_client, \
+                    streamable_http_client(self._mcp_url, http_client=http_client) as (
+                        read, write, _,
+                    ):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    await session.list_tools()
+            return True, (time.monotonic() - start) * 1000
         except Exception:
             return False, None
+
+
+def _parse_tool_result(result) -> dict:
+    """
+    FastMCP populates structuredContent with the tool's actual return value
+    when it's a Pydantic model/dict (true for every tool this codebase
+    calls); fall back to parsing the first text content block as JSON for
+    servers that only populate the human-readable content list.
+    """
+    if result.structuredContent is not None:
+        return result.structuredContent
+    for block in result.content:
+        if getattr(block, "type", None) == "text":
+            import json
+            try:
+                return json.loads(block.text)
+            except (json.JSONDecodeError, AttributeError):
+                return {"text": block.text}
+    return {}
 
 
 # ─── Unified sub-system client ────────────────────────────────────────────────
