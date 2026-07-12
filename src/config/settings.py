@@ -37,6 +37,13 @@ class MAEDASettings(BaseSettings):
     rag_server_mcp_url: str = Field(
         default="http://localhost:8002", alias="RAG_SERVER_MCP_URL"
     )
+    rag_collection: Optional[str] = Field(
+        default=None, alias="MAEDA_RAG_COLLECTION"
+    )
+    """Scope RAG retrieval to a single collection (e.g. "wake_apparel").
+    Left unset, retrieval searches the entire knowledge base, which risks
+    surfacing chunks from unrelated documents sharing the same RAG-MCP-Server
+    instance (see eval_report.md #23)."""
 
     # ── Data Sources ─────────────────────────────────────────────────────────
     default_data_dir: str = Field(default="./data/sample", alias="MAEDA_DEFAULT_DATA_DIR")

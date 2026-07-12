@@ -322,6 +322,35 @@ class TestRAGServerClient:
         assert chunks[0].source_file == "guide.pdf"
         assert chunks[0].page == 5
 
+    def test_retrieve_with_metadata_forwards_collection(self):
+        """collection must reach the wire — this is what scopes retrieval to
+        one document set instead of the whole shared knowledge base."""
+        transport = _mock_rag_transport({
+            "retrieve_with_metadata": {"chunks": []}
+        })
+        client = RAGServerClient(transport)
+        asyncio.run(client.retrieve_with_metadata(
+            "market analysis", top_k=5, collection="wake_apparel"
+        ))
+        transport.call_tool.assert_awaited_once_with(
+            "retrieve_with_metadata",
+            {"input": {"query": "market analysis", "top_k": 5, "collection": "wake_apparel"}},
+        )
+
+    def test_retrieve_with_metadata_omits_collection_when_unset(self):
+        """Unscoped calls must not send a "collection" key at all, so a
+        RAG-MCP-Server without collection support (or where it defaults to
+        None) sees exactly the same request shape as before this feature."""
+        transport = _mock_rag_transport({
+            "retrieve_with_metadata": {"chunks": []}
+        })
+        client = RAGServerClient(transport)
+        asyncio.run(client.retrieve_with_metadata("market analysis", top_k=5))
+        transport.call_tool.assert_awaited_once_with(
+            "retrieve_with_metadata",
+            {"input": {"query": "market analysis", "top_k": 5}},
+        )
+
     def test_list_collections(self):
         transport = _mock_rag_transport({
             "list_collections": {
@@ -405,6 +434,19 @@ class TestSubSystemWithFallback:
         chunks, log = asyncio.run(fb.retrieve_knowledge("query"))
         assert chunks == []
         assert log["mode"] == "fallback"
+
+    def test_retrieve_knowledge_forwards_collection_end_to_end(self):
+        """collection must survive the full path: fallback layer ->
+        RAGServerClient -> transport.call_tool's wire-level args."""
+        fb = _build_fallback(rag_responses={
+            "retrieve_with_metadata": {"chunks": []}
+        })
+        asyncio.run(fb.retrieve_knowledge("query", collection="wake_apparel"))
+        rag_transport = fb._rag._transport
+        rag_transport.call_tool.assert_awaited_once_with(
+            "retrieve_with_metadata",
+            {"input": {"query": "query", "top_k": 5, "collection": "wake_apparel"}},
+        )
 
     def test_get_cleaning_plan_fallback(self):
         fb = _build_fallback(dc_side_effect=MCPConnectionError("offline"))

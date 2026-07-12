@@ -167,13 +167,13 @@ class SubSystemWithFallback:
     # ── RAG Server delegation ─────────────────────────────────────────────────
 
     async def retrieve_knowledge(
-        self, query: str, top_k: int = 5
+        self, query: str, top_k: int = 5, collection: Optional[str] = None
     ) -> tuple[list[RAGChunk], dict]:
         """Retrieve domain knowledge; return empty list if RAG is unavailable."""
-        args = {"query": query, "top_k": top_k}
+        args = {"query": query, "top_k": top_k, "collection": collection}
         start = time.monotonic()
         try:
-            result = await self._rag.retrieve_with_metadata(query, top_k)
+            result = await self._rag.retrieve_with_metadata(query, top_k, collection=collection)
             duration_ms = (time.monotonic() - start) * 1000
             log = _make_call_record(
                 "rag_server", "retrieve_with_metadata", args,

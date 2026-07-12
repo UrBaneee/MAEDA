@@ -7,6 +7,7 @@ Nodes for future phases remain as labeled stubs.
 import asyncio
 from datetime import datetime, timezone
 
+from src.config.settings import settings
 from src.state.graph_state import MAEDAState
 from src.utils.logger import get_logger
 
@@ -207,7 +208,9 @@ def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
     query = insight_agent.build_retrieval_query(state)
 
     async def _run():
-        chunks, log = await client.retrieve_knowledge(query, top_k=5)
+        chunks, log = await client.retrieve_knowledge(
+            query, top_k=5, collection=settings.rag_collection
+        )
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), log]
         state["rag_context"] = [c.to_dict() for c in chunks]
         state["rag_sources"] = [
