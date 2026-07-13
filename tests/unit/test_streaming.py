@@ -57,6 +57,20 @@ def test_build_initial_state_unknown_extension_defaults_to_csv():
     assert state["data_sources"] == [{"path": "data/mystery", "type": "csv"}]
 
 
+def test_build_initial_state_threads_conversation_history():
+    """Roadmap #17: a follow-up query carries prior turns into the new state."""
+    from src.graph.streaming import build_initial_state
+    history = [{"role": "user", "content": "Show revenue by region"}]
+    state = build_initial_state("Now break that down by quarter", None, conversation_history=history)
+    assert state["conversation_history"] == history
+
+
+def test_build_initial_state_no_history_defaults_to_empty():
+    from src.graph.streaming import build_initial_state
+    state = build_initial_state("q", None)
+    assert state["conversation_history"] == []
+
+
 # ─── run_pipeline_streaming ───────────────────────────────────────────────────
 
 def test_run_pipeline_streaming_calls_on_node_for_each_chunk_in_order():
@@ -83,6 +97,30 @@ def test_run_pipeline_streaming_works_without_on_node_callback():
     with patch("src.graph.streaming.build_graph", return_value=fake_graph):
         result = run_pipeline_streaming("q", None)
     assert result["current_phase"] == "complete"
+
+
+def test_run_pipeline_streaming_threads_conversation_history_to_graph():
+    """Roadmap #17: the history passed to run_pipeline_streaming must reach
+    the state the graph actually runs on, not just build_initial_state's
+    own return value."""
+    from src.graph.streaming import run_pipeline_streaming
+
+    class _RecordingGraph(_FakeCompiledGraph):
+        def __init__(self, chunks):
+            super().__init__(chunks)
+            self.seen_state = None
+
+        async def astream(self, state, stream_mode="updates"):
+            self.seen_state = state
+            async for item in super().astream(state, stream_mode):
+                yield item
+
+    fake_graph = _RecordingGraph([{"run_eval": {"user_query": "q", "current_phase": "complete"}}])
+    history = [{"role": "user", "content": "Show revenue by region"}]
+    with patch("src.graph.streaming.build_graph", return_value=fake_graph):
+        run_pipeline_streaming("q", None, conversation_history=history)
+
+    assert fake_graph.seen_state["conversation_history"] == history
 
 
 def test_run_pipeline_streaming_returns_initial_state_if_graph_yields_nothing():

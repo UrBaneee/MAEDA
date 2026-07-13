@@ -32,6 +32,17 @@ Rules:
 - Be conservative: if you are unsure about a dimension or metric, list it in ambiguities.
 - Do NOT invent columns that don't exist in the schema.
 - Return ONLY the JSON object — no markdown fences, no explanation.
+
+If a "### Conversation History" section is provided, use it ONLY to resolve
+references the current query makes to earlier turns — pronouns ("that",
+"it"), comparatives ("the North one"), or continuations ("also add X",
+"now break it down by Y", "same thing but for Q4"). Assistant turns list
+the previous parse's query_type/target_metrics/dimensions/filters/
+key_findings explicitly — carry forward whichever of those the current
+query doesn't override. If the current query is fully self-contained,
+ignore the history entirely. Never let history override an explicit
+instruction in the current query, and never resolve a reference against
+history that talks about a different dataset than the current schema.
 """
 
 INTENT_CLARIFICATION_SYSTEM = """\

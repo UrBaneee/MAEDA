@@ -32,11 +32,16 @@ NODE_LABELS: dict[str, str] = {
 }
 
 
-def build_initial_state(query: str, data_source_path: Optional[str]) -> MAEDAState:
+def build_initial_state(
+    query: str,
+    data_source_path: Optional[str],
+    conversation_history: Optional[list[dict]] = None,
+) -> MAEDAState:
     """Build the initial MAEDAState for a query + optional data source path,
     inferring the source type from the file extension (SQL sources get a
-    sqlite:/// connection string rather than a bare path)."""
-    state = initial_state(query)
+    sqlite:/// connection string rather than a bare path). conversation_history
+    carries prior turns so follow-up queries can be resolved against them."""
+    state = initial_state(query, conversation_history=conversation_history)
     if data_source_path:
         ext = data_source_path.rsplit(".", 1)[-1].lower() if "." in data_source_path else "csv"
         type_map = {"csv": "csv", "json": "json", "xlsx": "excel",
@@ -66,15 +71,18 @@ def run_pipeline_streaming(
     query: str,
     data_source_path: Optional[str],
     on_node: Optional[Callable[[str, MAEDAState], None]] = None,
+    conversation_history: Optional[list[dict]] = None,
 ) -> MAEDAState:
     """Synchronous entry point for callers with no event loop of their own
     (e.g. Streamlit, which reruns its script synchronously per interaction).
 
     Drives astream_pipeline() to completion under a single asyncio.run(),
     invoking on_node(node_name, state_so_far) as each node completes, and
-    returns the final accumulated state.
+    returns the final accumulated state. Pass the previous turn's returned
+    state["conversation_history"] back in as conversation_history to make
+    this a follow-up query rather than a fresh one.
     """
-    state = build_initial_state(query, data_source_path)
+    state = build_initial_state(query, data_source_path, conversation_history)
 
     async def _drive() -> MAEDAState:
         final_state = state

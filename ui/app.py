@@ -31,10 +31,11 @@ st.set_page_config(
 
 def _init_session():
     defaults = {
-        "messages": [],          # list of {role, content}
-        "last_result": None,     # latest pipeline result dict
+        "messages": [],              # list of {role, content}, for chat display only
+        "last_result": None,         # latest pipeline result dict
         "data_source_path": None,
         "run_count": 0,
+        "conversation_history": [],  # MAEDAState-shaped turns, threaded back into the pipeline
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -58,17 +59,26 @@ with st.sidebar:
         save_dir.mkdir(parents=True, exist_ok=True)
         dest = save_dir / upload.name
         dest.write_bytes(upload.read())
-        st.session_state["data_source_path"] = str(dest)
+        new_path = str(dest)
+        # A genuinely new dataset invalidates any prior conversation history --
+        # references like "that" or "the North one" would resolve against the
+        # wrong data otherwise. Only reset on an actual change (this widget
+        # re-fires with the same value on every rerun, not just when it changes).
+        if new_path != st.session_state.get("data_source_path"):
+            st.session_state["conversation_history"] = []
+        st.session_state["data_source_path"] = new_path
         st.success(f"Loaded: {upload.name}")
 
     manual_path = st.text_input("Or enter file path / DB URI", placeholder="./data/demo/sales.csv")
-    if manual_path:
+    if manual_path and manual_path != st.session_state.get("data_source_path"):
+        st.session_state["conversation_history"] = []
         st.session_state["data_source_path"] = manual_path
 
     if st.session_state["data_source_path"]:
         st.info(f"Active: `{Path(st.session_state['data_source_path']).name}`")
         if st.button("Clear source"):
             st.session_state["data_source_path"] = None
+            st.session_state["conversation_history"] = []
             st.rerun()
 
     st.divider()
@@ -132,6 +142,7 @@ with st.sidebar:
     if st.button("🗑️ Clear chat"):
         st.session_state["messages"] = []
         st.session_state["last_result"] = None
+        st.session_state["conversation_history"] = []
         st.rerun()
 
 
@@ -204,7 +215,17 @@ with tab_chat:
                     # fixed-timer animation guessing how far along we are.
                     status_placeholder.info(NODE_LABELS.get(node_name, f"Running {node_name}..."))
 
-                pipeline_result = run_pipeline_streaming(prompt, _data_source_path, on_node=_on_node)
+                pipeline_result = run_pipeline_streaming(
+                    prompt, _data_source_path, on_node=_on_node,
+                    conversation_history=st.session_state.get("conversation_history"),
+                )
+                # Persist for the next turn regardless of outcome -- even a
+                # guardrail-refused turn's history (which includes at least
+                # the user's own query) is useful context for a follow-up
+                # like "no, I meant X".
+                st.session_state["conversation_history"] = pipeline_result.get(
+                    "conversation_history", []
+                )
 
                 if pipeline_result.get("current_phase") == "error":
                     err_msg = pipeline_result.get("error") or "Analysis could not complete"

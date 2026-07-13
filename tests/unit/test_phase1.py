@@ -39,6 +39,15 @@ def test_initial_state_defaults():
     assert state["guardrail_passed"] is False
     assert state["decision_trace"] == []
     assert state["token_usage"] == {}
+    assert state["conversation_history"] == []
+
+
+def test_initial_state_accepts_conversation_history():
+    """Roadmap #17: a follow-up query threads prior turns back in."""
+    from src.state.graph_state import initial_state
+    history = [{"role": "user", "content": "Show revenue by region"}]
+    state = initial_state("Now break that down by quarter", conversation_history=history)
+    assert state["conversation_history"] == history
 
 
 # ─── 1.3 / 1.4 Graph + Router ─────────────────────────────────────────────────

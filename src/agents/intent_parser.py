@@ -24,6 +24,11 @@ logger = get_logger("maeda.agent.intent_parser")
 # Confidence threshold below which clarification is requested
 _CLARIFICATION_THRESHOLD = 0.7
 
+# Cap how much conversation history reaches the prompt -- bounds token cost
+# as a conversation grows instead of letting every turn resend the entire
+# history verbatim. 6 messages = the last ~3 user/assistant exchanges.
+_MAX_HISTORY_MESSAGES = 6
+
 
 # ─── ParsedIntent dataclass ───────────────────────────────────────────────────
 
@@ -105,7 +110,9 @@ class IntentParserAgent(BaseAgent):
             return self.set_error(state, "user_query is empty")
 
         try:
-            intent = await self._parse(query, state.get("schema_summary", ""))
+            intent = await self._parse(
+                query, state.get("schema_summary", ""), state.get("conversation_history")
+            )
             # Sync token usage accumulated inside _parse back to state
             state["token_usage"] = self._cost_tracker.to_state_dict()
         except Exception as exc:
@@ -177,7 +184,12 @@ class IntentParserAgent(BaseAgent):
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 
-    async def _parse(self, query: str, schema_summary: str) -> ParsedIntent:
+    async def _parse(
+        self,
+        query: str,
+        schema_summary: str,
+        conversation_history: Optional[list[dict]] = None,
+    ) -> ParsedIntent:
         """Call the LLM to produce a ParsedIntent."""
         system = INTENT_PARSER_SYSTEM
         if schema_summary:
@@ -187,6 +199,9 @@ class IntentParserAgent(BaseAgent):
                 + "Use the schema to identify valid column names for dimensions, "
                 + "metrics, and filters."
             )
+        history_text = _format_history(conversation_history)
+        if history_text:
+            system = system + f"\n\n### Conversation History (most recent last)\n{history_text}\n"
 
         messages = [
             SystemMessage(content=system),
@@ -230,6 +245,18 @@ class IntentParserAgent(BaseAgent):
             call_label="generate_clarification",
         )
         return response.content.strip()
+
+
+# ─── Conversation history formatting ──────────────────────────────────────────
+
+def _format_history(conversation_history: Optional[list[dict]]) -> str:
+    """Render the last _MAX_HISTORY_MESSAGES turns as plain text for the
+    prompt. Returns "" for no/empty history so callers can skip the
+    section entirely rather than inject an empty header."""
+    if not conversation_history:
+        return ""
+    recent = conversation_history[-_MAX_HISTORY_MESSAGES:]
+    return "\n".join(f"{h.get('role', '?')}: {h.get('content', '')}" for h in recent)
 
 
 # ─── JSON extraction helper ───────────────────────────────────────────────────

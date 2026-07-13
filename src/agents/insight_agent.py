@@ -204,6 +204,15 @@ class InsightAgent(BaseAgent):
         # 7.5 Report generation
         state["report"] = await self._generate_report(state, insights)
 
+        # Append this turn's resolved intent + top findings to conversation
+        # history so a follow-up query ("now break that down by quarter")
+        # can be resolved against exactly what was asked/found this turn —
+        # see IntentParserAgent._parse()'s consumption of this field.
+        state["conversation_history"] = [
+            *state.get("conversation_history", []),
+            {"role": "assistant", "content": _format_assistant_turn_summary(state, insights)},
+        ]
+
         state = self.log_decision(
             state,
             action="generate_insights",
@@ -273,6 +282,31 @@ def _classify_evidence_level(result_summary: str) -> str:
     if s.startswith(_ROW_LEVEL_SUMMARY_PREFIXES):
         return "ROW-LEVEL SAMPLE"
     return "UNKNOWN"  # e.g. raw SQL — cannot tell if it grouped/aggregated
+
+
+def _format_assistant_turn_summary(state: MAEDAState, insights: list[Insight]) -> str:
+    """
+    Compact, structured recap of this turn for conversation_history — the
+    resolved intent's fields verbatim (so a follow-up query has exact
+    values to carry forward, not prose to re-parse) plus up to 2 key
+    findings. Intentionally not the full report: history is capped to the
+    last few messages (see IntentParserAgent._MAX_HISTORY_MESSAGES), so
+    each entry needs to stay compact as a conversation grows.
+    """
+    intent = state.get("parsed_intent") or {}
+    parts = [
+        f"query_type={intent.get('query_type')}",
+        f"target_metrics={intent.get('target_metrics') or []}",
+        f"dimensions={intent.get('dimensions') or []}",
+    ]
+    if intent.get("filters"):
+        parts.append(f"filters={intent['filters']}")
+    if intent.get("time_range"):
+        parts.append(f"time_range={intent['time_range']}")
+    findings = [ins.finding for ins in insights[:2] if ins.finding]
+    if findings:
+        parts.append("key_findings=" + " / ".join(findings))
+    return "; ".join(parts)
 
 
 def _format_findings(results: list[dict]) -> str:

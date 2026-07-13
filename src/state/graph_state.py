@@ -58,11 +58,22 @@ class MAEDAState(TypedDict):
     clarification_count: int     # For clarification loops (cap at 1)
 
 
-def initial_state(user_query: str, data_sources: Optional[list[dict]] = None) -> MAEDAState:
-    """Return a fully-initialized MAEDAState with safe defaults."""
+def initial_state(
+    user_query: str,
+    data_sources: Optional[list[dict]] = None,
+    conversation_history: Optional[list[dict]] = None,
+) -> MAEDAState:
+    """Return a fully-initialized MAEDAState with safe defaults.
+
+    conversation_history carries prior turns (see IntentParserAgent) so a
+    follow-up query ("now break that down by quarter") can be resolved
+    against what was actually asked/found last turn — each new pipeline
+    run still starts from a fresh state, only this list persists across
+    turns (threaded in by the caller, e.g. ui/app.py's session state).
+    """
     return MAEDAState(
         user_query=user_query,
-        conversation_history=[],
+        conversation_history=conversation_history or [],
         parsed_intent={},
         clarification_needed=False,
         clarification_question=None,

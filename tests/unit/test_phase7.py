@@ -232,6 +232,89 @@ def test_generate_tracks_token_usage():
     assert "insight_agent" in result["token_usage"]
 
 
+# ─── Multi-turn conversation history (roadmap #17) ────────────────────────────
+
+def test_generate_appends_assistant_turn_to_conversation_history():
+    from src.agents.insight_agent import InsightAgent
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.content = json.dumps([
+        {"finding": "North region generates 60% of revenue", "evidence": "e",
+         "confidence": 0.9, "recommendation": "rec"}
+    ])
+    mock_response.usage_metadata = {"input_tokens": 20, "output_tokens": 30}
+    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+    agent = InsightAgent(llm=mock_llm)
+    state = initial_state("Show revenue by region")
+    state["parsed_intent"] = {
+        "query_type": "descriptive", "target_metrics": ["revenue"],
+        "dimensions": ["region"], "filters": [],
+    }
+    state["analysis_results"] = [
+        {"step": 1, "method": "groupby", "result_summary": "North=600, South=400",
+         "confidence": 0.9, "failed": False},
+    ]
+    state["rag_context"] = []
+    state["rag_sources"] = []
+
+    result = asyncio.run(agent.generate(state))
+    history = result["conversation_history"]
+    assert len(history) == 1
+    assert history[0]["role"] == "assistant"
+    assert "target_metrics=['revenue']" in history[0]["content"]
+    assert "dimensions=['region']" in history[0]["content"]
+    assert "North region generates 60% of revenue" in history[0]["content"]
+
+
+def test_generate_preserves_prior_conversation_history():
+    """A follow-up turn's assistant summary must be appended, not replace,
+    whatever history already existed from earlier turns."""
+    from src.agents.insight_agent import InsightAgent
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("LLM down"))
+
+    agent = InsightAgent(llm=mock_llm)
+    state = initial_state("Now break that down by quarter")
+    state["conversation_history"] = [
+        {"role": "user", "content": "Show revenue by region"},
+        {"role": "assistant", "content": "query_type=descriptive; ..."},
+    ]
+    state["analysis_results"] = []
+    state["rag_context"] = []
+    state["rag_sources"] = []
+
+    result = asyncio.run(agent.generate(state))
+    assert len(result["conversation_history"]) == 3
+    assert result["conversation_history"][0]["content"] == "Show revenue by region"
+
+
+def test_format_assistant_turn_summary_includes_filters_and_time_range():
+    from src.agents.insight_agent import Insight, _format_assistant_turn_summary
+    state = initial_state("q")
+    state["parsed_intent"] = {
+        "query_type": "diagnostic", "target_metrics": ["revenue"],
+        "dimensions": ["quarter"],
+        "filters": [{"column": "region", "op": "=", "value": "North"}],
+        "time_range": {"start": "2023-01-01", "end": "2023-12-31"},
+    }
+    insights = [Insight(finding="Revenue dropped in Q3", evidence=[], confidence=0.8,
+                        domain_context="", impact="high", recommendation="", sources=[])]
+    summary = _format_assistant_turn_summary(state, insights)
+    assert "filters=[{'column': 'region'" in summary
+    assert "time_range={'start': '2023-01-01'" in summary
+    assert "Revenue dropped in Q3" in summary
+
+
+def test_format_assistant_turn_summary_handles_no_insights():
+    from src.agents.insight_agent import _format_assistant_turn_summary
+    state = initial_state("q")
+    state["parsed_intent"] = {"query_type": "descriptive", "target_metrics": [], "dimensions": []}
+    summary = _format_assistant_turn_summary(state, [])
+    assert "key_findings" not in summary
+    assert "query_type=descriptive" in summary
+
+
 # ─── 7.5 Report generator ─────────────────────────────────────────────────────
 
 def test_report_is_markdown():

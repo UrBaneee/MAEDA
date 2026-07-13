@@ -341,6 +341,82 @@ def test_no_schema_uses_base_prompt():
     assert "Available Data Schema" not in system_content
 
 
+# ─── Multi-turn conversation history (roadmap #17) ────────────────────────────
+
+def test_conversation_history_injected_into_prompt():
+    """A follow-up query must see prior turns in the system prompt so
+    references like "that" or "add X too" can be resolved."""
+    captured_messages = []
+
+    async def capturing_invoke(messages):
+        captured_messages.extend(messages)
+        return _make_llm_response({
+            "query_type": "descriptive", "target_metrics": ["revenue"],
+            "dimensions": ["region", "quarter"], "filters": [],
+            "time_range": None, "aggregation": "sum", "sort_by": None,
+            "limit": None, "confidence": 0.9, "ambiguities": [],
+        })
+
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=capturing_invoke)
+    agent = IntentParserAgent(llm=mock_llm)
+
+    state = initial_state("Now break that down by quarter too")
+    state["conversation_history"] = [
+        {"role": "user", "content": "Show revenue by region"},
+        {"role": "assistant", "content": "query_type=descriptive; target_metrics=['revenue']; "
+                                          "dimensions=['region']; key_findings=North leads at $450K"},
+    ]
+    asyncio.run(agent.process(state))
+
+    system_content = captured_messages[0].content
+    assert "### Conversation History (most recent last)" in system_content
+    assert "Show revenue by region" in system_content
+    assert "North leads at $450K" in system_content
+
+
+def test_no_conversation_history_omits_section():
+    """A fresh conversation (no prior turns) should not inject an empty
+    history section into the prompt."""
+    captured_messages = []
+
+    async def capturing_invoke(messages):
+        captured_messages.extend(messages)
+        return _make_llm_response({
+            "query_type": "descriptive", "target_metrics": ["revenue"],
+            "dimensions": [], "filters": [], "time_range": None,
+            "aggregation": "sum", "sort_by": None, "limit": None,
+            "confidence": 0.9, "ambiguities": [],
+        })
+
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=capturing_invoke)
+    agent = IntentParserAgent(llm=mock_llm)
+
+    state = initial_state("Show revenue by region")
+    asyncio.run(agent.process(state))
+
+    # The base prompt's rules describe how to use history *if* a section is
+    # given; only the actual injected "### Conversation History" section
+    # header should be absent when there's no history to inject.
+    assert "### Conversation History (most recent last)" not in captured_messages[0].content
+
+
+def test_format_history_caps_to_max_messages():
+    from src.agents.intent_parser import _format_history, _MAX_HISTORY_MESSAGES
+    history = [{"role": "user", "content": f"turn {i}"} for i in range(20)]
+    formatted = _format_history(history)
+    assert "turn 19" in formatted  # most recent kept
+    assert "turn 0" not in formatted  # oldest dropped
+    assert formatted.count("turn ") == _MAX_HISTORY_MESSAGES
+
+
+def test_format_history_empty_returns_empty_string():
+    from src.agents.intent_parser import _format_history
+    assert _format_history(None) == ""
+    assert _format_history([]) == ""
+
+
 # ─── 2.6 Accuracy on 5 sample queries ────────────────────────────────────────
 # These use deterministic mocks to validate the full parsing pipeline.
 
