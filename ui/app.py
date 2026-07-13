@@ -10,12 +10,8 @@ Layout:
 """
 from __future__ import annotations
 
-import asyncio
-import json
 import os
-import time
 from pathlib import Path
-from typing import Optional
 
 import streamlit as st
 
@@ -29,29 +25,6 @@ st.set_page_config(
 )
 
 # ─── Imports (lazy where possible to avoid import-time LLM construction) ─────
-
-def _run_pipeline(query: str, data_source_path: Optional[str]) -> dict:
-    """Invoke the LangGraph pipeline and return the final state.
-
-    Streamlit's execution model reruns this script synchronously per
-    interaction (no long-running event loop of its own), so a single
-    top-level asyncio.run() here is the correct boundary — the graph's
-    nodes all run under that one loop instead of each spinning up its own.
-    """
-    from src.graph.builder import build_graph
-    from src.state.graph_state import initial_state
-
-    state = initial_state(query)
-    if data_source_path:
-        ext = data_source_path.rsplit(".", 1)[-1].lower() if "." in data_source_path else "csv"
-        type_map = {"csv": "csv", "json": "json", "xlsx": "excel",
-                    "xls": "excel", "db": "sql", "sqlite": "sql"}
-        src_type = type_map.get(ext, "csv")
-        src_path = f"sqlite:///{data_source_path}" if src_type == "sql" else data_source_path
-        state["data_sources"] = [{"path": src_path, "type": src_type}]
-
-    graph = build_graph()
-    return asyncio.run(graph.ainvoke(state))
 
 
 # ─── Session state init ───────────────────────────────────────────────────────
@@ -201,6 +174,8 @@ with tab_chat:
 
     # Chat input
     if prompt := st.chat_input("Ask a question about your data…"):
+        from src.graph.streaming import NODE_LABELS, run_pipeline_streaming
+
         st.session_state["messages"].append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -216,49 +191,22 @@ with tab_chat:
             status_placeholder = st.empty()
             result_placeholder = st.empty()
 
-            # Stream progress phases
-            phases = [
-                "🔍 Parsing intent...",
-                "📊 Profiling data...",
-                "🧮 Running analysis...",
-                "🎨 Generating visualizations...",
-                "💡 Generating insights...",
-                "🛡️ Running guardrails...",
-                "🎯 Evaluating output...",
-            ]
-
-            status_placeholder.info(phases[0])
+            status_placeholder.info(NODE_LABELS.get("parse_intent", "Starting..."))
 
             try:
-                # Run pipeline (sync via thread to keep Streamlit responsive)
-                import threading
-                pipeline_result: dict = {}
-                pipeline_error: list = []
-                # Capture session state values in main thread before spawning
                 _data_source_path = st.session_state.get("data_source_path")
 
-                def _run():
-                    try:
-                        r = _run_pipeline(prompt, _data_source_path)
-                        pipeline_result.update(r)
-                    except Exception as e:
-                        pipeline_error.append(str(e))
+                def _on_node(node_name: str, _state: dict) -> None:
+                    # Called synchronously as each graph node actually
+                    # completes (via graph.astream()) -- st.empty().info()
+                    # pushes an incremental update to the browser
+                    # immediately, so this is real per-node progress, not a
+                    # fixed-timer animation guessing how far along we are.
+                    status_placeholder.info(NODE_LABELS.get(node_name, f"Running {node_name}..."))
 
-                thread = threading.Thread(target=_run)
-                thread.start()
+                pipeline_result = run_pipeline_streaming(prompt, _data_source_path, on_node=_on_node)
 
-                # Animate progress while running
-                phase_idx = 0
-                while thread.is_alive():
-                    status_placeholder.info(phases[min(phase_idx, len(phases) - 1)])
-                    phase_idx = (phase_idx + 1) % len(phases)
-                    time.sleep(1.0)
-                thread.join()
-
-                if pipeline_error:
-                    status_placeholder.error(f"Error: {pipeline_error[0]}")
-                    response = f"An error occurred: {pipeline_error[0]}"
-                elif pipeline_result.get("current_phase") == "error":
+                if pipeline_result.get("current_phase") == "error":
                     err_msg = pipeline_result.get("error") or "Analysis could not complete"
                     status_placeholder.error(f"Error: {err_msg}")
                     response = f"⚠️ {err_msg}"
