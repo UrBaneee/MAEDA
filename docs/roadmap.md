@@ -58,8 +58,9 @@ and the natural continuation of the eval-first narrative.
    `data/demo/*`; the 4 unanswerable ones (data mismatch / predictive)
    carry an explicit `"_note"` instead. This immediately caught two live
    bugs (eval_report.md #13, #14) that empty ground truth had been hiding.
-   Remaining gap: the exact-string-match scoring is brittle against
-   thousands-separator formatting — see eval_report.md's known limitations.
+   Remaining gap (now closed, see eval_report.md #25): the exact-string-match
+   scoring used to be brittle against thousands-separator formatting and
+   LLM rounding — replaced with tolerant numeric comparison.
 8. ✅ **Done (eval judge only) — LLM-judge reliability.** See
    eval_report.md #17. The eval harness's judge now auto-resolves to a
    provider/model independent from the agent being evaluated (prefers a
