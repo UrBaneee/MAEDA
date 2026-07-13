@@ -14,6 +14,7 @@ from src.graph.nodes import (
     generate_viz_node,
     handle_error_node,
     parse_intent_node,
+    persist_run_node,
     plan_analysis_node,
     retrieve_knowledge_node,
     run_eval_node,
@@ -42,6 +43,7 @@ def build_graph() -> StateGraph:
     g.add_node("run_guardrails", run_guardrails_node)
     g.add_node("run_eval", run_eval_node)
     g.add_node("handle_error", handle_error_node)
+    g.add_node("persist_run", persist_run_node)
 
     # Delegated sub-system nodes (call Data Cleaner + RAG via MCP)
     g.add_node("connect_and_profile_data", connect_and_profile_node)
@@ -88,9 +90,12 @@ def build_graph() -> StateGraph:
         },
     )
 
-    # Terminal nodes
-    g.add_edge("run_eval", END)
-    g.add_edge("handle_error", END)
+    # Terminal nodes — both routed through persist_run so every pipeline
+    # invocation is audited (success or failure) without either node
+    # needing to know persistence exists.
+    g.add_edge("run_eval", "persist_run")
+    g.add_edge("handle_error", "persist_run")
+    g.add_edge("persist_run", END)
 
     return g.compile()
 

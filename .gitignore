@@ -26,6 +26,7 @@ venv/
 # Runtime logs (eval reports under logs/eval_runs/ are intentionally kept)
 logs/*.log
 logs/maeda.log
+logs/*.db
 
 # Large / real user-uploaded data — not synthetic demo data, don't publish
 data/uploads/

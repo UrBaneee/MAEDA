@@ -33,6 +33,7 @@ _viz_agent = None
 _insight_agent = None
 _guardrail_agent = None
 _eval_runner = None
+_run_store = None
 
 def _get_intent_parser():
     global _intent_parser
@@ -89,6 +90,13 @@ def _get_eval_runner():
         from src.eval.runner import EvalRunner
         _eval_runner = EvalRunner()
     return _eval_runner
+
+def _get_run_store():
+    global _run_store
+    if _run_store is None:
+        from src.persistence.run_store import RunStore
+        _run_store = RunStore()
+    return _run_store
 
 
 def _trace(state: MAEDAState, agent_name: str, action: str, reasoning: str) -> MAEDAState:
@@ -249,7 +257,7 @@ async def run_eval_node(state: MAEDAState) -> MAEDAState:
     state["current_phase"] = "complete"
 
     runner = _get_eval_runner()
-    result = await runner.score(state)
+    result = await runner.score(state, run_id=state.get("run_id"))
     state["eval_scores"] = {
         s.metric: {"score": s.score, "label": s.label, "reasoning": s.reasoning}
         for s in result.scores
@@ -279,4 +287,21 @@ def handle_error_node(state: MAEDAState) -> MAEDAState:
     state["current_phase"] = "error"
     state = _trace(state, "orchestrator", "handle_error",
                     f"{state['error_type']}: {state.get('error')}")
+    return state
+
+
+def persist_run_node(state: MAEDAState) -> MAEDAState:
+    """
+    Terminal node on every path (both run_eval and handle_error route here
+    before END) — persists decision_trace/mcp_call_log to SQLite so they
+    survive past this process, instead of vanishing the moment the graph
+    finishes. See src/persistence/run_store.py.
+
+    Persistence failures must never break the pipeline the user is
+    actually waiting on: caught and logged, not raised.
+    """
+    try:
+        _get_run_store().save_run(state)
+    except Exception as exc:
+        logger.warning("Failed to persist run %s: %s", state.get("run_id"), exc)
     return state

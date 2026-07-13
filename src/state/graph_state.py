@@ -2,10 +2,14 @@
 MAEDAState — single source of truth for all inter-agent data.
 All agents read from and write to this TypedDict; no unstructured message passing.
 """
+import uuid
 from typing import TypedDict, Optional, Literal
 
 
 class MAEDAState(TypedDict):
+    # === Identity ===
+    run_id: str    # unique per pipeline invocation; see src/persistence/run_store.py
+
     # === User Input ===
     user_query: str
     conversation_history: list[dict]
@@ -72,6 +76,7 @@ def initial_state(
     turns (threaded in by the caller, e.g. ui/app.py's session state).
     """
     return MAEDAState(
+        run_id=uuid.uuid4().hex,
         user_query=user_query,
         conversation_history=conversation_history or [],
         parsed_intent={},

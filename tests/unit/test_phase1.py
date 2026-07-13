@@ -12,7 +12,7 @@ def test_initial_state_all_fields():
     from src.state.graph_state import initial_state
     state = initial_state("What is the average revenue by region?")
     required_fields = [
-        "user_query", "conversation_history",
+        "run_id", "user_query", "conversation_history",
         "parsed_intent", "clarification_needed", "clarification_question",
         "data_sources", "active_source", "schema_summary",
         "data_quality_report", "cleaning_applied", "cleaning_summary",
@@ -50,6 +50,16 @@ def test_initial_state_accepts_conversation_history():
     assert state["conversation_history"] == history
 
 
+def test_initial_state_generates_unique_run_id():
+    """Roadmap #20: run_id identifies this invocation for persistence
+    (src/persistence/run_store.py) -- must be present and unique per call."""
+    from src.state.graph_state import initial_state
+    s1 = initial_state("q")
+    s2 = initial_state("q")
+    assert s1["run_id"]
+    assert s1["run_id"] != s2["run_id"]
+
+
 # ─── 1.3 / 1.4 Graph + Router ─────────────────────────────────────────────────
 
 def test_graph_compiles():
@@ -67,7 +77,7 @@ def test_graph_has_expected_nodes():
         "parse_intent", "ask_clarification", "connect_and_profile_data",
         "plan_analysis", "execute_analysis", "generate_viz",
         "retrieve_domain_knowledge", "generate_insights",
-        "run_guardrails", "run_eval", "handle_error",
+        "run_guardrails", "run_eval", "handle_error", "persist_run",
     }
     assert expected.issubset(node_names), f"Missing nodes: {expected - node_names}"
 

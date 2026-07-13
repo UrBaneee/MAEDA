@@ -29,6 +29,7 @@ NODE_LABELS: dict[str, str] = {
     "run_guardrails": "🛡️ Running guardrails...",
     "run_eval": "🎯 Evaluating output...",
     "handle_error": "⚠️ Handling error...",
+    "persist_run": "💾 Saving run...",
 }
 
 

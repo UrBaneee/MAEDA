@@ -53,6 +53,12 @@ class MAEDASettings(BaseSettings):
     log_format: Literal["json", "pretty"] = Field(default="pretty", alias="LOG_FORMAT")
     log_file: Optional[str] = Field(default=None, alias="LOG_FILE")
 
+    # ── Run persistence ──────────────────────────────────────────────────────
+    # SQLite store for decision_trace/mcp_call_log (see src/persistence/run_store.py)
+    # -- previously discarded when the process exited, leaving nothing
+    # auditable after the fact.
+    runs_db_path: str = Field(default="logs/runs.db", alias="MAEDA_RUNS_DB_PATH")
+
     # ── Streamlit UI ─────────────────────────────────────────────────────────
     streamlit_port: int = Field(default=8501, alias="STREAMLIT_PORT")
 
