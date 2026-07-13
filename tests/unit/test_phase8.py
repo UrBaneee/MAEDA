@@ -176,6 +176,68 @@ def test_completeness_warns_no_structure():
     assert not cr.passed
 
 
+# ─── 8.8 Population-claim grounding ──────────────────────────────────────────
+
+def test_population_claim_passes_no_report():
+    from src.agents.guardrail_agent import _check_population_claim_grounding
+    cr = _check_population_claim_grounding("", [])
+    assert cr.passed
+
+
+def test_population_claim_passes_no_generalizing_language():
+    from src.agents.guardrail_agent import _check_population_claim_grounding
+    report = "Customer 4821 placed an order for $120 on March 3rd."
+    cr = _check_population_claim_grounding(report, [])
+    assert cr.passed
+
+
+def test_population_claim_critical_when_no_aggregate_evidence():
+    """The exact failure mode #12 targets: a row-level sample (filter/derive
+    only) gets generalized into a population-wide claim in the report."""
+    from src.agents.guardrail_agent import _check_population_claim_grounding
+    report = "Most customers churn within their first 90 days due to pricing."
+    results = [
+        {"method": "filter_recent", "result_summary": "pandas/filter -> 3 rows matched",
+         "failed": False},
+    ]
+    cr = _check_population_claim_grounding(report, results)
+    assert not cr.passed
+    assert cr.severity == "critical"
+    assert "population-level claim" in cr.finding
+
+
+def test_population_claim_passes_when_aggregate_evidence_exists():
+    from src.agents.guardrail_agent import _check_population_claim_grounding
+    report = "Most customers churn within their first 90 days due to pricing."
+    results = [
+        {"method": "churn_by_cohort", "result_summary": "pandas/groupby -> 5 groups",
+         "failed": False},
+    ]
+    cr = _check_population_claim_grounding(report, results)
+    assert cr.passed
+
+
+def test_population_claim_ignores_failed_steps_as_evidence():
+    from src.agents.guardrail_agent import _check_population_claim_grounding
+    report = "Overall, revenue trends upward across the board."
+    results = [
+        {"method": "revenue_groupby", "result_summary": "pandas/groupby -> 5 groups",
+         "failed": True},
+    ]
+    cr = _check_population_claim_grounding(report, results)
+    assert not cr.passed
+
+
+def test_population_claim_bare_all_is_not_flagged():
+    """A bare "all" is too common in ordinary prose to use as a trigger on
+    its own -- only "all/every/most <population noun>" and a short list of
+    unambiguous generalization phrases should match."""
+    from src.agents.guardrail_agent import _check_population_claim_grounding
+    report = "All of the figures above are rounded to the nearest dollar."
+    cr = _check_population_claim_grounding(report, [])
+    assert cr.passed
+
+
 # ─── 8.7 Aggregator ───────────────────────────────────────────────────────────
 
 def test_aggregate_all_pass():

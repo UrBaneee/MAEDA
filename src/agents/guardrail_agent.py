@@ -26,6 +26,7 @@ from typing import Literal, Optional
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.agents.base_agent import BaseAgent
+from src.agents.insight_agent import _classify_evidence_level
 from src.config.agent_prompts import GUARDRAIL_SYSTEM
 from src.config.settings import settings
 from src.state.graph_state import MAEDAState
@@ -46,6 +47,24 @@ _PII_PATTERNS = [
 _DANGEROUS_SQL = re.compile(
     r"\b(DROP|DELETE|TRUNCATE|ALTER|INSERT|UPDATE|EXEC|EXECUTE|GRANT|REVOKE|"
     r"CREATE\s+USER|CREATE\s+ROLE|xp_cmdshell|LOAD\s+DATA)\b",
+    re.IGNORECASE,
+)
+
+# Phrases that generalize a claim to the whole dataset/population. Deliberately
+# targeted at unambiguous generalization markers (not a bare "all", which is
+# too common in ordinary prose) to keep false positives low, since a match
+# without aggregate-step backing escalates straight to "critical".
+_POPULATION_NOUN = (
+    r"(?:customers?|users?|products?|orders?|transactions?|records?|rows?|"
+    r"regions?|stores?|accounts?|clients?|segments?)"
+)
+_POPULATION_CLAIM_RE = re.compile(
+    rf"\b(?:all|every|most|the majority of)\s+{_POPULATION_NOUN}\b"
+    rf"|\bacross (?:all|the board)\b"
+    rf"|\bon average\b"
+    rf"|\boverall,"
+    rf"|\bconsistently\b"
+    rf"|\bin general\b",
     re.IGNORECASE,
 )
 
@@ -135,6 +154,9 @@ class GuardrailAgent(BaseAgent):
 
         # 8.6 Completeness (rule-based)
         checks.append(_check_completeness(report_text, query))
+
+        # 8.8 Population-claim grounding (rule-based)
+        checks.append(_check_population_claim_grounding(report_text, analysis_results))
 
         # 8.5 Hallucination detector + 8.2 claim grounding (LLM-as-judge)
         llm_checks = await self._llm_judge(report_text, insights, analysis_results, query)
@@ -278,6 +300,50 @@ def _check_pii(text: str) -> CheckResult:
                 f"PII detected: {pii_type} at position {match.start()}",
             )
     return CheckResult("pii_detection", True, "info")
+
+
+def _check_population_claim_grounding(report: str, results: list[dict]) -> CheckResult:
+    """
+    8.8 Catch a report that generalizes to the whole population (e.g. "all
+    customers churn because...") when no analysis step actually computed
+    anything over the whole group — only row-level filter/derive results
+    (a sample of individual rows) or an unclassifiable raw result exist.
+    This is the specific failure mode roadmap #12 targets: an LLM
+    extrapolating a population-wide claim from what was really just a
+    sample row or two, previously caught only by a prompt-level ask (the
+    [AGGREGATE]/[ROW-LEVEL SAMPLE] evidence tags in
+    insight_agent._format_findings) with nothing double-checking that the
+    LLM actually respected it.
+
+    Coarse-grained by design: checks whether *any* aggregate-level evidence
+    exists in the whole step list, not whether the specific sentence
+    containing the claim traces to it — matching a specific claim to a
+    specific step would need real NLP, not a regex-based rule check. A
+    report making a population claim while zero steps ever aggregated
+    anything is unambiguous enough to flag without that precision.
+    """
+    if not report:
+        return CheckResult("population_claim_grounding", True, "info")
+
+    match = _POPULATION_CLAIM_RE.search(report)
+    if not match:
+        return CheckResult("population_claim_grounding", True, "info")
+
+    has_aggregate_evidence = any(
+        _classify_evidence_level(r.get("result_summary", "")) == "AGGREGATE"
+        for r in results
+        if not r.get("failed")
+    )
+    if has_aggregate_evidence:
+        return CheckResult("population_claim_grounding", True, "info")
+
+    return CheckResult(
+        "population_claim_grounding", False, "critical",
+        f"Report makes a population-level claim ({match.group(0).strip()!r}) "
+        f"but no analysis step aggregated over the data — only row-level or "
+        f"unclassifiable results are available. This looks like a "
+        f"generalization from a sample, not a computed pattern.",
+    )
 
 
 def _check_completeness(report: str, query: str) -> CheckResult:
