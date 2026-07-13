@@ -151,9 +151,21 @@ and the natural continuation of the eval-first narrative.
     no secrets) and an `integration-tests` job (live judge calibration +
     a 1-case eval smoke run, gated on `secrets.OPENAI_API_KEY`, skips
     gracefully without it). README has a CI status badge.
-17. **Multi-turn conversation memory.** `src/memory/` is an empty
-    `__init__.py`. Follow-up questions ("now break that down by region")
-    aren't supported at all, but real analysis is inherently conversational.
+17. ✅ **Done — multi-turn conversation memory.** See eval_report.md #32.
+    `conversation_history` (a state field that already existed since Phase
+    1 but was never read back) now actually resolves follow-ups: the
+    Intent Parser sees the last few turns and carries forward whichever
+    of query_type/target_metrics/dimensions/filters the current query
+    doesn't override, while everything downstream stays unaware multi-turn
+    exists at all. Verified live with a real two-turn browser session —
+    "Now break that down by quarter too" (a query naming neither "revenue"
+    nor "region") correctly resolved to `dimensions=['region', 'quarter']`
+    at full confidence. `src/memory/` stays an empty stub deliberately —
+    a capped list threaded through existing state was sufficient; no
+    separate memory abstraction was needed for what this required. Not
+    done: no multi-turn golden eval suite yet (scripts/run_eval.py still
+    runs all 20 cases independently) — a real follow-up, not silently
+    skipped.
 18. **Concurrency and session isolation.** Agents are module-level singletons;
     two simultaneous Streamlit users will cross-contaminate state.
 
@@ -203,12 +215,13 @@ fallback profiler was strengthened from one check to six (eval_report.md
 the primary demo dataset — and a dead-key bug was fixed that had kept every
 profiler finding out of the report's quality caveat.
 
-**Phase C — Make it pleasant to use** (#13, #14, #17): #13 (async cleanup)
-and #14 (streaming) ✅ done — see eval_report.md #30–31; #13 was the real
-prerequisite for #14 (streaming needs a genuine async execution path, not
-one loop per node). #17 (multi-turn memory) remains — the largest, most
-novel-feature-shaped item in this phase, deliberately left for its own
-dedicated pass rather than folded in here.
+**Phase C — Make it pleasant to use** (#13, #14, #17): ✅ done — see
+eval_report.md #30–32. #13 was the real prerequisite for #14 (streaming
+needs a genuine async execution path, not one loop per node). #17 turned
+out to be a two-agent, prompt-and-state-threading change rather than the
+large new subsystem the "largest, most novel-feature-shaped item" framing
+suggested going in — intent resolution absorbed all of the multi-turn
+complexity, so nothing downstream needed to change.
 
 **Product layer (#19–24) waits until a target scenario is picked** — recurring
 ops reporting prioritizes #23; an analyst-copilot scenario prioritizes #17
