@@ -166,8 +166,18 @@ and the natural continuation of the eval-first narrative.
     done: no multi-turn golden eval suite yet (scripts/run_eval.py still
     runs all 20 cases independently) — a real follow-up, not silently
     skipped.
-18. **Concurrency and session isolation.** Agents are module-level singletons;
-    two simultaneous Streamlit users will cross-contaminate state.
+18. ✅ **Done — concurrency and session isolation.** See eval_report.md #35.
+    Agents are module-level singletons, and each held a persistent
+    `self._cost_tracker` that only ever accumulated (`+=`, never reset) —
+    confirmed live that a second query in the same process showed
+    query1+query2's token_usage combined, and under genuinely concurrent
+    `asyncio.gather()` requests this is real cross-session leakage, not
+    just drift. `decision_trace` was already correctly scoped (stateless
+    per call). Fixed by rehydrating a tracker from `state["token_usage"]`
+    itself (unique per request) instead of accumulating on `self`;
+    `self._cost_tracker` removed entirely. Verified live under both
+    sequential and genuinely concurrent (`asyncio.gather`) requests — each
+    now reports only its own cost.
 
 ## Tier 4 — Product layer (scenario-dependent — don't build ahead of a use case)
 
