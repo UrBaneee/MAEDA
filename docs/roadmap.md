@@ -53,11 +53,13 @@ and the natural continuation of the eval-first narrative.
    `error_rate` no longer scores a correctly-blocked fabricated report the
    same as a pipeline crash; a separate informational `safe_refusal` metric
    (excluded from the weighted aggregate) tracks refusal rate on its own.
-7. ✅ **Done — backfilled `ground_truth`.** See eval_report.md #12. All 16
+7. ✅ **Done — backfilled `ground_truth`.** See eval_report.md #12. All
    answerable golden cases now have real values computed from
-   `data/demo/*`; the 4 unanswerable ones (data mismatch / predictive)
-   carry an explicit `"_note"` instead. This immediately caught two live
-   bugs (eval_report.md #13, #14) that empty ground truth had been hiding.
+   `data/demo/*`; the data-mismatch/predictive ones carry an explicit
+   `"_note"` instead (originally 4 — D02's cross-table join fix in #22
+   later made it answerable, leaving 3: DG04, C03, P03). This immediately
+   caught two live bugs (eval_report.md #13, #14) that empty ground truth
+   had been hiding.
    Remaining gap (now closed, see eval_report.md #25): the exact-string-match
    scoring used to be brittle against thousands-separator formatting and
    LLM rounding — replaced with tolerant numeric comparison.
@@ -123,7 +125,7 @@ and the natural continuation of the eval-first narrative.
     since neither depends on `test_case`. Only the cheap, test_case-aware
     metrics (factual_accuracy, intent_accuracy) get recomputed.
 16. ✅ **Done — integration tests + CI.** See eval_report.md #20.
-    `.github/workflows/ci.yml`: a free `unit-tests` job (357 mocked tests,
+    `.github/workflows/ci.yml`: a free `unit-tests` job (385 mocked tests,
     no secrets) and an `integration-tests` job (live judge calibration +
     a 1-case eval smoke run, gated on `secrets.OPENAI_API_KEY`, skips
     gracefully without it). README has a CI status badge.
@@ -162,12 +164,16 @@ smaller Tier 2 items not bundled into a named phase — pick up opportunisticall
 
 **Phase B — Make "real data" actually work** (#1, #2, #4, #10): ✅ done.
 #1, #2, #4 (joins, pushdown, date-part derivation — see eval_report.md
-#21–22). #10 (baseline B, see eval_report.md #23): RAG-MCP-Server connected
-and verified genuinely live; Data Cleaner intentionally still offline.
-Answer to this debugging pass's original question: the transport layer
-itself was a real bug (now fixed), but with it fixed, precision didn't
-move — the remaining gap is retrieval scoping upstream in rag-framework,
-not MAEDA's own orchestration.
+#21–22). #10 (baseline B/C/D, see eval_report.md #23–25): RAG-MCP-Server
+connected and verified genuinely live; Data Cleaner intentionally still
+offline. Answer to this debugging pass's original question: two real
+sub-system coordination bugs were found and fixed — the MCP transport
+layer (#23) and collection isolation upstream in rag-framework (#24,
+verified via reasoning-trace evidence, not just aggregate score) — plus
+one eval-harness bug of its own (`factual_accuracy`'s exact-match
+brittleness, #25, worth +0.03 aggregate points, confirmed twice
+independently). None of these were MAEDA's own orchestration logic;
+the harness itself needed as much debugging as the pipeline it measures.
 
 **Phase C — Make it pleasant to use** (#13, #14, #17): streaming, multi-turn,
 async cleanup.
