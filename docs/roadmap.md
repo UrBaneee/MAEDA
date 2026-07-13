@@ -173,8 +173,17 @@ and the natural continuation of the eval-first narrative.
 
 19. **Access control** — read-only DB accounts, table allowlists (this pairs
     naturally with the existing SQL-safety guardrail check).
-20. **Persist `decision_trace`/`mcp_call_log`** — currently discarded after
-    each run, so nothing is auditable after the fact.
+20. ✅ **Done — persist `decision_trace`/`mcp_call_log`.** See
+    eval_report.md #33. New `src/persistence/run_store.py` (SQLite,
+    path configurable via `settings.runs_db_path`) wired in as a genuine
+    graph node — `persist_run_node` is the terminal node before `END` on
+    every path (both `run_eval` and `handle_error` route through it), so
+    every invocation is audited automatically, success or failure,
+    without any other node needing to know it exists. Verified live: a
+    separate process queried the store after the originating run's
+    process had exited and found the full trace. The eval harness's
+    20-case runs now get persisted for free too, since it goes through
+    the same graph.
 21. **Cost quotas per user/day**, not just a single-session cap.
 22. **Componentize the UI** (`ui/components/` is still empty) and get the
     trace viewer / eval dashboard to actually meet the DEV_SPEC acceptance
