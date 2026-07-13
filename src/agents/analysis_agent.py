@@ -114,15 +114,19 @@ TOOL_REGISTRY: dict[str, ToolFn] = {
 # ─── LLM factory ─────────────────────────────────────────────────────────────
 
 def _build_llm():
+    # Roadmap #24: the Planner (plan() below and the #11 step-repair path)
+    # gets the stronger tier — structured multi-step reasoning is exactly
+    # where the eval harness's own judge-tiering already showed it pays off.
+    model = settings.resolved_planner_model
     if settings.llm_provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
         return ChatAnthropic(
-            model=settings.llm_model, temperature=0.0,
+            model=model, temperature=0.0,
             max_tokens=settings.max_tokens_per_call, api_key=settings.anthropic_api_key or "sk-no-key",
         )
     from langchain_openai import ChatOpenAI
     return ChatOpenAI(
-        model=settings.llm_model, temperature=0.0,
+        model=model, temperature=0.0,
         max_tokens=settings.max_tokens_per_call, api_key=settings.openai_api_key or "sk-no-key",
     )
 
@@ -175,12 +179,12 @@ class AnalysisAgent(BaseAgent):
             response = await self._llm.ainvoke(messages)
             usage = getattr(response, "usage_metadata", None) or {}
             self._cost_tracker.record(
-                agent_name=self.name, model=settings.llm_model,
+                agent_name=self.name, model=settings.resolved_planner_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="plan_analysis",
             )
-            state["token_usage"] = self._cost_tracker.to_state_dict()
+            state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
             data = _parse_json(response.content.strip())
             plan = AnalysisPlan.from_llm_response(data)
         except Exception as exc:
@@ -236,7 +240,7 @@ class AnalysisAgent(BaseAgent):
         state["analysis_results"] = analysis_results
         # 5.8 Aggregate: store a compact intermediate_data for insight generation
         state["intermediate_data"] = _aggregate(analysis_results)
-        state["token_usage"] = self._cost_tracker.to_state_dict()
+        state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
 
         state = self.log_decision(
             state,
@@ -337,7 +341,7 @@ class AnalysisAgent(BaseAgent):
             ])
             usage = getattr(response, "usage_metadata", None) or {}
             self._cost_tracker.record(
-                agent_name=self.name, model=settings.llm_model,
+                agent_name=self.name, model=settings.resolved_planner_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="repair_step",

@@ -318,6 +318,24 @@ def test_cost_tracker_per_agent():
     assert summary["agent_b"]["total_tokens"] == 300
 
 
+def test_price_for_does_not_confuse_mini_with_its_non_mini_prefix():
+    """"gpt-4o" is a substring of "gpt-4o-mini" -- a naive first-match scan
+    (dict insertion order: "gpt-4o" listed before "gpt-4o-mini") returned
+    gpt-4o's price for gpt-4o-mini calls, a 33x overcount on the model this
+    project defaults to. Longest-key-first must resolve each to its own rate."""
+    from src.utils.cost_tracker import _price_for
+    mini = _price_for("gpt-4o-mini")
+    full = _price_for("gpt-4o")
+    assert mini == {"input": 0.00015, "output": 0.0006}
+    assert full == {"input": 0.005, "output": 0.015}
+    assert mini != full
+
+
+def test_price_for_unknown_model_uses_default():
+    from src.utils.cost_tracker import _price_for, _DEFAULT_PRICING
+    assert _price_for("some-future-model-nobody-added-yet") == _DEFAULT_PRICING
+
+
 # ─── 1.7 Base Agent ──────────────────────────────────────────────────────────
 
 def test_base_agent_log_decision():
@@ -349,6 +367,28 @@ def test_base_agent_track_cost():
     state = agent.track_cost(state, "gpt-4o-mini", 100, 50)
     assert "dummy" in state["token_usage"]
     assert state["token_usage"]["dummy"]["total_tokens"] == 150
+
+
+def test_base_agent_track_cost_merges_not_overwrites():
+    """A single graph run passes state through many agents; each one's
+    track_cost() call must add its own entry, not wipe out whatever
+    agents already wrote earlier in the same run."""
+    from src.agents.base_agent import BaseAgent
+    from src.state.graph_state import initial_state
+
+    class DummyAgent(BaseAgent):
+        async def process(self, state):
+            return state
+
+    state = initial_state("q")
+    state["token_usage"] = {"earlier_agent": {"input_tokens": 10, "output_tokens": 5,
+                                               "total_tokens": 15, "cost_usd": 0.0001, "calls": 1}}
+
+    agent = DummyAgent("dummy")
+    state = agent.track_cost(state, "gpt-4o-mini", 100, 50)
+
+    assert "earlier_agent" in state["token_usage"]
+    assert "dummy" in state["token_usage"]
 
 
 # ─── 1.8 Config System ───────────────────────────────────────────────────────

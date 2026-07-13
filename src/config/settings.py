@@ -81,6 +81,18 @@ class MAEDASettings(BaseSettings):
     # (the same case scoring 0.5 one run and 1.0 the next).
     eval_judge_samples: int = Field(default=3, alias="EVAL_JUDGE_SAMPLES")
 
+    # ── Per-agent model tiering ──────────────────────────────────────────────
+    # Everything defaulted to llm_model (cost-optimized, gpt-4o-mini) until
+    # this. The Planner (structured multi-step reasoning, including the
+    # roadmap #11 step-repair path) and the Guardrail's live pass/fail judge
+    # (catching hallucination/fabrication in a report a sibling model wrote)
+    # are the two spots where the eval harness's own judge-tiering precedent
+    # (resolved_eval_model above) already showed a stronger model earns its
+    # keep. Left unset by default so both resolve automatically; explicit
+    # overrides only needed to pin a specific model.
+    planner_llm_model: Optional[str] = Field(default=None, alias="MAEDA_PLANNER_MODEL")
+    guardrail_llm_model: Optional[str] = Field(default=None, alias="MAEDA_GUARDRAIL_MODEL")
+
     @field_validator("llm_temperature")
     @classmethod
     def clamp_temperature(cls, v: float) -> float:
@@ -114,6 +126,26 @@ class MAEDASettings(BaseSettings):
             return self.eval_llm_model
         return "claude-3-5-sonnet-20241022" if self.resolved_eval_provider == "anthropic" else "gpt-4o"
 
+    @property
+    def resolved_planner_model(self) -> str:
+        """
+        Model for AnalysisAgent (plan() and the roadmap #11 step-repair path).
+        Same provider as llm_provider (unlike the eval judge, there's no
+        self-preference concern here — this is generating a plan, not
+        scoring one), just a stronger model in the same family.
+        """
+        if self.planner_llm_model:
+            return self.planner_llm_model
+        return _stronger_model_for(self.llm_provider)
+
+    @property
+    def resolved_guardrail_model(self) -> str:
+        """Model for the Guardrail Agent's live pass/fail judge (hallucination/
+        fabrication detection). Same tiering rationale as resolved_planner_model."""
+        if self.guardrail_llm_model:
+            return self.guardrail_llm_model
+        return _stronger_model_for(self.llm_provider)
+
 
 def _looks_like_real_key(key: Optional[str]) -> bool:
     """
@@ -122,6 +154,12 @@ def _looks_like_real_key(key: Optional[str]) -> bool:
     call a provider with a key that was never actually filled in.
     """
     return bool(key) and not key.endswith("...")
+
+
+def _stronger_model_for(provider: str) -> str:
+    """The step-up model within a provider's own family — same tier used by
+    resolved_eval_model when it stays on the agent's own provider."""
+    return "claude-3-5-sonnet-20241022" if provider == "anthropic" else "gpt-4o"
 
 
 # Singleton — import this everywhere

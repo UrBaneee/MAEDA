@@ -105,15 +105,22 @@ class GuardrailReport:
 # ─── LLM factory ─────────────────────────────────────────────────────────────
 
 def _build_llm():
+    # Roadmap #24: the guardrail's live pass/fail judge (hallucination/
+    # fabrication detection against a report a sibling model wrote) gets
+    # the stronger tier -- previously an explicit "Known limitation" in
+    # eval_report.md, deferred because it affects every live run's
+    # cost/latency, not just eval runs. The retry loop already in place is
+    # a partial mitigation for the same risk this addresses more directly.
+    model = settings.resolved_guardrail_model
     if settings.llm_provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
         return ChatAnthropic(
-            model=settings.llm_model, temperature=0.0,
+            model=model, temperature=0.0,
             max_tokens=512, api_key=settings.anthropic_api_key or "sk-no-key",
         )
     from langchain_openai import ChatOpenAI
     return ChatOpenAI(
-        model=settings.llm_model, temperature=0.0,
+        model=model, temperature=0.0,
         max_tokens=512, api_key=settings.openai_api_key or "sk-no-key",
     )
 
@@ -174,6 +181,10 @@ class GuardrailAgent(BaseAgent):
 
         state["guardrail_checks"] = [guardrail_report.to_state_dict()]
         state["guardrail_passed"] = guardrail_report.passed
+        # Sync token usage from _llm_judge()'s call -- docstring has always
+        # claimed this agent writes token_usage, but nothing ever actually
+        # did; merge (not overwrite) so an earlier agent's entries survive.
+        state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
 
         state = self.log_decision(
             state,
@@ -221,7 +232,7 @@ class GuardrailAgent(BaseAgent):
             ])
             usage = getattr(response, "usage_metadata", None) or {}
             self._cost_tracker.record(
-                agent_name=self.name, model=settings.llm_model,
+                agent_name=self.name, model=settings.resolved_guardrail_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="llm_judge",

@@ -144,6 +144,11 @@ class VizAgent(BaseAgent):
                 logger.warning("Dashboard generation failed: %s", exc)
 
         state["charts"] = charts
+        # Sync token usage from _caption_chart()'s calls -- docstring has
+        # always claimed this agent writes token_usage, but nothing ever
+        # actually did; merge (not overwrite) so an earlier agent's entries
+        # in the same state survive this write too.
+        state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
         state = self.log_decision(
             state,
             action="generate_viz",

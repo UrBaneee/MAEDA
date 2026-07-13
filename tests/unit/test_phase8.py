@@ -464,6 +464,35 @@ def test_process_warning_appends_caveat():
     assert "Automated Caveats" in result.get("report", "") or result["guardrail_passed"] is True
 
 
+def test_process_tracks_token_usage():
+    """The docstring has always claimed this agent writes token_usage
+    (its _llm_judge() call), but nothing ever actually propagated it to
+    state -- roadmap #24 fixed this in passing."""
+    from src.agents.guardrail_agent import GuardrailAgent
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.content = json.dumps({
+        "passed": True,
+        "checks": [{"check": "hallucination_check", "passed": True, "finding": None}],
+        "overall_verdict": "approved",
+        "retry_reason": None,
+    })
+    mock_response.usage_metadata = {"input_tokens": 20, "output_tokens": 15}
+    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+    agent = GuardrailAgent(llm=mock_llm)
+    state = initial_state("q")
+    state["report"] = "# Report\n\n## Findings\n- Revenue up 10%.\n\n## Rec\n- Keep going."
+    state["insights"] = [{"finding": "Revenue up", "confidence": 0.9}]
+    state["analysis_results"] = [{"result_summary": "Revenue up 10%", "failed": False}]
+    state["token_usage"] = {"intent_parser": {"input_tokens": 1, "output_tokens": 1,
+                                                "total_tokens": 2, "cost_usd": 0.0, "calls": 1}}
+
+    result = asyncio.run(agent.process(state))
+    assert "guardrail_agent" in result["token_usage"]
+    assert "intent_parser" in result["token_usage"]  # merged, not overwritten
+
+
 def test_process_logs_decision():
     from src.agents.guardrail_agent import GuardrailAgent
     mock_llm = MagicMock()

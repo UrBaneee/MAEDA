@@ -113,8 +113,11 @@ class IntentParserAgent(BaseAgent):
             intent = await self._parse(
                 query, state.get("schema_summary", ""), state.get("conversation_history")
             )
-            # Sync token usage accumulated inside _parse back to state
-            state["token_usage"] = self._cost_tracker.to_state_dict()
+            # Sync token usage accumulated inside _parse back to state.
+            # Merge (not overwrite) -- this was clobbering any other
+            # agent's token_usage entries already in state from earlier in
+            # the same run (e.g. a retry loop re-entering parse_intent).
+            state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
         except Exception as exc:
             logger.exception("Intent parsing failed")
             return self.set_error(state, f"Intent parsing failed: {exc}")
@@ -132,6 +135,9 @@ class IntentParserAgent(BaseAgent):
             try:
                 question = await self._generate_clarification(intent)
                 state["clarification_question"] = question
+                # _generate_clarification() records its own cost below this
+                # point in the method; sync it now or it's silently lost.
+                state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
             except Exception as exc:
                 logger.warning("Could not generate clarification: %s", exc)
                 state["clarification_question"] = (

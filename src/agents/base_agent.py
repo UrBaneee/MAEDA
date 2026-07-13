@@ -75,7 +75,13 @@ class BaseAgent(abc.ABC):
         output_tokens: int,
         call_label: str = "",
     ) -> MAEDAState:
-        """Record one LLM call's token usage and propagate to state."""
+        """Record one LLM call's token usage and propagate to state.
+
+        Merges into any existing state["token_usage"] rather than
+        overwriting it -- each agent's own CostTracker only ever contains
+        its own agent_name key, so an overwrite here would silently
+        discard every other agent's entries from earlier in the same run.
+        """
         self._cost_tracker.record(
             agent_name=self.name,
             model=model,
@@ -83,7 +89,7 @@ class BaseAgent(abc.ABC):
             output_tokens=output_tokens,
             call_label=call_label,
         )
-        state["token_usage"] = self._cost_tracker.to_state_dict()
+        state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
         return state
 
     # ── Error Handling Helper ───────────────────────────────────────────────

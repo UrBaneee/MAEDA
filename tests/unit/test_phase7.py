@@ -232,6 +232,32 @@ def test_generate_tracks_token_usage():
     assert "insight_agent" in result["token_usage"]
 
 
+def test_generate_preserves_other_agents_token_usage():
+    """generate() writes token_usage twice (insight generation, then
+    report generation) -- both must merge, not overwrite, or the second
+    write wipes out the first, and either wipes out any earlier agent."""
+    from src.agents.insight_agent import InsightAgent
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.content = json.dumps([
+        {"finding": "Finding A", "evidence": "e", "confidence": 0.8, "recommendation": "rec"}
+    ])
+    mock_response.usage_metadata = {"input_tokens": 50, "output_tokens": 25}
+    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+    agent = InsightAgent(llm=mock_llm)
+    state = initial_state("q")
+    state["analysis_results"] = []
+    state["rag_context"] = []
+    state["rag_sources"] = []
+    state["token_usage"] = {"intent_parser": {"input_tokens": 1, "output_tokens": 1,
+                                                "total_tokens": 2, "cost_usd": 0.0, "calls": 1}}
+
+    result = asyncio.run(agent.generate(state))
+    assert "intent_parser" in result["token_usage"]
+    assert "insight_agent" in result["token_usage"]
+
+
 # ─── Multi-turn conversation history (roadmap #17) ────────────────────────────
 
 def test_generate_appends_assistant_turn_to_conversation_history():

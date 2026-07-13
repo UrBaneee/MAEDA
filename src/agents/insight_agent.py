@@ -180,7 +180,7 @@ class InsightAgent(BaseAgent):
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="generate_insights",
             )
-            state["token_usage"] = self._cost_tracker.to_state_dict()
+            state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
 
             raw = _parse_json(response.content.strip())
             if not isinstance(raw, list):
@@ -254,7 +254,7 @@ class InsightAgent(BaseAgent):
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="generate_report",
             )
-            state["token_usage"] = self._cost_tracker.to_state_dict()
+            state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
             return response.content.strip()
         except Exception as exc:
             logger.warning("Report generation LLM failed: %s — using rule-based fallback", exc)

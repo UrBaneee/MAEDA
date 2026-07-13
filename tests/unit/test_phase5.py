@@ -531,6 +531,17 @@ class TestPlanGenerator:
         result = asyncio.run(agent.plan(state))
         assert "analysis_agent" in result["token_usage"]
 
+    def test_plan_preserves_other_agents_token_usage(self):
+        """plan()'s write must not wipe out an earlier agent's entry
+        already in state (e.g. intent_parser, which runs just before it)."""
+        agent = AnalysisAgent(llm=_mock_llm([]))
+        state = initial_state("test")
+        state["token_usage"] = {"intent_parser": {"input_tokens": 1, "output_tokens": 1,
+                                                    "total_tokens": 2, "cost_usd": 0.0, "calls": 1}}
+        result = asyncio.run(agent.plan(state))
+        assert "intent_parser" in result["token_usage"]
+        assert "analysis_agent" in result["token_usage"]
+
     def test_plan_prompt_includes_related_tables_for_sql_source(self, multi_table_sqlite_db):
         mock_llm = _mock_llm([])
         agent = AnalysisAgent(llm=mock_llm)
@@ -764,6 +775,40 @@ class TestErrorRecovery:
         mock_llm.ainvoke.assert_awaited_once()
         assert result["analysis_results"][0]["failed"] is False
         assert any("LLM-repaired" in w for w in result["analysis_results"][0]["warnings"])
+
+    def test_execute_repair_path_preserves_other_agents_token_usage(self, sales_df, tmp_path):
+        """execute()'s repair-path token_usage write must merge, not
+        overwrite -- intent_parser/plan() both ran earlier in the real
+        graph and their entries must survive this write too."""
+        csv = tmp_path / "d.csv"
+        sales_df.to_csv(str(csv), index=False)
+        plan_data = [
+            {"step_number": 1, "method": "groupby", "tool": "pandas_transform",
+             "parameters": {"operation": "groupby", "group_by": ["region"],
+                             "agg_col": "Revenue", "agg_func": "sum"},
+             "depends_on": [], "expected_output": "", "rationale": ""},
+        ]
+        repair_response = MagicMock(
+            content=json.dumps({
+                "parameters": {"operation": "groupby", "group_by": ["region"],
+                                "agg_col": "revenue", "agg_func": "sum"},
+                "reasoning": "Fixed casing",
+            }),
+            usage_metadata={"input_tokens": 50, "output_tokens": 30},
+        )
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=repair_response)
+
+        agent = AnalysisAgent(llm=mock_llm)
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(csv)}])
+        state["active_source"] = {"type": "csv", "path": str(csv)}
+        state["analysis_plan"] = plan_data
+        state["token_usage"] = {"intent_parser": {"input_tokens": 1, "output_tokens": 1,
+                                                    "total_tokens": 2, "cost_usd": 0.0, "calls": 1}}
+        result = asyncio.run(agent.execute(state))
+
+        assert "intent_parser" in result["token_usage"]
+        assert "analysis_agent" in result["token_usage"]
 
     def test_repair_step_falls_back_to_simplify_when_llm_returns_null(self, sales_df, tmp_path):
         csv = tmp_path / "d.csv"

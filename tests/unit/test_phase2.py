@@ -158,6 +158,22 @@ def test_parser_tracks_token_usage():
     assert result["token_usage"]["intent_parser"]["total_tokens"] == 80  # 50 + 30
 
 
+def test_parser_preserves_other_agents_token_usage():
+    """A single graph run passes state through many agents; parse_intent's
+    write must not wipe out an earlier agent's entry already in state."""
+    agent = _mock_agent({
+        "query_type": "descriptive", "target_metrics": ["revenue"], "dimensions": [],
+        "filters": [], "time_range": None, "aggregation": None, "sort_by": None,
+        "limit": None, "confidence": 0.9, "ambiguities": [],
+    })
+    state = initial_state("Show revenue")
+    state["token_usage"] = {"other_agent": {"input_tokens": 1, "output_tokens": 1,
+                                             "total_tokens": 2, "cost_usd": 0.0, "calls": 1}}
+    result = asyncio.run(agent.process(state))
+    assert "other_agent" in result["token_usage"]
+    assert "intent_parser" in result["token_usage"]
+
+
 def test_parser_adds_to_conversation_history():
     agent = _mock_agent({
         "query_type": "descriptive",

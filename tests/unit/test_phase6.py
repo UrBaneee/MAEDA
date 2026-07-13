@@ -347,6 +347,35 @@ def test_viz_agent_generates_chart_for_valid_result():
     assert "caption" in chart
 
 
+def test_viz_agent_tracks_token_usage():
+    """The docstring has always claimed this agent writes token_usage
+    (its caption-generation LLM calls), but nothing ever actually
+    propagated it to state -- roadmap #24 fixed this in passing."""
+    from src.agents.viz_agent import VizAgent
+    from src.state.graph_state import initial_state
+
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.content = "Sales are highest in the North region."
+    mock_response.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
+    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+    agent = VizAgent(llm=mock_llm, charts_dir=tempfile.mkdtemp())
+    state = initial_state("test")
+    state["token_usage"] = {"intent_parser": {"input_tokens": 1, "output_tokens": 1,
+                                                "total_tokens": 2, "cost_usd": 0.0, "calls": 1}}
+    state["analysis_results"] = [{
+        "step": 1, "method": "groupby", "tool": "pandas_transform",
+        "result": [{"region": "North", "sales": 100}, {"region": "South", "sales": 200}],
+        "result_summary": "North had most sales", "confidence": 1.0,
+        "warnings": [], "failed": False,
+    }]
+
+    result = asyncio.run(agent.process(state))
+    assert "viz_agent" in result["token_usage"]
+    assert "intent_parser" in result["token_usage"]  # merged, not overwritten
+
+
 def test_viz_agent_generates_dashboard_for_multiple_results():
     from src.agents.viz_agent import VizAgent
     from src.state.graph_state import initial_state

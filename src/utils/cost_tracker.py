@@ -26,9 +26,20 @@ _DEFAULT_PRICING = {"input": 0.005, "output": 0.015}
 
 
 def _price_for(model: str) -> dict[str, float]:
-    for key, pricing in _PRICING.items():
-        if key in model.lower():
-            return pricing
+    """
+    Match model name -> pricing tier by substring, longest key first.
+
+    Shortest-first (dict insertion order) silently mispriced every
+    gpt-4o-mini call at gpt-4o's rate: "gpt-4o" is a substring of
+    "gpt-4o-mini", so the "gpt-4o" entry matched (and returned) before the
+    loop ever reached the correct "gpt-4o-mini" key -- a 33x overcount on
+    the model this project uses by default. Checking longest keys first
+    means a more specific name always wins over a shorter one it contains.
+    """
+    model_lower = model.lower()
+    for key in sorted(_PRICING, key=len, reverse=True):
+        if key in model_lower:
+            return _PRICING[key]
     return _DEFAULT_PRICING
 
 
