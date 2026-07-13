@@ -131,10 +131,16 @@ and the natural continuation of the eval-first narrative.
     (previously present). This was also the real prerequisite for #14
     (streaming) — `.astream()` needs a genuine async execution path, not
     a graph where each node opens and closes its own loop.
-14. **Streaming output.** Queries take 22–137 seconds with zero feedback until
-    completion — not acceptable for an interactive user. LangGraph's
-    `.stream()` mode should push node progress and intermediate artifacts to
-    the UI as they're produced.
+14. ✅ **Done — streaming output.** See eval_report.md #31. Replaced the
+    chat handler's fake progress (a background thread + a fixed 7-phase
+    timer with no relationship to which node was actually running) with
+    `src/graph/streaming.py`'s `astream_pipeline()`/`run_pipeline_streaming()`,
+    driving `graph.astream(state, stream_mode="updates")` directly and
+    invoking a callback as each node genuinely completes. Verified live in
+    a real browser session: the status line advanced through real node
+    names as they finished, not a canned animation. Kept free of any
+    Streamlit dependency so the logic is independently unit-tested (10
+    tests) rather than only checkable by eye.
 15. ✅ **Done — stop double-running eval.** See eval_report.md #19.
     `EvalRunner.score()` now reuses `run_eval_node`'s in-graph
     answer_relevance/groundedness scores instead of re-invoking the judge,
@@ -197,10 +203,12 @@ fallback profiler was strengthened from one check to six (eval_report.md
 the primary demo dataset — and a dead-key bug was fixed that had kept every
 profiler finding out of the report's quality caveat.
 
-**Phase C — Make it pleasant to use** (#13, #14, #17): #13 (async cleanup) ✅
-done — see eval_report.md #30; it was the real prerequisite for #14
-(streaming needs a genuine async execution path). #14 (streaming) and #17
-(multi-turn memory) remain.
+**Phase C — Make it pleasant to use** (#13, #14, #17): #13 (async cleanup)
+and #14 (streaming) ✅ done — see eval_report.md #30–31; #13 was the real
+prerequisite for #14 (streaming needs a genuine async execution path, not
+one loop per node). #17 (multi-turn memory) remains — the largest, most
+novel-feature-shaped item in this phase, deliberately left for its own
+dedicated pass rather than folded in here.
 
 **Product layer (#19–24) waits until a target scenario is picked** — recurring
 ops reporting prioritizes #23; an analyst-copilot scenario prioritizes #17
