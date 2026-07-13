@@ -121,10 +121,16 @@ and the natural continuation of the eval-first narrative.
 
 ## Tier 3 — Engineering robustness
 
-13. **Clean up the async architecture.** Each graph node calls `asyncio.run()`
-    independently, producing constant "event loop is closed" noise in the
-    logs (visible throughout this session's runs). Should be a single
-    end-to-end async execution path.
+13. ✅ **Done — clean up the async architecture.** See eval_report.md #30.
+    All 9 I/O-bound graph nodes converted from sync wrappers around
+    individual `asyncio.run()` calls to real `async def` functions sharing
+    one event loop; every call site (`src/mcp_server/server.py`,
+    `scripts/run_eval.py`, `scripts/demo_scenarios.py`, `ui/app.py`)
+    switched from `graph.invoke()` to `graph.ainvoke()`. Confirmed live:
+    zero `"Event loop is closed"` occurrences in a full 20-case run
+    (previously present). This was also the real prerequisite for #14
+    (streaming) — `.astream()` needs a genuine async execution path, not
+    a graph where each node opens and closes its own loop.
 14. **Streaming output.** Queries take 22–137 seconds with zero feedback until
     completion — not acceptable for an interactive user. LangGraph's
     `.stream()` mode should push node progress and intermediate artifacts to
@@ -191,8 +197,10 @@ fallback profiler was strengthened from one check to six (eval_report.md
 the primary demo dataset — and a dead-key bug was fixed that had kept every
 profiler finding out of the report's quality caveat.
 
-**Phase C — Make it pleasant to use** (#13, #14, #17): streaming, multi-turn,
-async cleanup.
+**Phase C — Make it pleasant to use** (#13, #14, #17): #13 (async cleanup) ✅
+done — see eval_report.md #30; it was the real prerequisite for #14
+(streaming needs a genuine async execution path). #14 (streaming) and #17
+(multi-turn memory) remain.
 
 **Product layer (#19–24) waits until a target scenario is picked** — recurring
 ops reporting prioritizes #23; an analyst-copilot scenario prioritizes #17
