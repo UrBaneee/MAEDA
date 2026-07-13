@@ -98,11 +98,16 @@ and the natural continuation of the eval-first narrative.
     Answers the original question: sub-system coordination bugs (transport,
     then collection isolation) were both real and are now fixed; MAEDA's own
     orchestration code was never the bottleneck here.
-11. **Close the error→retry loop with the actual error message.** Tool errors
-    now include actionable detail (e.g. the exact list of available columns),
-    but `_simplify_step`'s retry just strips parameters down rather than
-    feeding that message back to the Planner for a corrected replan. This
-    would meaningfully raise the recovery rate.
+11. ✅ **Done — close the error→retry loop with the actual error message.**
+    See eval_report.md #28. New `_repair_step()` sends the tool's real
+    error message + authoritative column list to the LLM for a targeted
+    parameter fix, falling back to the old `_simplify_step` (kept as a
+    safety net) when the model isn't confident. Live: 10/10 tool failures
+    recovered in one 20-case run — column renames, a missing required
+    parameter, a wrong SQL table name — none of which blind parameter-
+    stripping could ever have fixed. Also fixed a latent `_parse_json`
+    bug surfaced by reusing it for the repair response (an object whose
+    only array is nested got truncated to just that array).
 12. **Harden the "single sample row → population claim" defense.** The current
     fix is a prompt-level evidence tag ([AGGREGATE]/[ROW-LEVEL SAMPLE]) on the
     generation side. A stronger version adds a guardrail check: any
@@ -158,9 +163,10 @@ For a solo effort, roughly 2–4 weeks per phase:
 
 **Phase A — Make "trustworthy" solid** (#6, #7, #8, #9, #15, #16): ✅ done.
 All six eval/quality items completed — see eval_report.md #11–20. This was
-the safety net for every later change. #10 rolls into Phase B below; #11
-and #12 (retry-loop feedback, harder population-claim guardrail) are
-smaller Tier 2 items not bundled into a named phase — pick up opportunistically.
+the safety net for every later change. #10 rolls into Phase B below. #11
+(retry-loop feedback) is also now done, picked up opportunistically — see
+eval_report.md #28. #12 (harder population-claim guardrail) remains, a
+smaller Tier 2 item not bundled into a named phase.
 
 **Phase B — Make "real data" actually work** (#1, #2, #4, #10): ✅ done.
 #1, #2, #4 (joins, pushdown, date-part derivation — see eval_report.md
