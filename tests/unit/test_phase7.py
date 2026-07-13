@@ -298,6 +298,34 @@ def test_report_fallback_handles_empty_insights():
     assert "# MAEDA Analysis Report" in report
 
 
+def test_quality_note_reads_quality_issues_key():
+    """DataQualityReport.to_dict() emits "quality_issues" — the note used to
+    read a nonexistent "issues" key, so profiler findings never reached the
+    report at all."""
+    from src.agents.insight_agent import _format_quality_note
+    report = {
+        "row_count": 100,
+        "quality_issues": [
+            {"column": "age", "issue": "high_null_rate", "severity": "warning",
+             "detail": "62.0% nulls"},
+            {"column": None, "issue": "duplicate_rows", "severity": "warning",
+             "detail": "3 fully duplicated rows (3.0%)"},
+        ],
+        "has_critical_issues": False,
+    }
+    note = _format_quality_note(report)
+    assert "high_null_rate" in note
+    assert "age" in note
+    assert "duplicate_rows" in note
+
+
+def test_quality_note_clean_report():
+    from src.agents.insight_agent import _format_quality_note
+    note = _format_quality_note({"row_count": 100, "quality_issues": [],
+                                 "has_critical_issues": False})
+    assert note == "Data quality checks passed."
+
+
 # ─── 7.6 Source attribution ───────────────────────────────────────────────────
 
 def test_source_attribution_from_rag_sources():

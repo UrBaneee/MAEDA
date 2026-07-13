@@ -369,7 +369,9 @@ def _format_charts_summary(charts: list[dict]) -> str:
 def _format_quality_note(report: dict) -> str:
     if not report:
         return "No data quality information available."
-    issues = report.get("issues", [])
+    # DataQualityReport.to_dict() emits "quality_issues"; the old key "issues"
+    # never existed in that dict, so issues silently never reached the report.
+    issues = report.get("quality_issues") or report.get("issues") or []
     score = report.get("score")
     critical = report.get("has_critical_issues", False)
     parts = []
@@ -378,8 +380,19 @@ def _format_quality_note(report: dict) -> str:
     if critical:
         parts.append("Critical issues were detected and cleaned.")
     if issues:
-        parts.append(f"Issues: {', '.join(str(i) for i in issues[:3])}")
+        parts.append(f"Issues: {'; '.join(_format_quality_issue(i) for i in issues[:5])}")
     return "; ".join(parts) if parts else "Data quality checks passed."
+
+
+def _format_quality_issue(issue: Any) -> str:
+    """Render one quality-issue dict as readable text for the report prompt."""
+    if not isinstance(issue, dict):
+        return str(issue)
+    column = issue.get("column")
+    kind = issue.get("issue", "unknown")
+    detail = issue.get("detail", "")
+    prefix = f"{column}: " if column else ""
+    return f"{prefix}{kind}" + (f" ({detail})" if detail else "")
 
 
 def _avg_confidence(insights: list[Insight]) -> float:

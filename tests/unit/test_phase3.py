@@ -568,6 +568,60 @@ class TestBasicPandasProfile:
         assert report.columns == []
         assert report.has_critical_issues is False
 
+    def test_detects_duplicate_rows(self, tmp_path):
+        csv = tmp_path / "dups.csv"
+        csv.write_text("a,b\n1,x\n1,x\n2,y\n1,x\n")
+        report = _basic_pandas_profile(str(csv))
+        dup = [i for i in report.quality_issues if i["issue"] == "duplicate_rows"]
+        assert len(dup) == 1
+        assert "2 fully duplicated rows" in dup[0]["detail"]
+
+    def test_detects_constant_column(self, tmp_path):
+        csv = tmp_path / "const.csv"
+        csv.write_text("region,value\nNorth,1\nNorth,2\nNorth,3\n")
+        report = _basic_pandas_profile(str(csv))
+        issues = [i for i in report.quality_issues if i["issue"] == "constant_column"]
+        assert [i["column"] for i in issues] == ["region"]
+
+    def test_detects_mixed_type_column(self, tmp_path):
+        csv = tmp_path / "mixed.csv"
+        csv.write_text("amount\n100\n200\nN/A\n300\nunknown\n400\n")
+        report = _basic_pandas_profile(str(csv))
+        issues = [i for i in report.quality_issues if i["issue"] == "mixed_types"]
+        assert [i["column"] for i in issues] == ["amount"]
+
+    def test_all_text_column_not_flagged_as_mixed(self, tmp_path):
+        csv = tmp_path / "text.csv"
+        csv.write_text("city\nParis\nLondon\nBerlin\n")
+        report = _basic_pandas_profile(str(csv))
+        assert not [i for i in report.quality_issues if i["issue"] == "mixed_types"]
+
+    def test_detects_high_outlier_share(self, tmp_path):
+        csv = tmp_path / "outliers.csv"
+        # 10 tightly clustered values + 2 extreme ones (>5% outlier share)
+        values = [100, 101, 99, 100, 102, 98, 100, 101, 99, 100, 10000, -10000]
+        csv.write_text("v\n" + "\n".join(str(v) for v in values) + "\n")
+        report = _basic_pandas_profile(str(csv))
+        issues = [i for i in report.quality_issues if i["issue"] == "high_outlier_share"]
+        assert [i["column"] for i in issues] == ["v"]
+
+    def test_clean_data_produces_no_issues(self, tmp_path):
+        csv = tmp_path / "clean.csv"
+        csv.write_text(
+            "id,city\n" + "\n".join(f"{i},city{i}" for i in range(20)) + "\n"
+        )
+        report = _basic_pandas_profile(str(csv))
+        assert report.quality_issues == []
+
+    def test_never_sets_critical_issues(self, tmp_path):
+        """Fallback mode has no cleaner to delegate to — critical=True would
+        trigger a cleaning path that no-ops but claims cleaning was applied."""
+        csv = tmp_path / "bad.csv"
+        csv.write_text("a,b\n1,\n1,\n1,\n1,\n1,\n")  # constant + 100% nulls + dups
+        report = _basic_pandas_profile(str(csv))
+        assert report.quality_issues  # plenty found
+        assert report.has_critical_issues is False
+
 
 # ─── 3.8 Integration: three-service chain ────────────────────────────────────
 

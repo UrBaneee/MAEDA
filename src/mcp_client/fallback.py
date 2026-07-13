@@ -227,8 +227,16 @@ class SubSystemWithFallback:
 
 def _basic_pandas_profile(path: str) -> DataQualityReport:
     """
-    Minimal local profiling using pandas.
-    Used when the Data Cleaner MCP is unavailable.
+    Local profiling using pandas. Used when the Data Cleaner MCP is unavailable.
+
+    Checks: high null rate, constant columns, mixed-type object columns,
+    duplicate rows, numeric outlier share, and empty datasets. All issues are
+    reported as warnings/info for the Insight Agent's quality caveat —
+    has_critical_issues stays False because in fallback mode there is no
+    cleaner to delegate to: setting it True would send the pipeline down the
+    get_cleaning_plan → clean_dataset path, both of which also fall back to
+    no-ops, ending with the state claiming "cleaning applied" while nothing
+    was actually cleaned. Honest caveats beat a fake cleaning pass.
     """
     try:
         if path.startswith("sqlite:///"):
@@ -251,6 +259,24 @@ def _basic_pandas_profile(path: str) -> DataQualityReport:
 
     columns = []
     quality_issues = []
+
+    if df.empty:
+        quality_issues.append({
+            "column": None,
+            "issue": "empty_dataset",
+            "severity": "warning",
+            "detail": "Dataset has no rows",
+        })
+
+    dup_count = int(df.duplicated().sum())
+    if dup_count > 0:
+        quality_issues.append({
+            "column": None,
+            "issue": "duplicate_rows",
+            "severity": "warning",
+            "detail": f"{dup_count} fully duplicated rows ({dup_count / len(df):.1%})",
+        })
+
     for col in df.columns:
         null_pct = float(df[col].isna().mean())
         unique_count = int(df[col].nunique())
@@ -272,11 +298,47 @@ def _basic_pandas_profile(path: str) -> DataQualityReport:
                 "detail": f"{null_pct:.1%} nulls",
             })
 
+        non_null = df[col].dropna()
+        if len(df) > 1 and unique_count == 1 and len(non_null) == len(df):
+            quality_issues.append({
+                "column": col,
+                "issue": "constant_column",
+                "severity": "info",
+                "detail": f"Single value {non_null.iloc[0]!r} in every row",
+            })
+
+        if df[col].dtype == object and len(non_null) >= 2:
+            numeric_pct = float(pd.to_numeric(non_null, errors="coerce").notna().mean())
+            # All-numeric-as-strings and all-text are both internally
+            # consistent; only a genuine mix is worth flagging.
+            if 0.05 < numeric_pct < 0.95:
+                quality_issues.append({
+                    "column": col,
+                    "issue": "mixed_types",
+                    "severity": "warning",
+                    "detail": f"{numeric_pct:.0%} of values parse as numbers, the rest are text",
+                })
+
+        if pd.api.types.is_numeric_dtype(df[col]) and len(non_null) >= 10:
+            q1, q3 = non_null.quantile(0.25), non_null.quantile(0.75)
+            iqr = q3 - q1
+            if iqr > 0:
+                outlier_pct = float(
+                    ((non_null < q1 - 1.5 * iqr) | (non_null > q3 + 1.5 * iqr)).mean()
+                )
+                if outlier_pct > 0.05:
+                    quality_issues.append({
+                        "column": col,
+                        "issue": "high_outlier_share",
+                        "severity": "info",
+                        "detail": f"{outlier_pct:.1%} of values outside 1.5×IQR",
+                    })
+
     return DataQualityReport(
         row_count=len(df),
         columns=columns,
         quality_issues=quality_issues,
-        has_critical_issues=False,  # Pandas fallback never blocks progress
+        has_critical_issues=False,  # see docstring: fallback has no cleaner to delegate to
     )
 
 
