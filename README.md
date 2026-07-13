@@ -32,7 +32,11 @@
 - **LangGraph state graph** — all agent flow via conditional edges, typed `MAEDAState` as single source of truth
 - **MCP protocol** for sub-system communication — MAEDA delegates, never reimplements
 - **Graceful degradation** — runs standalone if sub-systems are offline
-- **Every LLM call tracked** — cost tracker, decision trace on every node, eval scores on every run
+- **Every LLM call tracked** — per-request cost tracker, decision trace on every node, eval scores on every run
+- **Per-agent model tiering** — planner and guardrail judge run on a stronger model; high-volume generation stays on the cheap default
+- **Every run persisted** — decision trace / MCP call log / eval scores land in SQLite via a terminal graph node, auditable after the process exits
+- **Multi-turn conversation memory** — follow-ups like "now break that down by quarter" resolve against the prior turn's intent
+- **Real streaming progress** — the UI reflects which graph node actually just finished, not a canned animation
 
 ---
 
@@ -101,18 +105,19 @@ python scripts/demo_scenarios.py --all
 src/
 ├── agents/         Intent parser, Analysis, Viz, Insight, Guardrail
 ├── eval/           EvalRunner, metrics, 20-case golden suite, regression detection
-├── graph/          LangGraph builder, nodes, router
+├── graph/          LangGraph builder, nodes, router, streaming
 ├── mcp_client/     Data Cleaner + RAG Server MCP clients with fallbacks
 ├── mcp_server/     MAEDA-as-MCP-server (FastMCP)
+├── persistence/    SQLite run store — every run's trace survives the process
 ├── state/          MAEDAState TypedDict
 ├── tools/          Chart tool, data connector, SQL, stats, anomaly, time-series
 ├── config/         Settings (Pydantic), all agent prompts
 └── utils/          Logger, cost tracker
 
 ui/                 Streamlit app (Phase 11)
-scripts/            Demo data generator, demo scenarios
+scripts/            Demo data generator, demo scenarios, eval harness
 tests/
-├── unit/           331 tests, all phases covered
+├── unit/           467 tests, all phases covered
 └── eval/           Golden test suite JSON
 data/demo/          Sales, churn, marketing, ecommerce datasets
 ```
@@ -177,29 +182,43 @@ Every run is automatically scored against the 20-case golden suite via
 
 Regression detection alerts on any metric drop > 5% vs baseline.
 
-### Baseline results (fallback mode — sub-systems offline)
+### The eval-first debugging pass
 
-An eval-first debugging pass found and fixed 10 root-caused bugs — silent
-tool-parameter mismatches, a guardrail severity misclassification that let
-hallucinated reports through, and an ungrounded Planner/Insight Agent
-context that caused fabricated numbers. Each fix is documented with root
+The system was iterated exclusively through its own eval harness: establish a
+baseline on the 20-case golden suite, root-cause one failure, fix it, re-run,
+record the delta. **35 documented fixes** came out of this — each with root
 cause, code location, and before/after verification in
-**[docs/eval_report.md](docs/eval_report.md)**.
+**[docs/eval_report.md](docs/eval_report.md)** — spanning silent
+tool-parameter mismatches, a guardrail severity misclassification that let
+hallucinated reports through, an MCP transport bug that had never actually
+spoken the protocol, an eval judge that couldn't match numbers formatted
+differently, a 33× cost-pricing overcount, and a cross-request cost leak in
+the singleton agents.
+
+The early arc, as a taste of why raw aggregate can't be read naively:
 
 | Baseline | Aggregate score | Cases blocked by guardrail |
 |---|---|---|
 | Before fixes | 0.71 | 0 / 20 *(inflated — guardrail wasn't actually catching fabrication)* |
 | After guardrail severity fix | 0.67 | 7 / 20 *(score drop = guardrail correctly blocking hallucinated reports for the first time)* |
-| After all 10 fixes | 0.76 | 2 / 20 *(both benign — a completeness complaint and a judge false-positive)* |
+| After the first 10 fixes | 0.76 | 2 / 20 *(both benign — a completeness complaint and a judge false-positive)* |
+
+The same pattern repeated at the end: upgrading the guardrail's judge to a
+stronger model moved the aggregate 0.751 → 0.725 while safe-refusals rose
+4 → 6 — cross-referencing per-case reasoning traces showed all six were real
+fabrications the cheaper judge had silently passed. Score deltas were only
+ever trusted after reading the traces behind them.
 
 Full run history and archived reports: `logs/eval_runs/`.
+Prioritized gap analysis and what was deliberately *not* built:
+**[docs/roadmap.md](docs/roadmap.md)**.
 
 ---
 
 ## Tests
 
 ```bash
-pytest tests/unit/ -v          # 331 tests, all phases
+pytest tests/unit/ -v          # 467 tests, all phases
 pytest tests/unit/test_phase9.py -v   # eval module only
 ```
 
