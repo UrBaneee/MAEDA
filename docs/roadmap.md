@@ -191,9 +191,22 @@ and the natural continuation of the eval-first narrative.
 23. **Scheduling + push delivery** — e.g. a weekly ops report pushed to
     Slack/Feishu. If the target scenario is recurring reporting, this is the
     core delivery mechanism, not an add-on.
-24. **Per-agent model tiering** — everything runs on gpt-4o-mini today;
-    planner/judge quality likely benefits from a stronger model while the
-    step executor stays cheap.
+24. ✅ **Done — per-agent model tiering.** See eval_report.md #34.
+    `AnalysisAgent`'s planner/step-repair and `GuardrailAgent`'s live judge
+    now resolve to a stronger model (`resolved_planner_model`/
+    `resolved_guardrail_model`, default `gpt-4o`) via new settings, while
+    `IntentParser`/`VizAgent`/`InsightAgent` stay on the cheap default.
+    Found and fixed two real bugs in passing while live-verifying this: a
+    `cost_tracker.py` pricing bug that silently overcounted every
+    gpt-4o-mini call at gpt-4o's ~33x rate (substring-match ordering), and a
+    systemic `token_usage` overwrite bug where only the last agent to run
+    in a given pipeline ever had its cost visible in the final state (two
+    agents never wrote it at all). Live 20-case suite showed aggregate
+    0.751→0.725 and safe_refusals 4/20→6/20 — cross-referenced against the
+    prior baseline's per-case reasoning traces, this is the stronger judge
+    correctly catching real fabrications the cheaper judge previously
+    missed, not a quality regression. Cost adds ~$0.023/query (~12x on the
+    two upgraded agents), still under 3 cents/query total.
 
 ## Suggested phasing
 
