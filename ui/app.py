@@ -10,6 +10,7 @@ Layout:
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import time
@@ -30,7 +31,13 @@ st.set_page_config(
 # ─── Imports (lazy where possible to avoid import-time LLM construction) ─────
 
 def _run_pipeline(query: str, data_source_path: Optional[str]) -> dict:
-    """Invoke the LangGraph pipeline and return the final state."""
+    """Invoke the LangGraph pipeline and return the final state.
+
+    Streamlit's execution model reruns this script synchronously per
+    interaction (no long-running event loop of its own), so a single
+    top-level asyncio.run() here is the correct boundary — the graph's
+    nodes all run under that one loop instead of each spinning up its own.
+    """
     from src.graph.builder import build_graph
     from src.state.graph_state import initial_state
 
@@ -44,7 +51,7 @@ def _run_pipeline(query: str, data_source_path: Optional[str]) -> dict:
         state["data_sources"] = [{"path": src_path, "type": src_type}]
 
     graph = build_graph()
-    return graph.invoke(state)
+    return asyncio.run(graph.ainvoke(state))
 
 
 # ─── Session state init ───────────────────────────────────────────────────────

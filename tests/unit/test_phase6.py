@@ -479,18 +479,12 @@ def test_generate_viz_node_wires_viz_agent():
     mock_response.usage_metadata = {"input_tokens": 5, "output_tokens": 5}
     mock_llm.ainvoke = AsyncMock(return_value=mock_response)
 
-    # asyncio.run() closes the event loop; create a fresh one for the sync node wrapper
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        with patch("src.agents.viz_agent._build_llm", return_value=mock_llm):
-            _nodes._viz_agent = None
-            state = initial_state("Show sales by region")
-            state["analysis_results"] = []
-            result = generate_viz_node(state)
-            _nodes._viz_agent = None
-    finally:
-        loop.close()
+    with patch("src.agents.viz_agent._build_llm", return_value=mock_llm):
+        _nodes._viz_agent = None
+        state = initial_state("Show sales by region")
+        state["analysis_results"] = []
+        result = asyncio.run(generate_viz_node(state))
+        _nodes._viz_agent = None
 
     assert "charts" in result
     assert isinstance(result["charts"], list)

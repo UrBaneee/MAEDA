@@ -3,8 +3,19 @@ Node function registry for the MAEDA LangGraph graph.
 
 Nodes for completed phases use real agent implementations.
 Nodes for future phases remain as labeled stubs.
+
+All I/O-bound nodes are `async def` and run under a single event loop —
+the graph must be invoked via `graph.ainvoke(state)` (see src/graph/builder.py
+and every call site: scripts/run_eval.py, scripts/demo_scenarios.py,
+ui/app.py, src/mcp_server/server.py). Previously each node individually
+wrapped its work in `asyncio.run()`, spinning up and tearing down a fresh
+event loop per node — harmless in isolation, but async clients created in
+one node (e.g. the MCP transport's httpx.AsyncClient) don't survive being
+used from a *different* loop in a later node, producing the "Event loop is
+closed" errors visible throughout this project's logs. handle_error_node
+does no I/O and is left as a plain sync function — LangGraph runs sync and
+async nodes together transparently under ainvoke().
 """
-import asyncio
 from datetime import datetime, timezone
 
 from src.config.settings import settings
@@ -97,21 +108,21 @@ def _trace(state: MAEDAState, agent_name: str, action: str, reasoning: str) -> M
 
 # ─── Nodes ────────────────────────────────────────────────────────────────────
 
-def parse_intent_node(state: MAEDAState) -> MAEDAState:
+async def parse_intent_node(state: MAEDAState) -> MAEDAState:
     """Phase 2: real LLM-based intent parsing."""
     logger.info("Node: parse_intent | query=%s", state.get("user_query", "")[:80])
     state["current_phase"] = "plan"
-    return asyncio.run(_get_intent_parser().process(state))
+    return await _get_intent_parser().process(state)
 
 
-def ask_clarification_node(state: MAEDAState) -> MAEDAState:
+async def ask_clarification_node(state: MAEDAState) -> MAEDAState:
     """Phase 2: surface clarification question to user."""
     logger.info("Node: ask_clarification")
     state["clarification_count"] = state.get("clarification_count", 0) + 1
-    return asyncio.run(_get_intent_parser().generate_clarification_question(state))
+    return await _get_intent_parser().generate_clarification_question(state)
 
 
-def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
+async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     """Phase 4: connect to data source, extract schema + NL summary, delegate QC to MCP."""
     logger.info("Node: connect_and_profile_data")
     state["current_phase"] = "plan"
@@ -128,77 +139,73 @@ def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     connector = _get_data_connector()
     mcp_client = _get_subsystem_client()
 
-    async def _run():
-        # Step 1: Connect and extract schema + NL summary
-        try:
-            schema, nl_summary = await connector.connect_with_summary(source)
-            state["active_source"] = schema.to_source_dict()
-            state["schema_summary"] = nl_summary
-            # Merge schema back into the source descriptor in state
-            state["data_sources"] = [
-                {**source, "schema": schema.to_dict(), "preview": schema.preview},
-                *sources[1:],
-            ]
-            effective_path = source_path
-        except Exception as exc:
-            logger.warning("DataConnector failed for %s: %s", source_path, exc)
-            # Schema extraction failed — still run MCP profiling on original path
-            state["schema_summary"] = f"Schema unavailable: {exc}"
-            effective_path = source_path
+    # Step 1: Connect and extract schema + NL summary
+    try:
+        schema, nl_summary = await connector.connect_with_summary(source)
+        state["active_source"] = schema.to_source_dict()
+        state["schema_summary"] = nl_summary
+        # Merge schema back into the source descriptor in state
+        state["data_sources"] = [
+            {**source, "schema": schema.to_dict(), "preview": schema.preview},
+            *sources[1:],
+        ]
+        effective_path = source_path
+    except Exception as exc:
+        logger.warning("DataConnector failed for %s: %s", source_path, exc)
+        # Schema extraction failed — still run MCP profiling on original path
+        state["schema_summary"] = f"Schema unavailable: {exc}"
+        effective_path = source_path
 
-        # Step 2: Delegate quality profiling to Data Cleaner MCP
-        report, prof_log = await mcp_client.profile_dataset(effective_path)
-        state["mcp_call_log"] = [*state.get("mcp_call_log", []), prof_log]
+    # Step 2: Delegate quality profiling to Data Cleaner MCP
+    report, prof_log = await mcp_client.profile_dataset(effective_path)
+    state["mcp_call_log"] = [*state.get("mcp_call_log", []), prof_log]
 
-        # Step 3: If critical issues, delegate cleaning then re-extract schema
-        if report.has_critical_issues:
-            plan, plan_log = await mcp_client.get_cleaning_plan(effective_path)
-            state["mcp_call_log"] = [*state.get("mcp_call_log", []), plan_log]
-            result, clean_log = await mcp_client.clean_dataset(effective_path, plan)
-            state["mcp_call_log"] = [*state.get("mcp_call_log", []), clean_log]
-            state["cleaning_applied"] = True
-            state["cleaning_summary"] = result.changes_summary
-            # Re-extract schema from cleaned data
-            if result.cleaned_path and result.cleaned_path != effective_path:
-                try:
-                    cleaned_source = {**source, "path": result.cleaned_path}
-                    schema2, nl2 = await connector.connect_with_summary(cleaned_source)
-                    state["active_source"] = schema2.to_source_dict()
-                    state["schema_summary"] = nl2
-                except Exception:
-                    pass  # Keep original schema if re-extraction fails
+    # Step 3: If critical issues, delegate cleaning then re-extract schema
+    if report.has_critical_issues:
+        plan, plan_log = await mcp_client.get_cleaning_plan(effective_path)
+        state["mcp_call_log"] = [*state.get("mcp_call_log", []), plan_log]
+        result, clean_log = await mcp_client.clean_dataset(effective_path, plan)
+        state["mcp_call_log"] = [*state.get("mcp_call_log", []), clean_log]
+        state["cleaning_applied"] = True
+        state["cleaning_summary"] = result.changes_summary
+        # Re-extract schema from cleaned data
+        if result.cleaned_path and result.cleaned_path != effective_path:
+            try:
+                cleaned_source = {**source, "path": result.cleaned_path}
+                schema2, nl2 = await connector.connect_with_summary(cleaned_source)
+                state["active_source"] = schema2.to_source_dict()
+                state["schema_summary"] = nl2
+            except Exception:
+                pass  # Keep original schema if re-extraction fails
 
-        state["data_quality_report"] = report.to_dict()
-        return state
-
-    updated = asyncio.run(_run())
-    return _trace(updated, "data_connector", "connect_and_profile",
+    state["data_quality_report"] = report.to_dict()
+    return _trace(state, "data_connector", "connect_and_profile",
                   f"Connected to {source_path}; "
-                  f"critical_issues={updated['data_quality_report']['has_critical_issues']}")
+                  f"critical_issues={state['data_quality_report']['has_critical_issues']}")
 
 
-def plan_analysis_node(state: MAEDAState) -> MAEDAState:
+async def plan_analysis_node(state: MAEDAState) -> MAEDAState:
     """Phase 5: LLM generates AnalysisPlan from parsed intent + schema."""
     logger.info("Node: plan_analysis")
     state["current_phase"] = "plan"
-    return asyncio.run(_get_analysis_agent().plan(state))
+    return await _get_analysis_agent().plan(state)
 
 
-def execute_analysis_node(state: MAEDAState) -> MAEDAState:
+async def execute_analysis_node(state: MAEDAState) -> MAEDAState:
     """Phase 5: execute plan steps with dependency tracking and error recovery."""
     logger.info("Node: execute_analysis")
     state["current_phase"] = "execute"
-    return asyncio.run(_get_analysis_agent().execute(state))
+    return await _get_analysis_agent().execute(state)
 
 
-def generate_viz_node(state: MAEDAState) -> MAEDAState:
+async def generate_viz_node(state: MAEDAState) -> MAEDAState:
     """Phase 6: recommend charts, generate static/interactive, caption, dashboard."""
     logger.info("Node: generate_viz")
     state["current_phase"] = "synthesize"
-    return asyncio.run(_get_viz_agent().process(state))
+    return await _get_viz_agent().process(state)
 
 
-def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
+async def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
     """Phase 7: build focused retrieval query, delegate to RAG-MCP-Server."""
     logger.info("Node: retrieve_domain_knowledge")
 
@@ -207,55 +214,48 @@ def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
     # 7.1 Build focused retrieval query from analysis results + intent
     query = insight_agent.build_retrieval_query(state)
 
-    async def _run():
-        chunks, log = await client.retrieve_knowledge(
-            query, top_k=5, collection=settings.rag_collection
-        )
-        state["mcp_call_log"] = [*state.get("mcp_call_log", []), log]
-        state["rag_context"] = [c.to_dict() for c in chunks]
-        state["rag_sources"] = [
-            {"source_file": c.source_file, "page": c.page, "chunk_id": c.chunk_id}
-            for c in chunks if c.source_file
-        ]
-        return state
-
-    updated = asyncio.run(_run())
-    return _trace(updated, "insight_agent", "retrieve_knowledge",
-                  f"Query: {query[:80]!r} → {len(updated['rag_context'])} chunks")
+    chunks, log = await client.retrieve_knowledge(
+        query, top_k=5, collection=settings.rag_collection
+    )
+    state["mcp_call_log"] = [*state.get("mcp_call_log", []), log]
+    state["rag_context"] = [c.to_dict() for c in chunks]
+    state["rag_sources"] = [
+        {"source_file": c.source_file, "page": c.page, "chunk_id": c.chunk_id}
+        for c in chunks if c.source_file
+    ]
+    return _trace(state, "insight_agent", "retrieve_knowledge",
+                  f"Query: {query[:80]!r} → {len(state['rag_context'])} chunks")
 
 
-def generate_insights_node(state: MAEDAState) -> MAEDAState:
+async def generate_insights_node(state: MAEDAState) -> MAEDAState:
     """Phase 7: combine analysis results + RAG context → insights + report."""
     logger.info("Node: generate_insights")
     state["current_phase"] = "synthesize"
-    return asyncio.run(_get_insight_agent().generate(state))
+    return await _get_insight_agent().generate(state)
 
 
-def run_guardrails_node(state: MAEDAState) -> MAEDAState:
+async def run_guardrails_node(state: MAEDAState) -> MAEDAState:
     """Phase 8: run all guardrail checks on outputs before user delivery."""
     logger.info("Node: run_guardrails")
     state["current_phase"] = "guardrail"
     # Increment guardrail_retry_count so route_after_guardrails can cap retry loops
     state["guardrail_retry_count"] = state.get("guardrail_retry_count", 0) + 1
-    return asyncio.run(_get_guardrail_agent().process(state))
+    return await _get_guardrail_agent().process(state)
 
 
-def run_eval_node(state: MAEDAState) -> MAEDAState:
+async def run_eval_node(state: MAEDAState) -> MAEDAState:
     """Phase 9: score the completed pipeline run against all eval metrics."""
     logger.info("Node: run_eval")
     state["current_phase"] = "complete"
 
-    async def _run():
-        runner = _get_eval_runner()
-        result = await runner.score(state)
-        state["eval_scores"] = {
-            s.metric: {"score": s.score, "label": s.label, "reasoning": s.reasoning}
-            for s in result.scores
-        }
-        state["eval_scores"]["_aggregate"] = result.aggregate_score
-        return state
-
-    return asyncio.run(_run())
+    runner = _get_eval_runner()
+    result = await runner.score(state)
+    state["eval_scores"] = {
+        s.metric: {"score": s.score, "label": s.label, "reasoning": s.reasoning}
+        for s in result.scores
+    }
+    state["eval_scores"]["_aggregate"] = result.aggregate_score
+    return state
 
 
 def handle_error_node(state: MAEDAState) -> MAEDAState:

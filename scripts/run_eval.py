@@ -70,7 +70,7 @@ CASE_DATA_SOURCES: dict[str, dict] = {
 KNOWN_DATA_MISMATCH = {"DG04", "C03", "P03"}
 
 
-def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[EvalResult, dict]:
+async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[EvalResult, dict]:
     state = initial_state(tc.query)
     src = CASE_DATA_SOURCES.get(tc.id)
     if src:
@@ -78,18 +78,16 @@ def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[Ev
 
     t0 = time.time()
     try:
-        result_state = graph.invoke(state)
+        result_state = await graph.ainvoke(state)
         run_error = result_state.get("error")
     except Exception as exc:
         result_state = state
-        run_error = f"graph.invoke raised: {exc}"
+        run_error = f"graph.ainvoke raised: {exc}"
         result_state["error"] = run_error
         result_state["error_type"] = "pipeline_error"  # an uncaught exception is never a safe refusal
     elapsed = time.time() - t0
 
-    eval_result = asyncio.run(
-        eval_runner.score(result_state, test_case=tc, start_time=t0, run_id=tc.id)
-    )
+    eval_result = await eval_runner.score(result_state, test_case=tc, start_time=t0, run_id=tc.id)
     meta = {
         "elapsed_s": round(elapsed, 2),
         "guardrail_passed": result_state.get("guardrail_passed"),
@@ -102,7 +100,7 @@ def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[Ev
     return eval_result, meta
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(description="Run MAEDA eval harness against the golden suite")
     parser.add_argument("--limit", type=int, default=None, help="Only run the first N cases")
     parser.add_argument("--case", action="append", help="Only run this case id (repeatable)")
@@ -125,7 +123,7 @@ def main():
     rows = []
     for tc in suite:
         print(f"  [{tc.id}] {tc.query!r} ...", end=" ", flush=True)
-        eval_result, meta = run_one_case(tc, graph, eval_runner)
+        eval_result, meta = await run_one_case(tc, graph, eval_runner)
         tags = []
         if meta["data_mismatch"]:
             tags.append("DATA MISMATCH")
@@ -234,4 +232,4 @@ def _print_regressions(baseline_path: Path, rows, overall):
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

@@ -509,21 +509,16 @@ def test_run_guardrails_node_integration():
     mock_response.usage_metadata = {"input_tokens": 5, "output_tokens": 5}
     mock_llm.ainvoke = AsyncMock(return_value=mock_response)
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        with patch("src.agents.guardrail_agent._build_llm", return_value=mock_llm):
-            _nodes._guardrail_agent = None
-            state = initial_state("Show revenue")
-            state["report"] = "# Report\n\n## Findings\n- Revenue up 10%.\n\n## Rec\n- Keep going."
-            state["insights"] = [{"finding": "Revenue up", "confidence": 0.9}]
-            state["analysis_results"] = [
-                {"result_summary": "Revenue up 10%", "failed": False}
-            ]
-            result = run_guardrails_node(state)
-            _nodes._guardrail_agent = None
-    finally:
-        loop.close()
+    with patch("src.agents.guardrail_agent._build_llm", return_value=mock_llm):
+        _nodes._guardrail_agent = None
+        state = initial_state("Show revenue")
+        state["report"] = "# Report\n\n## Findings\n- Revenue up 10%.\n\n## Rec\n- Keep going."
+        state["insights"] = [{"finding": "Revenue up", "confidence": 0.9}]
+        state["analysis_results"] = [
+            {"result_summary": "Revenue up 10%", "failed": False}
+        ]
+        result = asyncio.run(run_guardrails_node(state))
+        _nodes._guardrail_agent = None
 
     assert "guardrail_checks" in result
     assert "guardrail_passed" in result

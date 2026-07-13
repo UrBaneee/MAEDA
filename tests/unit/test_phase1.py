@@ -2,6 +2,8 @@
 Phase 1 tests — Project Scaffold & LangGraph Foundation.
 Run with: pytest tests/unit/test_phase1.py -v
 """
+import asyncio
+
 import pytest
 
 # ─── 1.2 State definition ─────────────────────────────────────────────────────
@@ -119,7 +121,7 @@ def test_graph_runs_end_to_end():
         g = build_graph()
         state = initial_state("Show me sales by region",
                               data_sources=[{"path": "data/demo/sales_data.csv", "type": "csv"}])
-        result = g.invoke(state)
+        result = asyncio.run(g.ainvoke(state))
         _nodes._intent_parser = None
         _nodes._analysis_agent = None
         _nodes._viz_agent = None
@@ -402,8 +404,8 @@ def test_decision_trace_accumulated():
         _nodes._data_connector = None
         _nodes._subsystem_client = mock_mcp2
         g = build_graph()
-        result = g.invoke(initial_state("How many orders per month?",
-                                        data_sources=[{"path": "data/demo/sales_data.csv", "type": "csv"}]))
+        result = asyncio.run(g.ainvoke(initial_state("How many orders per month?",
+                                        data_sources=[{"path": "data/demo/sales_data.csv", "type": "csv"}])))
         _nodes._intent_parser = None
         _nodes._analysis_agent = None
         _nodes._viz_agent = None

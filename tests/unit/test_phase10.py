@@ -105,7 +105,7 @@ def test_analyze_data_success():
 
     with patch("src.graph.builder.build_graph") as mock_build:
         mock_graph = MagicMock()
-        mock_graph.invoke = MagicMock(return_value=mock_result)
+        mock_graph.ainvoke = AsyncMock(return_value=mock_result)
         mock_build.return_value = mock_graph
 
         result = asyncio.run(srv._analyze_data("Show revenue", "data.csv"))
@@ -141,7 +141,7 @@ def test_analyze_data_no_data_source():
 
     with patch("src.graph.builder.build_graph") as mock_build:
         mock_graph = MagicMock()
-        mock_graph.invoke = MagicMock(return_value=mock_result)
+        mock_graph.ainvoke = AsyncMock(return_value=mock_result)
         mock_build.return_value = mock_graph
 
         result = asyncio.run(srv._analyze_data("Describe the data", ""))
@@ -160,7 +160,7 @@ def test_analyze_data_returns_json_serialisable():
     }
     with patch("src.graph.builder.build_graph") as mock_build:
         mock_graph = MagicMock()
-        mock_graph.invoke = MagicMock(return_value=mock_result)
+        mock_graph.ainvoke = AsyncMock(return_value=mock_result)
         mock_build.return_value = mock_graph
 
         raw = asyncio.run(srv._analyze_data("q", ""))
@@ -216,7 +216,7 @@ def test_analyze_data_includes_progress():
     }
     with patch("src.graph.builder.build_graph") as mock_build:
         mock_graph = MagicMock()
-        mock_graph.invoke = MagicMock(return_value=mock_result)
+        mock_graph.ainvoke = AsyncMock(return_value=mock_result)
         mock_build.return_value = mock_graph
 
         result = asyncio.run(srv._analyze_data("q", ""))

@@ -633,24 +633,19 @@ def test_run_eval_node_populates_eval_scores():
     mock_response.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
     mock_llm.ainvoke = AsyncMock(return_value=mock_response)
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        with patch("src.eval.metrics._build_eval_llm", return_value=mock_llm):
-            _nodes._eval_runner = None
-            state = initial_state("Show sales")
-            state["report"] = "# Report\n\n## Findings\n- Sales up.\n\n## Rec\n- Keep going."
-            state["analysis_results"] = [
-                {"method": "groupby", "result_summary": "Sales up 10%", "failed": False}
-            ]
-            state["parsed_intent"] = {"query_type": "descriptive", "confidence": 0.9,
-                                       "target_metrics": ["sales"]}
-            state["rag_context"] = []
-            state["charts"] = []
-            result = run_eval_node(state)
-            _nodes._eval_runner = None
-    finally:
-        loop.close()
+    with patch("src.eval.metrics._build_eval_llm", return_value=mock_llm):
+        _nodes._eval_runner = None
+        state = initial_state("Show sales")
+        state["report"] = "# Report\n\n## Findings\n- Sales up.\n\n## Rec\n- Keep going."
+        state["analysis_results"] = [
+            {"method": "groupby", "result_summary": "Sales up 10%", "failed": False}
+        ]
+        state["parsed_intent"] = {"query_type": "descriptive", "confidence": 0.9,
+                                   "target_metrics": ["sales"]}
+        state["rag_context"] = []
+        state["charts"] = []
+        result = asyncio.run(run_eval_node(state))
+        _nodes._eval_runner = None
 
     assert "eval_scores" in result
     assert "_aggregate" in result["eval_scores"]

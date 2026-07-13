@@ -18,7 +18,6 @@ result text so clients can display real-time status.
 """
 from __future__ import annotations
 
-import asyncio
 import json
 import time
 from typing import Any, Optional
@@ -60,7 +59,7 @@ async def _analyze_data(query: str, data_source: str) -> dict:
     start = time.time()
     try:
         graph = build_graph()
-        result = graph.invoke(state)
+        result = await graph.ainvoke(state)
         elapsed = round(time.time() - start, 2)
         _emit(f"Complete in {elapsed}s")
 

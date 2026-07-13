@@ -372,7 +372,7 @@ class TestMCPQualityDelegation:
 
         try:
             state = initial_state("Show revenue", data_sources=[{"type": "csv", "path": csv_file}])
-            result = nodes.connect_and_profile_node(state)
+            result = asyncio.run(nodes.connect_and_profile_node(state))
         finally:
             nodes._data_connector = old_connector
             nodes._subsystem_client = old_mcp
@@ -421,7 +421,7 @@ class TestMCPQualityDelegation:
 
         try:
             state = initial_state("q", data_sources=[{"type": "csv", "path": csv_file}])
-            result = nodes.connect_and_profile_node(state)
+            result = asyncio.run(nodes.connect_and_profile_node(state))
         finally:
             nodes._data_connector = old_connector
             nodes._subsystem_client = old_mcp

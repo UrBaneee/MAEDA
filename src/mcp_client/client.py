@@ -55,12 +55,15 @@ class MCPClient:
     Async client for a single MCP server over the streamable-http transport.
 
     Opens a fresh session (initialize handshake included) per call rather
-    than holding one open across the whole pipeline run — MAEDA's graph
-    nodes each run under their own `asyncio.run()` (see roadmap #13), so a
-    session opened in one node's event loop couldn't safely be reused by
-    another node's anyway. The per-call handshake costs a network round
-    trip, which is a reasonable trade for correctness at MAEDA's call
-    volume (at most a handful of MCP calls per pipeline run).
+    than holding one open across the whole pipeline run. MAEDA's graph
+    nodes now all run under a single shared event loop (roadmap #13 —
+    previously each node wrapped its work in its own `asyncio.run()`,
+    which is exactly what made a long-lived session unsafe to reuse
+    across nodes; that specific constraint is gone now, but per-call
+    sessions remain the simpler, still-correct choice). The per-call
+    handshake costs a network round trip, which is a reasonable trade
+    for correctness at MAEDA's call volume (at most a handful of MCP
+    calls per pipeline run).
 
     Supports:
     - Tool calls (call_tool)

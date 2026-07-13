@@ -364,29 +364,24 @@ def test_retrieve_knowledge_node_uses_built_query():
     import src.graph.nodes as _nodes
     from src.graph.nodes import retrieve_knowledge_node
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        mock_llm = MagicMock()
+    mock_llm = MagicMock()
 
-        with patch("src.agents.insight_agent._build_llm", return_value=mock_llm):
-            _nodes._insight_agent = None
-            _nodes._subsystem_client = None
-            state = initial_state("Show sales by region")
-            state["parsed_intent"] = {
-                "query_type": "descriptive",
-                "target_metrics": ["sales"],
-                "dimensions": ["region"],
-            }
-            state["analysis_results"] = [
-                {"step": 1, "method": "groupby", "result_summary": "North leads",
-                 "confidence": 0.9, "failed": False},
-            ]
-            result = retrieve_knowledge_node(state)
-            _nodes._insight_agent = None
-            _nodes._subsystem_client = None
-    finally:
-        loop.close()
+    with patch("src.agents.insight_agent._build_llm", return_value=mock_llm):
+        _nodes._insight_agent = None
+        _nodes._subsystem_client = None
+        state = initial_state("Show sales by region")
+        state["parsed_intent"] = {
+            "query_type": "descriptive",
+            "target_metrics": ["sales"],
+            "dimensions": ["region"],
+        }
+        state["analysis_results"] = [
+            {"step": 1, "method": "groupby", "result_summary": "North leads",
+             "confidence": 0.9, "failed": False},
+        ]
+        result = asyncio.run(retrieve_knowledge_node(state))
+        _nodes._insight_agent = None
+        _nodes._subsystem_client = None
 
     # Node must set rag_context (fallback returns empty list, not error)
     assert "rag_context" in result
@@ -400,22 +395,17 @@ def test_generate_insights_node_produces_report():
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("no LLM"))
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        with patch("src.agents.insight_agent._build_llm", return_value=mock_llm):
-            _nodes._insight_agent = None
-            state = initial_state("Analyse data")
-            state["analysis_results"] = [
-                {"step": 1, "method": "groupby", "result_summary": "Key result",
-                 "confidence": 0.8, "failed": False}
-            ]
-            state["rag_context"] = []
-            state["rag_sources"] = []
-            result = generate_insights_node(state)
-            _nodes._insight_agent = None
-    finally:
-        loop.close()
+    with patch("src.agents.insight_agent._build_llm", return_value=mock_llm):
+        _nodes._insight_agent = None
+        state = initial_state("Analyse data")
+        state["analysis_results"] = [
+            {"step": 1, "method": "groupby", "result_summary": "Key result",
+             "confidence": 0.8, "failed": False}
+        ]
+        state["rag_context"] = []
+        state["rag_sources"] = []
+        result = asyncio.run(generate_insights_node(state))
+        _nodes._insight_agent = None
 
     assert "insights" in result
     assert "report" in result
@@ -492,8 +482,8 @@ def test_graph_end_to_end_with_phase7():
         _nodes._subsystem_client = mock_mcp
 
         g = build_graph()
-        result = g.invoke(initial_state("Show revenue by region",
-                                        data_sources=[{"path": "data/demo/sales_data.csv", "type": "csv"}]))
+        result = asyncio.run(g.ainvoke(initial_state("Show revenue by region",
+                                        data_sources=[{"path": "data/demo/sales_data.csv", "type": "csv"}])))
 
         _nodes._intent_parser = None
         _nodes._analysis_agent = None

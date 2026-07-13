@@ -9,6 +9,7 @@ Each scenario prints agent reasoning, chart paths, and the final report.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sys
 import time
@@ -65,7 +66,7 @@ SCENARIOS = {
 }
 
 
-def run_scenario(n: int, verbose: bool = True) -> dict:
+async def run_scenario(n: int, verbose: bool = True) -> dict:
     scenario = SCENARIOS[n]
     print(f"\n{'=' * 60}")
     print(f"Scenario {n}: {scenario['name']}")
@@ -91,7 +92,7 @@ def run_scenario(n: int, verbose: bool = True) -> dict:
 
     t0 = time.time()
     graph = build_graph()
-    result = graph.invoke(state)
+    result = await graph.ainvoke(state)
     elapsed = round(time.time() - t0, 2)
 
     print(f"\n✅ Completed in {elapsed}s")
@@ -135,7 +136,7 @@ def run_scenario(n: int, verbose: bool = True) -> dict:
     return result
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(description="Run MAEDA demo scenarios")
     parser.add_argument("--scenario", type=int, choices=list(SCENARIOS.keys()), default=1,
                         help="Scenario number to run (1–5)")
@@ -145,10 +146,10 @@ def main():
 
     if args.all:
         for n in SCENARIOS:
-            run_scenario(n, verbose=not args.quiet)
+            await run_scenario(n, verbose=not args.quiet)
     else:
-        run_scenario(args.scenario, verbose=not args.quiet)
+        await run_scenario(args.scenario, verbose=not args.quiet)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
