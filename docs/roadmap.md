@@ -174,6 +174,11 @@ one eval-harness bug of its own (`factual_accuracy`'s exact-match
 brittleness, #25, worth +0.03 aggregate points, confirmed twice
 independently). None of these were MAEDA's own orchestration logic;
 the harness itself needed as much debugging as the pipeline it measures.
+As the interim alternative on the Data Cleaner side, the built-in pandas
+fallback profiler was strengthened from one check to six (eval_report.md
+#26) — which immediately surfaced 238 previously-unknown duplicate rows in
+the primary demo dataset — and a dead-key bug was fixed that had kept every
+profiler finding out of the report's quality caveat.
 
 **Phase C — Make it pleasant to use** (#13, #14, #17): streaming, multi-turn,
 async cleanup.
