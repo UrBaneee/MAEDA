@@ -23,7 +23,11 @@ import pandas as pd
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.agents.base_agent import BaseAgent
-from src.config.agent_prompts import ANALYSIS_EXECUTOR_SYSTEM, ANALYSIS_PLANNER_SYSTEM
+from src.config.agent_prompts import (
+    ANALYSIS_EXECUTOR_SYSTEM,
+    ANALYSIS_PLANNER_SYSTEM,
+    STEP_REPAIR_SYSTEM,
+)
 from src.config.settings import settings
 from src.state.graph_state import MAEDAState
 from src.tools.sql_tool import sql_tool
@@ -204,6 +208,7 @@ class AnalysisAgent(BaseAgent):
 
         steps = [AnalysisStep.from_dict(d) for d in plan_dicts]
         original_df = _load_dataframe(state)
+        column_manifest = _column_manifest(state.get("active_source"))
 
         results: dict[int, dict] = {}  # step_number → result
         result_dfs: dict[int, pd.DataFrame] = {}  # step_number → its output DataFrame, if any
@@ -212,7 +217,7 @@ class AnalysisAgent(BaseAgent):
         for step in _execution_order(steps):
             prior = {n: results[n] for n in step.depends_on if n in results}
             step_df = _select_input_dataframe(step, result_dfs, original_df)
-            step_result = await self._execute_step(step, step_df, prior)
+            step_result = await self._execute_step(step, step_df, prior, column_manifest)
             results[step.step_number] = step_result
             analysis_results.append({
                 "step": step.step_number,
@@ -231,6 +236,7 @@ class AnalysisAgent(BaseAgent):
         state["analysis_results"] = analysis_results
         # 5.8 Aggregate: store a compact intermediate_data for insight generation
         state["intermediate_data"] = _aggregate(analysis_results)
+        state["token_usage"] = self._cost_tracker.to_state_dict()
 
         state = self.log_decision(
             state,
@@ -243,9 +249,20 @@ class AnalysisAgent(BaseAgent):
         return state
 
     async def _execute_step(
-        self, step: AnalysisStep, df: pd.DataFrame, prior: dict
+        self, step: AnalysisStep, df: pd.DataFrame, prior: dict, column_manifest: str = ""
     ) -> dict:
-        """Execute one step with up to _MAX_RETRIES retries on failure."""
+        """Execute one step with up to _MAX_RETRIES retries on failure.
+
+        The retry tries an LLM-informed repair first — tool errors already
+        include actionable detail (e.g. the exact list of available
+        columns; see _require_columns), but that detail used to be
+        discarded: the only retry path was _simplify_step, which blindly
+        strips parameters down to a fixed whitelist with no awareness of
+        *why* the step failed. _repair_step feeds the real error message
+        back to the LLM for a targeted fix; _simplify_step remains the
+        fallback when repair isn't available or doesn't return anything
+        usable.
+        """
         tool_fn = TOOL_REGISTRY.get(step.tool)
         if tool_fn is None:
             return {
@@ -257,15 +274,17 @@ class AnalysisAgent(BaseAgent):
             }
 
         last_exc: Optional[Exception] = None
+        retry_note: Optional[str] = None
         for attempt in range(_MAX_RETRIES + 1):
             try:
                 result = tool_fn(df, step.parameters, prior)
                 result.setdefault("confidence", 1.0)
                 result.setdefault("failed", False)
                 if attempt > 0:
-                    result["warnings"] = result.get("warnings", []) + [
-                        f"Succeeded on retry {attempt}"
-                    ]
+                    note = f"Succeeded on retry {attempt}"
+                    if retry_note:
+                        note += f" ({retry_note})"
+                    result["warnings"] = result.get("warnings", []) + [note]
                 return result
             except Exception as exc:
                 last_exc = exc
@@ -274,8 +293,13 @@ class AnalysisAgent(BaseAgent):
                     step.step_number, step.tool, attempt + 1, exc
                 )
                 if attempt < _MAX_RETRIES:
-                    # Simplify parameters for retry
-                    step = _simplify_step(step)
+                    repaired = await self._repair_step(step, exc, column_manifest)
+                    if repaired is not None:
+                        step = repaired
+                        retry_note = "LLM-repaired"
+                    else:
+                        step = _simplify_step(step)
+                        retry_note = "generic simplify"
 
         return {
             "result": None,
@@ -284,6 +308,53 @@ class AnalysisAgent(BaseAgent):
             "warnings": [str(last_exc)],
             "failed": True,
         }
+
+    async def _repair_step(
+        self, step: AnalysisStep, error: Exception, column_manifest: str
+    ) -> Optional[AnalysisStep]:
+        """
+        Ask the LLM to fix a failed step's parameters using the tool's own
+        error message. Returns a corrected AnalysisStep (same tool/method,
+        repaired parameters), or None if repair isn't confidently possible
+        or the LLM call itself fails — callers must fall back to
+        _simplify_step in that case.
+        """
+        prompt = (
+            f"### Failed Step\n"
+            f"tool: {step.tool}\n"
+            f"method: {step.method}\n"
+            f"parameters: {json.dumps(step.parameters)}\n"
+            f"expected_output: {step.expected_output}\n"
+            f"rationale: {step.rationale}\n\n"
+            f"### Error\n{error}\n\n"
+            f"### Available Columns (authoritative — use these exact names)\n"
+            f"{column_manifest or '(not available)'}\n"
+        )
+        try:
+            response = await self._llm.ainvoke([
+                SystemMessage(content=STEP_REPAIR_SYSTEM),
+                HumanMessage(content=prompt),
+            ])
+            usage = getattr(response, "usage_metadata", None) or {}
+            self._cost_tracker.record(
+                agent_name=self.name, model=settings.llm_model,
+                input_tokens=usage.get("input_tokens", 0),
+                output_tokens=usage.get("output_tokens", 0),
+                call_label="repair_step",
+            )
+            data = _parse_json(response.content.strip())
+            new_params = data.get("parameters")
+            if not isinstance(new_params, dict) or not new_params:
+                return None
+            logger.info(
+                "Step %d (%s) repair: %s",
+                step.step_number, step.tool, data.get("reasoning", "")
+            )
+            from dataclasses import replace
+            return replace(step, parameters=new_params)
+        except Exception as exc:
+            logger.warning("Step repair LLM call failed: %s", exc)
+            return None
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -461,8 +532,20 @@ def _parse_json(text: str) -> Any:
     if "```" in text:
         lines = [l for l in text.split("\n") if not l.strip().startswith("```")]
         text = "\n".join(lines)
+    text = text.strip()
 
-    # Try array first, then object
+    # Fast path: the response is exactly JSON, as instructed. Try this
+    # before any bracket-scanning heuristic -- scanning for the first "["
+    # and last "]" breaks the moment the top-level shape is an object that
+    # merely *contains* an array (e.g. {"parameters": {"group_by": [...]}}),
+    # since the array's own brackets get mistaken for the outer ones.
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback: find the first opening bracket and match it to the outer
+    # closing bracket, handling a JSON blob embedded in surrounding prose.
     for start_char, end_char in [("[", "]"), ("{", "}")]:
         start = text.find(start_char)
         end = text.rfind(end_char)

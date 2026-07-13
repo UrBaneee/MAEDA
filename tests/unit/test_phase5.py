@@ -730,6 +730,138 @@ class TestErrorRecovery:
         simplified = _simplify_step(step)
         assert simplified.parameters["agg_func"] == "count"
 
+    def test_repair_step_fixes_wrong_column_name(self, sales_df, tmp_path):
+        """The retry should feed the real error message to the LLM and use
+        its targeted fix, not just blindly strip parameters."""
+        csv = tmp_path / "d.csv"
+        sales_df.to_csv(str(csv), index=False)
+
+        # "Revenue" doesn't exist (real column is lowercase "revenue") --
+        # this raises _require_columns' error with the real column list.
+        plan_data = [
+            {"step_number": 1, "method": "groupby", "tool": "pandas_transform",
+             "parameters": {"operation": "groupby", "group_by": ["region"],
+                             "agg_col": "Revenue", "agg_func": "sum"},
+             "depends_on": [], "expected_output": "", "rationale": ""},
+        ]
+        repair_response = MagicMock(
+            content=json.dumps({
+                "parameters": {"operation": "groupby", "group_by": ["region"],
+                                "agg_col": "revenue", "agg_func": "sum"},
+                "reasoning": "Fixed casing: Revenue -> revenue",
+            }),
+            usage_metadata={"input_tokens": 50, "output_tokens": 30},
+        )
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=repair_response)
+
+        agent = AnalysisAgent(llm=mock_llm)
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(csv)}])
+        state["active_source"] = {"type": "csv", "path": str(csv)}
+        state["analysis_plan"] = plan_data
+        result = asyncio.run(agent.execute(state))
+
+        mock_llm.ainvoke.assert_awaited_once()
+        assert result["analysis_results"][0]["failed"] is False
+        assert any("LLM-repaired" in w for w in result["analysis_results"][0]["warnings"])
+
+    def test_repair_step_falls_back_to_simplify_when_llm_returns_null(self, sales_df, tmp_path):
+        csv = tmp_path / "d.csv"
+        sales_df.to_csv(str(csv), index=False)
+        # agg_func="mean" on a string column raises -- _simplify_step forces
+        # agg_func="count" (works on any dtype), so the retry succeeds.
+        plan_data = [
+            {"step_number": 1, "method": "groupby", "tool": "pandas_transform",
+             "parameters": {"operation": "groupby", "group_by": ["quarter"],
+                             "agg_col": "region", "agg_func": "mean"},
+             "depends_on": [], "expected_output": "", "rationale": ""},
+        ]
+        repair_response = MagicMock(
+            content=json.dumps({"parameters": None, "reasoning": "not confident"}),
+            usage_metadata={"input_tokens": 50, "output_tokens": 20},
+        )
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=repair_response)
+
+        agent = AnalysisAgent(llm=mock_llm)
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(csv)}])
+        state["active_source"] = {"type": "csv", "path": str(csv)}
+        state["analysis_plan"] = plan_data
+        result = asyncio.run(agent.execute(state))
+
+        assert result["analysis_results"][0]["failed"] is False
+        assert any("generic simplify" in w for w in result["analysis_results"][0]["warnings"])
+
+    def test_repair_step_falls_back_to_simplify_when_llm_call_fails(self, sales_df, tmp_path):
+        csv = tmp_path / "d.csv"
+        sales_df.to_csv(str(csv), index=False)
+        plan_data = [
+            {"step_number": 1, "method": "groupby", "tool": "pandas_transform",
+             "parameters": {"operation": "groupby", "group_by": ["quarter"],
+                             "agg_col": "region", "agg_func": "mean"},
+             "depends_on": [], "expected_output": "", "rationale": ""},
+        ]
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("LLM unavailable"))
+
+        agent = AnalysisAgent(llm=mock_llm)
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(csv)}])
+        state["active_source"] = {"type": "csv", "path": str(csv)}
+        state["analysis_plan"] = plan_data
+        result = asyncio.run(agent.execute(state))
+
+        assert result["analysis_results"][0]["failed"] is False
+        assert any("generic simplify" in w for w in result["analysis_results"][0]["warnings"])
+
+    def test_repair_step_returns_none_on_missing_parameters_key(self):
+        from src.agents.analysis_agent import AnalysisStep
+        step = AnalysisStep(
+            step_number=1, method="groupby", tool="pandas_transform",
+            parameters={"agg_col": "Revenue"}, depends_on=[],
+            expected_output="", rationale="",
+        )
+        bad_response = MagicMock(
+            content=json.dumps({"reasoning": "oops, forgot the key"}),
+            usage_metadata={},
+        )
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=bad_response)
+        agent = AnalysisAgent(llm=mock_llm)
+        repaired = asyncio.run(agent._repair_step(step, ValueError("bad column"), "- revenue (float64)"))
+        assert repaired is None
+
+
+# ─── JSON parsing ─────────────────────────────────────────────────────────────
+
+class TestParseJson:
+    def test_parses_plain_array(self):
+        from src.agents.analysis_agent import _parse_json
+        assert _parse_json('[{"a": 1}]') == [{"a": 1}]
+
+    def test_parses_plain_object(self):
+        from src.agents.analysis_agent import _parse_json
+        assert _parse_json('{"a": 1}') == {"a": 1}
+
+    def test_parses_markdown_fenced_array(self):
+        from src.agents.analysis_agent import _parse_json
+        text = '```json\n[{"a": 1}]\n```'
+        assert _parse_json(text) == [{"a": 1}]
+
+    def test_parses_object_containing_a_nested_array(self):
+        """Regression: the old bracket-scanning logic tried "[" ... "]"
+        first and unconditionally, so an object whose only array is
+        *nested* (e.g. {"parameters": {"group_by": [...]}}) got truncated
+        down to just that inner array, discarding the object around it."""
+        from src.agents.analysis_agent import _parse_json
+        data = {"parameters": {"group_by": ["region"], "agg_col": "revenue"},
+                "reasoning": "fixed it"}
+        assert _parse_json(json.dumps(data)) == data
+
+    def test_raises_on_garbage(self):
+        from src.agents.analysis_agent import _parse_json
+        with pytest.raises(ValueError):
+            _parse_json("not json at all")
+
 
 # ─── 5.8 Result aggregator ────────────────────────────────────────────────────
 
