@@ -108,11 +108,16 @@ and the natural continuation of the eval-first narrative.
     stripping could ever have fixed. Also fixed a latent `_parse_json`
     bug surfaced by reusing it for the repair response (an object whose
     only array is nested got truncated to just that array).
-12. **Harden the "single sample row → population claim" defense.** The current
-    fix is a prompt-level evidence tag ([AGGREGATE]/[ROW-LEVEL SAMPLE]) on the
-    generation side. A stronger version adds a guardrail check: any
-    population-level phrasing in the report must trace back to an aggregate
-    step, or it gets escalated to critical.
+12. ✅ **Done — harden the "single sample row → population claim" defense.**
+    See eval_report.md #29. New guardrail check `_check_population_claim_grounding`:
+    population-generalizing language in the report escalates to critical
+    unless at least one analysis step actually aggregated over the data
+    (reuses the same evidence classifier that produces the prompt-level
+    [AGGREGATE]/[ROW-LEVEL SAMPLE] tags). Verified correct at the unit
+    level (6 tests); live on the 20-case suite it fired with zero false
+    positives but also zero observed genuine catches — reported honestly
+    rather than overclaimed, plausibly because #15/#28 already reduce how
+    often a report is left with only row-level evidence in the first place.
 
 ## Tier 3 — Engineering robustness
 
@@ -164,9 +169,9 @@ For a solo effort, roughly 2–4 weeks per phase:
 **Phase A — Make "trustworthy" solid** (#6, #7, #8, #9, #15, #16): ✅ done.
 All six eval/quality items completed — see eval_report.md #11–20. This was
 the safety net for every later change. #10 rolls into Phase B below. #11
-(retry-loop feedback) is also now done, picked up opportunistically — see
-eval_report.md #28. #12 (harder population-claim guardrail) remains, a
-smaller Tier 2 item not bundled into a named phase.
+(retry-loop feedback) and #12 (population-claim guardrail) — the two
+smaller Tier 2 items not bundled into a named phase — are also now done,
+picked up opportunistically. See eval_report.md #28–29.
 
 **Phase B — Make "real data" actually work** (#1, #2, #4, #10): ✅ done.
 #1, #2, #4 (joins, pushdown, date-part derivation — see eval_report.md
