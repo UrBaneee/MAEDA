@@ -1,0 +1,449 @@
+Running eval harness on 20 golden case(s)...
+
+  [D01] 'Show total sales by region' ... [32m[19:13:41] INFO    [0m maeda.nodes — Node: parse_intent | query=Show total sales by region
+[32m[19:13:43] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:13:44] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[19:13:49] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:13:49] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:13:51] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:13:51] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:13:53] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:13:54] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:13:54] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:14:03] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:14:05] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:14:06] INFO    [0m maeda.eval.runner — Eval run=8f4ae9aa1e3c4972a423e85ba78d246f aggregate=0.95 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.50
+[32m[19:14:06] INFO    [0m maeda.eval.runner — Eval run=D01 aggregate=0.98 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.80
+aggregate=0.98 [fallback]
+  [D02] 'What is the average order value per product category?' ... [32m[19:14:06] INFO    [0m maeda.nodes — Node: parse_intent | query=What is the average order value per product category?
+[32m[19:14:08] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:14:08] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=100 cols=5
+[33m[19:14:11] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:14:11] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:14:13] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[19:14:13] WARNING [0m maeda.agent.analysis — Step 1 (sql_query) attempt 1 failed: (sqlite3.OperationalError) no such table: data
+[SQL: SELECT p.category, AVG(o.revenue) AS average_order_value FROM orders o JOIN data p ON o.product_id = p.product_id GROUP BY p.category]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[32m[19:14:14] INFO    [0m maeda.agent.analysis — Step 1 (sql_query) repair: Replaced 'data' with 'products' as the correct table name to join with 'orders'.
+[32m[19:14:14] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:14:15] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:14:17] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:14:17] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:14:30] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:14:32] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:14:33] INFO    [0m maeda.eval.runner — Eval run=48821080f121427ab08ad5062d319cf6 aggregate=0.94 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.45
+[32m[19:14:33] INFO    [0m maeda.eval.runner — Eval run=D02 aggregate=0.97 | answer_relevance=1.00 groundedness=1.00 factual_accuracy=1.00 intent_accuracy=0.75
+aggregate=0.97 [fallback]
+  [D03] 'How many customers do we have per country?' ... [32m[19:14:33] INFO    [0m maeda.nodes — Node: parse_intent | query=How many customers do we have per country?
+[32m[19:14:34] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:14:34] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=1000 cols=6
+[33m[19:14:38] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:14:38] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:14:39] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:14:39] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:14:40] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:14:42] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:14:42] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:14:47] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:14:50] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:14:51] INFO    [0m maeda.eval.runner — Eval run=05d60ba402094820b93689b751d3b0e6 aggregate=0.84 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.50
+[32m[19:14:51] INFO    [0m maeda.eval.runner — Eval run=D03 aggregate=0.83 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=0.67 intent_accuracy=0.80
+aggregate=0.83 [fallback]
+  [D04] 'What are the top 10 products by revenue?' ... [32m[19:14:51] INFO    [0m maeda.nodes — Node: parse_intent | query=What are the top 10 products by revenue?
+[32m[19:14:53] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:14:53] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[19:14:58] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:14:58] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:15:00] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[19:15:00] WARNING [0m maeda.agent.analysis — Step 2 (pandas_transform) attempt 1 failed: only list-like objects are allowed to be passed to isin(), you passed a `str`
+[32m[19:15:03] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:15:06] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:15:07] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:15:07] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:15:17] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:15:20] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:15:21] INFO    [0m maeda.eval.runner — Eval run=9240d1ebc25249ca852f37205c274484 aggregate=0.74 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.50
+[32m[19:15:21] INFO    [0m maeda.eval.runner — Eval run=D04 aggregate=0.79 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=1.00
+aggregate=0.79 [fallback]
+  [D05] 'Show monthly order volume for the last 12 months' ... [32m[19:15:21] INFO    [0m maeda.nodes — Node: parse_intent | query=Show monthly order volume for the last 12 months
+[32m[19:15:23] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:15:23] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=10000 cols=7
+[33m[19:15:27] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:15:27] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:15:31] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:15:31] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:15:39] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[32m[19:15:47] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:15:49] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:15:49] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:15:57] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:16:00] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:16:00] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:16:09] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[32m[19:16:16] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:16:18] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:16:18] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:16:27] INFO    [0m maeda.nodes — Node: run_guardrails
+[31m[19:16:31] ERROR   [0m maeda.nodes — Node: handle_error | error_type=safe_refusal | error=The report mentions specific monthly quantities and trends for the last five months without providing evidence from the analysis findings. The numbers appear fabricated as they are not supported by the data provided.
+[32m[19:16:33] INFO    [0m maeda.eval.runner — Eval run=D05 aggregate=0.62 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.00 intent_accuracy=0.80
+aggregate=0.62 [SAFE REFUSAL: The report mentions specific monthly quantities and trends for the last five months without providing evidence from the analysis findings. The numbers appear fabricated as they are not supported by the data provided., fallback]
+  [DG01] 'Why did revenue drop in Q3?' ... [32m[19:16:33] INFO    [0m maeda.nodes — Node: parse_intent | query=Why did revenue drop in Q3?
+[32m[19:16:35] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:16:35] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[19:16:40] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:16:40] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:16:44] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:16:44] INFO    [0m maeda.nodes — Node: generate_viz
+/Users/yintianyi/MAEDA/src/tools/chart_tool.py:309: RankWarning:
+
+Polyfit may be poorly conditioned
+
+/Users/yintianyi/MAEDA/src/tools/chart_tool.py:309: RankWarning:
+
+Polyfit may be poorly conditioned
+
+[32m[19:17:00] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:17:02] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:17:02] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:17:12] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:17:14] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:17:16] INFO    [0m maeda.eval.runner — Eval run=ca2c50fad89f4267b55a83c3ccc9cab9 aggregate=0.62 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.19 intent_accuracy=0.45
+[32m[19:17:16] INFO    [0m maeda.eval.runner — Eval run=DG01 aggregate=0.65 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.00 intent_accuracy=0.95
+aggregate=0.65 [fallback]
+  [DG02] 'What caused the spike in customer churn last month?' ... [32m[19:17:16] INFO    [0m maeda.nodes — Node: parse_intent | query=What caused the spike in customer churn last month?
+[32m[19:17:17] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:17:17] INFO    [0m maeda.tools.data_connector — Connected to data/demo/churn_data.csv | rows=5000 cols=8
+[33m[19:17:21] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:17:22] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:17:27] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:17:27] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:17:58] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:17:59] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:17:59] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:18:14] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:18:16] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:18:16] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:18:46] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:18:48] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:18:48] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:19:00] INFO    [0m maeda.nodes — Node: run_guardrails
+[31m[19:19:03] ERROR   [0m maeda.nodes — Node: handle_error | error_type=safe_refusal | error=The report mentions specific churn rates for different plans and a correlation coefficient for support calls, but these figures are not directly supported by the analysis findings provided. The analysis findings do not include aggregated churn rates or correlation coefficients.
+[32m[19:19:05] INFO    [0m maeda.eval.runner — Eval run=DG02 aggregate=0.61 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.00 intent_accuracy=0.70
+aggregate=0.61 [SAFE REFUSAL: The report mentions specific churn rates for different plans and a correlation coefficient for support calls, but these figures are not directly supported by the analysis findings provided. The analysis findings do not include aggregated churn rates or correlation coefficients., fallback]
+  [DG03] 'Why is the North region underperforming?' ... [32m[19:19:05] INFO    [0m maeda.nodes — Node: parse_intent | query=Why is the North region underperforming?
+[32m[19:19:08] INFO    [0m maeda.nodes — Node: ask_clarification
+[32m[19:19:08] INFO    [0m maeda.nodes — Node: parse_intent | query=Why is the North region underperforming?
+[32m[19:19:10] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:19:10] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[19:19:16] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:19:16] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:19:22] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:19:22] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:19:28] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[32m[19:19:32] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:19:34] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:19:34] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:19:47] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:19:51] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:19:51] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:19:57] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[32m[19:20:00] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:20:01] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:20:01] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:20:17] INFO    [0m maeda.nodes — Node: run_guardrails
+[31m[19:20:20] ERROR   [0m maeda.nodes — Node: handle_error | error_type=safe_refusal | error=The report includes specific revenue figures for channels and products that are not present in the analysis findings, suggesting potential fabrication of numbers.
+[32m[19:20:22] INFO    [0m maeda.eval.runner — Eval run=DG03 aggregate=0.50 | answer_relevance=0.50 groundedness=0.00 factual_accuracy=0.00 intent_accuracy=0.60
+aggregate=0.50 [SAFE REFUSAL: The report includes specific revenue figures for channels and products that are not present in the analysis findings, suggesting potential fabrication of numbers., fallback]
+  [DG04] 'What factors correlate with high customer lifetime value?' ... [32m[19:20:22] INFO    [0m maeda.nodes — Node: parse_intent | query=What factors correlate with high customer lifetime value?
+[32m[19:20:25] INFO    [0m maeda.nodes — Node: ask_clarification
+[32m[19:20:25] INFO    [0m maeda.nodes — Node: parse_intent | query=What factors correlate with high customer lifetime value?
+[32m[19:20:27] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:20:27] INFO    [0m maeda.tools.data_connector — Connected to data/demo/churn_data.csv | rows=5000 cols=8
+[33m[19:20:30] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:20:30] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:20:34] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:20:34] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:21:00] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:21:01] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:21:01] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:21:18] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:21:23] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:21:23] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:21:52] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:21:53] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:21:53] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:22:08] INFO    [0m maeda.nodes — Node: run_guardrails
+[31m[19:22:11] ERROR   [0m maeda.nodes — Node: handle_error | error_type=safe_refusal | error=The correlation coefficients mentioned (0.732, 0.6142, 0.024, -0.0096) are not present in the analysis findings, suggesting they may be fabricated.
+[32m[19:22:12] INFO    [0m maeda.eval.runner — Eval run=DG04 aggregate=0.79 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=0.53 intent_accuracy=0.70
+aggregate=0.79 [DATA MISMATCH, SAFE REFUSAL: The correlation coefficients mentioned (0.732, 0.6142, 0.024, -0.0096) are not present in the analysis findings, suggesting they may be fabricated., fallback]
+  [C01] 'Compare sales performance across Q1, Q2, Q3, Q4' ... [32m[19:22:12] INFO    [0m maeda.nodes — Node: parse_intent | query=Compare sales performance across Q1, Q2, Q3, Q4
+[32m[19:22:19] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:22:19] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[19:22:24] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:22:24] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:22:27] INFO    [0m maeda.nodes — Node: execute_analysis
+/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/scipy/stats/_axis_nan_policy.py:586: SmallSampleWarning:
+
+all input arrays have length 1.  f_oneway requires that at least one input has length greater than 1.
+
+/Users/yintianyi/MAEDA/src/tools/stats_tool.py:343: SmallSampleWarning:
+
+One or more sample arguments is too small; all returned values will be NaN. See documentation for sample size requirements.
+
+[32m[19:22:27] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:22:34] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[33m[19:22:35] WARNING [0m maeda.tools.chart — Chart generation failed for bar: 'revenue'
+[33m[19:22:35] WARNING [0m maeda.tools.chart — Plotly chart failed for bar: Value of 'y' is not the name of a column in 'data_frame'. Expected one of ['quarter', 'mean', 'sum', 'median', 'count', 'std'] but received: revenue
+[32m[19:22:43] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:22:44] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:22:44] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:22:54] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:22:57] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:22:59] INFO    [0m maeda.eval.runner — Eval run=9894c956d8524187be3fa9e022f04f07 aggregate=0.58 | answer_relevance=0.50 groundedness=0.00 factual_accuracy=0.64 intent_accuracy=0.45
+[32m[19:22:59] INFO    [0m maeda.eval.runner — Eval run=C01 aggregate=0.52 | answer_relevance=0.50 groundedness=0.00 factual_accuracy=0.00 intent_accuracy=0.75
+aggregate=0.52 [fallback]
+  [C02] 'How does conversion rate differ by marketing channel?' ... [32m[19:22:59] INFO    [0m maeda.nodes — Node: parse_intent | query=How does conversion rate differ by marketing channel?
+[32m[19:23:01] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:23:01] INFO    [0m maeda.tools.data_connector — Connected to data/demo/marketing_campaigns.csv | rows=2000 cols=9
+[33m[19:23:04] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:23:04] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:23:07] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:23:08] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:23:12] WARNING [0m maeda.tools.chart — Chart generation failed for bar: 'conversion_rate'
+[33m[19:23:12] WARNING [0m maeda.tools.chart — Plotly chart failed for bar: Value of 'y' is not the name of a column in 'data_frame'. Expected one of ['channel', 'mean', 'sum', 'median', 'count', 'std'] but received: conversion_rate
+[32m[19:23:16] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:23:18] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:23:18] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:23:30] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:23:34] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:23:34] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:23:39] WARNING [0m maeda.tools.chart — Chart generation failed for bar: 'conversion_rate'
+[33m[19:23:39] WARNING [0m maeda.tools.chart — Plotly chart failed for bar: Value of 'y' is not the name of a column in 'data_frame'. Expected one of ['channel', 'mean', 'sum', 'median', 'count', 'std'] but received: conversion_rate
+[32m[19:23:44] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:23:45] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:23:45] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:23:56] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:23:59] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:24:01] INFO    [0m maeda.eval.runner — Eval run=cda86eef85bb4e91b6357e3b602323b7 aggregate=0.62 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.21 intent_accuracy=0.45
+[32m[19:24:01] INFO    [0m maeda.eval.runner — Eval run=C02 aggregate=0.64 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.00 intent_accuracy=0.95
+aggregate=0.64 [fallback]
+  [C03] 'Compare average order value between new and returning customers' ... [32m[19:24:01] INFO    [0m maeda.nodes — Node: parse_intent | query=Compare average order value between new and returning customers
+[32m[19:24:02] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:24:02] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=10000 cols=7
+[33m[19:24:06] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:24:06] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:24:08] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[19:24:08] WARNING [0m maeda.agent.analysis — Step 1 (sql_query) attempt 1 failed: (sqlite3.OperationalError) no such table: data
+[SQL: SELECT o.customer_id, c.segment, AVG(o.revenue) AS average_order_value FROM data o JOIN customers c ON o.customer_id = c.customer_id GROUP BY c.segment]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[32m[19:24:10] INFO    [0m maeda.agent.analysis — Step 1 (sql_query) repair: Changed the table name from 'data' to 'orders' to match the available columns and resolve the 'no such table' error.
+[33m[19:24:10] WARNING [0m maeda.agent.analysis — Step 2 (comparison) attempt 1 failed: comparison: unsupported agg 'avg', must be one of ['count', 'mean', 'median', 'sum']
+[32m[19:24:11] INFO    [0m maeda.agent.analysis — Step 2 (comparison) repair: Changed 'agg' from 'avg' to 'mean' because 'mean' is the correct aggregation function for calculating averages according to the error message.
+/Users/yintianyi/Library/Caches/pypoetry/virtualenvs/maeda-A0H539tf-py3.11/lib/python3.11/site-packages/scipy/stats/_axis_nan_policy.py:586: SmallSampleWarning:
+
+all input arrays have length 1.  f_oneway requires that at least one input has length greater than 1.
+
+/Users/yintianyi/MAEDA/src/tools/stats_tool.py:343: SmallSampleWarning:
+
+One or more sample arguments is too small; all returned values will be NaN. See documentation for sample size requirements.
+
+[32m[19:24:11] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:24:12] WARNING [0m maeda.tools.chart — Chart generation failed for bar: 'average_order_value'
+[33m[19:24:12] WARNING [0m maeda.tools.chart — Plotly chart failed for bar: Value of 'y' is not the name of a column in 'data_frame'. Expected one of ['segment', 'mean', 'sum', 'median', 'count', 'std'] but received: average_order_value
+[32m[19:24:14] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:24:15] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:24:15] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:24:24] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:24:27] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:24:29] INFO    [0m maeda.eval.runner — Eval run=437fc565908349f390fa9a49cba33511 aggregate=0.63 | answer_relevance=0.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.45
+[32m[19:24:29] INFO    [0m maeda.eval.runner — Eval run=C03 aggregate=0.67 | answer_relevance=0.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.75
+aggregate=0.67 [DATA MISMATCH, fallback]
+  [C04] 'Which product categories have the highest and lowest margins?' ... [32m[19:24:29] INFO    [0m maeda.nodes — Node: parse_intent | query=Which product categories have the highest and lowest margins?
+[32m[19:24:31] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:24:31] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=100 cols=5
+[33m[19:24:34] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:24:34] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:24:37] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:24:37] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:24:39] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:24:41] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:24:41] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:24:49] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:24:52] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:24:53] INFO    [0m maeda.eval.runner — Eval run=f802c9eda9b54835b8eb08d7d502e34e aggregate=0.67 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.52 intent_accuracy=0.45
+[32m[19:24:53] INFO    [0m maeda.eval.runner — Eval run=C04 aggregate=0.79 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.95
+aggregate=0.79 [fallback]
+  [P01] 'What will revenue look like next quarter based on current trends?' ... [32m[19:24:53] INFO    [0m maeda.nodes — Node: parse_intent | query=What will revenue look like next quarter based on current trends?
+[32m[19:24:55] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:24:55] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[19:24:58] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:24:58] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:25:00] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:25:00] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:25:02] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:25:04] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:25:04] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:25:13] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:25:15] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:25:17] INFO    [0m maeda.eval.runner — Eval run=1cfe96f273324f7eb4b2b3657864fa64 aggregate=0.84 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.45
+[32m[19:25:17] INFO    [0m maeda.eval.runner — Eval run=P01 aggregate=0.89 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.95
+aggregate=0.89 [fallback]
+  [P02] 'Forecast customer churn for the next 30 days' ... [32m[19:25:17] INFO    [0m maeda.nodes — Node: parse_intent | query=Forecast customer churn for the next 30 days
+[32m[19:25:19] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:25:19] INFO    [0m maeda.tools.data_connector — Connected to data/demo/churn_data.csv | rows=5000 cols=8
+[33m[19:25:24] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:25:24] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:25:26] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:25:26] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:25:27] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:25:29] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:25:29] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:25:38] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:25:41] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:25:41] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:25:42] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:25:44] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:25:44] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:25:54] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:25:56] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:25:59] INFO    [0m maeda.eval.runner — Eval run=a0216f4ee1804864b4df945d2a4257e3 aggregate=0.73 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.45
+[32m[19:25:59] INFO    [0m maeda.eval.runner — Eval run=P02 aggregate=0.76 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.75
+aggregate=0.76 [fallback]
+  [P03] 'Which customers are most likely to upgrade their plan?' ... [32m[19:25:59] INFO    [0m maeda.nodes — Node: parse_intent | query=Which customers are most likely to upgrade their plan?
+[32m[19:26:00] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:26:00] INFO    [0m maeda.tools.data_connector — Connected to data/demo/churn_data.csv | rows=5000 cols=8
+[33m[19:26:03] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:26:03] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:26:08] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:26:08] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:26:30] WARNING [0m maeda.tools.chart — Chart generation failed for line: 'engagement_score'
+[33m[19:26:30] WARNING [0m maeda.tools.chart — Plotly chart failed for line: Value of 'y' is not the name of a column in 'data_frame'. Expected one of ['customer_id', 'cohort_month', 'tenure_months', 'plan', 'monthly_charges', 'support_calls_last_90d', 'login_days_last_30d', 'churned'] but received: engagement_score
+[32m[19:26:59] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:27:01] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:27:01] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:27:12] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:27:16] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:27:16] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:27:40] WARNING [0m maeda.tools.chart — Chart generation failed for line: 'engagement_score'
+[33m[19:27:40] WARNING [0m maeda.tools.chart — Plotly chart failed for line: Value of 'y' is not the name of a column in 'data_frame'. Expected one of ['customer_id', 'cohort_month', 'tenure_months', 'plan', 'monthly_charges', 'support_calls_last_90d', 'login_days_last_30d', 'churned'] but received: engagement_score
+[32m[19:28:10] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:28:12] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:28:12] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:28:24] INFO    [0m maeda.nodes — Node: run_guardrails
+[31m[19:28:29] ERROR   [0m maeda.nodes — Node: handle_error | error_type=safe_refusal | error=The report mentions a 'naive linear forecast' predicting an upgrade likelihood of 'approximately 16.51 for the next period,' but there is no supporting data or context in the analysis findings to validate this specific number.
+[32m[19:28:31] INFO    [0m maeda.eval.runner — Eval run=P03 aggregate=0.58 | answer_relevance=0.00 groundedness=0.50 factual_accuracy=0.50 intent_accuracy=0.70
+aggregate=0.58 [DATA MISMATCH, SAFE REFUSAL: The report mentions a 'naive linear forecast' predicting an upgrade likelihood of 'approximately 16.51 for the next period,' but there is no supporting data or context in the analysis findings to validate this specific number., fallback]
+  [E01] 'Give me an overview of this dataset' ... [32m[19:28:31] INFO    [0m maeda.nodes — Node: parse_intent | query=Give me an overview of this dataset
+[32m[19:28:32] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:28:32] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[19:28:36] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:28:36] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:28:41] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:28:41] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:28:52] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:28:53] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:28:54] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:29:07] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:29:09] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:29:11] INFO    [0m maeda.eval.runner — Eval run=9286fafa356649198a5ea39b2650790e aggregate=0.73 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.40
+[32m[19:29:11] INFO    [0m maeda.eval.runner — Eval run=E01 aggregate=0.62 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.00 intent_accuracy=0.70
+aggregate=0.62 [fallback]
+  [E02] 'Are there any anomalies or outliers in the sales data?' ... [32m[19:29:11] INFO    [0m maeda.nodes — Node: parse_intent | query=Are there any anomalies or outliers in the sales data?
+[32m[19:29:13] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:29:13] INFO    [0m maeda.tools.data_connector — Connected to data/demo/sales_data.csv | rows=12240 cols=7
+[33m[19:29:16] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:29:16] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:29:18] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:29:18] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:29:19] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:29:21] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:29:21] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:29:39] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:29:41] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:29:45] INFO    [0m maeda.eval.runner — Eval run=56e3ae6d36594741878dc4451671e149 aggregate=0.83 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.40
+[32m[19:29:45] INFO    [0m maeda.eval.runner — Eval run=E02 aggregate=0.78 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=0.50 intent_accuracy=0.60
+aggregate=0.78 [fallback]
+  [E03] 'What patterns exist in customer purchasing behavior?' ... [32m[19:29:45] INFO    [0m maeda.nodes — Node: parse_intent | query=What patterns exist in customer purchasing behavior?
+[32m[19:29:46] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:29:46] INFO    [0m maeda.tools.data_connector — Connected to sqlite:///data/demo/ecommerce_orders.db | rows=10000 cols=7
+[33m[19:29:50] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:29:50] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:29:56] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[19:29:56] WARNING [0m maeda.agent.analysis — Step 4 (sql_query) attempt 1 failed: (sqlite3.OperationalError) no such table: data
+[SQL: SELECT o.customer_id, c.segment, SUM(o.revenue) AS total_revenue FROM data o JOIN customers c ON o.customer_id = c.customer_id GROUP BY o.customer_id, c.segment]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[32m[19:29:57] INFO    [0m maeda.agent.analysis — Step 4 (sql_query) repair: Changed the table name from 'data' to 'orders' to match the available columns, as 'data' does not exist.
+[33m[19:29:57] WARNING [0m maeda.agent.analysis — Step 5 (sql_query) attempt 1 failed: (sqlite3.OperationalError) no such table: data
+[SQL: SELECT o.product_id, p.category, SUM(o.quantity) AS total_quantity FROM data o JOIN products p ON o.product_id = p.product_id GROUP BY o.product_id, p.category]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[32m[19:29:58] INFO    [0m maeda.agent.analysis — Step 5 (sql_query) repair: Changed the table name from 'data' to 'orders' to match the expected table name for the available columns.
+[32m[19:29:58] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:30:04] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[33m[19:30:05] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[32m[19:30:13] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:30:15] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:30:15] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:30:28] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:30:32] INFO    [0m maeda.nodes — Node: execute_analysis
+[33m[19:30:32] WARNING [0m maeda.agent.analysis — Step 4 (sql_query) attempt 1 failed: (sqlite3.OperationalError) no such table: data
+[SQL: SELECT o.customer_id, c.segment, SUM(o.revenue) AS total_revenue FROM data o JOIN customers c ON o.customer_id = c.customer_id GROUP BY o.customer_id, c.segment]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[32m[19:30:34] INFO    [0m maeda.agent.analysis — Step 4 (sql_query) repair: Changed the table name from 'data' to 'orders' to match the available columns.
+[33m[19:30:34] WARNING [0m maeda.agent.analysis — Step 5 (sql_query) attempt 1 failed: (sqlite3.OperationalError) no such table: data
+[SQL: SELECT o.product_id, p.category, SUM(o.quantity) AS total_quantity FROM data o JOIN products p ON o.product_id = p.product_id GROUP BY o.product_id, p.category]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[32m[19:30:35] INFO    [0m maeda.agent.analysis — Step 5 (sql_query) repair: Changed the table name from 'data' to 'orders' to match the expected table name for the available columns.
+[32m[19:30:35] INFO    [0m maeda.nodes — Node: generate_viz
+[33m[19:30:41] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[33m[19:30:42] WARNING [0m maeda.tools.chart — Plotly chart failed for scatter: No module named 'statsmodels'
+[32m[19:30:52] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:30:54] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:30:54] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:31:07] INFO    [0m maeda.nodes — Node: run_guardrails
+[31m[19:31:11] ERROR   [0m maeda.nodes — Node: handle_error | error_type=safe_refusal | error=The report includes a claim about product_id 51 being the most purchased product with 687 units sold, which is not supported by the analysis findings. This appears to be a fabricated detail.
+[32m[19:31:12] INFO    [0m maeda.eval.runner — Eval run=E03 aggregate=0.61 | answer_relevance=0.50 groundedness=0.50 factual_accuracy=0.00 intent_accuracy=0.70
+aggregate=0.61 [SAFE REFUSAL: The report includes a claim about product_id 51 being the most purchased product with 687 units sold, which is not supported by the analysis findings. This appears to be a fabricated detail., fallback]
+  [E04] 'Explore the relationship between marketing spend and revenue' ... [32m[19:31:12] INFO    [0m maeda.nodes — Node: parse_intent | query=Explore the relationship between marketing spend and revenue
+[32m[19:31:13] INFO    [0m maeda.nodes — Node: connect_and_profile_data
+[32m[19:31:13] INFO    [0m maeda.tools.data_connector — Connected to data/demo/marketing_campaigns.csv | rows=2000 cols=9
+[33m[19:31:16] WARNING [0m maeda.mcp.fallback — Data Cleaner unavailable, using pandas fallback: Cannot reach MCP server at http://localhost:8001: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:31:16] INFO    [0m maeda.nodes — Node: plan_analysis
+[32m[19:31:18] INFO    [0m maeda.nodes — Node: execute_analysis
+[32m[19:31:18] INFO    [0m maeda.nodes — Node: generate_viz
+[32m[19:31:19] INFO    [0m maeda.nodes — Node: retrieve_domain_knowledge
+[33m[19:31:21] WARNING [0m maeda.mcp.fallback — RAG Server unavailable, skipping domain enrichment: Cannot reach MCP server at http://localhost:8002: unhandled errors in a TaskGroup (1 sub-exception)
+[32m[19:31:21] INFO    [0m maeda.nodes — Node: generate_insights
+[32m[19:31:29] INFO    [0m maeda.nodes — Node: run_guardrails
+[32m[19:31:31] INFO    [0m maeda.nodes — Node: run_eval
+[32m[19:31:35] INFO    [0m maeda.eval.runner — Eval run=7f6e17850a0945b4bd6da40fe5183005 aggregate=0.81 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=0.80 intent_accuracy=0.45
+[32m[19:31:35] INFO    [0m maeda.eval.runner — Eval run=E04 aggregate=0.89 | answer_relevance=1.00 groundedness=0.50 factual_accuracy=1.00 intent_accuracy=0.95
+aggregate=0.89 [fallback]
+
+============================================================================================
+ID     aggregate  relevance  grounded  factual  errrate  notes
+--------------------------------------------------------------------------------------------
+D01         0.98       1.00      1.00     1.00     1.00  fallback
+D02         0.97       1.00      1.00     1.00     1.00  fallback
+D03         0.83       1.00      0.50     0.67     1.00  fallback
+D04         0.79       0.50      0.50     1.00     1.00  fallback
+D05         0.62       0.50      0.50     0.00     1.00  safe_refusal,fallback
+DG01        0.65       0.50      0.50     0.00     1.00  fallback
+DG02        0.61       0.50      0.50     0.00     1.00  safe_refusal,fallback
+DG03        0.50       0.50      0.00     0.00     1.00  safe_refusal,fallback
+DG04        0.79       1.00      0.50     0.53     1.00  data_mismatch,safe_refusal,fallback
+C01         0.52       0.50      0.00     0.00     1.00  fallback
+C02         0.64       0.50      0.50     0.00     1.00  fallback
+C03         0.67       0.00      0.50     1.00     1.00  data_mismatch,fallback
+C04         0.79       0.50      0.50     1.00     1.00  fallback
+P01         0.89       1.00      0.50     1.00     1.00  fallback
+P02         0.76       0.50      0.50     1.00     1.00  fallback
+P03         0.58       0.00      0.50     0.50     1.00  data_mismatch,safe_refusal,fallback
+E01         0.62       0.50      0.50     0.00     1.00  fallback
+E02         0.78       1.00      0.50     0.50     1.00  fallback
+E03         0.61       0.50      0.50     0.00     1.00  safe_refusal,fallback
+E04         0.89       1.00      0.50     1.00     1.00  fallback
+--------------------------------------------------------------------------------------------
+OVERALL      0.73   safe_refusals=6/20
+============================================================================================
+
+Report saved to logs/eval_runs/phase_d_model_tiering.json
