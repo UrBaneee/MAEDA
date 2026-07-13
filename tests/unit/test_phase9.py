@@ -64,6 +64,51 @@ def test_factual_accuracy_with_ground_truth():
     assert ms.score > 0.5
 
 
+def test_factual_accuracy_matches_thousands_separator():
+    """A naive digit regex splits '$1,363,760.55' into '1'/'363'/'760.55',
+    none of which equal the raw ground-truth value — this must not happen."""
+    from src.eval.metrics import score_factual_accuracy
+    report = "Total revenue was $1,363,760.55 across all regions."
+    ground_truth = {"north_region_revenue": 1363760.55}
+    ms = score_factual_accuracy(report, [], ground_truth)
+    assert ms.score == 1.0
+
+
+def test_factual_accuracy_tolerates_llm_rounding():
+    """LLM-written numbers are often rounded ($1,363,761 instead of
+    1363760.55, or 0.35 instead of 0.3536) — exact string equality
+    shouldn't zero these out."""
+    from src.eval.metrics import score_factual_accuracy
+    report = "Revenue was about $1,363,761. The correlation was 0.35."
+    ground_truth = {"revenue": 1363760.55, "correlation": 0.3536}
+    ms = score_factual_accuracy(report, [], ground_truth)
+    assert ms.score == 1.0
+
+
+def test_factual_accuracy_rejects_wrong_number_within_loose_absolute_tolerance():
+    """A flat absolute tolerance would let a wrong correlation coefficient
+    (0.7 vs true 0.3536) slip through; the tolerance must scale with the
+    expected value's magnitude instead."""
+    from src.eval.metrics import score_factual_accuracy
+    report = "The correlation between spend and revenue was 0.7."
+    ground_truth = {"correlation": 0.3536}
+    ms = score_factual_accuracy(report, [], ground_truth)
+    assert ms.score == 0.0
+
+
+def test_numbers_match_helper():
+    from src.eval.metrics import _numbers_match
+    assert _numbers_match(1363761.0, 1363760.55)  # rounding
+    assert _numbers_match(0.35, 0.3536)            # small-magnitude rounding
+    assert not _numbers_match(0.7, 0.3536)         # genuinely wrong
+
+
+def test_extract_numbers_strips_thousands_separators():
+    from src.eval.metrics import _extract_numbers
+    assert _extract_numbers("Revenue: $1,363,760.55") == {1363760.55}
+    assert _extract_numbers("Counts: 118, 302") == {118.0, 302.0}
+
+
 # ─── 9.5 Agent performance metrics ──────────────────────────────────────────
 
 def test_intent_accuracy_high_confidence():

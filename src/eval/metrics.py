@@ -163,6 +163,40 @@ async def score_relevance_and_groundedness(
 
 # ─── 9.4 Factual accuracy ─────────────────────────────────────────────────────
 
+_THOUSANDS_SEP_RE = re.compile(r"(?<=\d),(?=\d{3}(?:\D|$))")
+_NUMBER_RE = re.compile(r"\d+(?:\.\d+)?")
+
+
+def _extract_numbers(text: str) -> set[float]:
+    """Extract numeric values from text, tolerant of thousands separators.
+
+    LLM-written numbers commonly use thousands separators ($1,363,760.55);
+    a naive \\b\\d+(?:\\.\\d+)?\\b regex splits those into unrelated
+    fragments ("1", "363", "760.55") that never match a ground-truth value.
+    Strip the separating commas first so the whole number extracts as one.
+    """
+    cleaned = _THOUSANDS_SEP_RE.sub("", text)
+    numbers = set()
+    for m in _NUMBER_RE.finditer(cleaned):
+        try:
+            numbers.add(float(m.group()))
+        except ValueError:
+            continue
+    return numbers
+
+
+def _numbers_match(a: float, b: float) -> bool:
+    """Tolerant numeric equality — allows LLM rounding, not exact string match.
+
+    1% relative tolerance (with a small absolute floor for near-zero values
+    like correlation coefficients) covers "$1,363,761" vs "1363760.55" or
+    "0.35" vs "0.3536" without being loose enough to pass a genuinely wrong
+    number.
+    """
+    tolerance = max(abs(b) * 0.01, 0.005)
+    return abs(a - b) <= tolerance
+
+
 def score_factual_accuracy(
     report: str,
     analysis_results: list[dict],
@@ -176,17 +210,21 @@ def score_factual_accuracy(
     if not report:
         return MetricScore("factual_accuracy", 0.0, "fail", "Empty report")
 
-    report_nums = set(re.findall(r"\b\d+(?:\.\d+)?\b", report))
+    report_nums = _extract_numbers(report)
     summaries = " ".join(
         r.get("result_summary", "") for r in analysis_results if not r.get("failed")
     )
-    summary_nums = set(re.findall(r"\b\d+(?:\.\d+)?\b", summaries))
+    summary_nums = _extract_numbers(summaries)
 
     if ground_truth:
         # Check against explicit ground truth values
-        expected = {str(v) for v in ground_truth.values() if isinstance(v, (int, float))}
+        expected = {v for v in ground_truth.values() if isinstance(v, (int, float))}
         if expected:
-            overlap = len(expected & report_nums) / len(expected)
+            matched = sum(
+                1 for exp in expected
+                if any(_numbers_match(rn, exp) for rn in report_nums)
+            )
+            overlap = matched / len(expected)
             return MetricScore("factual_accuracy", overlap, _label(overlap),
                                f"Ground truth overlap: {overlap:.0%}")
 
@@ -196,10 +234,13 @@ def score_factual_accuracy(
     if not report_nums:
         return MetricScore("factual_accuracy", 0.5, "warn", "Report contains no numbers")
 
-    overlap = len(report_nums & summary_nums) / max(len(summary_nums), 1)
+    matched = sum(
+        1 for sn in summary_nums if any(_numbers_match(rn, sn) for rn in report_nums)
+    )
+    overlap = matched / max(len(summary_nums), 1)
     score = min(1.0, overlap * 2)  # generous: even 50% overlap → full score
     return MetricScore("factual_accuracy", score, _label(score),
-                       f"{len(report_nums & summary_nums)}/{len(summary_nums)} numbers overlap")
+                       f"{matched}/{len(summary_nums)} numbers overlap")
 
 
 # ─── 9.5 Agent performance ────────────────────────────────────────────────────
