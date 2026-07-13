@@ -542,6 +542,25 @@ class TestPlanGenerator:
         assert "intent_parser" in result["token_usage"]
         assert "analysis_agent" in result["token_usage"]
 
+    def test_plan_does_not_leak_token_usage_across_queries(self):
+        """Roadmap Tier 3 #18: AnalysisAgent is a module-level singleton
+        (src/graph/nodes.py._get_analysis_agent), reused for every query in
+        the process. Confirmed live that the pre-fix version's second query
+        showed query1 + query2's tokens combined. Two independent plan()
+        calls on the same agent instance must each report only their own
+        query's cost."""
+        agent = AnalysisAgent(llm=_mock_llm([]))
+
+        state_a = initial_state("query A")
+        result_a = asyncio.run(agent.plan(state_a))
+
+        state_b = initial_state("query B")
+        result_b = asyncio.run(agent.plan(state_b))
+
+        assert result_a["token_usage"]["analysis_agent"]["total_tokens"] == 180
+        assert result_b["token_usage"]["analysis_agent"]["total_tokens"] == 180  # not 360
+        assert result_b["token_usage"]["analysis_agent"]["calls"] == 1  # not 2
+
     def test_plan_prompt_includes_related_tables_for_sql_source(self, multi_table_sqlite_db):
         mock_llm = _mock_llm([])
         agent = AnalysisAgent(llm=mock_llm)
@@ -810,6 +829,53 @@ class TestErrorRecovery:
         assert "intent_parser" in result["token_usage"]
         assert "analysis_agent" in result["token_usage"]
 
+    def test_execute_accumulates_within_query_but_not_across_queries(self, sales_df, tmp_path):
+        """The repair path (and plan(), run earlier in the same query) must
+        still accumulate correctly onto the same state's token_usage --
+        rehydrating from state per call must not accidentally reset to
+        zero on every call. But a second, independent query on the same
+        agent instance (roadmap Tier 3 #18) must start from that query's
+        own state, not carry over the first query's total."""
+        csv = tmp_path / "d.csv"
+        sales_df.to_csv(str(csv), index=False)
+        plan_data = [
+            {"step_number": 1, "method": "groupby", "tool": "pandas_transform",
+             "parameters": {"operation": "groupby", "group_by": ["region"],
+                             "agg_col": "Revenue", "agg_func": "sum"},
+             "depends_on": [], "expected_output": "", "rationale": ""},
+        ]
+        repair_response = MagicMock(
+            content=json.dumps({
+                "parameters": {"operation": "groupby", "group_by": ["region"],
+                                "agg_col": "revenue", "agg_func": "sum"},
+                "reasoning": "Fixed casing",
+            }),
+            usage_metadata={"input_tokens": 50, "output_tokens": 30},
+        )
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=repair_response)
+        agent = AnalysisAgent(llm=mock_llm)
+
+        # Query A: plan() (via the same mock, so also 50/30) then execute()
+        # with one repair -- both calls belong to the same query/state and
+        # must accumulate together.
+        state_a = initial_state("query A", data_sources=[{"type": "csv", "path": str(csv)}])
+        state_a["active_source"] = {"type": "csv", "path": str(csv)}
+        state_a = asyncio.run(agent.plan(state_a))
+        state_a["analysis_plan"] = plan_data
+        result_a = asyncio.run(agent.execute(state_a))
+        assert result_a["token_usage"]["analysis_agent"]["calls"] == 2  # plan + repair
+        assert result_a["token_usage"]["analysis_agent"]["total_tokens"] == 160  # 2 * 80
+
+        # Query B: a fresh state, same agent instance -- must not inherit
+        # query A's accumulated total.
+        state_b = initial_state("query B", data_sources=[{"type": "csv", "path": str(csv)}])
+        state_b["active_source"] = {"type": "csv", "path": str(csv)}
+        state_b = asyncio.run(agent.plan(state_b))
+        assert result_a["token_usage"]["analysis_agent"]["calls"] == 2  # A unaffected by B
+        assert state_b["token_usage"]["analysis_agent"]["calls"] == 1  # not 3
+        assert state_b["token_usage"]["analysis_agent"]["total_tokens"] == 80  # not 240
+
     def test_repair_step_falls_back_to_simplify_when_llm_returns_null(self, sales_df, tmp_path):
         csv = tmp_path / "d.csv"
         sales_df.to_csv(str(csv), index=False)
@@ -872,7 +938,8 @@ class TestErrorRecovery:
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(return_value=bad_response)
         agent = AnalysisAgent(llm=mock_llm)
-        repaired = asyncio.run(agent._repair_step(step, ValueError("bad column"), "- revenue (float64)"))
+        state = initial_state("q")
+        repaired = asyncio.run(agent._repair_step(step, ValueError("bad column"), "- revenue (float64)", state))
         assert repaired is None
 
 

@@ -178,13 +178,12 @@ class AnalysisAgent(BaseAgent):
         try:
             response = await self._llm.ainvoke(messages)
             usage = getattr(response, "usage_metadata", None) or {}
-            self._cost_tracker.record(
-                agent_name=self.name, model=settings.resolved_planner_model,
+            self.track_cost(
+                state, model=settings.resolved_planner_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="plan_analysis",
             )
-            state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
             data = _parse_json(response.content.strip())
             plan = AnalysisPlan.from_llm_response(data)
         except Exception as exc:
@@ -221,7 +220,7 @@ class AnalysisAgent(BaseAgent):
         for step in _execution_order(steps):
             prior = {n: results[n] for n in step.depends_on if n in results}
             step_df = _select_input_dataframe(step, result_dfs, original_df)
-            step_result = await self._execute_step(step, step_df, prior, column_manifest)
+            step_result = await self._execute_step(step, step_df, prior, column_manifest, state)
             results[step.step_number] = step_result
             analysis_results.append({
                 "step": step.step_number,
@@ -240,7 +239,6 @@ class AnalysisAgent(BaseAgent):
         state["analysis_results"] = analysis_results
         # 5.8 Aggregate: store a compact intermediate_data for insight generation
         state["intermediate_data"] = _aggregate(analysis_results)
-        state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
 
         state = self.log_decision(
             state,
@@ -253,7 +251,8 @@ class AnalysisAgent(BaseAgent):
         return state
 
     async def _execute_step(
-        self, step: AnalysisStep, df: pd.DataFrame, prior: dict, column_manifest: str = ""
+        self, step: AnalysisStep, df: pd.DataFrame, prior: dict, column_manifest: str,
+        state: MAEDAState,
     ) -> dict:
         """Execute one step with up to _MAX_RETRIES retries on failure.
 
@@ -297,7 +296,7 @@ class AnalysisAgent(BaseAgent):
                     step.step_number, step.tool, attempt + 1, exc
                 )
                 if attempt < _MAX_RETRIES:
-                    repaired = await self._repair_step(step, exc, column_manifest)
+                    repaired = await self._repair_step(step, exc, column_manifest, state)
                     if repaired is not None:
                         step = repaired
                         retry_note = "LLM-repaired"
@@ -314,7 +313,7 @@ class AnalysisAgent(BaseAgent):
         }
 
     async def _repair_step(
-        self, step: AnalysisStep, error: Exception, column_manifest: str
+        self, step: AnalysisStep, error: Exception, column_manifest: str, state: MAEDAState
     ) -> Optional[AnalysisStep]:
         """
         Ask the LLM to fix a failed step's parameters using the tool's own
@@ -340,8 +339,8 @@ class AnalysisAgent(BaseAgent):
                 HumanMessage(content=prompt),
             ])
             usage = getattr(response, "usage_metadata", None) or {}
-            self._cost_tracker.record(
-                agent_name=self.name, model=settings.resolved_planner_model,
+            self.track_cost(
+                state, model=settings.resolved_planner_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="repair_step",

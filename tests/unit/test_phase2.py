@@ -174,6 +174,36 @@ def test_parser_preserves_other_agents_token_usage():
     assert "intent_parser" in result["token_usage"]
 
 
+def test_parser_does_not_leak_token_usage_across_queries():
+    """Roadmap Tier 3 #18: IntentParserAgent is a module-level singleton
+    (src/graph/nodes.py._get_intent_parser), reused for every query in the
+    process. Confirmed live that the pre-fix version's second query showed
+    query1 + query2's tokens combined. Two independent process() calls on
+    the same agent instance must each report only their own query's cost.
+
+    Uses a reusable return_value mock (not _mock_agent's single-use
+    side_effect queue, which is consumed after one process() call and is
+    meant to model the parse-then-clarification sequence within *one*
+    query, not two independent queries)."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=_make_llm_response({
+        "query_type": "descriptive", "target_metrics": ["revenue"], "dimensions": [],
+        "filters": [], "time_range": None, "aggregation": None, "sort_by": None,
+        "limit": None, "confidence": 0.9, "ambiguities": [],
+    }))
+    agent = IntentParserAgent(llm=mock_llm)
+
+    state_a = initial_state("Show revenue")
+    result_a = asyncio.run(agent.process(state_a))
+
+    state_b = initial_state("Show costs")
+    result_b = asyncio.run(agent.process(state_b))
+
+    assert result_a["token_usage"]["intent_parser"]["total_tokens"] == 80
+    assert result_b["token_usage"]["intent_parser"]["total_tokens"] == 80  # not 160
+    assert result_b["token_usage"]["intent_parser"]["calls"] == 1  # not 2
+
+
 def test_parser_adds_to_conversation_history():
     agent = _mock_agent({
         "query_type": "descriptive",

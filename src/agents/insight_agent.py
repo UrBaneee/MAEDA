@@ -174,13 +174,12 @@ class InsightAgent(BaseAgent):
                 HumanMessage(content=prompt),
             ])
             usage = getattr(response, "usage_metadata", None) or {}
-            self._cost_tracker.record(
-                agent_name=self.name, model=settings.llm_model,
+            self.track_cost(
+                state, model=settings.llm_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="generate_insights",
             )
-            state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
 
             raw = _parse_json(response.content.strip())
             if not isinstance(raw, list):
@@ -248,13 +247,12 @@ class InsightAgent(BaseAgent):
                 HumanMessage(content=prompt),
             ])
             usage = getattr(response, "usage_metadata", None) or {}
-            self._cost_tracker.record(
-                agent_name=self.name, model=settings.llm_model,
+            self.track_cost(
+                state, model=settings.llm_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="generate_report",
             )
-            state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
             return response.content.strip()
         except Exception as exc:
             logger.warning("Report generation LLM failed: %s — using rule-based fallback", exc)

@@ -336,6 +336,30 @@ def test_price_for_unknown_model_uses_default():
     assert _price_for("some-future-model-nobody-added-yet") == _DEFAULT_PRICING
 
 
+def test_cost_tracker_from_state_dict_rehydrates_existing_totals():
+    """Resuming a tracker from a state["token_usage"] snapshot must let a
+    new .record() call add on top of the rehydrated total, not start over
+    -- this is what lets agents drop a persistent self._cost_tracker and
+    still accumulate correctly across multiple calls within one query."""
+    from src.utils.cost_tracker import CostTracker
+    snapshot = {
+        "analysis_agent": {"input_tokens": 100, "output_tokens": 50,
+                            "total_tokens": 150, "cost_usd": 0.001, "calls": 1},
+    }
+    tracker = CostTracker.from_state_dict(snapshot)
+    tracker.record("analysis_agent", "gpt-4o-mini", 20, 10, call_label="repair_step")
+    result = tracker.to_state_dict()
+    assert result["analysis_agent"]["calls"] == 2
+    assert result["analysis_agent"]["input_tokens"] == 120
+    assert result["analysis_agent"]["output_tokens"] == 60
+
+
+def test_cost_tracker_from_state_dict_handles_empty_and_none():
+    from src.utils.cost_tracker import CostTracker
+    assert CostTracker.from_state_dict({}).to_state_dict() == {}
+    assert CostTracker.from_state_dict(None).to_state_dict() == {}
+
+
 # ─── 1.7 Base Agent ──────────────────────────────────────────────────────────
 
 def test_base_agent_log_decision():
@@ -367,6 +391,37 @@ def test_base_agent_track_cost():
     state = agent.track_cost(state, "gpt-4o-mini", 100, 50)
     assert "dummy" in state["token_usage"]
     assert state["token_usage"]["dummy"]["total_tokens"] == 150
+
+
+def test_base_agent_track_cost_does_not_leak_across_separate_states():
+    """Roadmap Tier 3 #18: agents are long-lived module-level singletons
+    (src/graph/nodes.py), reused across every query in the process and,
+    under concurrent requests, across every in-flight session. Before this
+    fix, track_cost() accumulated on a CostTracker stored on `self`, so a
+    second query's token_usage silently included the first query's totals
+    too -- confirmed live by running two real queries through the same
+    process and seeing the second query's counts equal query1 + query2
+    combined. track_cost() must only ever reflect the `state` object it
+    was given, regardless of how many times this same agent instance has
+    recorded cost for other, unrelated states before."""
+    from src.agents.base_agent import BaseAgent
+    from src.state.graph_state import initial_state
+
+    class DummyAgent(BaseAgent):
+        async def process(self, state):
+            return state
+
+    agent = DummyAgent("dummy")  # one shared instance, as nodes.py does
+
+    state_a = initial_state("query A")
+    agent.track_cost(state_a, "gpt-4o-mini", 100, 50)
+
+    state_b = initial_state("query B")
+    agent.track_cost(state_b, "gpt-4o-mini", 10, 5)
+
+    assert state_a["token_usage"]["dummy"]["total_tokens"] == 150
+    assert state_b["token_usage"]["dummy"]["total_tokens"] == 15  # not 165
+    assert state_b["token_usage"]["dummy"]["calls"] == 1  # not 2
 
 
 def test_base_agent_track_cost_merges_not_overwrites():

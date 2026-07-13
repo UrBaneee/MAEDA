@@ -166,7 +166,7 @@ class GuardrailAgent(BaseAgent):
         checks.append(_check_population_claim_grounding(report_text, analysis_results))
 
         # 8.5 Hallucination detector + 8.2 claim grounding (LLM-as-judge)
-        llm_checks = await self._llm_judge(report_text, insights, analysis_results, query)
+        llm_checks = await self._llm_judge(state, report_text, insights, analysis_results, query)
         checks.extend(llm_checks)
 
         # Aggregate — use guardrail_retry_count (already incremented by the node wrapper)
@@ -181,10 +181,6 @@ class GuardrailAgent(BaseAgent):
 
         state["guardrail_checks"] = [guardrail_report.to_state_dict()]
         state["guardrail_passed"] = guardrail_report.passed
-        # Sync token usage from _llm_judge()'s call -- docstring has always
-        # claimed this agent writes token_usage, but nothing ever actually
-        # did; merge (not overwrite) so an earlier agent's entries survive.
-        state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
 
         state = self.log_decision(
             state,
@@ -207,6 +203,7 @@ class GuardrailAgent(BaseAgent):
 
     async def _llm_judge(
         self,
+        state: MAEDAState,
         report_text: str,
         insights: list[dict],
         analysis_results: list[dict],
@@ -231,8 +228,8 @@ class GuardrailAgent(BaseAgent):
                 HumanMessage(content=context),
             ])
             usage = getattr(response, "usage_metadata", None) or {}
-            self._cost_tracker.record(
-                agent_name=self.name, model=settings.resolved_guardrail_model,
+            self.track_cost(
+                state, model=settings.resolved_guardrail_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="llm_judge",

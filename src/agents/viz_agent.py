@@ -114,7 +114,7 @@ class VizAgent(BaseAgent):
                 plotly_json = ""
 
             # 6.5 Caption
-            caption = await self._caption_chart(spec, ar)
+            caption = await self._caption_chart(state, spec, ar)
 
             chart_record = {
                 **spec.to_dict(),
@@ -144,11 +144,6 @@ class VizAgent(BaseAgent):
                 logger.warning("Dashboard generation failed: %s", exc)
 
         state["charts"] = charts
-        # Sync token usage from _caption_chart()'s calls -- docstring has
-        # always claimed this agent writes token_usage, but nothing ever
-        # actually did; merge (not overwrite) so an earlier agent's entries
-        # in the same state survive this write too.
-        state["token_usage"] = {**state.get("token_usage", {}), **self._cost_tracker.to_state_dict()}
         state = self.log_decision(
             state,
             action="generate_viz",
@@ -161,7 +156,7 @@ class VizAgent(BaseAgent):
 
     # ── 6.5 Chart captioning ─────────────────────────────────────────────────
 
-    async def _caption_chart(self, spec: ChartSpec, analysis_result: dict) -> str:
+    async def _caption_chart(self, state: MAEDAState, spec: ChartSpec, analysis_result: dict) -> str:
         """Ask the LLM for a concise chart caption. Falls back to a rule-based caption."""
         context = (
             f"Chart type: {spec.chart_type}\n"
@@ -175,8 +170,8 @@ class VizAgent(BaseAgent):
                 HumanMessage(content=context),
             ])
             usage = getattr(response, "usage_metadata", None) or {}
-            self._cost_tracker.record(
-                agent_name=self.name, model=settings.llm_model,
+            self.track_cost(
+                state, model=settings.llm_model,
                 input_tokens=usage.get("input_tokens", 0),
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="caption_chart",

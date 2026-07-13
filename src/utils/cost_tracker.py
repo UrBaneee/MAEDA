@@ -147,6 +147,31 @@ class CostTracker:
             for agent, usage in self._per_agent.items()
         }
 
+    @classmethod
+    def from_state_dict(cls, data: Optional[dict], max_cost_usd: float = 1.0) -> "CostTracker":
+        """
+        Rehydrate a tracker's running totals from state["token_usage"].
+
+        Agents are long-lived module-level singletons (src/graph/nodes.py),
+        reused across every query in the process and, in a multi-user
+        deployment, across every concurrent session. A CostTracker kept as
+        a persistent attribute on such an agent accumulates forever across
+        all of that -- one query's (or one user's) cost silently leaks into
+        another's reported token_usage and budget check. Rebuilding a
+        tracker from state on every call keeps the running total scoped to
+        exactly the request that owns this `state` object, which is
+        already unique per call (see initial_state()).
+        """
+        tracker = cls(max_cost_usd=max_cost_usd)
+        for agent_name, usage in (data or {}).items():
+            tracker._per_agent[agent_name] = AgentUsage(
+                input_tokens=usage.get("input_tokens", 0),
+                output_tokens=usage.get("output_tokens", 0),
+                cost_usd=usage.get("cost_usd", 0.0),
+                calls=usage.get("calls", 0),
+            )
+        return tracker
+
     def summary(self) -> dict:
         return {
             "total_cost_usd": round(self.total_cost, 6),

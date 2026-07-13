@@ -313,7 +313,9 @@ def test_llm_judge_passes_clean_report():
     mock_llm.ainvoke = AsyncMock(return_value=mock_response)
 
     agent = GuardrailAgent(llm=mock_llm)
+    state = initial_state("Show revenue growth")
     result = asyncio.run(agent._llm_judge(
+        state,
         "# Report\nRevenue grew 15% in Q1.",
         [{"finding": "Revenue grew", "confidence": 0.9}],
         [{"result_summary": "Revenue grew 15%", "failed": False}],
@@ -340,7 +342,9 @@ def test_llm_judge_flags_hallucination():
     mock_llm.ainvoke = AsyncMock(return_value=mock_response)
 
     agent = GuardrailAgent(llm=mock_llm)
+    state = initial_state("Show revenue")
     result = asyncio.run(agent._llm_judge(
+        state,
         "# Report\nRevenue grew 99% — unprecedented.",
         [],
         [{"result_summary": "Revenue grew 5%", "failed": False}],
@@ -358,7 +362,8 @@ def test_llm_judge_fallback_on_error():
     mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("LLM unavailable"))
 
     agent = GuardrailAgent(llm=mock_llm)
-    result = asyncio.run(agent._llm_judge("report text", [], [], "query"))
+    state = initial_state("query")
+    result = asyncio.run(agent._llm_judge(state, "report text", [], [], "query"))
     # Fallback: returns pass results, doesn't raise
     assert all(c.passed for c in result)
 
