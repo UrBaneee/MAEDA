@@ -31,6 +31,7 @@ from src.config.agent_prompts import GUARDRAIL_SYSTEM
 from src.config.settings import settings
 from src.state.graph_state import MAEDAState
 from src.utils.logger import get_logger
+from src.utils.retry import call_with_rate_limit_retry
 
 logger = get_logger("maeda.agent.guardrail")
 
@@ -222,7 +223,7 @@ class GuardrailAgent(BaseAgent):
             f"### Report to Evaluate\n{report_text[:1500]}\n"
         )
 
-        try:
+        async def _call_llm():
             response = await self._llm.ainvoke([
                 SystemMessage(content=GUARDRAIL_SYSTEM),
                 HumanMessage(content=context),
@@ -234,9 +235,19 @@ class GuardrailAgent(BaseAgent):
                 output_tokens=usage.get("output_tokens", 0),
                 call_label="llm_judge",
             )
-            import json as _json
             raw = _parse_json(response.content.strip())
             return _parse_llm_checks(raw)
+
+        try:
+            # A transient rate limit (see docs/noise_floor.md's incident
+            # writeup) used to be caught by the same bare except below and
+            # silently defaulted to "pass" -- the guardrail's entire
+            # purpose is catching hallucinated/unsafe output, so failing
+            # open under load (exactly when a system is most likely to be
+            # producing degraded output) is backwards. Retry the transient
+            # case first; only default to pass once retries are exhausted
+            # or the failure isn't a rate limit at all.
+            return await call_with_rate_limit_retry(_call_llm, logger=logger, label="Guardrail LLM judge")
         except Exception as exc:
             logger.warning("LLM guardrail judge failed: %s — defaulting to pass", exc)
             return [

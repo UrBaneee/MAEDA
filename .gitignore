@@ -36,3 +36,14 @@ data/uploads/
 
 # Charts generated at runtime
 data/charts/
+
+# Replay cache (src/eval/replay_cache.py) — full pipeline states, tens of MB
+# for the golden suite; regenerate locally via scripts/generate_replay_corpus.py
+# rather than committing it.
+logs/replay_cache/
+
+# scripts/measure_noise.py's cached fixed states for judge-noise mode --
+# same idea as logs/replay_cache/ above (large, regeneratable, not itself
+# evidence). The actual *_noise_*.json measurement reports in
+# logs/noise_runs/ are intentionally kept, same as logs/eval_runs/.
+logs/noise_runs/judge_fixed_states.json

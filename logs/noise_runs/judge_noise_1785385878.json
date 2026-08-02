@@ -1,0 +1,307 @@
+{
+  "per_case": {
+    "D01": {
+      "raw": {
+        "answer_relevance": {
+          "label": "D01/raw/answer_relevance",
+          "n": 20,
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "D01/raw/groundedness",
+          "n": 20,
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "two_sigma": 0.0
+        }
+      },
+      "median": {
+        "answer_relevance": {
+          "label": "D01/median/answer_relevance",
+          "n": 20,
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "D01/median/groundedness",
+          "n": 20,
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "two_sigma": 0.0
+        }
+      }
+    },
+    "DG01": {
+      "raw": {
+        "answer_relevance": {
+          "label": "DG01/raw/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "DG01/raw/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      },
+      "median": {
+        "answer_relevance": {
+          "label": "DG01/median/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "DG01/median/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      }
+    },
+    "DG03": {
+      "raw": {
+        "answer_relevance": {
+          "label": "DG03/raw/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "DG03/raw/groundedness",
+          "n": 20,
+          "mean": 0.475,
+          "std": 0.1118,
+          "min": 0.0,
+          "max": 0.5,
+          "two_sigma": 0.2236
+        }
+      },
+      "median": {
+        "answer_relevance": {
+          "label": "DG03/median/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "DG03/median/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      }
+    },
+    "C02": {
+      "raw": {
+        "answer_relevance": {
+          "label": "C02/raw/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "C02/raw/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      },
+      "median": {
+        "answer_relevance": {
+          "label": "C02/median/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "C02/median/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      }
+    },
+    "P01": {
+      "raw": {
+        "answer_relevance": {
+          "label": "P01/raw/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "P01/raw/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      },
+      "median": {
+        "answer_relevance": {
+          "label": "P01/median/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "P01/median/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      }
+    },
+    "E02": {
+      "raw": {
+        "answer_relevance": {
+          "label": "E02/raw/answer_relevance",
+          "n": 20,
+          "mean": 0.575,
+          "std": 0.1832,
+          "min": 0.5,
+          "max": 1.0,
+          "two_sigma": 0.3663
+        },
+        "groundedness": {
+          "label": "E02/raw/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      },
+      "median": {
+        "answer_relevance": {
+          "label": "E02/median/answer_relevance",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        },
+        "groundedness": {
+          "label": "E02/median/groundedness",
+          "n": 20,
+          "mean": 0.5,
+          "std": 0.0,
+          "min": 0.5,
+          "max": 0.5,
+          "two_sigma": 0.0
+        }
+      }
+    }
+  },
+  "pooled": {
+    "raw": {
+      "answer_relevance": {
+        "label": "pooled/raw/answer_relevance",
+        "n": 120,
+        "mean": 0.5958,
+        "std": 0.1976,
+        "min": 0.5,
+        "max": 1.0,
+        "two_sigma": 0.3953
+      },
+      "groundedness": {
+        "label": "pooled/raw/groundedness",
+        "n": 120,
+        "mean": 0.5792,
+        "std": 0.1944,
+        "min": 0.0,
+        "max": 1.0,
+        "two_sigma": 0.3888
+      }
+    },
+    "median": {
+      "answer_relevance": {
+        "label": "pooled/median/answer_relevance",
+        "n": 120,
+        "mean": 0.5833,
+        "std": 0.1871,
+        "min": 0.5,
+        "max": 1.0,
+        "two_sigma": 0.3742
+      },
+      "groundedness": {
+        "label": "pooled/median/groundedness",
+        "n": 120,
+        "mean": 0.5833,
+        "std": 0.1871,
+        "min": 0.5,
+        "max": 1.0,
+        "two_sigma": 0.3742
+      }
+    }
+  },
+  "cases": [
+    "D01",
+    "DG01",
+    "DG03",
+    "C02",
+    "P01",
+    "E02"
+  ],
+  "repeats": 20
+}

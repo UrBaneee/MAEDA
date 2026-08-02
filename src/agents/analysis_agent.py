@@ -39,6 +39,7 @@ from src.tools.stats_tool import (
     timeseries_tool,
 )
 from src.utils.logger import get_logger
+from src.utils.retry import call_with_rate_limit_retry
 
 logger = get_logger("maeda.agent.analysis")
 
@@ -175,7 +176,7 @@ class AnalysisAgent(BaseAgent):
             HumanMessage(content=prompt),
         ]
 
-        try:
+        async def _call_llm():
             response = await self._llm.ainvoke(messages)
             usage = getattr(response, "usage_metadata", None) or {}
             self.track_cost(
@@ -185,7 +186,16 @@ class AnalysisAgent(BaseAgent):
                 call_label="plan_analysis",
             )
             data = _parse_json(response.content.strip())
-            plan = AnalysisPlan.from_llm_response(data)
+            return AnalysisPlan.from_llm_response(data)
+
+        try:
+            # A transient rate limit (see docs/noise_floor.md's incident
+            # writeup) used to be caught by the same bare except below and
+            # silently turned into an empty plan -- no different from a
+            # genuinely broken response. Retry the transient case first;
+            # only fall back to an empty plan once retries are exhausted or
+            # the failure isn't a rate limit at all.
+            plan = await call_with_rate_limit_retry(_call_llm, logger=logger, label="Plan generation")
         except Exception as exc:
             logger.warning("Plan generation failed: %s — using empty plan", exc)
             plan = AnalysisPlan(steps=[], rationale=f"Planning failed: {exc}")

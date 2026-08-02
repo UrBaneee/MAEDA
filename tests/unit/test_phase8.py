@@ -368,6 +368,50 @@ def test_llm_judge_fallback_on_error():
     assert all(c.passed for c in result)
 
 
+def test_llm_judge_retries_on_rate_limit_instead_of_defaulting_to_pass(monkeypatch):
+    """Found via docs/noise_floor.md's incident writeup: a transient 429
+    used to be caught by the same bare except as a genuinely broken
+    response, silently defaulting hallucination_check/claim_grounding to
+    pass under load -- the one condition where a guardrail is least safe
+    to fail open. It must retry a rate limit instead of waving the report
+    through."""
+    from src.agents.guardrail_agent import GuardrailAgent
+
+    class _FakeRateLimitError(Exception):
+        status_code = 429
+
+    hallucination_response = MagicMock()
+    hallucination_response.content = json.dumps({
+        "passed": False,
+        "checks": [
+            {"check": "hallucination_check", "passed": False,
+             "finding": "Fabricated figure not in findings"},
+            {"check": "claim_grounding", "passed": True, "finding": None},
+        ],
+        "overall_verdict": "retry",
+        "retry_reason": "Hallucinated figure",
+    })
+    hallucination_response.usage_metadata = {"input_tokens": 20, "output_tokens": 20}
+
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _FakeRateLimitError("429 rate limit exceeded"),
+        hallucination_response,
+    ])
+    monkeypatch.setattr("src.utils.retry.asyncio.sleep", AsyncMock())
+
+    agent = GuardrailAgent(llm=mock_llm)
+    state = initial_state("query")
+    result = asyncio.run(agent._llm_judge(state, "fabricated report", [], [], "query"))
+
+    hallucination = next(c for c in result if c.check == "hallucination_check")
+    assert not hallucination.passed, (
+        "a rate-limited retry that recovers a real hallucination finding must not be "
+        "silently overwritten by the 'defaulted to pass' fallback"
+    )
+    assert mock_llm.ainvoke.await_count == 2
+
+
 # ─── 8.7 Full process ────────────────────────────────────────────────────────
 
 def test_process_clean_state_passes():
