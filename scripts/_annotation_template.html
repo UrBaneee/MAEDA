@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MAEDA Judge Calibration — Labeling</title>
+<style>
+  :root {
+    --bg: #eef0f4;
+    --surface: #ffffff;
+    --surface-2: #f5f6f9;
+    --ink: #1b1f2a;
+    --muted: #5b6272;
+    --border: #d8dbe3;
+    --accent: #3454d1;
+    --accent-ink: #ffffff;
+    --accent-soft: #e7ebfc;
+    --good: #1e8a5f;
+    --warn: #a9791f;
+    --bad: #c0392b;
+    --serif: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --sans: -apple-system, "Segoe UI", system-ui, Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161d;
+      --surface: #1c1f29;
+      --surface-2: #22252f;
+      --ink: #e8e9ee;
+      --muted: #9298a8;
+      --border: #333744;
+      --accent: #7891f0;
+      --accent-ink: #0d1020;
+      --accent-soft: #232b4d;
+      --good: #4cbf8e;
+      --warn: #d1a53d;
+      --bad: #e2685a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161d; --surface: #1c1f29; --surface-2: #22252f; --ink: #e8e9ee;
+    --muted: #9298a8; --border: #333744; --accent: #7891f0; --accent-ink: #0d1020;
+    --accent-soft: #232b4d; --good: #4cbf8e; --warn: #d1a53d; --bad: #e2685a;
+  }
+  :root[data-theme="light"] {
+    --bg: #eef0f4; --surface: #ffffff; --surface-2: #f5f6f9; --ink: #1b1f2a;
+    --muted: #5b6272; --border: #d8dbe3; --accent: #3454d1; --accent-ink: #ffffff;
+    --accent-soft: #e7ebfc; --good: #1e8a5f; --warn: #a9791f; --bad: #c0392b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  }
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .topbar h1 {
+    font-size: 15px; margin: 0; font-weight: 600;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 120px; }
+  .progress-track {
+    flex: 1; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--accent); transition: width 0.2s ease; }
+  .progress-label { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .topbar button, .btn {
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    padding: 7px 14px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--ink); cursor: pointer;
+  }
+  .topbar button:hover, .btn:hover { border-color: var(--accent); }
+  .btn-primary {
+    background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  input[type="file"] { display: none; }
+
+  main {
+    max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px;
+    display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr); gap: 20px;
+  }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px;
+  }
+  .case-meta { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .case-id { font-family: var(--mono); font-size: 13px; color: var(--accent); font-weight: 700; }
+  .query-type-pill {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+  }
+  h2.query {
+    font-family: var(--serif); font-size: 21px; font-weight: 600; line-height: 1.35;
+    margin: 0 0 18px; text-wrap: balance; max-width: 62ch;
+  }
+  .section-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin: 20px 0 8px; display: block;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+  .prose {
+    font-family: var(--serif); font-size: 15.5px; line-height: 1.65; max-width: 66ch;
+    white-space: pre-wrap; color: var(--ink);
+  }
+  .findings, .rag {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.6; white-space: pre-wrap;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; max-height: 220px; overflow-y: auto; color: var(--muted);
+  }
+  .empty-note { color: var(--muted); font-style: italic; font-size: 13px; }
+
+  .rating-panel { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 76px; align-self: start; }
+  .rating-group { display: flex; flex-direction: column; gap: 8px; }
+  .rating-group h3 {
+    font-size: 13px; margin: 0; display: flex; align-items: center; justify-content: space-between;
+  }
+  .rating-group .hint { font-weight: 400; color: var(--muted); font-size: 11.5px; }
+  .bands { display: flex; flex-direction: column; gap: 6px; }
+  .band-option {
+    display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+    padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2);
+  }
+  .band-option:hover { border-color: var(--accent); }
+  .band-option.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .band-option input { margin-top: 3px; accent-color: var(--accent); }
+  .band-option .band-score {
+    font-family: var(--mono); font-size: 12px; font-weight: 700; min-width: 34px;
+  }
+  .band-option .band-text { font-size: 12.5px; color: var(--ink); line-height: 1.4; }
+  .band-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .b0 { color: var(--bad); } .b1 { color: var(--bad); } .b2 { color: var(--warn); }
+  .b3 { color: var(--good); } .b4 { color: var(--good); }
+
+  textarea.notes {
+    width: 100%; min-height: 60px; font-family: var(--sans); font-size: 13px;
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: var(--surface-2);
+    color: var(--ink); resize: vertical;
+  }
+  .nav-row { display: flex; gap: 8px; }
+  .nav-row button { flex: 1; padding: 10px; }
+
+  .rubric-toggle { font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: underline dotted; background: none; border: none; padding: 0; }
+
+  footer.help {
+    max-width: 1180px; margin: 0 auto; padding: 0 20px 60px; color: var(--muted); font-size: 12.5px; line-height: 1.6;
+  }
+  footer.help summary { cursor: pointer; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+  footer.help code { font-family: var(--mono); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  .done-banner {
+    max-width: 1180px; margin: 16px auto 0; padding: 14px 20px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent); font-size: 13.5px; font-weight: 600;
+    display: none;
+  }
+  .done-banner.show { display: block; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .export-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.45); align-items: center; justify-content: center; padding: 20px;
+  }
+  .export-overlay.show { display: flex; }
+  .export-modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px; max-width: 640px; width: 100%; max-height: 85vh;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .export-modal h3 { margin: 0; font-size: 16px; }
+  .export-hint { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+  #exportText {
+    width: 100%; flex: 1; min-height: 220px; font-family: var(--mono); font-size: 11.5px;
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+    background: var(--surface-2); color: var(--ink); resize: vertical;
+  }
+  .export-actions { display: flex; gap: 8px; }
+  .export-status { font-size: 12.5px; color: var(--good); min-height: 16px; margin: 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <span class="eyebrow">Eval v2 · Step 3</span>
+    <h1>Judge calibration labeling</h1>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 0 labeled</span>
+  </div>
+  <button id="loadBtn">Load progress</button>
+  <input type="file" id="loadInput" accept="application/json" />
+  <button class="btn-primary" id="downloadBtn">Download labels</button>
+</div>
+
+<div class="done-banner" id="doneBanner">All cases labeled. Download your labels, then hand the file to <code>scripts/compute_agreement.py</code>. For self-consistency, come back 24h+ later, reload this same page (fresh, don't peek at today's file), and label again into a second file.</div>
+
+<!-- Fallback for sandboxed contexts (e.g. an Artifact iframe) where a
+     synthetic <a download> click can be silently blocked with no JS error
+     -- there's no reliable way to detect that failure from script, so this
+     always shows alongside the direct-download attempt rather than only
+     appearing "if it fails". Copy-to-clipboard and a plain selectable
+     textarea are two independent fallback paths of their own. -->
+<div class="export-overlay" id="exportOverlay">
+  <div class="export-modal">
+    <h3>Your labels (JSON)</h3>
+    <p class="export-hint">
+      A direct file download was also attempted — if it landed in your
+      Downloads folder, you're done, close this. If not (common inside a
+      sandboxed preview), copy the text below and paste it into a new file
+      saved as <code id="exportFilename">human_labels.json</code>.
+    </p>
+    <textarea id="exportText" readonly></textarea>
+    <div class="export-actions">
+      <button class="btn-primary" id="copyBtn">Copy to clipboard</button>
+      <button class="btn" id="closeExportBtn">Close</button>
+    </div>
+    <p class="export-status" id="copyStatus"></p>
+  </div>
+</div>
+
+<main>
+  <div class="card" id="caseCard">
+    <div class="case-meta">
+      <span class="case-id" id="caseId"></span>
+      <span class="query-type-pill" id="queryType"></span>
+    </div>
+    <h2 class="query" id="queryText"></h2>
+
+    <span class="section-label">Report</span>
+    <div class="prose" id="reportText"></div>
+
+    <span class="section-label">Analysis findings (what the report should be grounded in)</span>
+    <div class="findings" id="findingsText"></div>
+
+    <span class="section-label">Data quality (source for any data-quality caveats the report makes)</span>
+    <div class="findings" id="dataQualityText"></div>
+
+    <span class="section-label" id="ragLabel" style="display:none">RAG context</span>
+    <div class="rag" id="ragText" style="display:none"></div>
+  </div>
+
+  <div class="rating-panel">
+    <div class="card rating-group">
+      <h3>Answer relevance <span class="hint">does it answer the question?</span></h3>
+      <div class="bands" id="relevanceBands"></div>
+    </div>
+
+    <div class="card rating-group">
+      <h3>Groundedness <span class="hint">are claims backed by the findings?</span></h3>
+      <div class="bands" id="groundednessBands"></div>
+    </div>
+
+    <div class="card">
+      <span class="section-label" style="margin-top:0">Notes (optional)</span>
+      <textarea class="notes" id="notesText" placeholder="Anything ambiguous about this case, or why you picked this band..."></textarea>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn" id="prevBtn">← Prev</button>
+      <button class="btn" id="nextBtn">Next →</button>
+    </div>
+  </div>
+</main>
+
+<footer class="help">
+  <details>
+    <summary>How to use this</summary>
+    <p>Read the query, report, and findings for each case, then rate <strong>answer_relevance</strong> (does the report answer the question?) and <strong>groundedness</strong> (is every claim traceable to the findings?) independently — a report can be perfectly grounded and still not answer the question, or vice versa.</p>
+    <p>Progress autosaves to this browser (localStorage) as you go, so closing the tab is safe. <code>Download labels</code> at any time to get a <code>human_labels.json</code> file you can hand off or resume from later via <code>Load progress</code>.</p>
+    <p>Recommended: label the first ~5 cases, then pause and reconsider any band definitions that felt ambiguous before continuing — don't let your standard drift partway through. For self-consistency, repeat this whole exercise once more 24h+ later without looking at your first set of answers, and keep both files.</p>
+  </details>
+</footer>
+
+<script>
+const SAMPLES = /*__SAMPLES_JSON__*/;
+
+const RELEVANCE_BANDS = [
+  { score: 1.0,  label: "Fully answers",     text: "Fully answers the question with specific, relevant details — nothing important is missing." },
+  { score: 0.75, label: "Mostly answers",     text: "Answers the question but misses a minor aspect, or could be more specific." },
+  { score: 0.5,  label: "Partially answers",  text: "Addresses part of the question but misses a significant aspect of it." },
+  { score: 0.25, label: "Barely relevant",    text: "Touches the general topic but doesn't really answer what was asked." },
+  { score: 0.0,  label: "Off-topic",          text: "Does not address the question at all." },
+];
+
+const GROUNDEDNESS_BANDS = [
+  { score: 1.0,  label: "Fully grounded",     text: "Every factual claim in the report is clearly supported by the findings/context." },
+  { score: 0.75, label: "Mostly grounded",     text: "Nearly all claims are supported; at most one minor unsupported detail." },
+  { score: 0.5,  label: "Partly grounded",     text: "About half the claims are supported; a meaningful portion are unsupported or unverifiable." },
+  { score: 0.25, label: "Mostly ungrounded",   text: "Most claims are unsupported; only a small part of the report is actually backed by the findings." },
+  { score: 0.0,  label: "Fabricated",          text: "The report's claims are fabricated or contradict the findings/context provided." },
+];
+
+const STORAGE_KEY = "maeda_judge_calibration_labels_pass2_v1";
+let state = loadState();
+let current = 0;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  const labels = {};
+  SAMPLES.forEach(s => { labels[s.case_id] = { answer_relevance: null, groundedness: null, notes: "" }; });
+  return { labels };
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = SAMPLES.length;
+  const done = SAMPLES.filter(s => {
+    const l = state.labels[s.case_id];
+    return l && l.answer_relevance !== null && l.groundedness !== null;
+  }).length;
+  document.getElementById("progressFill").style.width = (done / total * 100) + "%";
+  document.getElementById("progressLabel").textContent = done + " / " + total + " labeled";
+  document.getElementById("doneBanner").classList.toggle("show", done === total);
+}
+
+function renderBands(containerEl, bands, metric, sample) {
+  containerEl.innerHTML = "";
+  const current = state.labels[sample.case_id][metric];
+  bands.forEach((b, i) => {
+    const id = metric + "_" + sample.case_id + "_" + i;
+    const wrap = document.createElement("label");
+    wrap.className = "band-option" + (current === b.score ? " selected" : "");
+    wrap.setAttribute("for", id);
+    wrap.innerHTML =
+      '<input type="radio" id="' + id + '" name="' + metric + '_' + sample.case_id + '" ' +
+      (current === b.score ? "checked" : "") + '/>' +
+      '<span class="band-score b' + i + '">' + b.score.toFixed(2) + '</span>' +
+      '<span class="band-text"><strong>' + b.label + '.</strong> ' + b.text + '</span>';
+    wrap.querySelector("input").addEventListener("change", () => {
+      state.labels[sample.case_id][metric] = b.score;
+      saveState();
+      renderBands(containerEl, bands, metric, sample);
+    });
+    containerEl.appendChild(wrap);
+  });
+}
+
+function render() {
+  const sample = SAMPLES[current];
+  document.getElementById("caseId").textContent = sample.case_id;
+  document.getElementById("queryType").textContent = sample.query_type;
+  document.getElementById("queryText").textContent = sample.query;
+  document.getElementById("reportText").textContent = sample.report || "(empty report)";
+  document.getElementById("findingsText").textContent = sample.findings || "(no findings recorded)";
+  document.getElementById("dataQualityText").textContent = sample.data_quality || "None";
+
+  const ragLabel = document.getElementById("ragLabel");
+  const ragText = document.getElementById("ragText");
+  if (sample.rag_context && sample.rag_context.trim()) {
+    ragLabel.style.display = "block";
+    ragText.style.display = "block";
+    ragText.textContent = sample.rag_context;
+  } else {
+    ragLabel.style.display = "none";
+    ragText.style.display = "none";
+  }
+
+  document.getElementById("notesText").value = state.labels[sample.case_id].notes || "";
+  renderBands(document.getElementById("relevanceBands"), RELEVANCE_BANDS, "answer_relevance", sample);
+  renderBands(document.getElementById("groundednessBands"), GROUNDEDNESS_BANDS, "groundedness", sample);
+
+  document.getElementById("prevBtn").disabled = current === 0;
+  document.getElementById("nextBtn").textContent = current === SAMPLES.length - 1 ? "Done ✓" : "Next →";
+  document.getElementById("caseCard").scrollTop = 0;
+  window.scrollTo({ top: 0, behavior: "instant" });
+  updateProgress();
+}
+
+document.getElementById("notesText").addEventListener("input", (e) => {
+  state.labels[SAMPLES[current].case_id].notes = e.target.value;
+  saveState();
+});
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+  if (current > 0) { current--; render(); }
+});
+document.getElementById("nextBtn").addEventListener("click", () => {
+  if (current < SAMPLES.length - 1) { current++; render(); }
+});
+
+function _exportPayload() {
+  return {
+    exported_at: new Date().toISOString(),
+    n_cases: SAMPLES.length,
+    labels: state.labels,
+  };
+}
+
+document.getElementById("downloadBtn").addEventListener("click", () => {
+  const filename = "human_labels_" + Date.now() + ".json";
+  const json = JSON.stringify(_exportPayload(), null, 2);
+
+  // Best-effort direct download. In a sandboxed context (e.g. a Claude
+  // Artifact iframe) this can be silently blocked with no JS error and no
+  // way to detect the failure from script -- so it's tried, but the modal
+  // below is always shown too, not conditionally on this appearing to fail.
+  try {
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    // ignored -- the modal fallback below is the guaranteed path
+  }
+
+  document.getElementById("exportFilename").textContent = filename;
+  document.getElementById("exportText").value = json;
+  document.getElementById("copyStatus").textContent = "";
+  document.getElementById("exportOverlay").classList.add("show");
+  document.getElementById("exportText").focus();
+  document.getElementById("exportText").select();
+});
+
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const text = document.getElementById("exportText").value;
+  const status = document.getElementById("copyStatus");
+  try {
+    await navigator.clipboard.writeText(text);
+    status.textContent = "Copied.";
+  } catch (e) {
+    // navigator.clipboard can itself be blocked in a sandboxed context --
+    // fall back to the classic select+execCommand path, and if even that
+    // throws, the text is still visible and manually selectable either way.
+    try {
+      const ta = document.getElementById("exportText");
+      ta.focus();
+      ta.select();
+      document.execCommand("copy");
+      status.textContent = "Copied.";
+    } catch (e2) {
+      status.textContent = "Couldn't copy automatically -- select the text above and copy manually (Cmd/Ctrl+A, then Cmd/Ctrl+C).";
+    }
+  }
+});
+
+document.getElementById("closeExportBtn").addEventListener("click", () => {
+  document.getElementById("exportOverlay").classList.remove("show");
+});
+
+document.getElementById("loadBtn").addEventListener("click", () => {
+  document.getElementById("loadInput").click();
+});
+document.getElementById("loadInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const loaded = JSON.parse(reader.result);
+      if (loaded.labels) {
+        state.labels = Object.assign(state.labels, loaded.labels);
+        saveState();
+        render();
+      }
+    } catch (err) {
+      alert("Couldn't parse that file as a labels JSON.");
+    }
+  };
+  reader.readAsText(file);
+});
+
+render();
+</script>
+</body>
+</html>

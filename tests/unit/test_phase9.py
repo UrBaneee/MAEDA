@@ -132,61 +132,126 @@ def test_intent_accuracy_empty_intent():
     assert ms.label == "fail"
 
 
-def test_tool_selection_all_success():
-    from src.eval.metrics import score_tool_selection
+def test_step_success_rate_all_success():
+    """This is what "tool_selection" used to mean (eval v2 Step 2d renamed
+    it -- it never actually measured tool choice, only whether a step
+    threw)."""
+    from src.eval.metrics import score_step_success_rate
     results = [
         {"method": "groupby", "failed": False},
         {"method": "correlation", "failed": False},
     ]
-    ms = score_tool_selection(results)
+    ms = score_step_success_rate(results)
     assert ms.score == 1.0
     assert ms.label == "pass"
 
 
-def test_tool_selection_partial_failure():
-    from src.eval.metrics import score_tool_selection
+def test_step_success_rate_partial_failure():
+    from src.eval.metrics import score_step_success_rate
     results = [
         {"method": "groupby", "failed": False},
         {"method": "timeseries", "failed": True},
     ]
-    ms = score_tool_selection(results)
+    ms = score_step_success_rate(results)
     assert ms.score == 0.5
 
 
-def test_tool_selection_no_steps():
+def test_step_success_rate_no_steps():
+    from src.eval.metrics import score_step_success_rate
+    ms = score_step_success_rate([])
+    assert ms.label == "warn"
+
+
+def test_tool_selection_no_expected_tools_is_lenient():
+    """No expected_tools authored for this case (e.g. an ad-hoc query with
+    no GoldenTestCase) -- can't score tool choice without ground truth, so
+    this must not penalize, unlike a real mismatch below."""
     from src.eval.metrics import score_tool_selection
-    ms = score_tool_selection([])
-    assert ms.label == "warn"
+    ms = score_tool_selection([{"tool": "pandas_transform"}], expected_tools=None)
+    assert ms.score == 0.8
+    assert ms.label == "pass"
 
 
-def test_plan_efficiency_optimal():
-    from src.eval.metrics import score_plan_efficiency
-    results = [{"step": i} for i in range(4)]
-    ms = score_plan_efficiency(results)
+def test_tool_selection_explicitly_no_tool_expected():
+    """expected_tools=[] (authored) is distinct from expected_tools=None
+    (not authored) -- an explicitly-no-specific-tool-expected case always
+    passes regardless of what was actually used."""
+    from src.eval.metrics import score_tool_selection
+    ms = score_tool_selection([{"tool": "sql_query"}], expected_tools=[])
     assert ms.score == 1.0
 
 
-def test_plan_efficiency_too_many_steps():
-    from src.eval.metrics import score_plan_efficiency
-    results = [{"step": i} for i in range(15)]
-    ms = score_plan_efficiency(results)
-    assert ms.score < 0.7
-
-
-def test_chart_appropriateness_valid_charts():
-    from src.eval.metrics import score_chart_appropriateness
-    charts = [
-        {"chart_type": "bar", "title": "Sales by Region"},
-        {"chart_type": "line", "title": "Revenue Trend"},
-    ]
-    ms = score_chart_appropriateness(charts)
+def test_tool_selection_matches_expected_tool():
+    from src.eval.metrics import score_tool_selection
+    results = [{"tool": "time_series"}, {"tool": "pandas_transform"}]
+    ms = score_tool_selection(results, expected_tools=["time_series"])
     assert ms.score == 1.0
 
 
-def test_chart_appropriateness_no_charts():
+def test_tool_selection_wrong_tool_scores_zero():
+    """The old tool_selection (now step_success_rate) would score this
+    1.0 -- the step didn't throw. The rebuilt metric must catch that the
+    planner picked a tool with zero overlap with what was expected."""
+    from src.eval.metrics import score_tool_selection
+    results = [{"tool": "sql_query", "failed": False}]
+    ms = score_tool_selection(results, expected_tools=["anomaly_detection"])
+    assert ms.score == 0.0
+    assert ms.label == "fail"
+
+
+def test_tool_selection_hitting_just_one_of_several_acceptable_tools_scores_full():
+    """expected_tools=[A, B] means 'either is fine', not 'both required' --
+    using just one acceptable tool alongside an unrelated supporting step
+    must not be penalized as merely half right."""
+    from src.eval.metrics import score_tool_selection
+    results = [{"tool": "pandas_transform"}, {"tool": "sql_query"}]
+    ms = score_tool_selection(results, expected_tools=["pandas_transform", "time_series"])
+    assert ms.score == 1.0
+
+
+def test_tool_selection_no_steps_executed_with_expected_tools_scores_zero():
+    from src.eval.metrics import score_tool_selection
+    ms = score_tool_selection([], expected_tools=["sql_query"])
+    assert ms.score == 0.0
+
+
+def test_chart_appropriateness_no_expected_types_is_lenient():
     from src.eval.metrics import score_chart_appropriateness
-    ms = score_chart_appropriateness([])
-    assert ms.label == "warn"
+    ms = score_chart_appropriateness([{"chart_type": "bar"}], expected_chart_types=None)
+    assert ms.score == 0.8
+    assert ms.label == "pass"
+
+
+def test_chart_appropriateness_explicitly_no_chart_expected():
+    from src.eval.metrics import score_chart_appropriateness
+    ms = score_chart_appropriateness([], expected_chart_types=[])
+    assert ms.score == 1.0
+
+
+def test_chart_appropriateness_matches_expected_type():
+    from src.eval.metrics import score_chart_appropriateness
+    charts = [{"chart_type": "bar", "title": "Sales by Region"}]
+    ms = score_chart_appropriateness(charts, expected_chart_types=["bar", "horizontal_bar"])
+    assert ms.score == 1.0
+
+
+def test_chart_appropriateness_wrong_type_scores_zero():
+    """recommend_chart() (src/tools/chart_tool.py) is rule-based and
+    always returns *some* valid type, which is why the old metric ("did
+    chart generation not error") was structurally constant at 1.00. The
+    rebuilt metric must catch a genuinely inappropriate chart type."""
+    from src.eval.metrics import score_chart_appropriateness
+    charts = [{"chart_type": "pie", "title": "Revenue Trend"}]
+    ms = score_chart_appropriateness(charts, expected_chart_types=["line"])
+    assert ms.score == 0.0
+    assert ms.label == "fail"
+
+
+def test_chart_appropriateness_no_charts_generated_but_expected():
+    from src.eval.metrics import score_chart_appropriateness
+    ms = score_chart_appropriateness([], expected_chart_types=["bar"])
+    assert ms.score == 0.0
+    assert ms.label == "fail"
 
 
 # ─── System metrics ──────────────────────────────────────────────────────────
@@ -253,21 +318,154 @@ def test_system_metrics_retries():
     assert retry_m.raw_value == 2  # 3 iterations = 2 retries
 
 
+def test_system_metrics_token_cost_reads_cost_usd_key():
+    """CostTracker.to_dict() (src/utils/cost_tracker.py) writes the per-agent
+    cost under "cost_usd" — reading any other key name here would silently
+    sum to $0 for every run regardless of actual spend."""
+    from src.eval.metrics import score_system_metrics
+    state = {
+        "token_usage": {
+            "intent_parser": {"cost_usd": 0.02},
+            "analysis_agent": {"cost_usd": 0.03},
+        },
+        "iteration_count": 1, "error": None,
+    }
+    metrics = score_system_metrics(state)
+    cost_m = next(m for m in metrics if m.metric == "token_cost")
+    assert cost_m.raw_value == pytest.approx(0.05)
+    assert cost_m.score == pytest.approx(0.95)
+
+
 # ─── 9.2 / 9.3 LLM-as-judge ─────────────────────────────────────────────────
+#
+# answer_relevance and groundedness are now two fully independent judge
+# calls (eval v2 Step 2b) with different response shapes, so each gets its
+# own test block below instead of one shared mock serving both. A shared
+# score_relevance_and_groundedness() block at the end covers the
+# back-compat wrapper that composes them.
 
-def test_score_relevance_and_groundedness_with_llm():
+# ── shared judge/human rendering (eval v2 Step 3) ────────────────────────────
+
+def test_render_findings_includes_full_result_for_small_structured_steps():
+    """The old rendering only showed result_summary -- a significance
+    test's statistic/p-value lived in `result` and was invisible to both
+    the judge and human annotators (docs/judge_calibration.md, case C01)."""
+    from src.eval.metrics import render_findings
+    results = [{
+        "method": "comparison_of_sales_performance", "failed": False,
+        "result_summary": "comparison: top=4",
+        "result": {"significance_test": {"test": "one-way ANOVA", "p_value": None}},
+    }]
+    text = render_findings(results)
+    assert "comparison: top=4" in text
+    assert "one-way ANOVA" in text, "the structured result must be visible, not just the summary"
+
+
+def test_render_findings_caps_large_results_instead_of_dumping_them():
+    from src.eval.metrics import render_findings, _STEP_RESULT_CAP
+    huge_result = [{"row": i} for i in range(5000)]  # a full-dataframe-sized result
+    results = [{"method": "derive", "failed": False, "result_summary": "12240 rows",
+                "result": huge_result}]
+    text = render_findings(results)
+    assert len(text) < len(repr(huge_result))
+    assert "more chars truncated" in text
+
+
+def test_render_findings_skips_failed_steps():
+    from src.eval.metrics import render_findings
+    results = [{"method": "ok_step", "failed": False, "result_summary": "fine", "result": 1},
+               {"method": "bad_step", "failed": True, "result_summary": "should not appear", "result": 2}]
+    text = render_findings(results)
+    assert "fine" in text
+    assert "should not appear" not in text
+
+
+def test_render_rag_context_includes_full_content_no_truncation():
+    from src.eval.metrics import render_rag_context
+    long_content = "x" * 500  # longer than the old 100-char cap
+    text = render_rag_context([{"content": long_content}])
+    assert text == long_content
+
+
+def test_render_rag_context_empty_list():
+    from src.eval.metrics import render_rag_context
+    assert render_rag_context([]) == ""
+
+
+def test_render_data_quality_shows_flagged_issues():
+    from src.eval.metrics import render_data_quality
+    dq = {"row_count": 12240, "quality_issues": [
+        {"issue": "duplicate_rows", "severity": "warning", "detail": "238 fully duplicated rows (1.9%)"},
+    ]}
+    text = render_data_quality(dq)
+    assert "238" in text
+    assert "12240" in text
+
+
+def test_render_data_quality_none_report():
+    from src.eval.metrics import render_data_quality
+    assert render_data_quality(None) == "None"
+
+
+def test_render_data_quality_no_issues_flagged():
+    from src.eval.metrics import render_data_quality
+    text = render_data_quality({"row_count": 100, "quality_issues": []})
+    assert "no quality issues" in text.lower()
+
+
+def test_build_judge_prompt_does_not_truncate():
+    """Found via a real annotation session: the judge's old 600/1200-char
+    caps cut off the exact groupby results and Automated Caveats section a
+    human annotator could see in full, so the two were judging different
+    material (docs/judge_calibration.md, case C01)."""
+    from src.eval.metrics import _build_judge_prompt
+    long_report = "A" * 5000
+    findings = [{"method": "step", "failed": False, "result_summary": "B" * 2000, "result": None}]
+    prompt = _build_judge_prompt("q", long_report, findings, [])
+    assert long_report in prompt, "the full report must reach the judge, not a 1200-char prefix"
+    assert "B" * 2000 in prompt, "the full findings must reach the judge, not a 600-char prefix"
+
+
+def test_build_judge_prompt_includes_data_quality_section():
+    from src.eval.metrics import _build_judge_prompt
+    dq = {"row_count": 100, "quality_issues": [{"issue": "duplicate_rows", "severity": "warning", "detail": "5 dupes"}]}
+    prompt = _build_judge_prompt("q", "report", [], [], data_quality_report=dq)
+    assert "### Data Quality" in prompt
+    assert "5 dupes" in prompt
+
+
+class _FakeRateLimitError(Exception):
+    """Stands in for openai.RateLimitError / anthropic.RateLimitError --
+    both expose a 429 status_code, which is all
+    src.utils.retry.is_rate_limit_error checks for, so a lightweight fake
+    avoids depending on either SDK's exception class in this test."""
+    status_code = 429
+
+
+def _mock_relevance_response(score, reasoning="r"):
+    resp = MagicMock()
+    resp.content = json.dumps({"answer_relevance": score, "reasoning": reasoning})
+    resp.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
+    return resp
+
+
+def _mock_groundedness_response(claims, reasoning="r"):
+    resp = MagicMock()
+    resp.content = json.dumps({"claims": claims, "reasoning": reasoning})
+    resp.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
+    return resp
+
+
+# ── answer_relevance ─────────────────────────────────────────────────────────
+
+def test_score_answer_relevance_with_llm():
     mock_llm = MagicMock()
-    mock_response = MagicMock()
-    mock_response.content = json.dumps({
-        "answer_relevance": 0.9,
-        "groundedness": 0.85,
-        "reasoning": "Report directly answers the question with evidence",
-    })
-    mock_response.usage_metadata = {"input_tokens": 20, "output_tokens": 15}
-    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+    mock_llm.ainvoke = AsyncMock(return_value=_mock_relevance_response(
+        0.9, "Directly answers the question"
+    ))
 
-    from src.eval.metrics import score_relevance_and_groundedness
-    rel, gnd = asyncio.run(score_relevance_and_groundedness(
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance(
         "Show sales by region",
         "# Report\nNorth region: $500K. South: $300K.",
         [{"result_summary": "North=500K South=300K", "failed": False}],
@@ -276,88 +474,324 @@ def test_score_relevance_and_groundedness_with_llm():
     ))
     assert rel.metric == "answer_relevance"
     assert rel.score == 0.9
-    assert gnd.metric == "groundedness"
-    assert gnd.score == 0.85
+    assert rel.valid is True
 
 
-def test_score_relevance_fallback_on_llm_error():
+def test_score_answer_relevance_fallback_on_llm_error():
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("LLM down"))
 
-    from src.eval.metrics import score_relevance_and_groundedness
-    rel, gnd = asyncio.run(score_relevance_and_groundedness(
-        "q", "report", [], [], llm=mock_llm
-    ))
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm))
     assert rel.score == 0.5
-    assert gnd.score == 0.5
-    assert rel.label == "warn"
+    assert rel.label == "error"
+    assert rel.valid is False, "an unrecoverable judge failure must not look like a real 0.5 score"
 
 
-def _mock_judge_response(relevance, groundedness, reasoning="r"):
-    resp = MagicMock()
-    resp.content = json.dumps({
-        "answer_relevance": relevance, "groundedness": groundedness, "reasoning": reasoning,
-    })
-    resp.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
-    return resp
-
-
-def test_score_relevance_makes_n_samples_judge_calls():
+def test_score_answer_relevance_makes_n_samples_judge_calls():
     mock_llm = MagicMock()
-    mock_llm.ainvoke = AsyncMock(return_value=_mock_judge_response(0.8, 0.8))
+    mock_llm.ainvoke = AsyncMock(return_value=_mock_relevance_response(0.8))
 
-    from src.eval.metrics import score_relevance_and_groundedness
-    asyncio.run(score_relevance_and_groundedness(
-        "q", "report", [], [], llm=mock_llm, n_samples=5,
-    ))
+    from src.eval.metrics import score_answer_relevance
+    asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm, n_samples=5))
     assert mock_llm.ainvoke.await_count == 5
 
 
-def test_score_relevance_aggregates_by_median_not_mean():
+def test_score_answer_relevance_aggregates_by_median_not_mean():
     # Median of [0.2, 0.9, 0.9] is 0.9, not the mean (~0.67) — a single
     # noisy low outlier shouldn't drag the score down as much as a mean would.
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(side_effect=[
-        _mock_judge_response(0.2, 0.2),
-        _mock_judge_response(0.9, 0.9),
-        _mock_judge_response(0.9, 0.9),
+        _mock_relevance_response(0.2),
+        _mock_relevance_response(0.9),
+        _mock_relevance_response(0.9),
     ])
 
-    from src.eval.metrics import score_relevance_and_groundedness
-    rel, gnd = asyncio.run(score_relevance_and_groundedness(
-        "q", "report", [], [], llm=mock_llm, n_samples=3,
-    ))
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm, n_samples=3))
     assert rel.score == 0.9
-    assert gnd.score == 0.9
 
 
-def test_score_relevance_flags_high_judge_disagreement():
+def test_score_answer_relevance_flags_high_judge_disagreement():
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(side_effect=[
-        _mock_judge_response(0.1, 0.1),
-        _mock_judge_response(0.9, 0.9),
-        _mock_judge_response(0.5, 0.5),
+        _mock_relevance_response(0.1),
+        _mock_relevance_response(0.9),
+        _mock_relevance_response(0.5),
     ])
+
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm, n_samples=3))
+    assert "disagreement" in rel.reasoning
+
+
+def test_score_answer_relevance_missing_field_is_a_failure_not_a_05_default():
+    """eval v2 Step 2a: a response missing 'answer_relevance' entirely used
+    to silently become 0.5 via raw.get(key, 0.5) -- indistinguishable from
+    the judge genuinely scoring 0.5. It must count as a failed sample
+    instead, so 2/3 good samples still produce a real median."""
+    mock_llm = MagicMock()
+    ok_response = _mock_relevance_response(0.9)
+    malformed_response = MagicMock()
+    malformed_response.content = json.dumps({"reasoning": "forgot the score"})  # no answer_relevance key
+    malformed_response.usage_metadata = {"input_tokens": 5, "output_tokens": 5}
+    mock_llm.ainvoke = AsyncMock(side_effect=[ok_response, malformed_response, ok_response])
+
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm, n_samples=3))
+    assert rel.score == 0.9
+    assert rel.valid is True
+
+
+def test_answer_relevance_retries_on_rate_limit_then_succeeds(monkeypatch):
+    """Found running scripts/measure_noise.py against a real (rate-limited)
+    API account: a single transient 429 used to propagate straight through
+    to the judge's fallback, silently degrading the result to 0.5 --
+    indistinguishable from the judge genuinely scoring something mediocre.
+    It must retry instead."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _FakeRateLimitError("429 rate limit exceeded"),
+        _mock_relevance_response(0.9),
+    ])
+    monkeypatch.setattr("src.utils.retry.asyncio.sleep", AsyncMock())
+
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm, n_samples=1))
+    assert rel.score == 0.9
+    assert mock_llm.ainvoke.await_count == 2  # 1 rate-limited attempt + 1 retry that succeeded
+
+
+def test_answer_relevance_gives_up_after_max_retries_and_falls_back(monkeypatch):
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=_FakeRateLimitError("429 rate limit exceeded"))
+    monkeypatch.setattr("src.utils.retry.asyncio.sleep", AsyncMock())
+
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm, n_samples=1))
+    assert rel.score == 0.5
+    assert rel.valid is False
+    assert "LLM unavailable" in rel.reasoning
+
+
+def test_answer_relevance_non_rate_limit_error_is_not_retried(monkeypatch):
+    """A permanently-broken response (malformed JSON, etc.) shouldn't spin
+    through retries meant for transient rate limits -- it should fail fast."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("malformed response"))
+    sleep_mock = AsyncMock()
+    monkeypatch.setattr("src.utils.retry.asyncio.sleep", sleep_mock)
+
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm, n_samples=1))
+    assert rel.score == 0.5
+    assert mock_llm.ainvoke.await_count == 1  # no retry attempted
+    sleep_mock.assert_not_awaited()
+
+
+def test_answer_relevance_partial_sample_failure_scores_from_survivors_not_fallback():
+    """One of three samples fails permanently (not rate-limited, so not
+    retried) -- previously this discarded the whole batch via a bare
+    asyncio.gather; the two surviving samples must still produce a real
+    score instead of collapsing to the 0.5 fallback."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _mock_relevance_response(0.9),
+        RuntimeError("malformed response"),
+        _mock_relevance_response(0.9),
+    ])
+
+    from src.eval.metrics import score_answer_relevance
+    rel = asyncio.run(score_answer_relevance("q", "report", [], [], llm=mock_llm, n_samples=3))
+    assert rel.score == 0.9
+    assert rel.valid is True
+
+
+# ── groundedness ─────────────────────────────────────────────────────────────
+
+def test_score_groundedness_computes_score_from_claim_list():
+    """eval v2 Step 2c: groundedness is supported_count/total_claims,
+    computed in code -- not a bare 0-1 number asked from the judge."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=_mock_groundedness_response([
+        {"claim": "North region revenue $1,363,760.55", "supported": True, "evidence": "findings"},
+        {"claim": "growth driven by a new product line", "supported": False, "evidence": None},
+    ]))
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm))
+    assert gnd.metric == "groundedness"
+    assert gnd.score == 0.5  # 1/2 claims supported
+    assert gnd.valid is True
+
+
+def test_score_groundedness_all_claims_supported_scores_one():
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=_mock_groundedness_response([
+        {"claim": "a", "supported": True, "evidence": "x"},
+        {"claim": "b", "supported": True, "evidence": "y"},
+    ]))
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm))
+    assert gnd.score == 1.0
+
+
+def test_score_groundedness_no_checkable_claims_is_lenient_not_zero():
+    """No claims to check is neither grounded nor ungrounded -- same
+    lenient-default convention as score_factual_accuracy's 'no numbers to
+    cross-check' case, not a penalty."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=_mock_groundedness_response([]))
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm))
+    assert gnd.score == 0.8
+    assert gnd.valid is True
+
+
+def test_score_groundedness_reasoning_is_the_claim_list_not_generic_prose():
+    """The old shared-judge design let groundedness's reasoning describe
+    relevance instead (verified 20/20 cases identical in the audit that
+    started this rewrite) -- the claim list itself must now be what's
+    reported, so score and reasoning can't drift apart."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=_mock_groundedness_response([
+        {"claim": "North region revenue is $1,363,760.55", "supported": True, "evidence": "findings: North=1363760.55"},
+        {"claim": "driven by a new premium product line", "supported": False, "evidence": None},
+    ]))
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm))
+    assert "North region revenue" in gnd.reasoning
+    assert "premium product line" in gnd.reasoning
+    assert "1/2" in gnd.reasoning
+
+
+def test_score_groundedness_fallback_on_llm_error():
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("LLM down"))
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm))
+    assert gnd.score == 0.5
+    assert gnd.label == "error"
+    assert gnd.valid is False
+
+
+def test_score_groundedness_missing_claims_field_is_a_failure():
+    """eval v2 Step 2a: a response missing 'claims' entirely must count as
+    a failed sample, not silently become an empty (lenient) claim list."""
+    mock_llm = MagicMock()
+    malformed = MagicMock()
+    malformed.content = json.dumps({"reasoning": "forgot the claims list"})
+    malformed.usage_metadata = {"input_tokens": 5, "output_tokens": 5}
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _mock_groundedness_response([{"claim": "a", "supported": True, "evidence": "x"}]),
+        malformed,
+        _mock_groundedness_response([{"claim": "a", "supported": True, "evidence": "x"}]),
+    ])
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm, n_samples=3))
+    assert gnd.score == 1.0  # median of the 2 successful samples, malformed one excluded
+    assert gnd.valid is True
+
+
+def test_score_groundedness_aggregates_by_median_across_samples():
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _mock_groundedness_response([{"claim": "a", "supported": False, "evidence": None}]),  # 0.0
+        _mock_groundedness_response([{"claim": "a", "supported": True, "evidence": "x"}]),      # 1.0
+        _mock_groundedness_response([{"claim": "a", "supported": True, "evidence": "x"}]),      # 1.0
+    ])
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm, n_samples=3))
+    assert gnd.score == 1.0  # median of [0.0, 1.0, 1.0]
+
+
+def test_groundedness_retries_on_rate_limit_then_succeeds(monkeypatch):
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _FakeRateLimitError("429 rate limit exceeded"),
+        _mock_groundedness_response([{"claim": "a", "supported": True, "evidence": "x"}]),
+    ])
+    monkeypatch.setattr("src.utils.retry.asyncio.sleep", AsyncMock())
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm, n_samples=1))
+    assert gnd.score == 1.0
+    assert mock_llm.ainvoke.await_count == 2
+
+
+def test_groundedness_partial_sample_failure_scores_from_survivors_not_fallback():
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=[
+        _mock_groundedness_response([{"claim": "a", "supported": True, "evidence": "x"}]),
+        RuntimeError("malformed response"),
+        _mock_groundedness_response([{"claim": "a", "supported": True, "evidence": "x"}]),
+    ])
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm, n_samples=3))
+    assert gnd.score == 1.0
+    assert gnd.valid is True
+
+
+# ── back-compat wrapper: score_relevance_and_groundedness ───────────────────
+
+def _routing_mock_llm(relevance_response, groundedness_response):
+    """A single mock LLM that returns different canned responses depending
+    on which of the two independent system prompts it was called with --
+    lets the wrapper test prove the two calls are genuinely independent
+    (different prompt, different response shape) rather than assuming it."""
+    from src.config.agent_prompts import EVAL_GROUNDEDNESS_SYSTEM, EVAL_RELEVANCE_SYSTEM
+
+    async def _ainvoke(messages):
+        system_content = messages[0].content
+        if system_content == EVAL_RELEVANCE_SYSTEM:
+            return relevance_response
+        if system_content == EVAL_GROUNDEDNESS_SYSTEM:
+            return groundedness_response
+        raise AssertionError(f"unexpected system prompt: {system_content!r}")
+
+    mock = MagicMock()
+    mock.ainvoke = AsyncMock(side_effect=_ainvoke)
+    return mock
+
+
+def test_score_relevance_and_groundedness_composes_two_independent_calls():
+    mock_llm = _routing_mock_llm(
+        _mock_relevance_response(0.9, "answers the question directly"),
+        _mock_groundedness_response(
+            [{"claim": "a", "supported": True, "evidence": "x"},
+             {"claim": "b", "supported": False, "evidence": None}],
+            "unused -- reasoning is rendered from the claim list",
+        ),
+    )
 
     from src.eval.metrics import score_relevance_and_groundedness
     rel, gnd = asyncio.run(score_relevance_and_groundedness(
-        "q", "report", [], [], llm=mock_llm, n_samples=3,
+        "q", "report", [], [], llm=mock_llm, n_samples=1,
     ))
-    assert "disagreement" in rel.reasoning
+    assert rel.metric == "answer_relevance"
+    assert rel.score == 0.9
+    assert gnd.metric == "groundedness"
+    assert gnd.score == 0.5
+    assert rel.reasoning != gnd.reasoning, (
+        "the two scores must never share one reasoning string again -- "
+        "that was the original bug (20/20 cases identical)"
+    )
 
 
 # ─── 9.1 EvalRunner ──────────────────────────────────────────────────────────
 
 def test_eval_runner_scores_state():
-    mock_llm = MagicMock()
-    mock_response = MagicMock()
-    mock_response.content = json.dumps({
-        "answer_relevance": 0.88,
-        "groundedness": 0.82,
-        "reasoning": "Good",
-    })
-    mock_response.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
-    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+    mock_llm = _routing_mock_llm(
+        _mock_relevance_response(0.88, "Good"),
+        _mock_groundedness_response([{"claim": "North=500K", "supported": True, "evidence": "findings"}]),
+    )
 
     from src.eval.runner import EvalRunner
     runner = EvalRunner(llm=mock_llm)
@@ -381,13 +815,10 @@ def test_eval_runner_scores_state():
 
 
 def test_eval_runner_with_test_case():
-    mock_llm = MagicMock()
-    mock_response = MagicMock()
-    mock_response.content = json.dumps({
-        "answer_relevance": 0.9, "groundedness": 0.9, "reasoning": "Perfect"
-    })
-    mock_response.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
-    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+    mock_llm = _routing_mock_llm(
+        _mock_relevance_response(0.9, "Perfect"),
+        _mock_groundedness_response([{"claim": "North leads", "supported": True, "evidence": "findings"}]),
+    )
 
     from src.eval.runner import EvalRunner, GoldenTestCase
     runner = EvalRunner(llm=mock_llm)
@@ -491,17 +922,39 @@ def test_safe_refusal_excluded_from_aggregate_score():
     assert with_refusal_false == without_refusal
 
 
+def test_invalid_metric_excluded_from_aggregate_score():
+    """eval v2 Step 2a: a metric that failed to score (judge unreachable)
+    must not be averaged in as a fake 0.5 placeholder -- it should be
+    excluded from the weighted average entirely, same treatment as
+    safe_refusal but for a different reason (no real measurement exists,
+    rather than the metric being intentionally informational-only)."""
+    from src.eval.runner import _aggregate_score
+    from src.eval.metrics import MetricScore
+
+    base_scores = [
+        MetricScore("answer_relevance", 0.9, "pass"),
+        MetricScore("factual_accuracy", 1.0, "pass"),
+    ]
+    without_failure = _aggregate_score(base_scores)
+    with_failed_groundedness = _aggregate_score(
+        base_scores + [MetricScore("groundedness", 0.5, "error", "LLM unavailable", valid=False)]
+    )
+    assert with_failed_groundedness == without_failure, (
+        "a valid=False placeholder score must not move the aggregate at all"
+    )
+
+
 # ─── 9.6 Golden test suite ───────────────────────────────────────────────────
 
-def test_builtin_golden_suite_has_20_cases():
-    from src.eval.runner import _builtin_golden_suite
-    suite = _builtin_golden_suite()
+def test_golden_suite_has_20_cases():
+    from src.eval.runner import load_golden_suite
+    suite = load_golden_suite()
     assert len(suite) >= 20
 
 
-def test_builtin_golden_suite_covers_all_query_types():
-    from src.eval.runner import _builtin_golden_suite
-    suite = _builtin_golden_suite()
+def test_golden_suite_covers_all_query_types():
+    from src.eval.runner import load_golden_suite
+    suite = load_golden_suite()
     types = {tc.query_type for tc in suite}
     assert "descriptive" in types
     assert "diagnostic" in types
@@ -510,13 +963,49 @@ def test_builtin_golden_suite_covers_all_query_types():
     assert "exploratory" in types
 
 
+def test_load_golden_suite_fails_loudly_if_json_missing():
+    """Eval v2 Step 4: the old silent fallback to a hardcoded Python copy
+    is gone -- a missing/misconfigured suite file must raise, not quietly
+    substitute a copy that can drift out of sync unnoticed."""
+    from src.eval.runner import load_golden_suite
+    with pytest.raises(FileNotFoundError):
+        load_golden_suite(path="tests/eval/does_not_exist.json")
+
+
+def test_golden_suite_data_mismatch_cases_are_tagged():
+    """Eval v2 Step 4: KNOWN_DATA_MISMATCH (a hardcoded set in run_eval.py)
+    was replaced by a "data_mismatch" tag authored directly on each case."""
+    from src.eval.runner import load_golden_suite
+    suite = {tc.id: tc for tc in load_golden_suite()}
+    for cid in ("DG04", "C03", "P03"):
+        assert "data_mismatch" in suite[cid].tags, f"{cid} should carry the data_mismatch tag"
+
+
 # Cases where the query asks for something the demo datasets don't contain,
 # or asks about the future — these carry a "_note" instead of a checkable
 # numeric ground truth. Every other case must have a real, non-empty
 # ground_truth backed by an actual computation over data/demo/*.
 # D02 was here too until Phase B #1/#2 (cross-table joins) made it fully
 # answerable via a real orders-JOIN-products query — see docs/eval_report.md.
-_KNOWN_UNANSWERABLE_CASES = {"DG04", "C03", "P01", "P02", "P03"}
+_KNOWN_UNANSWERABLE_CASES = {
+    "DG04", "C03", "P01", "P02", "P03",
+    # Eval v2 Step 4: 20 new cases added alongside the original 20 (see
+    # docs/eval_v2_plan.md Step 4) -- same two "no checkable ground truth"
+    # reasons as the originals: genuinely predictive (P04, P05, P07),
+    # absent data (P06), and a deliberately ambiguous query with no
+    # metric/dimension to check at all (E05).
+    "P04", "P05", "P06", "P07", "E05",
+    # Eval v2 Step 4, second batch of 20 (2026-07-31): same reasons again --
+    # genuinely predictive (P08, P09, P11), absent data (DG12), ambiguous (E13).
+    "P08", "P09", "P11", "DG12", "E13",
+    # Eval v2 Step 4, third batch of 20 (2026-08-01): same reasons again --
+    # genuinely predictive (P12, P13, P14), absent data (DG16), ambiguous (E19).
+    "P12", "P13", "P14", "DG16", "E19",
+    # Eval v2 Step 4, fourth batch of 20 (2026-08-01), suite now 100 cases --
+    # genuinely predictive (P15, P16, P17), absent data (DG20). No new
+    # ambiguous case this batch (3 already in the suite).
+    "P15", "P16", "P17", "DG20",
+}
 
 
 def test_golden_suite_ground_truth_backfilled_from_json():
@@ -530,14 +1019,6 @@ def test_golden_suite_ground_truth_backfilled_from_json():
             assert numeric_values, f"{tc.id} should have at least one numeric ground_truth fact"
 
 
-def test_builtin_and_json_golden_suites_have_matching_ground_truth():
-    """The JSON file and the builtin fallback must stay in sync."""
-    from src.eval.runner import _builtin_golden_suite, load_golden_suite
-    json_suite = {tc.id: tc.ground_truth for tc in load_golden_suite()}
-    builtin_suite = {tc.id: tc.ground_truth for tc in _builtin_golden_suite()}
-    assert json_suite == builtin_suite
-
-
 def test_golden_test_case_round_trip():
     from src.eval.runner import GoldenTestCase
     tc = GoldenTestCase(
@@ -549,12 +1030,6 @@ def test_golden_test_case_round_trip():
     tc2 = GoldenTestCase.from_dict(d)
     assert tc2.id == "X01"
     assert tc2.ground_truth == {"total": 1000}
-
-
-def test_load_golden_suite_fallback_to_builtin():
-    from src.eval.runner import load_golden_suite
-    suite = load_golden_suite("/nonexistent/path/test_suite.json")
-    assert len(suite) >= 20
 
 
 # ─── 9.8 Regression detection ────────────────────────────────────────────────
@@ -651,3 +1126,43 @@ def test_run_eval_node_populates_eval_scores():
     assert "_aggregate" in result["eval_scores"]
     assert result["current_phase"] == "complete"
     assert result["eval_scores"]["_aggregate"] > 0.0
+
+
+# ─── _parse_json ─────────────────────────────────────────────────────────────
+
+def test_parse_json_extracts_object():
+    from src.eval.metrics import _parse_json
+    assert _parse_json('{"a": 1, "b": 2}') == {"a": 1, "b": 2}
+
+
+def test_parse_json_strips_markdown_fences():
+    from src.eval.metrics import _parse_json
+    assert _parse_json('```json\n{"a": 1}\n```') == {"a": 1}
+
+
+def test_parse_json_no_longer_falls_back_to_a_bare_list():
+    """Found live (eval v2 Step 2c): a truncated groundedness response
+    (claims list cut off mid-response by max_tokens) could make the
+    top-level object parse fail and an old `[...]` fallback then
+    successfully parse just the claims array as a bare list -- which
+    crashed callers expecting a dict with "'list' object has no attribute
+    'get'" instead of a clean, catchable parse error. Every prompt in this
+    module asks for a top-level object; a response with no object at all
+    (no curly braces whatsoever) must fail the same clear way truncation
+    does, not silently fall through to a list-shaped result."""
+    from src.eval.metrics import _parse_json
+    with pytest.raises(ValueError):
+        _parse_json('[1, 2, 3]')
+
+
+def test_parse_json_raises_on_truncated_response():
+    from src.eval.metrics import _parse_json
+    truncated = '{"claims": [{"claim": "a", "supported": true, "evidence": "part'
+    with pytest.raises(ValueError):
+        _parse_json(truncated)
+
+
+def test_parse_json_raises_on_garbage():
+    from src.eval.metrics import _parse_json
+    with pytest.raises(ValueError):
+        _parse_json("not json at all")

@@ -17,6 +17,29 @@ from src.utils.logger import get_logger
 logger = get_logger("maeda.tools.stats")
 
 
+def _significance_flag(p_val) -> Optional[bool]:
+    """None -- not False -- when p_val is nan.
+
+    A significance test on degenerate input (e.g. every group has exactly
+    one observation, so within-group variance is undefined) returns
+    p_val=nan. `bool(nan < 0.05)` is False in Python, so every call site
+    here used to report `"significant": False` identically to a genuinely
+    computed null result -- "we ran the test and found no effect" and "the
+    test could not be run at all" were indistinguishable in the output.
+    Found via a real judge-calibration annotation session (see
+    docs/judge_calibration.md): a report cited "no statistically
+    significant difference" from an ANOVA whose own p-value was nan.
+    """
+    if p_val is None:
+        return None
+    try:
+        if np.isnan(p_val):
+            return None
+    except TypeError:
+        pass
+    return bool(p_val < 0.05)
+
+
 # ─── Statistical tests ────────────────────────────────────────────────────────
 
 def compute_correlation(
@@ -118,16 +141,20 @@ def run_ttest(
     a = df[df[group_col] == g1][value_col].dropna()
     b = df[df[group_col] == g2][value_col].dropna()
     t_stat, p_val = stats.ttest_ind(a, b)
+    significant = _significance_flag(p_val)
 
     return {
         "group_a": str(g1), "mean_a": round(float(a.mean()), 4), "n_a": len(a),
         "group_b": str(g2), "mean_b": round(float(b.mean()), 4), "n_b": len(b),
         "t_statistic": round(float(t_stat), 4),
         "p_value": round(float(p_val), 6),
-        "significant": bool(p_val < 0.05),
+        "significant": significant,
         "interpretation": (
-            f"Significant difference between {g1} and {g2} (p={p_val:.4f})"
-            if p_val < 0.05
+            f"Test could not be computed (p-value is undefined) — check for zero "
+            f"variance or too few observations in one or both groups."
+            if significant is None
+            else f"Significant difference between {g1} and {g2} (p={p_val:.4f})"
+            if significant
             else f"No significant difference between {g1} and {g2} (p={p_val:.4f})"
         ),
     }
@@ -145,7 +172,7 @@ def run_chi_square(
         "chi2_statistic": round(float(chi2), 4),
         "p_value": round(float(p_val), 6),
         "degrees_of_freedom": int(dof),
-        "significant": bool(p_val < 0.05),
+        "significant": _significance_flag(p_val),
         "contingency_table": contingency.to_dict(),
     }
 
@@ -278,7 +305,7 @@ def analyze_time_series(
             "slope": round(float(slope), 6),
             "r_squared": round(float(r_val ** 2), 4),
             "p_value": round(float(p_val), 6),
-            "significant": bool(p_val < 0.05),
+            "significant": _significance_flag(p_val),
         },
         "summary_stats": {
             "min": round(float(values.min()), 4),
@@ -338,11 +365,18 @@ def compare_segments(
     if len(groups) == 2:
         t, p = stats.ttest_ind(*groups)
         significance = {"test": "t-test", "statistic": round(float(t), 4),
-                        "p_value": round(float(p), 6), "significant": bool(p < 0.05)}
+                        "p_value": round(float(p), 6), "significant": _significance_flag(p)}
     elif len(groups) >= 3:
         f, p = stats.f_oneway(*groups)
+        anova_significant = _significance_flag(p)
         significance = {"test": "one-way ANOVA", "statistic": round(float(f), 4),
-                        "p_value": round(float(p), 6), "significant": bool(p < 0.05)}
+                        "p_value": round(float(p), 6), "significant": anova_significant}
+        if anova_significant is None:
+            significance["note"] = (
+                "p-value could not be computed -- likely every segment has too "
+                "few observations to estimate within-group variance (e.g. this "
+                "ran on already-aggregated data, one row per segment)."
+            )
 
     # Was hardcoded to grouped["mean"] regardless of the requested `agg` —
     # asking "which channel has the highest total spend" (agg="sum") would

@@ -1,0 +1,106 @@
+{
+  "exported_at": "2026-07-31T05:44:32.693Z",
+  "n_cases": 20,
+  "labels": {
+    "C01": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": "Relevance: The report states: \"On January 1, Widget A generated $549.67 in the North Region via the Online channel\", this is irrelevant to \"comparing the four quarters\".\nRelevance: User wants to know \"sales performance\", while \"revenue is the only metric being mentioned in the report--not 100% match."
+    },
+    "C02": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.25,
+      "notes": "1 Groundedness: “The Email channel has a conversion rate of approximately 4.71%, which is higher than the Affiliate (2.69%) and Social (1.41%) channels.” These are all based on one certain campaign, instead of the average of every marketing channel.\n2 \"The report claims that the Search channel has the highest conversion rate, but the provided data does not include any information about the Search channel.\" Wrong\n3 relevance: the report almost didn't mention \"Display\" channel."
+    },
+    "C03": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": "1 relevance: Analysis findings don't contain anything related to new & returning customers. And this has been mentioned clearly in the report. Therefore, the report wants to answer, but it failed due to a lack of info.\n"
+    },
+    "C04": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: product 2 doesn't generate the highest margin; it should be Product 7, which generates the highest margin at $429.23\n2 Product 8 and 12 are also operating at a loss"
+    },
+    "D01": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": "1 relevance: the report doesn't mention south region\n2 In ## Automated Caveats, the statement \"The report incorrectly states that the West region has the second highest revenue\" is wrong. The report says \"the West region has the second highest revenue\" is a grounded truth. But I don't take \"Automated Caveats\" as a consideration when I score. "
+    },
+    "D02": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D03": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"The analysis indicates a high confidence level (0.9) in the accuracy of these findings.\" doesn't been mentioned\n2 relevance: The report doesn't answer the question\"How many customers do we have per country?\" clearly. and some countries'data has been missed"
+    },
+    "D04": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": "1 relevance: the report only provides details for the top 5 products instead of \"top 10\" in question. but this one is being mentioned by Automated Caveats"
+    },
+    "D05": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"the 'month' column was not found in the dataframe\" wrong\n2 groundedness: The highest revenue from a single order was not  generated on October 9, 2022 and The second highest revenue was not from order_id 1\n3 "
+    },
+    "DG01": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"[groupby_aggregate_revenue]\"in analysis findings shows that there's the highest revenue in quarter 3. So when the report claims, \"This figure highlights a significant drop compared to previous quarters.\" It's wrong"
+    },
+    "DG02": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groundedness：“Customers who logged in less frequently (0 login days in the last 30 days) have a notably high churn rate” is not true.  There is a negative correlation of only -0.0113 between Login Days and churn, which is not notably high\n2 groudedness: The report claims specific churn rates for Basic, Premium, and Standard plans, but the analysis findings provided do not include any data or calculations that support these specific percentages."
+    },
+    "DG03": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"significantly lower than top performers in other regions,\"doesn't been mentioned\n2 groundedness:\"The Online channel's revenue is the lowest among top channels\" wrong. should be Retail channel"
+    },
+    "DG04": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: The analysis of support calls in the last 90 days revealed a high outlier share, with 7.3% of values falling outside 1.5×IQR. This does not affect the reliability of insights drawn from this variable. "
+    },
+    "E01": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E02": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"representing approximately 1.58% of the total observations. This suggests significant deviations from typical revenue patterns\" i don't think \"1.58%\" is \"significant\""
+    },
+    "E03": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 Groundedness: the data doesn't \"suggesting seasonal buying trends\"\n2groundedness: \"Consumer segment outperforms Corporate.\"not true"
+    },
+    "E04": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groudedness：“The correlation matrix heatmap reveals strong positive correlations among several key variables, suggesting interconnected relationships that could be leveraged for strategic planning.”"
+    },
+    "P01": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.25,
+      "notes": "1 groundedness: “predicted value approximately 513.42”, “indicating consistent growth over time”, “confidence level = 0.4”，“period ending Dec 31 2024”"
+    },
+    "P02": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 relevance: doesn't really answer “next 30 days”\n2 Groundedness: “R²=0.0029” doesn't mean \"Churn rates are increasing\" or \"chart clearly shows upward trend\"\n3"
+    },
+    "P03": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.25,
+      "notes": ""
+    }
+  }
+}

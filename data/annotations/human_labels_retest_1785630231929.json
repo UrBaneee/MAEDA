@@ -1,0 +1,106 @@
+{
+  "exported_at": "2026-08-02T00:23:51.929Z",
+  "n_cases": 20,
+  "labels": {
+    "C01": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \" the highest revenue on January 1, 2022\""
+    },
+    "C02": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.25,
+      "notes": "1 groundedness: \"The Email channel has a conversion rate of approximately 4.71%, which is higher than the Affiliate (2.69%) and Social (1.41%) channels.\" \"The Social channel has the lowest conversion rate at approximately 1.41%\"\"Campaign CAM0001 achieved the highest ROI at 2023.7\""
+    },
+    "C03": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C04": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"Product 2 generates the highest margin \""
+    },
+    "D01": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D02": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"which could benefit from enhanced product offerings or promotional strategies\""
+    },
+    "D03": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"Customers are distributed across five countries\" 6 countries \n2 groundedness:\"a high confidence level (0.9)\""
+    },
+    "D04": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D05": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"The highest revenue from a single order was generated on October 9, 2022,\""
+    },
+    "DG01": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "DG02": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"Customers who logged in less frequently (0 login days in the last 30 days) have a notably high churn rate\""
+    },
+    "DG03": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"The Online channel's revenue is the lowest \" \"significantly lower than top performers in other regions\""
+    },
+    "DG04": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"support calls and login frequency show negligible impacts.\""
+    },
+    "E01": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E02": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E03": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "E04": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "P01": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.25,
+      "notes": "1 groundedness:\"approximately 513.42 for the end of the next quarter\" \"The confidence level in this forecast is low (0.4),\""
+    },
+    "P02": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "P03": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.25,
+      "notes": ""
+    }
+  }
+}

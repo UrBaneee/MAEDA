@@ -486,6 +486,29 @@ class TestTimeSeriesAndComparison:
         result = compare_segments(sales_df, "region", "revenue")
         assert result["significance_test"]["test"] == "one-way ANOVA"
 
+    def test_compare_segments_on_already_aggregated_data_reports_undefined_not_false(self):
+        """Reproduces a bug found via a real judge-calibration annotation
+        session (docs/judge_calibration.md, case C01): running comparison
+        on data already reduced to one row per segment (e.g. the output of
+        a prior groupby step) makes every group's std/ANOVA input a single
+        point, so f_oneway's p-value is nan. `bool(nan < 0.05)` is False in
+        Python, so this used to silently report "significant": False --
+        indistinguishable from a genuinely-computed null result. The
+        report went on to claim "no statistically significant differences"
+        as if the test had actually run. It must report `None` instead,
+        with a note explaining why."""
+        df = pd.DataFrame({
+            "quarter": [1, 2, 3, 4],
+            "revenue": [1321831.71, 1326183.26, 1178006.80, 1801747.75],
+        })
+        result = compare_segments(df, "quarter", "revenue", agg="sum")
+        sig = result["significance_test"]
+        assert sig["test"] == "one-way ANOVA"
+        assert sig["significant"] is None, (
+            "an undefined p-value (nan) must not be reported as significant=False"
+        )
+        assert "note" in sig
+
 
 # ─── 5.1 Plan generator ───────────────────────────────────────────────────────
 
@@ -524,6 +547,29 @@ class TestPlanGenerator:
         state = initial_state("test")
         result = asyncio.run(agent.plan(state))
         assert result["analysis_plan"] == []
+
+    def test_plan_retries_on_rate_limit_instead_of_going_straight_to_empty_plan(self, monkeypatch):
+        """Found via docs/noise_floor.md's incident writeup: a transient 429
+        used to be caught by the same bare except as a genuinely broken
+        response, silently producing an empty plan under load with no
+        retry. It must retry a rate limit instead."""
+        class _FakeRateLimitError(Exception):
+            status_code = 429
+
+        plan_data = [{"step_number": 1, "method": "groupby", "tool": "pandas_transform",
+                       "parameters": {}, "depends_on": [], "expected_output": "", "rationale": ""}]
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(side_effect=[
+            _FakeRateLimitError("429 rate limit exceeded"),
+            MagicMock(content=json.dumps(plan_data), usage_metadata={"input_tokens": 10, "output_tokens": 10}),
+        ])
+        monkeypatch.setattr("src.utils.retry.asyncio.sleep", AsyncMock())
+
+        agent = AnalysisAgent(llm=mock_llm)
+        state = initial_state("test")
+        result = asyncio.run(agent.plan(state))
+        assert len(result["analysis_plan"]) == 1
+        assert mock_llm.ainvoke.await_count == 2
 
     def test_plan_tracks_token_usage(self):
         agent = AnalysisAgent(llm=_mock_llm([]))
