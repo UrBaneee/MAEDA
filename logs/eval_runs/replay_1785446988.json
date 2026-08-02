@@ -1,0 +1,2269 @@
+{
+  "timestamp": 1785446988.5237381,
+  "n_cases": 20,
+  "overall_aggregate": 0.6581527093596058,
+  "replayed": true,
+  "generation_fingerprint": "0606564705159859",
+  "cases": [
+    {
+      "test_case_id": "C01",
+      "eval_result": {
+        "run_id": "C01",
+        "query": "Compare sales performance across Q1, Q2, Q3, Q4",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report provides a partial answer by comparing the revenue figures for Q3 and Q4, indicating that Q4 had the highest revenue and Q3 the lowest. However, it lacks specific revenue data for Q1 and Q2, which are essential for a complete comparison across all four quarters. Additionally, the mention of a one-way ANOVA test without clear results (p-value is 'nan') does not effectively support the analysis of sales performance differences.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "0/8 claims supported. \u2717 Quarter 4 achieved the highest revenue of $1,801,747.75 (no evidence found) | \u2717 Quarter 3 recorded the lowest revenue at $1,178,006.80 (no evidence found) | \u2717 A one-way ANOVA test indicated no statistically significant differences in sales performance across the quarters (no evidence found) | \u2717 Quarter 4 had the highest revenue at $1,801,747.75 (no evidence found) | \u2717 Quarter 3 had the lowest revenue at $1,178,006.80 (no evidence found) | \u2717 A one-way ANOVA test showed no statistically significant difference in sales performance across the quarters, with a p-value of nan (no evidence found) | \u2717 Revenue analysis indicates that the top four quarters consistently outperformed others, suggesting significant seasonal sales peaks (no evidence found) | \u2717 Quarter 4 generated the highest revenue, significantly outperforming other quarters (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['comparison', 'pandas_transform'], expected one of ['comparison', 'pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/3 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard', 'horizontal_bar', 'scatter'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.979677,
+            "label": "pass",
+            "reasoning": "$0.0203",
+            "raw_value": 0.020323,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions 'the top four quarters consistently outperformed others,' which is misleading as there are only four quarters in a year. This statement is nonsensical.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions 'the top four quarters consistently outperformed others,' which is misleading as there are only four quarters in a year. This statement is nonsensical.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.375,
+        "timestamp": 1785446872.529662,
+        "test_case_id": "C01"
+      },
+      "meta": {
+        "elapsed_s": 203.53740525245667,
+        "replay_scoring_s": 3.86,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions 'the top four quarters consistently outperformed others,' which is misleading as there are only four quarters in a year. This statement is nonsensical.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "C02",
+      "eval_result": {
+        "run_id": "C02",
+        "query": "How does conversion rate differ by marketing channel?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the question by providing conversion rates for some marketing channels (Email, Affiliate, Social) and mentioning the Search channel's dominance. However, it lacks specific conversion rate figures for the Search channel and does not provide a comprehensive comparison across all channels, which is necessary to fully address the user's question about how conversion rates differ by marketing channel.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "3/6 claims supported. \u2717 The conversion rate for the Search channel is the highest among all marketing channels analyzed. (no evidence found) | \u2713 The Email channel has a conversion rate of approximately 4.71%. (evidence: campaign_id=CAM0001, channel=Email, conversion_rate=0.04710992315402606) | \u2713 The Affiliate channel has a conversion rate of 2.69%. (evidence: campaign_id=CAM0002, channel=Affiliate, conversion_rate=0.026893475599090434) | \u2713 The Social channel has a conversion rate of 3.36%. (evidence: campaign_id=CAM0003, channel=Social, conversion_rate=0.0335997390311531) | \u2717 The Social channel has the lowest conversion rate at approximately 1.41%. (no evidence found) | \u2717 A significant one-way ANOVA test statistic of 994.85 and a p-value of 0.0 supports the Search channel's dominance. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['comparison', 'pandas_transform'], expected one of ['comparison', 'pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard', 'horizontal_bar'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.980567,
+            "label": "pass",
+            "reasoning": "$0.0194",
+            "raw_value": 0.019433,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions a one-way ANOVA test statistic of 994.85 and a p-value of 0.0, but these figures are not present in the analysis findings provided. This suggests potential hallucination of statistical results.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions a one-way ANOVA test statistic of 994.85 and a p-value of 0.0, but these figures are not present in the analysis findings provided. This suggests potential hallucination of statistical results.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.5386363636363636,
+        "timestamp": 1785446877.952152,
+        "test_case_id": "C02"
+      },
+      "meta": {
+        "elapsed_s": 203.54244112968445,
+        "replay_scoring_s": 5.42,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions a one-way ANOVA test statistic of 994.85 and a p-value of 0.0, but these figures are not present in the analysis findings provided. This suggests potential hallucination of statistical results.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "C03",
+      "eval_result": {
+        "run_id": "C03",
+        "query": "Compare average order value between new and returning customers",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "The report does not address the user's question about comparing average order value between new and returning customers. Instead, it focuses on comparing average order values across different customer segments (Consumer, Corporate, Home Office) without distinguishing between new and returning customers.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "4/4 claims supported. \u2713 The Consumer segment has the highest average order value at approximately $1,246.12. (evidence: SQL returned 3 rows. Top results: customer_id=789, segment=Consumer, average_order_value=1246.1159862932072) | \u2713 The average order values for the segments are as follows: Consumer ($1,246.12), Corporate ($1,235.63), and Home Office ($1,244.99). (evidence: SQL returned 3 rows. Top results: customer_id=789, segment=Consumer, average_order_value=1246.1159862932072; customer_id=173, segment=Corporate, average_order_value=1235.627831504004; customer_id=247, segment=Home Office, average_order_value=1244.9900427742123) | \u2713 A one-way ANOVA test returned 'nan' for both the statistic and p-value, indicating no significant differences in average order values across segments. (evidence: A one-way ANOVA test returned 'nan' for both the statistic and p-value) | \u2713 The Consumer segment leads in average order value. (evidence: SQL returned 3 rows. Top results: customer_id=789, segment=Consumer, average_order_value=1246.1159862932072; comparison: top=Consumer) [judge disagreement across 3 samples: spread=0.33]",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.8571428571428571,
+            "label": "pass",
+            "reasoning": "3/7 numbers overlap",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['comparison', 'sql_query'], expected one of ['comparison', 'sql_query']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.973479,
+            "label": "pass",
+            "reasoning": "$0.0265",
+            "raw_value": 0.026520999999999996,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions a one-way ANOVA test returning 'nan' for both the statistic and p-value, but this detail is not supported by the SQL results or any analysis data provided.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions a one-way ANOVA test returning 'nan' for both the statistic and p-value, but this detail is not supported by the SQL results or any analysis data provided.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.6672077922077922,
+        "timestamp": 1785446881.743231,
+        "test_case_id": "C03"
+      },
+      "meta": {
+        "elapsed_s": 206.31434297561646,
+        "replay_scoring_s": 3.79,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions a one-way ANOVA test returning 'nan' for both the statistic and p-value, but this detail is not supported by the SQL results or any analysis data provided.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": true,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "C04",
+      "eval_result": {
+        "run_id": "C04",
+        "query": "Which product categories have the highest and lowest margins?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by identifying the product categories with the highest and lowest margins. It specifies that the Books category has the highest margin at approximately 217.83, while the Office Supplies category has the lowest margin at around 43.67. This provides a clear and specific response to the query.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.6666666666666666,
+            "label": "pass",
+            "reasoning": "2/3 claims supported. \u2713 The Books category has the highest profit margin at approximately 217.83. (evidence: pandas/groupby \u2192 5 rows. Top results: category=Books, margin=217.83450000000002) | \u2717 Office Supplies has the lowest margin at around 43.67. (no evidence found) | \u2713 Product 2 generates the highest margin at $362.98. (evidence: pandas/derive \u2192 100 rows. Top results: product_id=2, name=Product 2, category=Furniture, unit_price=431.89, cost=68.91, margin=362.98)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform', 'sql_query']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/3 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard', 'horizontal_bar'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.985446,
+            "label": "pass",
+            "reasoning": "$0.0146",
+            "raw_value": 0.014554000000000001,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.9022727272727273,
+        "timestamp": 1785446884.610021,
+        "test_case_id": "C04"
+      },
+      "meta": {
+        "elapsed_s": 98.81245708465576,
+        "replay_scoring_s": 2.86,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "D01",
+      "eval_result": {
+        "run_id": "D01",
+        "query": "Show total sales by region",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing total sales figures for each region, specifically listing the revenue for Central, East, North, South, and West regions. It also includes a summary and analysis of the findings, which are relevant to the user's request for total sales by region.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "6/6 claims supported. \u2713 The North region leads in revenue generation with $1,363,760.55. (evidence: region=North, revenue=1363760.55) | \u2713 The Central region has the lowest revenue at $821,174.97. (evidence: region=Central, revenue=821174.97) | \u2713 The North region has the highest revenue at $1,363,760.55. (evidence: region=North, revenue=1363760.55) | \u2713 The West region has the second highest revenue at $1,271,795.18. (evidence: region=West, revenue=1271795.18) | \u2713 The East region generated $1,164,964.55 in revenue, making it the third highest region. (evidence: region=East, revenue=1164964.55) | \u2713 The Central region has the lowest revenue at $821,174.97. (evidence: region=Central, revenue=821174.97)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.989498,
+            "label": "pass",
+            "reasoning": "$0.0105",
+            "raw_value": 0.010502000000000001,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.9727272727272727,
+        "timestamp": 1785446889.118999,
+        "test_case_id": "D01"
+      },
+      "meta": {
+        "elapsed_s": 98.81216406822205,
+        "replay_scoring_s": 4.51,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "D02",
+      "eval_result": {
+        "run_id": "D02",
+        "query": "What is the average order value per product category?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing the average order value for each product category, including specific figures for Books, Clothing, Electronics, Furniture, and Office Supplies. It also highlights the highest and lowest values, offering a comprehensive overview of the average order values across categories.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "6/6 claims supported. \u2713 Books have the highest average order value at approximately $1,543.26. (evidence: category=Books, average_order_value=1543.2604263758033) | \u2713 Furniture follows with an average order value of around $1,382.82. (evidence: category=Furniture, average_order_value=1382.8210445745167) | \u2713 Clothing has an average order value of $1,364.37. (evidence: category=Clothing, average_order_value=1364.3720168483667) | \u2713 Electronics has an average order value of $1,153.89. (evidence: category=Electronics, average_order_value=1153.8883621241214) | \u2713 Office Supplies has the lowest average order value at approximately $770.88. (evidence: category=Office Supplies, average_order_value=770.8789637780817) | \u2713 Office Supplies is significantly lower than Electronics, which is the next lowest category at $1,153.89. (evidence: category=Office Supplies, average_order_value=770.8789637780817; category=Electronics, average_order_value=1153.8883621241214)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['sql_query'], expected one of ['sql_query']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.985806,
+            "label": "pass",
+            "reasoning": "$0.0142",
+            "raw_value": 0.014194,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.9727272727272727,
+        "timestamp": 1785446892.6061592,
+        "test_case_id": "D02"
+      },
+      "meta": {
+        "elapsed_s": 116.6494152545929,
+        "replay_scoring_s": 3.49,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "D03",
+      "eval_result": {
+        "run_id": "D03",
+        "query": "How many customers do we have per country?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing the number of customers per country, listing specific figures for Australia, Canada, France, Germany, and the UK. It clearly identifies the number of unique customers in each country, which is exactly what the user asked for.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.8333333333333334,
+            "label": "pass",
+            "reasoning": "5/6 claims supported. \u2713 Customers are distributed across five countries: Australia, Canada, France, Germany, and the UK. (evidence: pandas/groupby \u2192 6 rows. Top results: country=Australia, customer_id=141; country=Canada, customer_id=189; country=France, customer_id=186; country=Germany, customer_id=162; country=UK, customer_id=171) | \u2713 Canada has the highest number of unique customers. (evidence: pandas/groupby \u2192 6 rows. Top results: country=Canada, customer_id=189) | \u2713 Canada leads with 189 unique customers. (evidence: pandas/groupby \u2192 6 rows. Top results: country=Canada, customer_id=189) | \u2713 France has 186 unique customers. (evidence: pandas/groupby \u2192 6 rows. Top results: country=France, customer_id=186) | \u2713 The UK has 171 unique customers. (evidence: pandas/groupby \u2192 6 rows. Top results: country=UK, customer_id=171) | \u2717 There are a total of 6 unique customer entries. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.6666666666666666,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 67%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "used ['pandas_transform'], expected one of ['sql_query']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.984409,
+            "label": "pass",
+            "reasoning": "$0.0156",
+            "raw_value": 0.015591,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.7757575757575758,
+        "timestamp": 1785446896.259284,
+        "test_case_id": "D03"
+      },
+      "meta": {
+        "elapsed_s": 207.94779181480408,
+        "replay_scoring_s": 3.65,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "D04",
+      "eval_result": {
+        "run_id": "D04",
+        "query": "What are the top 10 products by revenue?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report provides detailed information on the top 5 products by revenue, including specific revenue figures for each. However, it does not fully answer the user's question, which asks for the top 10 products by revenue. The report only covers the top 5, missing key aspects of the query.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "5/5 claims supported. \u2713 Widget B is the top revenue-generating product, bringing in approximately $1,195,178.74. (evidence: pandas/groupby \u2192 5 rows. Top results: product=Widget B, revenue=1195178.74) | \u2713 Gadget Lite follows closely with revenue of approximately $1,127,051.35. (evidence: pandas/groupby \u2192 5 rows. Top results: product=Gadget Lite, revenue=1127051.35) | \u2713 The Service Pack ranks third, generating about $1,122,027.04. (evidence: pandas/groupby \u2192 5 rows. Top results: product=Service Pack, revenue=1122027.04) | \u2713 Gadget Pro has a revenue of approximately $1,095,334.94, placing it fourth. (evidence: pandas/groupby \u2192 5 rows. Top results: product=Gadget Pro, revenue=1095334.94) | \u2713 Widget A generates about $1,088,177.45, securing the fifth position in revenue. (evidence: pandas/groupby \u2192 5 rows. Top results: product=Widget A, revenue=1088177.45)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard'], expected one of ['bar', 'horizontal_bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.98581,
+            "label": "pass",
+            "reasoning": "$0.0142",
+            "raw_value": 0.01419,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.8636363636363636,
+        "timestamp": 1785446905.18384,
+        "test_case_id": "D04"
+      },
+      "meta": {
+        "elapsed_s": 116.64836120605469,
+        "replay_scoring_s": 8.92,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "D05",
+      "eval_result": {
+        "run_id": "D05",
+        "query": "Show monthly order volume for the last 12 months",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the user's question by providing monthly order volumes, but only for the last five months instead of the requested twelve months. It lacks data for the full 12-month period, which is a key aspect of the user's query.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "0/7 claims supported. \u2717 The analysis of monthly order volume over the last five months indicates a consistent trend, with quantities ranging from 1,524 to 1,593. (no evidence found) | \u2717 The monthly order volume has shown a consistent trend over the last five months, with quantities ranging from 1,524 to 1,593. (no evidence found) | \u2717 May recorded the highest order volume with 1,593 units, indicating a peak in demand during that month. (no evidence found) | \u2717 The analysis does not provide insights into order volume for the months beyond May, as it was limited to the last five months. (no evidence found) | \u2717 The monthly order volume was aggregated and analyzed for the last five months. (no evidence found) | \u2717 The quantities observed were: Month 1: 1,524; Month 2: 1,454; Month 3: 1,581; Month 4: 1,541; Month 5: 1,593. (no evidence found) | \u2717 This analysis indicates a general upward trend in order volume, particularly peaking in May. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform', 'time_series']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/3 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "used ['dashboard', 'horizontal_bar', 'scatter'], expected one of ['line']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.977352,
+            "label": "pass",
+            "reasoning": "$0.0226",
+            "raw_value": 0.022648,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions a peak in May with 1,593 units, but there is no evidence in the analysis findings to support this specific claim about May.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions a peak in May with 1,593 units, but there is no evidence in the analysis findings to support this specific claim about May.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.33636363636363636,
+        "timestamp": 1785446918.274805,
+        "test_case_id": "D05"
+      },
+      "meta": {
+        "elapsed_s": 212.7333061695099,
+        "replay_scoring_s": 13.09,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions a peak in May with 1,593 units, but there is no evidence in the analysis findings to support this specific claim about May.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "DG01",
+      "eval_result": {
+        "run_id": "DG01",
+        "query": "Why did revenue drop in Q3?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially addresses the question by noting a significant revenue drop in Q3 and mentioning missing data for some products, which could affect revenue accuracy. However, it does not provide specific reasons or factors contributing to the revenue drop, such as market conditions, changes in sales strategy, or other external factors. The lack of comparison with previous quarters also limits the explanation.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "4/4 claims supported. \u2713 Revenue in Q3 was reported at $1,178,006.80 (evidence: Revenue in Q3 was calculated to be $1,178,006.80.) | \u2713 There are instances of missing revenue data for some products (evidence: There are NaN values for revenue in Q3, particularly for 'Widget A' in the North and Central regions.) | \u2713 Q3 revenue was $1,178,006.80, but the exact drop compared to Q2 cannot be quantified (evidence: Q3 revenue was calculated to be $1,178,006.80. However, without the previous quarter's revenue data, the exact drop cannot be quantified.) | \u2713 The highest revenue recorded in Q3 was $1,178,006.80 (evidence: The revenue for Q3 was calculated to be $1,178,006.80.)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: diagnostic; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/3 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "used ['dashboard', 'horizontal_bar', 'scatter'], expected one of ['bar', 'line']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.979226,
+            "label": "pass",
+            "reasoning": "$0.0208",
+            "raw_value": 0.020774,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions a revenue peak of $1,178,006.80 in Q3, but this is presented as both a drop and a peak, which is inconsistent. The report also lacks specific data to support the claim of a significant revenue drop.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions a revenue peak of $1,178,006.80 in Q3, but this is presented as both a drop and a peak, which is inconsistent. The report also lacks specific data to support the claim of a significant revenue drop.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.6295454545454545,
+        "timestamp": 1785446921.215373,
+        "test_case_id": "DG01"
+      },
+      "meta": {
+        "elapsed_s": 214.29030013084412,
+        "replay_scoring_s": 2.94,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions a revenue peak of $1,178,006.80 in Q3, but this is presented as both a drop and a peak, which is inconsistent. The report also lacks specific data to support the claim of a significant revenue drop.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "DG02",
+      "eval_result": {
+        "run_id": "DG02",
+        "query": "What caused the spike in customer churn last month?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially addresses the question by identifying factors associated with higher churn rates, such as the Basic plan having a higher churn rate and the impact of support calls and engagement. However, it does not specifically explain what caused the spike in customer churn last month, as it lacks temporal analysis or specific events that occurred in the last month that could have led to the spike.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "0/6 claims supported. \u2717 Customers on the Basic plan exhibit the highest churn rate at approximately 23%. (no evidence found) | \u2717 The churn rate for Premium plans is 12.5%. (no evidence found) | \u2717 The churn rate for Standard plans is 8.9%. (no evidence found) | \u2717 There is a weak negative correlation of -0.1029 between monthly charges and churn. (no evidence found) | \u2717 Churn rates for Basic plan customers who made support calls in the last 90 days are higher (23%). (no evidence found) | \u2717 There is a correlation of -0.0524 between fewer login days in the last 30 days and higher churn. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "query_type correct: diagnostic; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform', 'statistical_test'], expected one of ['anomaly_detection', 'pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/4 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard', 'heatmap', 'horizontal_bar'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.977031,
+            "label": "pass",
+            "reasoning": "$0.0230",
+            "raw_value": 0.022969,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions specific churn rates and correlation values that are not directly supported by the provided analysis findings. The analysis findings do not include aggregated churn rates or correlation calculations.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions specific churn rates and correlation values that are not directly supported by the provided analysis findings. The analysis findings do not include aggregated churn rates or correlation calculations.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.36818181818181817,
+        "timestamp": 1785446925.334477,
+        "test_case_id": "DG02"
+      },
+      "meta": {
+        "elapsed_s": 217.3585720062256,
+        "replay_scoring_s": 4.12,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions specific churn rates and correlation values that are not directly supported by the provided analysis findings. The analysis findings do not include aggregated churn rates or correlation calculations.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "DG03",
+      "eval_result": {
+        "run_id": "DG03",
+        "query": "Why is the North region underperforming?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report provides some insights into the North region's performance, such as revenue by channel and the presence of revenue outliers, which could imply issues affecting performance. However, it does not directly explain why the North region is underperforming, as it lacks specific analysis on factors like market conditions, competition, or operational challenges that could be contributing to the underperformance.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "0/6 claims supported. \u2717 The North region's revenue from the Partner channel is the highest among all channels, totaling approximately $343,805.58. (no evidence found) | \u2717 The Online channel follows closely with about $339,051.1. (no evidence found) | \u2717 There are 45 identified outliers in revenue. (no evidence found) | \u2717 Widget B is the top-selling product in the North region, with a total of 5,805 units sold. (no evidence found) | \u2717 The Online channel generated the least revenue compared to others. (no evidence found) | \u2717 The Partner channel leads with $343,805.58, followed closely by the Direct channel at $342,107.09. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.6,
+            "label": "pass",
+            "reasoning": "query_type correct: diagnostic; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['anomaly_detection', 'pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/4 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'box', 'dashboard', 'horizontal_bar'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.978116,
+            "label": "pass",
+            "reasoning": "$0.0219",
+            "raw_value": 0.021884,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions 45 revenue outliers, but there is no evidence or data in the analysis findings to support this specific number of outliers.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions 45 revenue outliers, but there is no evidence or data in the analysis findings to support this specific number of outliers.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.35454545454545455,
+        "timestamp": 1785446928.975382,
+        "test_case_id": "DG03"
+      },
+      "meta": {
+        "elapsed_s": 213.61036682128906,
+        "replay_scoring_s": 3.64,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions 45 revenue outliers, but there is no evidence or data in the analysis findings to support this specific number of outliers.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "DG04",
+      "eval_result": {
+        "run_id": "DG04",
+        "query": "What factors correlate with high customer lifetime value?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly addresses the user's question by identifying factors that correlate with high customer lifetime value. It specifies the correlation with tenure months, monthly charges, support calls, and login days, providing specific correlation coefficients for each factor. This detailed analysis fully answers the user's query about the factors influencing customer lifetime value.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "8/8 claims supported. \u2713 There is a strong positive correlation between customer lifetime value and tenure months. (evidence: Our analysis reveals a strong positive correlation between customer lifetime value and tenure months.) | \u2713 The correlation coefficient between customer lifetime value and tenure months is 0.732. (evidence: A correlation coefficient of 0.732 between customer lifetime value and tenure months indicates that longer customer relationships lead to higher lifetime values.) | \u2713 There is a moderate correlation between customer lifetime value and monthly charges. (evidence: Additionally, there is a moderate correlation with monthly charges, indicating that pricing strategies may also impact customer lifetime value.) | \u2713 The correlation coefficient between customer lifetime value and monthly charges is 0.6142. (evidence: A correlation coefficient of 0.6142 suggests that higher monthly charges are associated with increased customer lifetime value.) | \u2713 There is a very weak positive correlation between customer lifetime value and support calls in the last 90 days. (evidence: A very weak positive correlation (0.024) between customer lifetime value and support calls in the last 90 days indicates that increasing support calls may not effectively enhance lifetime value.) | \u2713 The correlation coefficient between customer lifetime value and support calls in the last 90 days is 0.024. (evidence: A very weak positive correlation (0.024) between customer lifetime value and support calls in the last 90 days indicates that increasing support calls may not effectively enhance lifetime value.) | \u2713 There is a negligible negative correlation between customer lifetime value and login days in the last 30 days. (evidence: A correlation coefficient of -0.0096 shows a negligible negative relationship between customer lifetime value and login days in the last 30 days.) | \u2713 The correlation coefficient between customer lifetime value and login days in the last 30 days is -0.0096. (evidence: A correlation coefficient of -0.0096 shows a negligible negative relationship between customer lifetime value and login days in the last 30 days.)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.5333333333333333,
+            "label": "warn",
+            "reasoning": "8/30 numbers overlap",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.4,
+            "label": "warn",
+            "reasoning": "query_type mismatch: got exploratory expected diagnostic; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform', 'statistical_test'], expected one of ['statistical_test']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['dashboard', 'heatmap', 'horizontal_bar'], expected one of ['heatmap', 'scatter']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.980153,
+            "label": "pass",
+            "reasoning": "$0.0198",
+            "raw_value": 0.019847,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The correlation coefficients mentioned in the report (0.732, 0.6142, 0.024, -0.0096) are not supported by the analysis findings provided. These numbers appear to be fabricated.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The correlation coefficients mentioned in the report (0.732, 0.6142, 0.024, -0.0096) are not supported by the analysis findings provided. These numbers appear to be fabricated.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.8333333333333333,
+        "timestamp": 1785446933.031873,
+        "test_case_id": "DG04"
+      },
+      "meta": {
+        "elapsed_s": 231.2994728088379,
+        "replay_scoring_s": 4.06,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The correlation coefficients mentioned in the report (0.732, 0.6142, 0.024, -0.0096) are not supported by the analysis findings provided. These numbers appear to be fabricated.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": true,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "E01",
+      "eval_result": {
+        "run_id": "E01",
+        "query": "Give me an overview of this dataset",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report provides some information about the dataset, specifically mentioning the presence of duplicate rows and the percentage they represent. However, it lacks a comprehensive overview of the dataset's contents, such as the types of data, number of columns, or any other characteristics beyond the issue of duplicates. This limits its ability to fully answer the user's request for an overview.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "0/2 claims supported. \u2717 The dataset has 238 fully duplicated rows. (no evidence found) | \u2717 The duplicate rows account for 1.9% of the total data. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "query_type correct: exploratory",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "6/6 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "no chart type expected; 0 generated",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.957702,
+            "label": "pass",
+            "reasoning": "$0.0423",
+            "raw_value": 0.042298,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions specific numbers (238 duplicate rows, 1.9% of the dataset) without any analysis findings to back them up, indicating potential fabrication.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions specific numbers (238 duplicate rows, 1.9% of the dataset) without any analysis findings to back them up, indicating potential fabrication.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.36818181818181817,
+        "timestamp": 1785446958.135243,
+        "test_case_id": "E01"
+      },
+      "meta": {
+        "elapsed_s": 259.01134634017944,
+        "replay_scoring_s": 25.1,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions specific numbers (238 duplicate rows, 1.9% of the dataset) without any analysis findings to back them up, indicating potential fabrication.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "E02",
+      "eval_result": {
+        "run_id": "E02",
+        "query": "Are there any anomalies or outliers in the sales data?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by identifying anomalies and outliers in the sales data. It specifies the number of outliers found in both revenue and units sold, providing percentages of total observations and indicating potential issues for further investigation. This directly addresses the user's query about anomalies or outliers in the sales data.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.4,
+            "label": "warn",
+            "reasoning": "2/5 claims supported. \u2713 There are 114 revenue outliers. (evidence: anomaly/zscore: 114 outliers) | \u2717 114 revenue outliers represent approximately 0.96% of the total observations. (no evidence found) | \u2713 There are 166 units sold outliers. (evidence: anomaly/zscore: 166 outliers) | \u2717 166 units sold outliers account for about 1.36% of the total observations. (no evidence found) | \u2717 The dataset contains 238 fully duplicated rows, which constitutes 1.9% of the total data. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.6000000000000001,
+            "label": "pass",
+            "reasoning": "query_type mismatch: got diagnostic expected exploratory; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['anomaly_detection'], expected one of ['anomaly_detection']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['box', 'dashboard'], expected one of ['box', 'scatter']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.988565,
+            "label": "pass",
+            "reasoning": "$0.0114",
+            "raw_value": 0.011435,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.6000000000000001,
+        "timestamp": 1785446963.9724338,
+        "test_case_id": "E02"
+      },
+      "meta": {
+        "elapsed_s": 104.99178791046143,
+        "replay_scoring_s": 5.84,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "E03",
+      "eval_result": {
+        "run_id": "E03",
+        "query": "What patterns exist in customer purchasing behavior?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially addresses the question about patterns in customer purchasing behavior. It mentions diverse customer segments, seasonal revenue variability, and consistent product sales, which are relevant to understanding purchasing patterns. However, it lacks specific details on broader patterns across the entire dataset, such as trends over time, frequency of purchases, or demographic influences, which are key aspects of the user's question.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "0/4 claims supported. \u2717 The Consumer segment generates a total revenue of $20,730.32 from customer_id=2, compared to $3,791.33 from the Corporate segment (customer_id=1). (no evidence found) | \u2717 Monthly purchasing patterns show fluctuations, with customer_id=1 generating $630.52 in March 2023 and $1,127.20 in April 2023. (no evidence found) | \u2717 Product_id=1 sold 72 units in March and 52 units in April. (no evidence found) | \u2717 The Books category sold 560 units, while Office Supplies sold 476 units. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "query_type correct: exploratory",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform', 'sql_query'], expected one of ['pandas_transform', 'statistical_test']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/6 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "used ['dashboard', 'horizontal_bar', 'scatter'], expected one of ['bar', 'histogram']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.954874,
+            "label": "pass",
+            "reasoning": "$0.0451",
+            "raw_value": 0.045126,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report includes specific revenue figures and customer_ids that do not appear in the analysis findings. These details seem to be fabricated as they are not present in the provided data.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report includes specific revenue figures and customer_ids that do not appear in the analysis findings. These details seem to be fabricated as they are not present in the provided data.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.3227272727272727,
+        "timestamp": 1785446968.606774,
+        "test_case_id": "E03"
+      },
+      "meta": {
+        "elapsed_s": 355.0778429508209,
+        "replay_scoring_s": 4.63,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report includes specific revenue figures and customer_ids that do not appear in the analysis findings. These details seem to be fabricated as they are not present in the provided data.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "E04",
+      "eval_result": {
+        "run_id": "E04",
+        "query": "Explore the relationship between marketing spend and revenue",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly addresses the user's question by providing a specific correlation coefficient (0.3536) that quantifies the relationship between marketing spend and revenue. It explains that there is a moderate positive correlation, suggesting that increased marketing spend may lead to higher revenue. This directly answers the user's query about the relationship between these two variables.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 claims supported. \u2713 There is a moderate positive correlation between marketing spend and revenue, with a correlation coefficient of 0.3536. (evidence: The analysis findings state that a correlation analysis was conducted, resulting in a correlation coefficient of 0.3536.)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: exploratory; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['statistical_test'], expected one of ['statistical_test']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "used ['heatmap'], expected one of ['scatter']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.98993,
+            "label": "pass",
+            "reasoning": "$0.0101",
+            "raw_value": 0.010069999999999999,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.9477272727272728,
+        "timestamp": 1785446972.420643,
+        "test_case_id": "E04"
+      },
+      "meta": {
+        "elapsed_s": 30.665546894073486,
+        "replay_scoring_s": 3.81,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "P01",
+      "eval_result": {
+        "run_id": "P01",
+        "query": "What will revenue look like next quarter based on current trends?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing a specific forecast for the next quarter's revenue, indicating an increasing trend and predicting a value of approximately 513.42. It also mentions the method used (naive linear forecast) and the confidence level, addressing the user's query about future revenue based on current trends.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.6,
+            "label": "pass",
+            "reasoning": "3/5 claims supported. \u2713 Revenue is expected to show an increasing trend, with a predicted value of approximately 513.42 by the end of the next quarter. (evidence: Revenue is projected to reach approximately 513.42 by the end of the next quarter, based on a naive linear forecast.) | \u2713 The forecast is based on a naive linear extrapolation. (evidence: A naive linear forecast was applied to historical revenue data.) | \u2717 The confidence level in this forecast is low (0.4). (no evidence found) | \u2713 There are 238 fully duplicated rows in the dataset, accounting for 1.9% of the total data. (evidence: There are 238 fully duplicated rows in the dataset, accounting for 1.9% of the total data.) | \u2717 The forecast predicts a revenue value of 513.4233 for the period ending on December 31, 2024. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 numbers overlap",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: predictive; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['time_series'], expected one of ['time_series']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['line'], expected one of ['line']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.989575,
+            "label": "pass",
+            "reasoning": "$0.0104",
+            "raw_value": 0.010425,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.884090909090909,
+        "timestamp": 1785446977.110764,
+        "test_case_id": "P01"
+      },
+      "meta": {
+        "elapsed_s": 47.21244502067566,
+        "replay_scoring_s": 4.69,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "P02",
+      "eval_result": {
+        "run_id": "P02",
+        "query": "Forecast customer churn for the next 30 days",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially addresses the user's request to forecast customer churn for the next 30 days by providing a forecasted churn rate for June 1, 2024. However, it does not specifically provide a forecast for the next 30 days, which is the user's primary request. The report focuses on a longer-term prediction and discusses the limitations of the model used, but it lacks specific details about the immediate 30-day forecast.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.6666666666666666,
+            "label": "pass",
+            "reasoning": "4/6 claims supported. \u2713 The analysis indicates an increasing trend in customer churn. (evidence: timeseries: increasing trend) | \u2717 A predicted churn rate of approximately 19.07% for June 1, 2024. (no evidence found) | \u2717 The customer churn trend is increasing, with a forecasted churn value of 0.1907 for June 1, 2024. (no evidence found) | \u2713 The analysis shows a slope of 1.4e-05. (evidence: The analysis shows a slope of 1.4e-05, suggesting a gradual increase in churn rates over time.) | \u2713 The r_squared value is 0.0029. (evidence: The r_squared value is 0.0029, indicating a weak fit for the trend line.) | \u2713 The forecast is based on naive linear extrapolation. (evidence: naive linear forecast for 1 period(s))",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "1/1 numbers overlap",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: predictive; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['time_series'], expected one of ['time_series']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['line'], expected one of ['line']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.9832,
+            "label": "pass",
+            "reasoning": "$0.0168",
+            "raw_value": 0.016800000000000002,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions a specific churn rate of 19.07% for June 1, 2024, which seems to be a precise figure not typically derived from a naive linear forecast without additional context or data.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions a specific churn rate of 19.07% for June 1, 2024, which seems to be a precise figure not typically derived from a naive linear forecast without additional context or data.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.7386363636363636,
+        "timestamp": 1785446982.6732512,
+        "test_case_id": "P02"
+      },
+      "meta": {
+        "elapsed_s": 123.79986596107483,
+        "replay_scoring_s": 5.56,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions a specific churn rate of 19.07% for June 1, 2024, which seems to be a precise figure not typically derived from a naive linear forecast without additional context or data.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "P03",
+      "eval_result": {
+        "run_id": "P03",
+        "query": "Which customers are most likely to upgrade their plan?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the question by indicating that several customers have a zero likelihood of upgrading their plans, suggesting they are not likely to upgrade. However, it does not provide specific details on which customers are most likely to upgrade, only mentioning those unlikely to do so. The analysis lacks a clear identification of customers with a high likelihood of upgrading, which is a key aspect of the user's question.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "4/5 claims supported. \u2713 The regression analysis shows an R-squared value of 0.0425. (evidence: The analysis findings mention an R-squared value of 0.0425.) | \u2713 The model explains only 4.25% of the variance in upgrade likelihood. (evidence: The R-squared value of 0.0425 indicates that the model explains 4.25% of the variance.) | \u2713 Several customers, including C00001, have an upgrade likelihood of 0. (evidence: The analysis findings list customer C00001 with an upgrade likelihood of 0.) | \u2717 Multiple customers were identified with an upgrade likelihood of 0, including C00001, C03887, and C01327. (no evidence found) | \u2713 The regression analysis was based on 5,000 observations. (evidence: The analysis findings mention 'pandas/derive \u2192 5000 rows'.)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.6896551724137931,
+            "label": "pass",
+            "reasoning": "10/29 numbers overlap",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "query_type correct: predictive; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform', 'statistical_test'], expected one of ['comparison', 'statistical_test']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/3 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['dashboard', 'horizontal_bar', 'scatter'], expected one of ['bar', 'scatter']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.978334,
+            "label": "pass",
+            "reasoning": "$0.0217",
+            "raw_value": 0.021665999999999998,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions customers C03887 and C01327 as having an upgrade likelihood of 0, but these customers are not present in the analysis findings. This suggests potential fabrication of customer IDs or their likelihood values.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions customers C03887 and C01327 as having an upgrade likelihood of 0, but these customers are not present in the analysis findings. This suggests potential fabrication of customer IDs or their likelihood values.",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.711755485893417,
+        "timestamp": 1785446988.5231822,
+        "test_case_id": "P03"
+      },
+      "meta": {
+        "elapsed_s": 230.7520570755005,
+        "replay_scoring_s": 5.85,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions customers C03887 and C01327 as having an upgrade likelihood of 0, but these customers are not present in the analysis findings. This suggests potential fabrication of customer IDs or their likelihood values.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": true,
+        "replayed_from_cache": true
+      }
+    }
+  ]
+}

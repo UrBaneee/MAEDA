@@ -1,0 +1,106 @@
+{
+  "exported_at": "2026-08-01T03:10:30.125Z",
+  "n_cases": 20,
+  "labels": {
+    "C09": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"the highest click-through rate recorded at 3.52% \""
+    },
+    "C10": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"This finding suggests a strong willingness to pay for enhanced services among Premium subscribers\"\n2 groundedness:\"The findings indicate that customers with longer tenures tend to have higher monthly charges and lower churn rates\""
+    },
+    "C11": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C12": {
+      "answer_relevance": 1,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "D10": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D11": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": "1 relevance: Doesn't mention “Widget A” at all. "
+    },
+    "D12": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D13": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "DG09": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: the highest ROI of 1208.2"
+    },
+    "DG10": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": ""
+    },
+    "DG11": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.25,
+      "notes": "1. Groundedness: \"which is lower than other categories\", \"Product 2 generates the highest margin\",\"Product 6 stands out with the highest profit margin\""
+    },
+    "DG12": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.25,
+      "notes": "1 relevance: \"due to missing data on the loyalty tier column\""
+    },
+    "E09": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E10": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundednesss:\"Confidence = 100%\""
+    },
+    "E11": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"which highlighted strong positive correlations among several key variables\""
+    },
+    "E12": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "E13": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "P08": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": ""
+    },
+    "P09": {
+      "answer_relevance": 1,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "P11": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": "1 relevance: doesn't answer the question directly"
+    }
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "timestamp": 1785547977.418319,
+  "n_cases": 2,
+  "overall_aggregate": 0.8238636363636364,
+  "replayed": true,
+  "generation_fingerprint": "8fb49462b22f1bb1",
+  "split": "test",
+  "cases": [
+    {
+      "test_case_id": "C01",
+      "eval_result": {
+        "run_id": "C01",
+        "query": "Compare sales performance across Q1, Q2, Q3, Q4",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report fully answers the user's question by providing a detailed comparison of sales performance across all four quarters. It specifies the revenue for each quarter, highlights the highest and lowest performing quarters, and discusses potential trends and implications. The report also includes recommendations based on the findings, addressing the user's query comprehensively.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "6/6 claims supported. \u2713 Quarter 4 consistently generates the highest revenue, totaling $1,801,747.75. (evidence: Grouped revenue data shows Q4 revenue as $1,801,747.75.) | \u2713 Quarter 3 shows a significant dip with revenue of $1,178,006.80. (evidence: Grouped revenue data shows Q3 revenue as $1,178,006.80.) | \u2713 Quarter 4 has the highest revenue at $1,801,747.75, while Quarter 3 has the lowest at $1,178,006.80. (evidence: Grouped revenue data shows Q4 revenue as $1,801,747.75 and Q3 revenue as $1,178,006.80.) | \u2713 The revenue for each quarter was aggregated as follows: Q1: $1,321,831.71, Q2: $1,326,183.26, Q3: $1,178,006.80, Q4: $1,801,747.75. (evidence: Grouped revenue data shows Q1: $1,321,831.71, Q2: $1,326,183.26, Q3: $1,178,006.80, Q4: $1,801,747.75.) | \u2713 A significance test could not be computed for Quarter 3 due to insufficient data. (evidence: Significance test note indicates p-value could not be computed due to insufficient data.) | \u2713 There were issues with data quality, specifically 238 fully duplicated rows, which account for 1.9% of the dataset. (evidence: Data quality notes mention 238 fully duplicated rows, accounting for 1.9% of the dataset.)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.75,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['comparison', 'pandas_transform'], expected one of ['comparison', 'pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/3 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard', 'horizontal_bar', 'scatter'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.985854,
+            "label": "pass",
+            "reasoning": "$0.0141",
+            "raw_value": 0.014145999999999999,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.7840909090909091,
+        "timestamp": 1785547972.586453,
+        "test_case_id": "C01"
+      },
+      "meta": {
+        "elapsed_s": 136.8815360069275,
+        "replay_scoring_s": 4.43,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "D04",
+      "eval_result": {
+        "run_id": "D04",
+        "query": "What are the top 10 products by revenue?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "The report partially answers the question by providing details on the top 5 products by revenue, but it does not fully address the user's request for the top 10 products. The analysis findings and report focus only on the top 5, missing key aspects of the user's query.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "7/7 claims supported. \u2713 Widget B is the top revenue-generating product, bringing in approximately $1,195,178.74. (evidence: product=Widget B, revenue=1195178.74) | \u2713 Gadget Lite is the second highest revenue product, with revenues of $1,127,051.35. (evidence: product=Gadget Lite, revenue=1127051.35) | \u2713 Service Pack is the third highest revenue product, with revenues of $1,122,027.04. (evidence: product=Service Pack, revenue=1122027.04) | \u2713 Gadget Pro is the fourth highest revenue product, generating $1,095,334.94. (evidence: product=Gadget Pro, revenue=1095334.94) | \u2713 Widget A is the fifth highest revenue product, generating $1,088,177.45. (evidence: product=Widget A, revenue=1088177.45) | \u2713 The report claims to list the top 10 products by revenue, but only provides details for the top 5 products. (evidence: The analysis findings only list 5 products.) | \u2713 There were issues with data quality, specifically 238 fully duplicated rows, which account for 1.9% of the dataset. (evidence: Data Quality section: 238 fully duplicated rows (1.9%))",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard'], expected one of ['bar', 'horizontal_bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.985897,
+            "label": "pass",
+            "reasoning": "$0.0141",
+            "raw_value": 0.014102999999999997,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.8636363636363636,
+        "timestamp": 1785547977.417854,
+        "test_case_id": "D04"
+      },
+      "meta": {
+        "elapsed_s": 146.1213457584381,
+        "replay_scoring_s": 4.83,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    }
+  ]
+}

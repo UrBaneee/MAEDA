@@ -12,7 +12,22 @@
     "ground_truth": {
       "north_region_revenue": 1363760.55,
       "central_region_revenue": 821174.97
-    }
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "horizontal_bar"
+    ],
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev"
   },
   {
     "id": "D02",
@@ -27,7 +42,22 @@
     "ground_truth": {
       "books_avg_order_value": 1543.26,
       "office_supplies_avg_order_value": 770.88
-    }
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "products"
+    },
+    "split": "dev"
   },
   {
     "id": "D03",
@@ -43,7 +73,23 @@
       "canada_customers": 189,
       "france_customers": 186,
       "total_customers": 1000
-    }
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "horizontal_bar"
+    ],
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "customers"
+    },
+    "split": "dev"
   },
   {
     "id": "D04",
@@ -58,7 +104,23 @@
     "ground_truth": {
       "top_product_revenue": 1195178.74,
       "n_products": 5
-    }
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "horizontal_bar"
+    ],
+    "tags": [
+      "descriptive",
+      "top_n"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "test"
   },
   {
     "id": "D05",
@@ -73,7 +135,24 @@
     "ground_truth": {
       "dec_2024_orders": 324,
       "jan_2024_orders": 279
-    }
+    },
+    "expected_tools": [
+      "time_series",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "tags": [
+      "descriptive",
+      "time_series"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "split": "dev"
   },
   {
     "id": "DG01",
@@ -89,7 +168,22 @@
       "q3_2023_revenue": 314480.57,
       "q2_2023_revenue": 422976.68,
       "q4_2023_revenue": 581966.52
-    }
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "line"
+    ],
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "test"
   },
   {
     "id": "DG02",
@@ -105,7 +199,22 @@
       "march_2024_churned": 118,
       "march_2024_total": 302,
       "march_2024_churn_rate_pct": 39.07
-    }
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "anomaly_detection"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "split": "test"
   },
   {
     "id": "DG03",
@@ -120,7 +229,21 @@
     "ground_truth": {
       "north_region_revenue": 1363760.55,
       "_note": "North is actually the HIGHEST-revenue region, not underperforming"
-    }
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev"
   },
   {
     "id": "DG04",
@@ -132,7 +255,24 @@
     "expected_dimensions": [],
     "ground_truth": {
       "_note": "data_mismatch: no customer_lifetime_value column exists in churn_data.csv"
-    }
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "scatter",
+      "heatmap"
+    ],
+    "tags": [
+      "diagnostic",
+      "correlation",
+      "data_mismatch"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "split": "dev"
   },
   {
     "id": "C01",
@@ -149,7 +289,22 @@
       "q2_2023_revenue": 422976.68,
       "q3_2023_revenue": 314480.57,
       "q4_2023_revenue": 581966.52
-    }
+    },
+    "expected_tools": [
+      "comparison",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "test"
   },
   {
     "id": "C02",
@@ -162,9 +317,24 @@
       "channel"
     ],
     "ground_truth": {
-      "search_conversion_rate_pct": 6.41,
-      "display_conversion_rate_pct": 1.22
-    }
+      "search_conversion_rate_pct": 6.49,
+      "display_conversion_rate_pct": 1.2
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "split": "dev"
   },
   {
     "id": "C03",
@@ -178,7 +348,24 @@
     ],
     "ground_truth": {
       "_note": "data_mismatch: no new/returning customer_type field exists in orders/customers tables"
-    }
+    },
+    "expected_tools": [
+      "sql_query",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "tags": [
+      "comparative",
+      "data_mismatch"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "split": "test"
   },
   {
     "id": "C04",
@@ -193,7 +380,23 @@
     "ground_truth": {
       "books_avg_margin": 217.83,
       "office_supplies_avg_margin": 43.67
-    }
+    },
+    "expected_tools": [
+      "sql_query",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "products"
+    },
+    "split": "dev"
   },
   {
     "id": "P01",
@@ -207,7 +410,21 @@
     ],
     "ground_truth": {
       "_note": "predictive query \u2014 no ground truth exists for a future value; only historical trend direction is checkable"
-    }
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev"
   },
   {
     "id": "P02",
@@ -221,7 +438,21 @@
     ],
     "ground_truth": {
       "_note": "predictive query \u2014 no ground truth exists for future churn"
-    }
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "split": "test"
   },
   {
     "id": "P03",
@@ -235,7 +466,24 @@
     ],
     "ground_truth": {
       "_note": "data_mismatch: no upgrade/plan-change history exists; also predictive"
-    }
+    },
+    "expected_tools": [
+      "statistical_test",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "scatter"
+    ],
+    "tags": [
+      "predictive",
+      "data_mismatch"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "split": "dev"
   },
   {
     "id": "E01",
@@ -246,7 +494,19 @@
     "ground_truth": {
       "n_rows": 12240,
       "n_columns": 7
-    }
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "tags": [
+      "exploratory"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev"
   },
   {
     "id": "E02",
@@ -259,7 +519,23 @@
     "ground_truth": {
       "revenue_outliers_iqr": 187,
       "units_outliers_iqr": 470
-    }
+    },
+    "expected_tools": [
+      "anomaly_detection"
+    ],
+    "expected_chart_types": [
+      "box",
+      "scatter"
+    ],
+    "tags": [
+      "exploratory",
+      "anomaly"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "test"
   },
   {
     "id": "E03",
@@ -272,7 +548,24 @@
     "ground_truth": {
       "n_orders": 10000,
       "n_customers": 1000
-    }
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "histogram"
+    ],
+    "tags": [
+      "exploratory"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "split": "dev"
   },
   {
     "id": "E04",
@@ -285,6 +578,2384 @@
     "expected_dimensions": [],
     "ground_truth": {
       "spend_revenue_correlation": 0.3536
-    }
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "scatter"
+    ],
+    "tags": [
+      "exploratory",
+      "correlation"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "split": "test"
+  },
+  {
+    "id": "D06",
+    "query": "How many orders were placed by customers in the USA?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "orders"
+    ],
+    "expected_dimensions": [
+      "country"
+    ],
+    "ground_truth": {
+      "usa_order_count": 1571,
+      "total_orders": 10000
+    },
+    "tags": [
+      "descriptive",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "D07",
+    "query": "What is the total spend and revenue by marketing channel?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "spend",
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "email_spend": 2094536.45,
+      "email_revenue": 60607080.18,
+      "search_revenue": 73111916.05
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "grouped_bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "D08",
+    "query": "What is the average tenure of customers who have churned, compared to those who haven't?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "tenure_months"
+    ],
+    "expected_dimensions": [
+      "churned"
+    ],
+    "ground_truth": {
+      "churned_avg_tenure_months": 27.22,
+      "retained_avg_tenure_months": 31.07
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "D09",
+    "query": "Which single order generated the most revenue, and which country was the customer from?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "order",
+      "country"
+    ],
+    "ground_truth": {
+      "top_order_revenue": 4992.2,
+      "top_order_customer_country": "UK"
+    },
+    "tags": [
+      "descriptive",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test"
+  },
+  {
+    "id": "DG05",
+    "query": "Why do customers who log in less frequently churn at a higher rate?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "login_days_last_30d"
+    ],
+    "ground_truth": {
+      "churn_rate_0_login_days": 0.24,
+      "churn_rate_10plus_login_days": 0.1451
+    },
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "scatter"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG06",
+    "query": "What's driving the ROI difference between the Email and Display marketing channels?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "roi"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "email_avg_roi": 2780.31,
+      "display_avg_roi": 687.3
+    },
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "DG07",
+    "query": "Why does Product 8 have a negative profit margin?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "margin"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "product_8_unit_price": 191.65,
+      "product_8_cost": 195.4,
+      "product_8_margin": -3.75
+    },
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "products"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG08",
+    "query": "Why is the Corporate segment generating significantly less revenue than Consumer?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "segment"
+    ],
+    "ground_truth": {
+      "consumer_total_revenue": 4181965.25,
+      "corporate_total_revenue": 4165301.42,
+      "_note": "Corporate and Consumer segment revenue are nearly identical (within 0.4%) -- there is no significant gap to explain"
+    },
+    "tags": [
+      "diagnostic",
+      "false_premise"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "C05",
+    "query": "Compare churn rates between customers with 0 login days and 10+ login days in the last 30 days",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "login_days_last_30d"
+    ],
+    "ground_truth": {
+      "churn_rate_0_days": 0.24,
+      "churn_rate_10plus_days": 0.1451
+    },
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "C06",
+    "query": "Compare average order revenue across customer segments",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "segment"
+    ],
+    "ground_truth": {
+      "consumer_avg_order_revenue": 1246.12,
+      "corporate_avg_order_revenue": 1235.63,
+      "home_office_avg_order_revenue": 1244.99
+    },
+    "tags": [
+      "comparative",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C07",
+    "query": "Compare revenue growth in the North and South regions from 2022 to 2024",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2022_revenue": 439901.01,
+      "north_2024_revenue": 476047.98,
+      "south_2022_revenue": 348526.24,
+      "south_2024_revenue": 343617.57
+    },
+    "tags": [
+      "comparative",
+      "time_series"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "line",
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "C08",
+    "query": "Compare the number of orders placed in Q1 2024 versus Q4 2024",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "orders"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {
+      "q1_2024_orders": 797,
+      "q4_2024_orders": 908
+    },
+    "tags": [
+      "comparative",
+      "time_series"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "P04",
+    "query": "What will total marketing spend look like next quarter based on current trends?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "spend"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "P05",
+    "query": "Forecast the customer churn rate for next quarter",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for future churn rate"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "P06",
+    "query": "Predict customer satisfaction scores for the next quarter",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "satisfaction"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {
+      "_note": "data_mismatch: no customer satisfaction/CSAT column exists in any demo dataset; also predictive"
+    },
+    "tags": [
+      "predictive",
+      "data_mismatch"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "line",
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "P07",
+    "query": "Which regions are likely to see the fastest revenue growth next year?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value; only historical trend direction is checkable"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "time_series",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "E05",
+    "query": "Show me the numbers.",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "_note": "deliberately ambiguous query -- no metric or dimension specified; expected to trigger a clarification request rather than a specific numeric answer"
+    },
+    "tags": [
+      "exploratory",
+      "ambiguous"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [],
+    "expected_chart_types": [],
+    "split": "test"
+  },
+  {
+    "id": "E06",
+    "query": "Give me an overview of the customer churn dataset",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "n_rows": 5000,
+      "n_columns": 8
+    },
+    "tags": [
+      "exploratory"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "dev"
+  },
+  {
+    "id": "E07",
+    "query": "Are there any anomalies in campaign ROI or spend?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "roi",
+      "spend"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "roi_outliers_iqr": 114,
+      "spend_outliers_iqr": 6
+    },
+    "tags": [
+      "exploratory",
+      "anomaly"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "anomaly_detection"
+    ],
+    "expected_chart_types": [
+      "box",
+      "scatter"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "E08",
+    "query": "What's the relationship between customer support calls and churn?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "support_calls_last_90d"
+    ],
+    "expected_dimensions": [
+      "churned"
+    ],
+    "ground_truth": {
+      "support_calls_churn_correlation": 0.1619
+    },
+    "tags": [
+      "exploratory",
+      "correlation"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "scatter"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "D10",
+    "query": "Which sales rep generated the most total revenue?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "rep_id"
+    ],
+    "ground_truth": {
+      "top_rep_id": 1029,
+      "top_rep_revenue": 139992.95
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "horizontal_bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "D11",
+    "query": "What is the total quantity of units sold, broken down by product?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "widget_b_units": 24291,
+      "widget_a_units": 22916
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "D12",
+    "query": "How many customers joined each year?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "customers"
+    ],
+    "expected_dimensions": [
+      "joined_date"
+    ],
+    "ground_truth": {
+      "customers_joined_2023": 258,
+      "customers_joined_2020": 249
+    },
+    "tags": [
+      "descriptive",
+      "time_series"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "customers"
+    },
+    "expected_tools": [
+      "sql_query",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "line"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "D13",
+    "query": "What is the average discount applied across all orders?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "discount"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "avg_discount": 0.1003,
+      "orders_with_discount": 8040,
+      "total_orders": 10000
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [],
+    "split": "test"
+  },
+  {
+    "id": "DG09",
+    "query": "Why does the Display channel have such a low click-through rate compared to other channels?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "ctr"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "display_ctr": 0.027,
+      "email_ctr": 0.0279,
+      "search_ctr": 0.0278,
+      "social_ctr": 0.0272,
+      "affiliate_ctr": 0.027,
+      "_note": "Display's CTR (2.70%) is essentially identical to every other channel (2.70%-2.79%) -- there is no meaningful underperformance to explain"
+    },
+    "tags": [
+      "diagnostic",
+      "false_premise"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "DG10",
+    "query": "Why do Premium plan customers pay so much more in monthly charges than Basic plan customers?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "monthly_charges"
+    ],
+    "expected_dimensions": [
+      "plan"
+    ],
+    "ground_truth": {
+      "premium_avg_monthly_charge": 99.1,
+      "basic_avg_monthly_charge": 29.04
+    },
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG11",
+    "query": "Why does the Office Supplies category have the lowest average product margin?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "margin"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "office_supplies_avg_margin": 43.67,
+      "books_avg_margin": 217.83
+    },
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "products"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG12",
+    "query": "Why are customers in the Gold loyalty tier churning less than other tiers?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "loyalty_tier"
+    ],
+    "ground_truth": {
+      "_note": "data_mismatch: no loyalty tier column exists in any demo dataset"
+    },
+    "tags": [
+      "diagnostic",
+      "data_mismatch"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C09",
+    "query": "Compare click-through rates between the Search and Social marketing channels",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "ctr"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "search_ctr": 0.0278,
+      "social_ctr": 0.0272
+    },
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C10",
+    "query": "Compare average monthly charges between customers on the Basic and Premium plans",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "monthly_charges"
+    ],
+    "expected_dimensions": [
+      "plan"
+    ],
+    "ground_truth": {
+      "basic_avg_monthly_charge": 29.04,
+      "premium_avg_monthly_charge": 99.1
+    },
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C11",
+    "query": "Compare total units sold between the Online and Retail sales channels",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "online_units": 28960,
+      "retail_units": 30505
+    },
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "C12",
+    "query": "Compare the number of customers who joined before versus after January 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "customers"
+    ],
+    "expected_dimensions": [
+      "joined_date"
+    ],
+    "ground_truth": {
+      "joined_before_2022": 502,
+      "joined_2022_or_later": 498
+    },
+    "tags": [
+      "comparative",
+      "time_series"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "customers"
+    },
+    "expected_tools": [
+      "sql_query",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "P08",
+    "query": "What will next month's total order discount cost the business?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "discount"
+    ],
+    "expected_dimensions": [
+      "month"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "P09",
+    "query": "Forecast units sold for Widget A next quarter",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "P11",
+    "query": "Which marketing channels will have the best ROI next year?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "roi"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value; only historical ROI by channel is checkable"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "time_series",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "E09",
+    "query": "What's the distribution of customers across segments?",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [
+      "segment"
+    ],
+    "ground_truth": {
+      "consumer_pct": 33.6,
+      "corporate_pct": 32.7,
+      "home_office_pct": 33.7
+    },
+    "tags": [
+      "exploratory"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "customers"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "pie"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "E10",
+    "query": "Are there any unusual patterns in order discounts?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "discount"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "discount_outliers_iqr": 0,
+      "_note": "discount values are capped/quantized (min 0, max 0.20); the IQR-based outlier count is 0 -- there are no statistical outliers in this field"
+    },
+    "tags": [
+      "exploratory",
+      "anomaly"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "anomaly_detection"
+    ],
+    "expected_chart_types": [
+      "box"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "E11",
+    "query": "What's the relationship between marketing spend and clicks?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "spend",
+      "clicks"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "spend_clicks_correlation": 0.5163
+    },
+    "tags": [
+      "exploratory",
+      "correlation"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "scatter"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "E12",
+    "query": "Give me an overview of the orders dataset",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "n_rows": 10000,
+      "n_columns": 7
+    },
+    "tags": [
+      "exploratory"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [],
+    "split": "dev"
+  },
+  {
+    "id": "E13",
+    "query": "How are we doing?",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "_note": "deliberately ambiguous query -- no metric, dimension, or timeframe specified; expected to trigger a clarification request rather than a specific numeric answer"
+    },
+    "tags": [
+      "exploratory",
+      "ambiguous"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [],
+    "expected_chart_types": [],
+    "split": "dev"
+  },
+  {
+    "id": "D14",
+    "query": "What is the total quantity of items ordered, broken down by product category?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "quantity"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "furniture_quantity": 12507,
+      "books_quantity": 10947
+    },
+    "tags": [
+      "descriptive",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "D15",
+    "query": "How many marketing campaigns ran on each channel?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "campaigns"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "email_campaign_count": 429,
+      "search_campaign_count": 371
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "D16",
+    "query": "Which product has the highest average revenue per order?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "top_product_by_avg_order_revenue": "Product 11",
+      "top_product_avg_order_revenue": 2530.29
+    },
+    "tags": [
+      "descriptive",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "horizontal_bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "D17",
+    "query": "How many customers are on each subscription plan?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "customers"
+    ],
+    "expected_dimensions": [
+      "plan"
+    ],
+    "ground_truth": {
+      "premium_plan_customers": 1705,
+      "basic_plan_customers": 1697,
+      "standard_plan_customers": 1598
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "pie"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG13",
+    "query": "Why does the Furniture category generate more total revenue than Books, despite Books having a higher average margin?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue",
+      "margin"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "furniture_revenue": 3071245.54,
+      "books_revenue": 3112756.28,
+      "books_avg_margin": 217.83,
+      "furniture_avg_margin": 180.2,
+      "_note": "Books actually generates slightly MORE total revenue than Furniture ($3,112,756 vs $3,071,246) as well as a higher margin -- there is no revenue-vs-margin tradeoff to explain here"
+    },
+    "tags": [
+      "diagnostic",
+      "false_premise"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG14",
+    "query": "Why do customers with more support calls in the last 90 days churn at a higher rate?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "support_calls_last_90d"
+    ],
+    "ground_truth": {
+      "churn_rate_0_1_calls": 0.1257,
+      "churn_rate_4plus_calls": 0.3361
+    },
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "scatter"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "DG15",
+    "query": "Why does Product 1 show such a heavy loss?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "margin"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "product_1_unit_price": 32.69,
+      "product_1_cost": 194.51,
+      "product_1_margin": -161.82
+    },
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "products"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG16",
+    "query": "Why do customers who pay via PayPal churn less than other payment methods?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "payment_method"
+    ],
+    "ground_truth": {
+      "_note": "data_mismatch: no payment_method column exists in any demo dataset"
+    },
+    "tags": [
+      "diagnostic",
+      "data_mismatch"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C13",
+    "query": "Compare the total quantity of Furniture items ordered versus Books",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "quantity"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "furniture_quantity": 12507,
+      "books_quantity": 10947
+    },
+    "tags": [
+      "comparative",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C14",
+    "query": "Compare the number of campaigns run on the Email and Search channels",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "campaigns"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "email_campaign_count": 429,
+      "search_campaign_count": 371
+    },
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "C15",
+    "query": "Compare churn rates between customers on the Basic and Premium plans",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "plan"
+    ],
+    "ground_truth": {
+      "basic_churn_rate": 0.2139,
+      "premium_churn_rate": 0.1331
+    },
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C16",
+    "query": "Compare total revenue between the West and East regions in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "west_2023_revenue": 395309.38,
+      "east_2023_revenue": 350064.96
+    },
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "P12",
+    "query": "What will total campaign spend look like next quarter?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "spend"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "P13",
+    "query": "Which customer segment is likely to grow the fastest next year?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "customers"
+    ],
+    "expected_dimensions": [
+      "segment"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "customers"
+    },
+    "expected_tools": [
+      "time_series",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "P14",
+    "query": "Forecast order quantity trends for next quarter",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "quantity"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "E14",
+    "query": "Are there any unusual patterns in order quantities?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "quantity"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "quantity_outliers_iqr": 0,
+      "_note": "order quantity is capped/quantized (1-10 units); the IQR-based outlier count is 0 -- there are no statistical outliers in this field"
+    },
+    "tags": [
+      "exploratory",
+      "anomaly"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "anomaly_detection"
+    ],
+    "expected_chart_types": [
+      "box"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "E15",
+    "query": "What's the relationship between a product's unit price and its profit margin?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "unit_price",
+      "margin"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "unit_price_margin_correlation": 0.9332
+    },
+    "tags": [
+      "exploratory",
+      "correlation"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "products"
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "scatter"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "E17",
+    "query": "What's the relationship between customer tenure and monthly charges?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "tenure_months",
+      "monthly_charges"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "tenure_monthly_charges_correlation": 0.0286
+    },
+    "tags": [
+      "exploratory",
+      "correlation"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "scatter"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "E18",
+    "query": "Are there any unusual patterns in campaign impressions?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "impressions"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "impressions_outliers_iqr": 22
+    },
+    "tags": [
+      "exploratory",
+      "anomaly"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "anomaly_detection"
+    ],
+    "expected_chart_types": [
+      "box"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "E19",
+    "query": "What's next?",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "_note": "deliberately ambiguous query -- no metric, dimension, or timeframe specified; expected to trigger a clarification request rather than a specific numeric answer"
+    },
+    "tags": [
+      "exploratory",
+      "ambiguous"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [],
+    "expected_chart_types": [],
+    "split": "dev"
+  },
+  {
+    "id": "D18",
+    "query": "What is the total revenue generated from customers in Germany?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "country"
+    ],
+    "ground_truth": {
+      "germany_revenue": 2000370.95
+    },
+    "tags": [
+      "descriptive",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [],
+    "split": "dev"
+  },
+  {
+    "id": "D19",
+    "query": "Which product category has the most orders?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "orders"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "furniture_order_count": 2221,
+      "books_order_count": 2017
+    },
+    "tags": [
+      "descriptive",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "D20",
+    "query": "What is the average order discount by product category?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "discount"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "books_avg_discount": 0.1014,
+      "furniture_avg_discount": 0.0996
+    },
+    "tags": [
+      "descriptive",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "D21",
+    "query": "What is the distribution of monthly charges among churned customers?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "monthly_charges"
+    ],
+    "expected_dimensions": [
+      "churned"
+    ],
+    "ground_truth": {
+      "churned_monthly_charges_mean": 56.58,
+      "churned_monthly_charges_median": 53.54
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "histogram",
+      "box"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "DG17",
+    "query": "Why do customers with higher monthly charges churn less?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "monthly_charges",
+      "churn"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "monthly_charges_churn_correlation": -0.0864,
+      "churned_avg_monthly_charge": 56.58,
+      "retained_avg_monthly_charge": 63.58
+    },
+    "tags": [
+      "diagnostic"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "statistical_test",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "scatter",
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG18",
+    "query": "Why does the Books category have fewer orders than Furniture?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "orders"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "books_order_count": 2017,
+      "furniture_order_count": 2221
+    },
+    "tags": [
+      "diagnostic",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "DG19",
+    "query": "Why do customers with larger order quantities receive lower discounts?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "discount",
+      "quantity"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "discount_quantity_correlation": 0.0083,
+      "_note": "The correlation between order quantity and discount is essentially zero (0.0083) -- there is no real relationship to explain here"
+    },
+    "tags": [
+      "diagnostic",
+      "false_premise"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "scatter"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "DG20",
+    "query": "Why do customers who signed up through referral programs churn less?",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "churn"
+    ],
+    "expected_dimensions": [
+      "referral_source"
+    ],
+    "ground_truth": {
+      "_note": "data_mismatch: no referral-source/acquisition-channel column exists in any demo dataset"
+    },
+    "tags": [
+      "diagnostic",
+      "data_mismatch"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "C17",
+    "query": "Compare total revenue from customers in Germany versus the UK",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "country"
+    ],
+    "ground_truth": {
+      "germany_revenue": 2000370.95,
+      "uk_revenue": 2123799.7
+    },
+    "tags": [
+      "comparative",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "C18",
+    "query": "Compare order counts between the Books and Electronics categories",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "orders"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "books_order_count": 2017,
+      "electronics_order_count": 1563
+    },
+    "tags": [
+      "comparative",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C19",
+    "query": "Compare average discount given on Electronics versus Clothing orders",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "discount"
+    ],
+    "expected_dimensions": [
+      "category"
+    ],
+    "ground_truth": {
+      "electronics_avg_discount": 0.1,
+      "clothing_avg_discount": 0.0996
+    },
+    "tags": [
+      "comparative",
+      "cross_table_join"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "sql_query",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "C20",
+    "query": "Compare average monthly charges between churned and retained customers",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "monthly_charges"
+    ],
+    "expected_dimensions": [
+      "churned"
+    ],
+    "ground_truth": {
+      "churned_avg_monthly_charge": 56.58,
+      "retained_avg_monthly_charge": 63.58
+    },
+    "tags": [
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "P15",
+    "query": "What will next year's customer country distribution look like?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "customers"
+    ],
+    "expected_dimensions": [
+      "country"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "customers"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "P16",
+    "query": "Forecast the average order discount for next quarter",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "discount"
+    ],
+    "expected_dimensions": [
+      "quarter"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "P17",
+    "query": "Will conversions keep rising across marketing campaigns?",
+    "query_type": "predictive",
+    "expected_metrics": [
+      "conversions"
+    ],
+    "expected_dimensions": [
+      "date"
+    ],
+    "ground_truth": {
+      "_note": "predictive query -- no ground truth exists for a future value; only historical trend direction is checkable"
+    },
+    "tags": [
+      "predictive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "time_series"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "E20",
+    "query": "Are there any unusual patterns in campaign conversions?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "conversions"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "conversions_outliers_iqr": 137
+    },
+    "tags": [
+      "exploratory",
+      "anomaly"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/marketing_campaigns.csv"
+    },
+    "expected_tools": [
+      "anomaly_detection"
+    ],
+    "expected_chart_types": [
+      "box",
+      "scatter"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "E21",
+    "query": "What's the relationship between order discount and order quantity?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "discount",
+      "quantity"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "discount_quantity_correlation": 0.0083
+    },
+    "tags": [
+      "exploratory",
+      "correlation"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "statistical_test"
+    ],
+    "expected_chart_types": [
+      "scatter"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "E22",
+    "query": "Give me an overview of the products catalog",
+    "query_type": "exploratory",
+    "expected_metrics": [],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "n_products": 100,
+      "n_columns": 5
+    },
+    "tags": [
+      "exploratory"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "products"
+    },
+    "expected_tools": [
+      "sql_query"
+    ],
+    "expected_chart_types": [],
+    "split": "dev"
+  },
+  {
+    "id": "E23",
+    "query": "What's the distribution of customer tenure?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "tenure_months"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "tenure_outliers_iqr": 0,
+      "_note": "customer tenure ranges 1-60 months with no statistical outliers (IQR-based outlier count is 0)"
+    },
+    "tags": [
+      "exploratory",
+      "anomaly"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/churn_data.csv"
+    },
+    "expected_tools": [
+      "anomaly_detection",
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "histogram",
+      "box"
+    ],
+    "split": "test"
+  },
+  {
+    "id": "E24",
+    "query": "Are there any anomalies in order revenue?",
+    "query_type": "exploratory",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {
+      "order_revenue_outliers_iqr": 89
+    },
+    "tags": [
+      "exploratory",
+      "anomaly"
+    ],
+    "data_source": {
+      "type": "sql",
+      "path": "sqlite:///data/demo/ecommerce_orders.db",
+      "table_name": "orders"
+    },
+    "expected_tools": [
+      "anomaly_detection"
+    ],
+    "expected_chart_types": [
+      "box",
+      "scatter"
+    ],
+    "split": "dev"
   }
 ]

@@ -118,6 +118,66 @@ and the natural continuation of the eval-first narrative.
     positives but also zero observed genuine catches — reported honestly
     rather than overclaimed, plausibly because #15/#28 already reduce how
     often a report is left with only row-level evidence in the first place.
+25. **Planner sometimes runs a comparison/significance test on
+    already-aggregated data.** Found via the user's own judge-calibration
+    labeling session (eval v2 Step 3, see
+    [judge_calibration.md](judge_calibration.md), case C01) — this is a
+    genuine Planner defect, not just the nan-significance display bug
+    fixed alongside it. C01's plan: step 2 groupby-aggregates revenue down
+    to one row per quarter, then step 3 runs `comparison` (ANOVA) grouped
+    by quarter *again*, over data that's already one-row-per-group — every
+    group has count=1, so mean/median/sum all collapse to the same single
+    value and std/F-statistic/p-value are all structurally undefined
+    (`nan`), regardless of what the underlying data actually looks like.
+    The fix already shipped (`_significance_flag()` in
+    `src/tools/stats_tool.py`, see `judge_calibration.md`) stops the
+    system from *reporting* an undefined test as a real null result, but
+    doesn't stop the Planner from writing this kind of step sequence in
+    the first place — comparison/significance-test steps need to run
+    against row-level data, not a prior step's aggregated output.
+    Deliberately not fixed now: touching `analysis_agent.py`'s planning
+    logic is generation-relevant and would invalidate the replay corpus
+    the user is actively labeling against (`logs/replay_cache/corpus.json`).
+    **Pick up after Step 4** (eval_v2_plan.md) once the golden suite has
+    expanded past 20 cases and isn't a fixed target being actively labeled
+    — likely fix direction: either have the Planner check `depends_on` for
+    an already-aggregated intermediate before emitting a `comparison`
+    step, or have `compare_segments` itself validate `count > 1` per group
+    and refuse (loudly, not `nan`) rather than let scipy silently produce
+    an undefined result.
+26. **`GuardrailAgent._llm_judge`'s own hallucination check has the same
+    truncation bug the eval judge had — never fixed, because it's a
+    different code path.** Found via the user's own labeling, case C02
+    (see [judge_calibration.md](judge_calibration.md)): the report's
+    Automated Caveats section flatly asserted "the provided data does not
+    include any information about the Search channel," which is false —
+    Search's numbers (conversion rate 6.49%, the actual top segment) are
+    in `analysis_results`, just past where the guardrail's own truncation
+    cuts them off. Confirmed by direct reproduction:
+    [src/agents/guardrail_agent.py:214-223](../src/agents/guardrail_agent.py#L214)
+    joins `result_summary` across all steps and caps it at **800 chars**
+    (for C02, `"comparison: top=Search"` — literally the one substring
+    that would have told the guardrail Search's data existed — sits at
+    character 950, past the cut) and separately caps the report at
+    **1500 chars**. This is a sibling of the bug fixed in `src/eval/
+    metrics.py`'s `_build_judge_prompt` (`render_findings`/no-truncation,
+    see `judge_calibration.md`'s bug #1) — same shape, same root cause
+    (an LLM-as-judge call built from a truncated view of the same
+    findings/report everything else now sees in full), but a completely
+    separate function in a separate file that the earlier fix never
+    touched. Practical consequence: the guardrail can (and, in this
+    observed case, did) fabricate a hallucination finding — accusing a
+    report of citing data that doesn't exist, when the data exists but
+    the guardrail itself couldn't see it — which is arguably worse than
+    missing a real hallucination, since it teaches the pipeline to
+    distrust correct output. **Not fixed now**, same reason as #25:
+    `guardrail_agent.py` is generation-relevant, changing it invalidates
+    the corpus mid-labeling. **Pick up alongside #25, after Step 4** —
+    likely fix: reuse `render_findings`/`render_rag_context` from
+    `src/eval/metrics.py` here too (untruncated, single source of truth
+    for "what does an LLM judge of this pipeline's output get to see"),
+    rather than `_llm_judge` maintaining its own truncated,
+    independently-drifting context-builder.
 
 ## Tier 3 — Engineering robustness
 

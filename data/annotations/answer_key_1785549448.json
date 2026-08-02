@@ -1,0 +1,302 @@
+{
+  "C17": {
+    "case_id": "C17",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a comparison of total revenue from customers in Germany versus the UK. It specifies the total revenue figures for both countries, indicating that the UK has higher revenue than Germany. The report also mentions the lack of statistical significance in the findings, which is relevant to understanding the reliability of the comparison.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 Total revenue from the UK is approximately $2,123,800. (evidence: SQL returned 2 rows. Top results: country=UK, total_revenue=2123799.7000000016) | \u2713 Revenue from Germany is about $2,000,370. (evidence: SQL returned 2 rows. Top results: country=Germany, total_revenue=2000370.9500000011) | \u2713 The UK leads in total revenue among all countries analyzed. (evidence: comparison: top=UK) | \u2713 A significance test could not be computed due to 'nan' values. (evidence: significance_test': {'test': 't-test', 'statistic': nan, 'p_value': nan, 'significant': None})",
+      "valid": true
+    }
+  },
+  "C18": {
+    "case_id": "C18",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a clear comparison of order counts between the Books and Electronics categories. It specifies the exact order counts for each category and highlights the difference, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 The Books category has a total of 2,017 orders. (evidence: SQL returned 2 rows. Top results: category=Books, order_count=2017) | \u2713 The Electronics category has a total of 1,563 orders. (evidence: SQL returned 2 rows. Top results: category=Electronics, order_count=1563) | \u2713 The order count for Books exceeds that of Electronics by 454 orders. (evidence: Books: 2,017 orders; Electronics: 1,563 orders. Difference: 2017 - 1563 = 454)",
+      "valid": true
+    }
+  },
+  "C19": {
+    "case_id": "C19",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the average discounts for both Electronics and Clothing categories. It specifies that the average discount for Clothing is approximately 9.96%, while for Electronics it is approximately 10.00%. The report also notes the inability to perform a statistical comparison due to insufficient data, which is relevant to the user's query about comparing the discounts.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 The average discount for Clothing is approximately 9.96%. (evidence: calculate_average_discount_by_category) | \u2713 The average discount for Electronics is approximately 10.00%. (evidence: calculate_average_discount_by_category) | \u2713 A statistical comparison between Electronics and Clothing discounts could not be performed due to insufficient data, resulting in a p-value of nan. (evidence: compare_electronics_vs_clothing) | \u2717 Books have the highest average discount at 10.14%, slightly surpassing Office Supplies at 10.07%. (no evidence found)",
+      "valid": true
+    }
+  },
+  "C20": {
+    "case_id": "C20",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing a comparison of average monthly charges between churned and retained customers. It mentions that churned customers have higher average charges and provides statistical evidence for this claim. However, the report incorrectly states that churned customers have higher charges, while the analysis findings show that retained customers have higher average charges. This discrepancy affects the accuracy of the response.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.4,
+      "label": "warn",
+      "reasoning": "2/5 claims supported. \u2717 Churned customers exhibit significantly higher average monthly charges compared to those who remain with the service. (no evidence found) | \u2717 Churned customers have an average monthly charge that is significantly higher than retained customers, with a t-test statistic of 6.1314 and a p-value of 0.0. (no evidence found) | \u2713 A t-test was conducted to compare the average monthly charges between churned and retained customers. The results indicated a t-test statistic of 6.1314 and a p-value of 0.0. (evidence: The analysis findings include a t-test statistic of 6.1314 and a p-value of 0.0.) | \u2717 The analysis suggests a potential correlation between higher charges and customer churn. (no evidence found) | \u2713 There is a noted issue with the support calls data, where 7.3% of values are considered outliers (outside 1.5\u00d7IQR). (evidence: Data Quality notes mention 7.3% of values outside 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "D18": {
+    "case_id": "D18",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not provide any information about the total revenue generated from customers in Germany. It states that no data was available for analysis, thus failing to address the user's question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "No checkable claims in report.",
+      "valid": true
+    }
+  },
+  "D19": {
+    "case_id": "D19",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying the Furniture category as having the most orders, with a specific number of 2,221 orders. This provides a clear and direct response to the query about which product category has the most orders.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The Furniture category leads in sales with a total of 2,221 orders. (evidence: SQL returned 1 rows. Top results: category=Furniture, orders=2221) | \u2713 The Furniture category has the highest number of orders, totaling 2,221. (evidence: SQL returned 1 rows. Top results: category=Furniture, orders=2221) | \u2717 A bar chart visualization confirms that Furniture significantly outpaces all other categories in terms of orders. (no evidence found)",
+      "valid": true
+    }
+  },
+  "D20": {
+    "case_id": "D20",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the average order discount for each product category, including specific percentages for Books, Clothing, Electronics, Furniture, and Office Supplies. It also highlights which category has the highest and lowest average discounts, addressing the user's query comprehensively.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "2/4 claims supported. \u2713 The Books category offers the highest average order discount at approximately 10.14%. (evidence: category=Books, avg_order_discount=0.1013882002974718) | \u2717 The Furniture category has the lowest average order discount at about 9.96%. (no evidence found) | \u2713 The average order discount for the Books category is approximately 10.14%. (evidence: category=Books, avg_order_discount=0.1013882002974718) | \u2717 The Furniture category has the lowest average order discount at about 9.96%. (no evidence found)",
+      "valid": true
+    }
+  },
+  "D21": {
+    "case_id": "D21",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a detailed distribution of monthly charges among churned customers, specifying the range from $15.14 to $104.87. It also discusses the variance in charges and suggests that pricing alone may not be the primary factor in customer churn, which is relevant to understanding the distribution. [judge disagreement across 3 samples: spread=0.50]",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 The distribution of monthly charges among churned customers ranges from $15.14 to $104.87. (evidence: The analysis findings list monthly charges as low as $15.14 and as high as $104.87 among churned customers.) | \u2713 Churned customers exhibit both low and high monthly charges. (evidence: The analysis findings show a range of monthly charges from $15.14 to $104.87, indicating both low and high charges.) | \u2713 Churned customers show a wide range of tenure, with some remaining for as long as 25 months while others churn after just 1 month. (evidence: The analysis findings include customers with tenure of 25 months and others with tenure of 1 month.) | \u2717 Customer ID 1 consistently incurred lower charges. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG17": {
+    "case_id": "DG17",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the question by indicating a weak negative correlation between higher monthly charges and churn, suggesting that customers with higher charges are less likely to churn. However, it does not provide a detailed explanation or specific reasons why this might be the case, such as potential factors like service quality, customer satisfaction, or value perception that could influence this trend. The report mainly focuses on the correlation and retention in lower-priced plans without delving into the underlying reasons for the observed behavior in higher-priced plans.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 Customers with higher monthly charges tend to have lower churn rates. (evidence: Our analysis reveals that customers with higher monthly charges tend to have lower churn rates, with a correlation coefficient of -0.0864 indicating a weak negative relationship.) | \u2713 The correlation coefficient between monthly charges and churned status is -0.0864. (evidence: The analysis revealed a correlation coefficient of -0.0864, indicating a weak negative relationship.) | \u2713 Customers with monthly charges below $15 show no instances of churn. (evidence: The results showed that for charges of $12.68, 13.86, 14.47, 14.5, and 14.61, the churned status was consistently 0.0.) | \u2713 7.3% of values are outside 1.5\u00d7IQR for the variable `support_calls_last_90d`. (evidence: There are some data quality concerns, particularly with the variable `support_calls_last_90d`, which has a high outlier share (7.3% of values outside 1.5\u00d7IQR).)",
+      "valid": true
+    }
+  },
+  "DG18": {
+    "case_id": "DG18",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides data on the number of orders for Books and Furniture, showing that Furniture has more orders. However, it does not directly explain why the Books category has fewer orders than Furniture. It suggests exploring marketing strategies and customer preferences but does not provide specific reasons for the current discrepancy.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The Furniture category has 2,221 orders. (evidence: count_orders_by_category \u2192 2 rows. Top results: category=Books, order_id=2017; category=Furniture, order_id=2221) | \u2713 The Books category has 2,017 orders. (evidence: count_orders_by_category \u2192 2 rows. Top results: category=Books, order_id=2017; category=Furniture, order_id=2221) | \u2713 Furniture has more orders than Books. (evidence: count_orders_by_category \u2192 2 rows. Top results: category=Books, order_id=2017; category=Furniture, order_id=2221) | \u2713 The difference in orders between Furniture and Books is 204. (evidence: The report suggests a 'notable margin' between Furniture and Books orders, but the difference is only 204 orders (2,221 vs. 2,017).)",
+      "valid": true
+    }
+  },
+  "DG19": {
+    "case_id": "DG19",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the user's question by discussing the observed trend that customers with larger order quantities receive lower discounts. However, it does not provide a clear explanation or reasoning for why this trend exists, only suggesting that the discount structure may need review. The analysis shows a very weak correlation, which contradicts the claim of a significant trend, leaving the question of 'why' largely unanswered.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 Customers with larger order quantities receive lower discounts, with the highest discount of approximately 10.12% for a quantity of 1. (evidence: The analysis findings show that the highest discount of approximately 10.12% is for a quantity of 1.) | \u2713 Analysis shows a very weak correlation (0.0083) between order quantity and discount. (evidence: The correlation analysis result indicates a very weak correlation of 0.0083 between order quantity and discount.) | \u2717 The scatter plot confirms the trend that higher quantities tend to receive slightly lower discounts. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG20": {
+    "case_id": "DG20",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not address the user's question about why customers who signed up through referral programs churn less. It explicitly states that no insights were found regarding this topic, and instead focuses on data quality issues and recommendations for future analysis.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 5000 rows (evidence: Data Quality section mentions 5000 rows.) | \u2713 7.3% of values outside 1.5\u00d7IQR (evidence: Data Quality section states 7.3% of values are outside 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "E20": {
+    "case_id": "E20",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question by identifying unusual patterns in campaign conversions through the detection of 36 outliers. It provides specific details about the outliers, including their percentage of total conversions and the statistical method used to identify them. The report also discusses the implications of these outliers on campaign performance and data quality, fully answering the user's query about unusual patterns.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 The analysis identified 36 outliers in campaign conversions. (evidence: [anomaly_detection] anomaly/zscore: 36 outliers) | \u2713 These outliers represent 1.8% of total conversions. (evidence: {'n_outliers': 36, 'outlier_pct': 0.018}) | \u2713 6.9% of conversion values were identified as outliers. (evidence: 2000 rows - high_outlier_share (info): 6.9% of values outside 1.5\u00d7IQR) | \u2713 7.5% of revenue values were identified as outliers. (evidence: 2000 rows - high_outlier_share (info): 7.5% of values outside 1.5\u00d7IQR) | \u2713 5.7% of ROI values were identified as outliers. (evidence: 2000 rows - high_outlier_share (info): 5.7% of values outside 1.5\u00d7IQR) [judge disagreement across 3 samples: spread=0.60]",
+      "valid": true
+    }
+  },
+  "E21": {
+    "case_id": "E21",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by stating that there is a very weak positive correlation between order discount and order quantity, with a correlation coefficient of 0.0083. This indicates that discounts have minimal impact on the quantity of orders placed, which is a specific and relevant detail addressing the user's query about the relationship between these two variables.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2713 The analysis reveals a very weak positive correlation between order discount and order quantity, with a correlation coefficient of 0.0083. (evidence: The correlation analysis result shows a correlation coefficient of 0.0083 between discount and quantity.) | \u2713 This suggests that discounts have minimal impact on the quantity of orders placed. (evidence: A correlation coefficient of 0.0083 is considered very weak, indicating minimal impact.) | \u2717 The correlation analysis heatmap shows strong positive correlations among several key variables. (no evidence found) | \u2713 The correlation analysis was conducted using the Pearson method. (evidence: The analysis findings specify that the method used was 'pearson'.) | \u2713 Data quality checks passed, indicating that the data used for this analysis is reliable and free from significant issues. (evidence: The data quality section states '1000 rows \u2014 no quality issues flagged'.)",
+      "valid": true
+    }
+  },
+  "E22": {
+    "case_id": "E22",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report provides a comprehensive overview of the product catalog, detailing the range of categories, unit prices, and costs. It highlights the diversity of products and the variation in pricing, which directly addresses the user's request for an overview of the products catalog.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "6/6 claims supported. \u2713 The product catalog includes a diverse range of categories such as Office Supplies, Furniture, Books, Electronics, and Clothing. (evidence: The analysis findings list products in categories: Office Supplies, Furniture, Books, Electronics, and Clothing.) | \u2713 The highest unit price is $431.89 for Furniture. (evidence: Product 2 in the analysis findings has a unit price of $431.89 and is categorized as Furniture.) | \u2713 The lowest unit price is $10.44 for Electronics. (evidence: Product 4 in the analysis findings has a unit price of $10.44 and is categorized as Electronics.) | \u2713 The highest cost is $194.51 for Office Supplies. (evidence: Product 1 in the analysis findings has a cost of $194.51 and is categorized as Office Supplies.) | \u2713 The lowest cost is $68.91 for Furniture. (evidence: Product 2 in the analysis findings has a cost of $68.91 and is categorized as Furniture.) | \u2713 The analysis returned 100 rows. (evidence: The analysis findings state that the SQL query returned 100 rows.)",
+      "valid": true
+    }
+  },
+  "E23": {
+    "case_id": "E23",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question about the distribution of customer tenure. It mentions a concentration of customers with tenures of 1 to 5 months and provides some specific customer IDs associated with these tenures. However, it does not provide a comprehensive distribution or total counts of customers across different tenure periods, which are key aspects of understanding the overall distribution.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2713 The analysis of customer tenure reveals a concentration of new customers, particularly those with tenures of 1 to 5 months. (evidence: The analysis findings list specific customer IDs associated with tenure months ranging from 1 to 5, indicating a focus on these early tenure months.) | \u2713 Customer_id=93 has a tenure of 1 month. (evidence: The analysis findings include {'tenure_months': 1, 'customer_id': 93}.) | \u2713 Customer_id=95 has a tenure of 2 months. (evidence: The analysis findings include {'tenure_months': 2, 'customer_id': 95}.) | \u2717 A scatter plot of tenure months versus customer IDs indicates that customers with shorter tenures are concentrated among a few individuals. (no evidence found) | \u2713 7.3% of values are considered high outliers (outside 1.5\u00d7IQR) in the support_calls_last_90d variable. (evidence: Data Quality section states 7.3% of values are outside 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "E24": {
+    "case_id": "E24",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by confirming the presence of anomalies in order revenue, specifically identifying 89 outliers using the IQR method. It provides specific details about the outliers, including their percentage of total orders and the method used for detection, which fully addresses the user's query about anomalies in order revenue.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 The analysis identified 89 outliers in order revenue. (evidence: [anomaly_detection] anomaly/iqr: 89 outliers) | \u2713 The outlier percentage is 0.0089. (evidence: {'outlier_pct': 0.0089}) | \u2713 The anomaly detection process utilized the Interquartile Range (IQR) method. (evidence: {'method': 'iqr'}) | \u2717 The report states that the outlier percentage is 0.0089, which implies that the total number of orders is 10,000,000. (no evidence found)",
+      "valid": true
+    }
+  },
+  "P15": {
+    "case_id": "P15",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing the current customer country distribution but fails to provide a projection for next year's distribution, which was the main focus of the user's query. The report mentions an attempt to project future distribution but does not succeed due to missing data, thus not fully addressing the user's question about future distribution.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The current customer distribution is concentrated in Australia, Canada, France, Germany, and the UK, with Canada leading in unique customers. (evidence: The analysis findings list the top customer countries and the number of unique customers, with Canada having the highest at 189.) | \u2713 Canada has the highest number of unique customers at 189. (evidence: The analysis findings show Canada with 189 unique customers, the highest among the listed countries.) | \u2713 Future projections for customer distribution could not be determined due to data collection issues. (evidence: The report states that the time series projection failed due to missing data for the 'joined_date' column.) | \u2713 The analysis could not locate the 'joined_date' column in the dataset, which is critical for making accurate projections. (evidence: The report mentions the failure in the time series projection step due to the absence of the 'joined_date' column.)",
+      "valid": true
+    }
+  },
+  "P16": {
+    "case_id": "P16",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a forecast for the average order discount for the next quarter, predicting a value of 0.0982. It also explains the basis of the forecast, noting the decreasing trend and the lack of statistical significance, which are relevant details for understanding the forecast's reliability.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8333333333333334,
+      "label": "pass",
+      "reasoning": "5/6 claims supported. \u2713 The average order discount is predicted to continue a decreasing trend over the next quarter. (evidence: The analysis findings mention a decreasing trend in the time series forecast.) | \u2713 The trend is not statistically significant. (evidence: The analysis findings state that the p_value is 0.098527, indicating a lack of statistical significance.) | \u2717 The average order discount is forecasted to decrease, with a predicted value of 0.0982 for the next three periods. (no evidence found) | \u2713 The slope of the trend line is -0.0. (evidence: The analysis findings mention a slope of -0.0 in the trend.) | \u2713 The r_squared value is 0.0003. (evidence: The analysis findings state that the r_squared value is 0.0003.) | \u2713 The p_value is 0.098527. (evidence: The analysis findings state that the p_value is 0.098527.)",
+      "valid": true
+    }
+  },
+  "P17": {
+    "case_id": "P17",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by indicating a decreasing trend in conversions, suggesting that conversions may not keep rising. However, it does not provide a definitive answer about future trends across all marketing campaigns, as the trend is not statistically significant and the forecast is based on a naive linear model. The report also lacks specific details on whether any campaigns are exceptions to this trend.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "8/8 claims supported. \u2713 The analysis indicates a concerning downward trend in conversions. (evidence: The analysis findings mention a decreasing trend in conversions with a slope of -0.002779.) | \u2713 A naive linear forecast predicts continued declines in conversions. (evidence: The findings include a naive linear forecast predicting conversions will decrease to approximately 609.6.) | \u2713 Historical data analysis shows a decreasing trend in conversions, with a slope of -0.002779. (evidence: The findings explicitly state a decreasing trend with a slope of -0.002779.) | \u2713 The r_squared value of 0.0 indicates the trend is not statistically significant. (evidence: The findings mention an r_squared of 0.0, indicating the trend is not statistically significant.) | \u2713 The forecast predicts conversions will decrease to approximately 609.6 in the upcoming periods. (evidence: The findings include a forecast predicting conversions will decrease to approximately 609.6.) | \u2713 6.9% of conversion values were identified as outliers. (evidence: The data quality section mentions 6.9% of conversion values as outliers.) | \u2713 7.5% of revenue values were identified as outliers. (evidence: The data quality section mentions 7.5% of revenue values as outliers.) | \u2713 5.7% of ROI values were identified as outliers. (evidence: The data quality section mentions 5.7% of ROI values as outliers.)",
+      "valid": true
+    }
+  }
+}

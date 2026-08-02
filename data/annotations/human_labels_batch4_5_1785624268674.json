@@ -1,0 +1,206 @@
+{
+  "exported_at": "2026-08-01T22:44:28.674Z",
+  "n_cases": 40,
+  "labels": {
+    "C13": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C14": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"Campaign CAM0010 achieved the highest ROI\"\n2 groundedness: \"Given the high ROI from Search campaigns\""
+    },
+    "C15": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C16": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"the East region's Widget A achieved the highest revenue of $421.51 through online sales\""
+    },
+    "D14": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Clothing has the highest total quantity ordered\""
+    },
+    "D15": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D16": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D17": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "DG13": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \" suggesting that while Furniture has higher total revenue,\""
+    },
+    "DG14": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "DG15": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"Product 1 has been sold in 97 orders,.\"\" Product 1 has the highest loss\""
+    },
+    "DG16": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groudedness：“There is a high outlier share (7.3%) in the 'support_calls_last_90d' data, which may affect the reliability of related analyses”"
+    },
+    "E14": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E15": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Product 2 has the highest profit margin at 362.98\""
+    },
+    "E17": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E18": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groudedness:\"conversions (6.9%), revenue (7.5%), and ROI (5.7%) \""
+    },
+    "E19": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"churn rates have shown a slight upward trend over the past five months\"“There are no outliers in monthly charges, suggesting consistent pricing across the customer base”"
+    },
+    "P12": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"with predicted values around $4,979.79 to $4,979.84.\" \"confidence level of 0.2\"“including a high outlier share in conversions (6.9% of values outside 1.5×IQR), revenue (7.5% of values outside 1.5×IQR), and ROI (5.7% of values outside 1.5×IQR). These outliers may affect the reliability of the trend analysis and should be addressed in future analyses.”"
+    },
+    "P13": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": "1 relevance：doesn't mention “Home Office” at all"
+    },
+    "P14": {
+      "answer_relevance": 1,
+      "groundedness": 0.25,
+      "notes": "1 groundedness:\"5.48 \"out of nowhere, the same as \"next quarter predicts order quantities of 5.4783, 5.4783, and 5.4782, \"\n2 groundedness:\"The highest revenue\""
+    },
+    "C17": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C18": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"indicating a notable difference in consumer preference or engagement.\""
+    },
+    "C19": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C20": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"Churned customers exhibit significantly higher average monthly charges compared to those who remain with the service. \"wrong"
+    },
+    "D18": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D19": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D20": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.75,
+      "notes": "1 relevance: doesn't mention all the \"product category\""
+    },
+    "D21": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "DG17": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Customers with monthly charges below $15 show no instances of churn, suggesting that lower pricing may enhance customer retention.\" Several samples can not tell the whole story."
+    },
+    "DG18": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "DG19": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"the highest discount of approximately 10.12% \""
+    },
+    "DG20": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E20": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "E21": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E22": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"highest unit price reaching $431.89\"\"Costs range from $68.91 to $194.51\""
+    },
+    "E23": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "E24": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"Potential unusual customer behavior or errors in order processing\""
+    },
+    "P15": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "P16": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "groundedness:\"forecast=0.0982\""
+    },
+    "P17": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"forecast ≈ 609.6\",\" continued declines\", \"Immediate reassessment is essential\""
+    }
+  }
+}

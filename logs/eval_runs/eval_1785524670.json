@@ -1,0 +1,245 @@
+{
+  "timestamp": 1785524670.381238,
+  "n_cases": 2,
+  "overall_aggregate": 0.8238636363636364,
+  "cases": [
+    {
+      "test_case_id": "D01",
+      "eval_result": {
+        "run_id": "D01",
+        "query": "Show total sales by region",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing the total sales (revenue) figures for each region. It lists the revenue for the Central, East, North, South, and West regions, fulfilling the request to show total sales by region.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "7/7 claims supported. \u2713 The North region leads in revenue generation with over $1.36 million. (evidence: region=North, revenue=1363760.55) | \u2713 The Central region has the lowest revenue at just over $821 thousand. (evidence: region=Central, revenue=821174.97) | \u2713 The North region has the highest revenue at $1,363,760.55. (evidence: region=North, revenue=1363760.55) | \u2713 The West region with $1,271,795.18. (evidence: region=West, revenue=1271795.18) | \u2713 The East region generated $1,164,964.55 in revenue. (evidence: region=East, revenue=1164964.55) | \u2713 The Central region has the lowest revenue at $821,174.97. (evidence: region=Central, revenue=821174.97) | \u2713 There were issues with data quality, specifically 238 fully duplicated rows, which account for 1.9% of the dataset. (evidence: duplicate_rows (warning): 238 fully duplicated rows (1.9%))",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.989912,
+            "label": "pass",
+            "reasoning": "$0.0101",
+            "raw_value": 0.010088,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "35.3s",
+            "raw_value": 35.34812307357788,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 1.0,
+        "timestamp": 1785524600.895262,
+        "test_case_id": "D01"
+      },
+      "meta": {
+        "elapsed_s": 35.35,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    },
+    {
+      "test_case_id": "C02",
+      "eval_result": {
+        "run_id": "C02",
+        "query": "How does conversion rate differ by marketing channel?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing a detailed comparison of conversion rates across different marketing channels. It identifies the Search channel as having the highest conversion rate, followed by Email, Affiliate, and Social channels. The report also includes statistical analysis to support these findings, making it a comprehensive response to the query about how conversion rates differ by marketing channel.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.4,
+            "label": "warn",
+            "reasoning": "2/5 claims supported. \u2713 The Search channel is the most effective for driving conversions, with a significantly higher conversion rate compared to other channels. (evidence: The analysis findings show that the Search channel has the highest mean conversion rate of 0.0649338275912053, supported by a significant one-way ANOVA test statistic of 994.85 and a p-value of 0.0.) | \u2717 The Email channel has a conversion rate of approximately 4.71%. (no evidence found) | \u2717 The Affiliate channel has a conversion rate of 2.69%. (no evidence found) | \u2717 The Social channel has a conversion rate of 1.41%. (no evidence found) | \u2713 A one-way ANOVA test was conducted to compare conversion rates across channels, confirming the statistical significance of the differences observed. (evidence: The analysis findings include a one-way ANOVA test with a statistic of 994.85 and a p-value of 0.0, indicating statistical significance.)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "Ground truth overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.95,
+            "label": "pass",
+            "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['comparison', 'pandas_transform'], expected one of ['comparison', 'pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/2 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar', 'dashboard', 'horizontal_bar'], expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.980416,
+            "label": "pass",
+            "reasoning": "$0.0196",
+            "raw_value": 0.019584,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report mentions a one-way ANOVA test statistic of 994.85 and a p-value of 0.0, but these figures are not present in the analysis findings provided. This suggests potential hallucination of data.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 1.0,
+            "label": "info",
+            "reasoning": "The report mentions a one-way ANOVA test statistic of 994.85 and a p-value of 0.0, but these figures are not present in the analysis findings provided. This suggests potential hallucination of data.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.3,
+            "label": "fail",
+            "reasoning": "69.5s",
+            "raw_value": 69.48445963859558,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.6477272727272727,
+        "timestamp": 1785524670.380067,
+        "test_case_id": "C02"
+      },
+      "meta": {
+        "elapsed_s": 58.49,
+        "guardrail_passed": false,
+        "current_phase": "error",
+        "error": "The report mentions a one-way ANOVA test statistic of 994.85 and a p-value of 0.0, but these figures are not present in the analysis findings provided. This suggests potential hallucination of data.",
+        "error_type": "safe_refusal",
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false
+      }
+    }
+  ]
+}

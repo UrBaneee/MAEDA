@@ -1,0 +1,101 @@
+{
+  "labels_file": "data/annotations/human_labels_batch2_1785532153573.json",
+  "compared_against": "data/annotations/answer_key_1785525212.json",
+  "comparison_type": "human vs. judge",
+  "metrics": {
+    "answer_relevance": {
+      "metric": "answer_relevance",
+      "n": 20,
+      "qwk": 0.5507,
+      "spearman": 0.5569,
+      "spearman_p": 0.0108,
+      "mae": 0.1875,
+      "exact_match_rate": 0.55,
+      "confusion": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          1,
+          0,
+          2
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          9
+        ]
+      ],
+      "n_bands": 5
+    },
+    "groundedness": {
+      "metric": "groundedness",
+      "n": 20,
+      "qwk": 0.0397,
+      "spearman": 0.3259,
+      "spearman_p": 0.1608,
+      "mae": 0.1817,
+      "exact_match_rate": 0.5,
+      "confusion": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          5,
+          5
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          5
+        ]
+      ],
+      "n_bands": 5
+    }
+  }
+}

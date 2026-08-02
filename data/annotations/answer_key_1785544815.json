@@ -1,0 +1,302 @@
+{
+  "C09": {
+    "case_id": "C09",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the user's question by providing a comparison of click-through rates between the Search and Social marketing channels. It mentions that the Search channel has a higher mean click-through rate than the Social channel and provides statistical analysis results. However, the report contains inconsistencies and errors, such as incorrectly stating that the Search channel significantly outperforms the Social channel, despite the statistical test showing no significant difference. Additionally, the highest click-through rate mentioned is for an Affiliate channel, not Search, which adds to the confusion.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "4/6 claims supported. \u2717 The Search channel significantly outperforms the Social channel in terms of click-through rates. (no evidence found) | \u2717 The highest click-through rate recorded at 3.52% for campaign CAM0002. (no evidence found) | \u2713 The Search channel has a higher click-through rate compared to the Social channel. (evidence: The findings show that the mean click-through rate for Search is 0.027756965207114626, while for Social it is 0.02723429858540459.) | \u2713 Campaign CAM0006 within the Social channel achieved a click-through rate of 0.0404. (evidence: The findings list campaign CAM0006 with a click-through rate of 0.040434838025854146.) | \u2713 A statistical comparison yielded a p-value of 0.571027, indicating no significant difference in click-through rates between Search and Social channels. (evidence: The findings include a p-value of 0.571027 from a t-test, indicating no significant difference.) | \u2713 Campaign CAM0010 had the highest ROI at 2916.7. (evidence: The findings list campaign CAM0010 with an ROI of 2916.7.)",
+      "valid": true
+    }
+  },
+  "C10": {
+    "case_id": "C10",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a clear comparison of the average monthly charges between customers on the Basic and Premium plans. It specifies that Premium customers have an average monthly charge of approximately $99.10, while Basic customers average $29.04. This information is presented in the 'Key Findings' and 'Average Monthly Charges Comparison' sections, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 Premium plan customers average $99.10 in monthly charges. (evidence: groupby_aggregate_average result: {'plan': 'Premium', 'monthly_charges': 99.10464516129034}) | \u2713 Basic plan customers average $29.04 in monthly charges. (evidence: groupby_aggregate_average result: {'plan': 'Basic', 'monthly_charges': 29.036682380671774}) | \u2713 Premium plan customers exhibit significantly higher average monthly charges compared to those on the Basic plan. (evidence: Comparison of average monthly charges: Premium ($99.10) vs Basic ($29.04)) | \u2713 7.3% of values are considered high outliers (beyond 1.5\u00d7IQR) in the support calls data. (evidence: Data Quality section: 7.3% of values outside 1.5\u00d7IQR)",
+      "valid": true
+    }
+  },
+  "C11": {
+    "case_id": "C11",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a comparison of total units sold between the Online and Retail sales channels. It specifies that the Retail channel sold 30,505 units, while the Online channel sold 28,960 units, thus fully addressing the query with specific and relevant details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The Retail channel outperformed the Online channel in unit sales, with 30,505 units sold compared to 28,960 units. (evidence: Analysis Findings: [{'channel': 'Retail', 'units': 30505}, {'channel': 'Online', 'units': 28960}]) | \u2713 The Retail channel sold the highest number of units at 30,505, compared to the Online channel's 28,960 units. (evidence: Analysis Findings: [{'channel': 'Retail', 'units': 30505}, {'channel': 'Online', 'units': 28960}]) | \u2713 A statistical comparison between the Online and Retail channels could not be performed due to insufficient data for variance estimation. (evidence: Analysis Findings: 'p-value could not be computed -- likely every segment has too few observations to estimate within-group variance') | \u2713 There were 238 fully duplicated rows, which accounted for 1.9% of the dataset. (evidence: Data Quality: 238 fully duplicated rows (1.9%))",
+      "valid": true
+    }
+  },
+  "C12": {
+    "case_id": "C12",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the user's question by providing the number of customers who joined before and after January 2022, stating there were 350 before and 355 after. However, it lacks specific evidence or details from the analysis findings to support the 355 figure for customers who joined after January 2022, which is a key aspect of the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.3333333333333333,
+      "label": "fail",
+      "reasoning": "1/3 claims supported. \u2713 There were 350 customers who joined before January 2022. (evidence: [count_customers_before_2022] pandas/groupby \u2192 350 rows.) | \u2717 There were 355 customers who joined after January 2022. (no evidence found) | \u2717 The highest number of new customers joined on January 4, 2022. (no evidence found)",
+      "valid": true
+    }
+  },
+  "D10": {
+    "case_id": "D10",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying sales representative rep_id 1029 as the one who generated the most total revenue, with a specific amount of $139,992.95. This information is clearly presented in the executive summary and key findings, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The highest total revenue was generated by rep_id 1029, amounting to $139,992.95. (evidence: Top results: rep_id=1029, revenue=139992.95) | \u2713 Sales representative rep_id 1029 is the top performer, generating a total revenue of $139,992.95. (evidence: Top results: rep_id=1029, revenue=139992.95) | \u2713 Rep_id 1029's revenue is nearly $140,000. (evidence: Top results: rep_id=1029, revenue=139992.95) | \u2713 There were 238 fully duplicated rows in the dataset, accounting for 1.9% of the total data. (evidence: Data Quality: 238 fully duplicated rows (1.9%))",
+      "valid": true
+    }
+  },
+  "D11": {
+    "case_id": "D11",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a breakdown of the total quantity of units sold for each product. It lists the units sold for Gadget Lite, Gadget Pro, Service Pack, Widget A, and Widget B, which aligns with the user's request for a product-wise breakdown of sales.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 Widget B is the top-selling product with 24,291 units sold. (evidence: product=Widget B, units=24291) | \u2713 The Service Pack sold 23,922 units. (evidence: product=Service Pack, units=23922) | \u2713 Gadget Lite sold 23,057 units. (evidence: product=Gadget Lite, units=23057) | \u2713 Gadget Pro sold 22,689 units. (evidence: product=Gadget Pro, units=22689)",
+      "valid": true
+    }
+  },
+  "D12": {
+    "case_id": "D12",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the number of customers who joined each year from 2020 to 2023. It specifies the exact number of customers for each year, which fully addresses the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 In 2020, 249 customers joined; in 2021, 253 customers joined; in 2022, 240 customers joined; and in 2023, 258 customers joined. (evidence: [groupby_year_and_count_customers] pandas/groupby \u2192 4 rows. Top results: year=2020, customer_id=249; year=2021, customer_id=253; year=2022, customer_id=240; year=2023, customer_id=258) | \u2713 The highest number of new customers was recorded in 2023, with a total of 258. (evidence: [groupby_year_and_count_customers] pandas/groupby \u2192 4 rows. Top results: year=2020, customer_id=249; year=2021, customer_id=253; year=2022, customer_id=240; year=2023, customer_id=258) | \u2713 The year 2022 experienced a decline in new customer registrations compared to the previous years. (evidence: [groupby_year_and_count_customers] pandas/groupby \u2192 4 rows. Top results: year=2020, customer_id=249; year=2021, customer_id=253; year=2022, customer_id=240; year=2023, customer_id=258)",
+      "valid": true
+    }
+  },
+  "D13": {
+    "case_id": "D13",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not provide an answer to the user's question about the average discount applied across all orders. It states that no data was available for analysis, which means the question was not addressed at all.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "No checkable claims in report.",
+      "valid": true
+    }
+  },
+  "DG09": {
+    "case_id": "DG09",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the user's question by providing a comparison of click-through rates across different channels, including Display. It mentions that the Display channel's CTR is comparable to other channels, but it does not specifically explain why the Display channel might have a lower CTR compared to others. The report lacks detailed analysis or insights into factors that could contribute to the Display channel's performance, such as audience targeting, ad placement, or creative effectiveness, which are key aspects of the user's question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2713 The Display channel has a click-through rate (CTR) of approximately 0.027. (evidence: [groupby_channel] pandas/groupby \u2192 5 rows. Top results: channel=Display, click_through_rate=0.027047062383677434) | \u2717 The click-through rates for various channels are as follows: Email: 0.028, Search: 0.028, Affiliate: 0.027, Display: 0.027, Social: 0.027. (no evidence found) | \u2717 Campaign CAM0002 achieved the highest click-through rate at 3.52%. (no evidence found) | \u2713 Campaign CAM0014 generated the highest ROI of 1208.2. (evidence: [filter_display_channel] pandas/filter \u2192 376 rows. Top results: campaign_id=CAM0014, roi=1208.2) | \u2713 The Display channel's CTR is not significantly lower than other channels. (evidence: [compare_display_to_others] comparison: top=Email)",
+      "valid": true
+    }
+  },
+  "DG10": {
+    "case_id": "DG10",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by highlighting the significant difference in monthly charges between Premium and Basic plan customers. However, it does not provide specific reasons or features that justify why Premium plan customers pay more, which is the core of the user's question. The report suggests a need for further analysis of features but does not directly address the reasons for the pricing disparity.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "6/6 claims supported. \u2713 Premium plan customers incur significantly higher monthly charges compared to Basic plan customers, with average charges of approximately $99.10 for Premium versus $29.04 for Basic. (evidence: Analysis Findings: [{'plan': 'Premium', 'monthly_charges': 99.10464516129034}, {'plan': 'Basic', 'monthly_charges': 29.036682380671774}]) | \u2713 Premium plan customers have average monthly charges of approximately $99.10. (evidence: Analysis Findings: [{'plan': 'Premium', 'monthly_charges': 99.10464516129034}]) | \u2713 Basic plan customers average $29.04 in monthly charges. (evidence: Analysis Findings: [{'plan': 'Basic', 'monthly_charges': 29.036682380671774}]) | \u2713 Premium and Standard plan customers made more support calls in the last 90 days, averaging 1.55 and 1.57 calls respectively, compared to 1.50 for Basic plan customers. (evidence: Analysis Findings: [{'plan': 'Premium', 'support_calls_last_90d': 1.5489736070381233}, {'plan': 'Standard', 'support_calls_last_90d': 1.5657071339173967}, {'plan': 'Basic', 'support_calls_last_90d': 1.5020624631703006}]) | \u2713 Basic plan customers logged in an average of approximately 14.90 days in the last 30 days, more than Premium (14.48) and Standard (14.83) plan customers. (evidence: Analysis Findings: [{'plan': 'Basic', 'login_days_last_30d': 14.903358868591633}, {'plan': 'Premium', 'login_days_last_30d': 14.480351906158358}, {'plan': 'Standard', 'login_days_last_30d': 14.827284105131413}]) | \u2713 7.3% of values are considered high outliers (outside 1.5\u00d7IQR). (evidence: Data Quality: 7.3% of values outside 1.5\u00d7IQR)",
+      "valid": true
+    }
+  },
+  "DG11": {
+    "case_id": "DG11",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by identifying that the Office Supplies category has a lower average product margin due to some products having negative margins. However, it does not fully explain why this category specifically has the lowest average margin compared to others, nor does it provide a comprehensive analysis of the factors contributing to this situation.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8571428571428571,
+      "label": "pass",
+      "reasoning": "6/7 claims supported. \u2713 The Office Supplies category has an average product margin of 43.67. (evidence: calculate_average_margin) | \u2717 The Office Supplies category has the lowest average product margin. (no evidence found) | \u2713 Certain products in the Office Supplies category have negative margins, including Product 1 with a margin of -161.82 and Product 8 with a margin of -3.75. (evidence: filter_office_supplies) | \u2713 Product 2 generates the highest margin at $362.98. (evidence: derive_product_margin) | \u2713 Product 1 incurs a significant loss with a margin of -$161.82. (evidence: derive_product_margin) | \u2713 Product 4 incurs a significant loss with a margin of -$86.93. (evidence: derive_product_margin) | \u2713 Product 6 stands out with the highest profit margin of $201.60 among office supplies. (evidence: filter_office_supplies)",
+      "valid": true
+    }
+  },
+  "DG12": {
+    "case_id": "DG12",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not answer the user's question about why customers in the Gold loyalty tier are churning less than other tiers. It states that the analysis could not determine churn rates for the Gold tier due to missing data on the loyalty tier column, thus failing to provide any explanation or insights related to the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 The analysis was unable to determine churn rates for the Gold loyalty tier due to missing data on the loyalty tier column. (evidence: The report explicitly states that the analysis could not determine the churn rates for the Gold loyalty tier due to missing data on the loyalty tier column.) | \u2713 Customers with longer tenure months, such as C00004 with 59 months, show lower churn rates compared to newer customers. (evidence: The report mentions that customers with longer tenure months tend to have lower churn rates, and provides an example of customer C00004 with 59 months of tenure.) | \u2713 7.3% of values are outside 1.5\u00d7IQR in the support_calls_last_90d variable. (evidence: The data quality section of the report states that there is a high outlier share of 7.3% of values outside 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "E09": {
+    "case_id": "E09",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the distribution of customers across the segments: Consumer, Corporate, and Home Office. It specifies the number of unique customers in each segment, which is exactly what the user asked for.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 The Home Office segment has the highest number of unique customers, with 337 identified. (evidence: Analysis Findings: segment=Home Office, customer_id=337) | \u2713 The Consumer segment has 336 unique customers. (evidence: Analysis Findings: segment=Consumer, customer_id=336) | \u2713 The Corporate segment has 327 unique customers. (evidence: Analysis Findings: segment=Corporate, customer_id=327) | \u2713 The Home Office segment surpasses the Consumer segment by 1 customer. (evidence: Analysis Findings: segment=Home Office, customer_id=337; segment=Consumer, customer_id=336) | \u2713 The Home Office segment surpasses the Corporate segment by 10 customers. (evidence: Analysis Findings: segment=Home Office, customer_id=337; segment=Corporate, customer_id=327)",
+      "valid": true
+    }
+  },
+  "E10": {
+    "case_id": "E10",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by stating that there are no unusual patterns in order discounts. It provides specific details from the anomaly detection analysis, confirming that there are zero outliers in the discount data, which indicates a consistent and stable discounting strategy. This directly addresses the user's inquiry about unusual patterns.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2713 The anomaly detection analysis reported zero outliers in the discount data. (evidence: anomaly_detection: 0 outliers) | \u2717 The confidence level in the analysis is 100%. (no evidence found) | \u2713 The outlier percentage is 0.0%. (evidence: anomaly_detection: outlier_pct=0.0) | \u2713 There are no outliers in the discount data. (evidence: anomaly_detection: n_outliers=0) | \u2713 1000 rows \u2014 no quality issues flagged. (evidence: Data Quality: 1000 rows \u2014 no quality issues flagged)",
+      "valid": true
+    }
+  },
+  "E11": {
+    "case_id": "E11",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a specific correlation coefficient of 0.5163, indicating a moderate positive relationship between marketing spend and clicks. It explains that as marketing spend increases, clicks tend to increase as well, which is exactly what the user asked about.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "2/4 claims supported. \u2713 There is a moderate positive correlation between marketing spend and clicks, with a correlation coefficient of 0.5163. (evidence: The analysis findings state a correlation coefficient of 0.5163 between spend and clicks, indicating a moderate positive correlation.) | \u2717 The correlation analysis was visualized through a heatmap, which highlighted strong positive correlations among several key variables. (no evidence found) | \u2713 The analysis yielded a correlation coefficient of 0.5163, indicating a moderate positive correlation. (evidence: The findings explicitly state a correlation coefficient of 0.5163 between spend and clicks, indicating a moderate positive correlation.) | \u2717 There are notable data quality issues, including high outlier shares in conversions (6.9%), revenue (7.5%), and ROI (5.7%), with values outside 1.5\u00d7IQR. (no evidence found)",
+      "valid": true
+    }
+  },
+  "E12": {
+    "case_id": "E12",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides some relevant details about the orders dataset, such as the total number of rows (10,000) and mentions specific order quantities. However, it does not fully answer the user's request for an overview of the dataset. Key aspects such as the structure of the dataset, types of data fields, and overall summary statistics beyond average quantity are missing. The report also incorrectly claims an average quantity of 7.0 without evidence from the analysis findings.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2717 The average quantity of items ordered is 7.0. (no evidence found) | \u2713 The dataset contains a total of 10,000 rows of order data. (evidence: [calculate_average_quantity] pandas/groupby \u2192 10000 rows.) | \u2713 Orders with the highest average quantity (10.0) were identified for order_id 2 and order_id 5. (evidence: Top results: order_id=2, quantity=10.0; order_id=5, quantity=10.0)",
+      "valid": true
+    }
+  },
+  "E13": {
+    "case_id": "E13",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides detailed data on revenue by region, channel, and product sales, which partially addresses the question 'How are we doing?' by offering insights into performance metrics. However, it lacks a direct assessment of overall performance or comparison to past performance, which would fully answer the question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8333333333333334,
+      "label": "pass",
+      "reasoning": "5/6 claims supported. \u2713 The North region leads in revenue generation at approximately $1.36 million. (evidence: Analysis Findings: region=North, revenue=1363760.55) | \u2713 The Central region lags behind at about $821 thousand. (evidence: Analysis Findings: region=Central, revenue=821174.97) | \u2713 The Retail channel is the top performer, generating around $1.44 million in revenue. (evidence: Analysis Findings: channel=Retail, revenue=1437142.12) | \u2713 Widget B is the top-selling product with 24,291 units sold. (evidence: Analysis Findings: product=Widget B, units=24291) | \u2713 Gadget Pro is the lowest with 22,689 units sold. (evidence: Analysis Findings: product=Gadget Pro, units=22689) | \u2717 Revenue fluctuates daily, with the highest recorded on January 5, 2022, at approximately $7,330. (no evidence found)",
+      "valid": true
+    }
+  },
+  "P08": {
+    "case_id": "P08",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not provide a direct answer to the user's question about the total order discount cost for next month. Instead, it discusses a forecast for January 1, 2025, and general trends in discount costs, without specifying the cost for the upcoming month. The user's question is not addressed with specific, relevant details about next month's discount cost.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2717 The total discount cost is forecasted to decrease to approximately $5.01 by January 1, 2025. (no evidence found) | \u2713 The highest total discount cost recorded was approximately $6.05 on January 1, 2022. (evidence: aggregate_monthly_discount_cost) | \u2713 A majority of orders have no discounts applied. (evidence: derive_total_discount_cost) | \u2713 The analysis indicates a decreasing trend in total discount costs, with a slope of -0.000102. (evidence: forecast_discount_cost) | \u2713 The trend is not statistically significant, as evidenced by an r_squared value of 0.0002 and a p_value of 0.644547. (evidence: forecast_discount_cost)",
+      "valid": true
+    }
+  },
+  "P09": {
+    "case_id": "P09",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report partially answers the user's question by providing a forecast of 9.91 units for Widget A in the next quarter. However, it lacks specific details on how this forecast was derived and does not address potential discrepancies or errors in the forecast calculation, which are noted in the automated caveats. The report also includes additional information about sales trends and revenue insights, which are not directly relevant to the user's request for a forecast. [judge disagreement across 3 samples: spread=0.50]",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2713 The analysis reveals a gradual increase in units sold for Widget A, with a slope of 0.000313. (evidence: The findings mention a slope of 0.000313 indicating an increasing trend.) | \u2717 A naive linear forecast suggests that approximately 9.91 units will be sold in the next quarter. (no evidence found) | \u2713 The analysis shows a significant upward trend in units sold for Widget A, with a slope of 0.000313 (p-value: 0.043558). (evidence: The findings mention a slope of 0.000313 with a p-value of 0.043558 indicating significance.) | \u2717 The highest revenue for Widget A was recorded on January 1, 2022, in the North region, exceeding $1,100. (no evidence found) | \u2713 There were issues with data quality, specifically 238 fully duplicated rows, which account for 1.9% of the dataset. (evidence: The data quality section mentions 238 fully duplicated rows accounting for 1.9% of the dataset.)",
+      "valid": true
+    }
+  },
+  "P11": {
+    "case_id": "P11",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides current ROI figures for various marketing channels, indicating that 'Search' has the highest ROI and 'Display' the lowest. However, it does not directly answer the user's question about which channels will have the best ROI next year, as it lacks future projections due to missing date data for time series analysis.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 The 'Search' marketing channel currently boasts the highest ROI at approximately 4009.58. (evidence: channel=Search, roi=4009.5843665768193) | \u2713 The 'Display' channel shows the lowest ROI at around 687.30. (evidence: channel=Display, roi=687.2954787234042) | \u2713 The 'Email' channel has an ROI at around 2780.31. (evidence: channel=Email, roi=2780.3146853146854) | \u2713 Time series projection analysis failed due to missing date data. (evidence: Time series projection analysis failed due to missing date data, preventing predictions for next year's ROI.) | \u2713 The analysis encountered data quality issues, including high outlier shares in conversions (6.9%), revenue (7.5%), and ROI (5.7%). (evidence: high_outlier_share (info): 6.9% of values outside 1.5\u00d7IQR; high_outlier_share (info): 7.5% of values outside 1.5\u00d7IQR; high_outlier_share (info): 5.7% of values outside 1.5\u00d7IQR)",
+      "valid": true
+    }
+  }
+}

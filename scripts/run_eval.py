@@ -8,7 +8,8 @@ MAEDAState with EvalRunner, and writes a timestamped JSON report to logs/eval_ru
 for later regression comparison.
 
 Usage:
-    poetry run python scripts/run_eval.py                     # full 20-case suite
+    poetry run python scripts/run_eval.py                     # dev split (default)
+    poetry run python scripts/run_eval.py --split test         # holdout -- must be explicit
     poetry run python scripts/run_eval.py --limit 3            # smoke test
     poetry run python scripts/run_eval.py --case DG01 --case C02
     poetry run python scripts/run_eval.py --compare logs/eval_runs/eval_1234567890.json
@@ -29,52 +30,33 @@ from src.state.graph_state import initial_state
 
 REPORT_DIR = Path("logs/eval_runs")
 
-# Map golden case id -> data source descriptor.
+# Eval v2 Step 4: data source and data-mismatch status used to live here as
+# two separate hardcoded dicts (CASE_DATA_SOURCES, KNOWN_DATA_MISMATCH),
+# duplicating what's now authored directly on each case in
+# tests/eval/test_suite.json (`data_source`, and a `"data_mismatch"` tag) --
+# see docs/eval_v2_plan.md Step 4. Consolidated so a new case only needs to
+# be added in one place.
 #
-# The Analysis Planner can now write real cross-table JOINs against a SQL
-# source (Phase B #1/#2 — see docs/eval_report.md) when it's told the
-# connection string and other tables' schemas, so cases needing a join
-# across ecommerce_orders.db tables are no longer structurally unanswerable.
-# D02 (order value by category) is fully resolved this way. C03 (new vs
-# returning customers) still executes a real join but there's no literal
-# "new/returning" flag in the data — the Planner substitutes the closest
-# available dimension (customer segment) instead, which answers a related
-# but not identical question, so it stays flagged. DG04 (customer LTV) and
-# P03 (upgrade likelihood) remain genuinely unanswerable: no LTV column
-# exists anywhere, and P03 needs plan-change history that was never
-# collected. This is intentional: it surfaces real data-coverage gaps as a
-# finding rather than papering over them by rewriting the golden queries.
-CASE_DATA_SOURCES: dict[str, dict] = {
-    "D01": {"type": "csv", "path": "data/demo/sales_data.csv"},
-    "D02": {"type": "sql", "path": "sqlite:///data/demo/ecommerce_orders.db", "table_name": "products"},
-    "D03": {"type": "sql", "path": "sqlite:///data/demo/ecommerce_orders.db", "table_name": "customers"},
-    "D04": {"type": "csv", "path": "data/demo/sales_data.csv"},
-    "D05": {"type": "sql", "path": "sqlite:///data/demo/ecommerce_orders.db", "table_name": "orders"},
-    "DG01": {"type": "csv", "path": "data/demo/sales_data.csv"},
-    "DG02": {"type": "csv", "path": "data/demo/churn_data.csv"},
-    "DG03": {"type": "csv", "path": "data/demo/sales_data.csv"},
-    "DG04": {"type": "csv", "path": "data/demo/churn_data.csv"},
-    "C01": {"type": "csv", "path": "data/demo/sales_data.csv"},
-    "C02": {"type": "csv", "path": "data/demo/marketing_campaigns.csv"},
-    "C03": {"type": "sql", "path": "sqlite:///data/demo/ecommerce_orders.db", "table_name": "orders"},
-    "C04": {"type": "sql", "path": "sqlite:///data/demo/ecommerce_orders.db", "table_name": "products"},
-    "P01": {"type": "csv", "path": "data/demo/sales_data.csv"},
-    "P02": {"type": "csv", "path": "data/demo/churn_data.csv"},
-    "P03": {"type": "csv", "path": "data/demo/churn_data.csv"},
-    "E01": {"type": "csv", "path": "data/demo/sales_data.csv"},
-    "E02": {"type": "csv", "path": "data/demo/sales_data.csv"},
-    "E03": {"type": "sql", "path": "sqlite:///data/demo/ecommerce_orders.db", "table_name": "orders"},
-    "E04": {"type": "csv", "path": "data/demo/marketing_campaigns.csv"},
-}
-
-KNOWN_DATA_MISMATCH = {"DG04", "C03", "P03"}
+# Note on which cases carry the data_mismatch tag: the Analysis Planner can
+# now write real cross-table JOINs against a SQL source (Phase B #1/#2 —
+# see docs/eval_report.md) when it's told the connection string and other
+# tables' schemas, so cases needing a join across ecommerce_orders.db
+# tables are no longer structurally unanswerable. D02 (order value by
+# category) is fully resolved this way. C03 (new vs returning customers)
+# still executes a real join but there's no literal "new/returning" flag in
+# the data — the Planner substitutes the closest available dimension
+# (customer segment) instead, which answers a related but not identical
+# question, so it stays flagged. DG04 (customer LTV) and P03 (upgrade
+# likelihood) remain genuinely unanswerable: no LTV column exists anywhere,
+# and P03 needs plan-change history that was never collected. This is
+# intentional: it surfaces real data-coverage gaps as a finding rather than
+# papering over them by rewriting the golden queries.
 
 
 async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[EvalResult, dict]:
     state = initial_state(tc.query)
-    src = CASE_DATA_SOURCES.get(tc.id)
-    if src:
-        state["data_sources"] = [dict(src)]
+    if tc.data_source:
+        state["data_sources"] = [dict(tc.data_source)]
 
     t0 = time.time()
     try:
@@ -95,7 +77,7 @@ async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tu
         "error": run_error,
         "error_type": result_state.get("error_type"),
         "mcp_modes": sorted({c.get("mode", "mcp") for c in (result_state.get("mcp_call_log") or [])}),
-        "data_mismatch": tc.id in KNOWN_DATA_MISMATCH,
+        "data_mismatch": "data_mismatch" in tc.tags,
     }
     return eval_result, meta
 
@@ -104,18 +86,26 @@ async def main():
     parser = argparse.ArgumentParser(description="Run MAEDA eval harness against the golden suite")
     parser.add_argument("--limit", type=int, default=None, help="Only run the first N cases")
     parser.add_argument("--case", action="append", help="Only run this case id (repeatable)")
+    parser.add_argument("--split", choices=["dev", "test"], default="dev",
+                        help="Eval v2 Step 4: which split to run. Defaults to dev -- the holdout "
+                             "'test' split must be requested explicitly so it can't be peeked at "
+                             "by accident. See data/eval_split_manifest.json.")
     parser.add_argument("--compare", type=str, default=None, help="Path to a prior report JSON to regress against")
     parser.add_argument("--out", type=str, default=None, help="Output report path (default: timestamped)")
     args = parser.parse_args()
 
-    suite = load_golden_suite()
+    if args.split == "test":
+        print("*** Running against the HOLDOUT TEST SPLIT. ***")
+        print("*** This result should be recorded as an official reveal, not used to iterate. ***\n")
+
+    suite = [tc for tc in load_golden_suite() if tc.split == args.split]
     if args.case:
         wanted = set(args.case)
         suite = [tc for tc in suite if tc.id in wanted]
     if args.limit:
         suite = suite[: args.limit]
 
-    print(f"Running eval harness on {len(suite)} golden case(s)...\n")
+    print(f"Running eval harness on {len(suite)} golden case(s) [split={args.split}]...\n")
 
     graph = build_graph()
     eval_runner = EvalRunner()
@@ -144,6 +134,7 @@ async def main():
         "timestamp": time.time(),
         "n_cases": len(rows),
         "overall_aggregate": overall,
+        "split": args.split,
         "cases": rows,
     }
 
@@ -175,9 +166,11 @@ def _print_summary(rows, overall):
     print(f"{'ID':6s} {'aggregate':>9s} {'relevance':>10s} {'grounded':>9s} {'factual':>8s} {'errrate':>8s}  notes")
     print("-" * 92)
     n_refusals = 0
+    n_invalid = 0
     for r in rows:
         er = r["eval_result"]
         by = {s["metric"]: s["score"] for s in er["scores"]}
+        invalid_metrics = [s["metric"] for s in er["scores"] if not s.get("valid", True)]
         notes = []
         if r["meta"]["data_mismatch"]:
             notes.append("data_mismatch")
@@ -188,6 +181,9 @@ def _print_summary(rows, overall):
             notes.append("error")
         if any(m == "fallback" for m in r["meta"]["mcp_modes"]):
             notes.append("fallback")
+        if invalid_metrics:
+            notes.append(f"FAILED_TO_SCORE:{'+'.join(invalid_metrics)}")
+            n_invalid += len(invalid_metrics)
         print(
             f"{r['test_case_id']:6s} {er['aggregate_score']:9.2f} "
             f"{by.get('answer_relevance', float('nan')):10.2f} "
@@ -197,6 +193,9 @@ def _print_summary(rows, overall):
         )
     print("-" * 92)
     print(f"{'OVERALL':6s} {overall:9.2f}   safe_refusals={n_refusals}/{len(rows)}")
+    if n_invalid:
+        print(f"  {n_invalid} metric(s) FAILED TO SCORE this run (judge unreachable after "
+              f"retries) -- excluded from their case's aggregate, not silently defaulted.")
     print("=" * 92)
 
 

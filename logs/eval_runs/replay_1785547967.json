@@ -1,0 +1,236 @@
+{
+  "timestamp": 1785547967.007972,
+  "n_cases": 2,
+  "overall_aggregate": 0.8636363636363636,
+  "replayed": true,
+  "generation_fingerprint": "8fb49462b22f1bb1",
+  "split": "dev",
+  "cases": [
+    {
+      "test_case_id": "D01",
+      "eval_result": {
+        "run_id": "D01",
+        "query": "Show total sales by region",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing the total sales figures for each region, specifically listing the revenue for Central, East, North, South, and West regions. It also includes a summary and analysis details that align with the user's request for total sales by region.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "8/8 claims supported. \u2713 The North region leads in revenue generation with over $1.36 million. (evidence: region=North, revenue=1363760.55) | \u2713 The East region also shows strong potential with over $1.16 million in revenue. (evidence: region=East, revenue=1164964.55) | \u2713 The Central region lags behind with the lowest revenue at $821,174.97. (evidence: region=Central, revenue=821174.97) | \u2713 The North region has the highest revenue at $1,363,760.55. (evidence: region=North, revenue=1363760.55) | \u2713 The West region with $1,271,795.18. (evidence: region=West, revenue=1271795.18) | \u2713 The East region generated $1,164,964.55 in revenue. (evidence: region=East, revenue=1164964.55) | \u2713 The Central region has the lowest revenue at $821,174.97. (evidence: region=Central, revenue=821174.97) | \u2713 There were 238 fully duplicated rows identified, accounting for 1.9% of the dataset. (evidence: duplicate_rows (warning): 238 fully duplicated rows (1.9%))",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.988623,
+            "label": "pass",
+            "reasoning": "$0.0114",
+            "raw_value": 0.011377,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 1.0,
+        "timestamp": 1785547965.11293,
+        "test_case_id": "D01"
+      },
+      "meta": {
+        "elapsed_s": 97.882493019104,
+        "replay_scoring_s": 6.21,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    },
+    {
+      "test_case_id": "D06",
+      "eval_result": {
+        "run_id": "D06",
+        "query": "How many orders were placed by customers in the USA?",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly answers the user's question by providing the specific number of orders placed by customers in the USA, which is 1,571. This information is clearly stated in both the executive summary and the key findings, making it fully relevant to the user's query.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "1/2 claims supported. \u2713 A total of 1,571 orders were placed by customers in the USA. (evidence: SQL returned 1 rows. Top results: order_count=1571) | \u2717 The confidence level in this finding is 100%. (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 0.5,
+            "label": "warn",
+            "reasoning": "Ground truth overlap: 50%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['sql_query'], expected one of ['sql_query']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 0.0,
+            "label": "fail",
+            "reasoning": "No charts generated; expected one of ['bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.987617,
+            "label": "pass",
+            "reasoning": "$0.0124",
+            "raw_value": 0.012382999999999998,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.7272727272727273,
+        "timestamp": 1785547967.007495,
+        "test_case_id": "D06"
+      },
+      "meta": {
+        "elapsed_s": 59.73200988769531,
+        "replay_scoring_s": 1.89,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "replayed_from_cache": true
+      }
+    }
+  ]
+}
