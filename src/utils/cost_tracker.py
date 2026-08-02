@@ -9,20 +9,36 @@ from typing import Optional
 
 
 # ─── Pricing tables (USD per 1 000 tokens) ────────────────────────────────────
+# Verified against https://developers.openai.com/api/docs/pricing and
+# https://claude.com/pricing as of 2026-07-29. Provider prices change
+# without notice — re-check both pages before trusting this table again.
 
 _PRICING: dict[str, dict[str, float]] = {
-    # OpenAI
-    "gpt-4o":                  {"input": 0.005,   "output": 0.015},
+    # OpenAI — current generation
+    "gpt-5.6-sol":             {"input": 0.005,   "output": 0.03},
+    "gpt-5.6-terra":           {"input": 0.0025,  "output": 0.015},
+    "gpt-5.6-luna":            {"input": 0.001,   "output": 0.006},
+    "gpt-5.4-mini":            {"input": 0.00075, "output": 0.0045},
+    # OpenAI — still callable, prices current as of the date above
+    "gpt-4o":                  {"input": 0.0025,  "output": 0.01},
     "gpt-4o-mini":             {"input": 0.00015, "output": 0.0006},
     "gpt-4-turbo":             {"input": 0.01,    "output": 0.03},
-    # Anthropic
+    # Anthropic — current generation
+    "claude-opus-5":           {"input": 0.005,   "output": 0.025},
+    # Introductory pricing through 2026-08-31; reverts to 0.003/0.015 after.
+    "claude-sonnet-5":         {"input": 0.002,   "output": 0.01},
+    "claude-fable-5":          {"input": 0.01,    "output": 0.05},
+    "claude-haiku-4-5-20251001":  {"input": 0.001,   "output": 0.005},
+    # Anthropic — still callable, dated-snapshot pricing doesn't change
     "claude-3-5-sonnet-20241022": {"input": 0.003, "output": 0.015},
     "claude-3-haiku-20240307":    {"input": 0.00025, "output": 0.00125},
     "claude-opus-4-6":            {"input": 0.015,   "output": 0.075},
     "claude-sonnet-4-6":          {"input": 0.003,   "output": 0.015},
-    "claude-haiku-4-5-20251001":  {"input": 0.0008,  "output": 0.004},
 }
-_DEFAULT_PRICING = {"input": 0.005, "output": 0.015}
+# Fallback for an unrecognized model name — deliberately pinned to the
+# current top-tier rate (gpt-5.6-sol) so an unmatched model overcounts
+# cost rather than undercounts it silently.
+_DEFAULT_PRICING = {"input": 0.005, "output": 0.03}
 
 
 def _price_for(model: str) -> dict[str, float]:

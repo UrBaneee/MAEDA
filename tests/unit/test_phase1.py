@@ -327,7 +327,7 @@ def test_price_for_does_not_confuse_mini_with_its_non_mini_prefix():
     mini = _price_for("gpt-4o-mini")
     full = _price_for("gpt-4o")
     assert mini == {"input": 0.00015, "output": 0.0006}
-    assert full == {"input": 0.005, "output": 0.015}
+    assert full == {"input": 0.0025, "output": 0.01}
     assert mini != full
 
 

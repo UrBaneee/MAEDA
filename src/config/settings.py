@@ -124,7 +124,7 @@ class MAEDASettings(BaseSettings):
         """Default to a stronger model than the (typically cost-optimized) agent model."""
         if self.eval_llm_model:
             return self.eval_llm_model
-        return "claude-3-5-sonnet-20241022" if self.resolved_eval_provider == "anthropic" else "gpt-4o"
+        return "claude-sonnet-5" if self.resolved_eval_provider == "anthropic" else "gpt-4o"
 
     @property
     def resolved_planner_model(self) -> str:
@@ -159,7 +159,7 @@ def _looks_like_real_key(key: Optional[str]) -> bool:
 def _stronger_model_for(provider: str) -> str:
     """The step-up model within a provider's own family — same tier used by
     resolved_eval_model when it stays on the agent's own provider."""
-    return "claude-3-5-sonnet-20241022" if provider == "anthropic" else "gpt-4o"
+    return "claude-sonnet-5" if provider == "anthropic" else "gpt-4o"
 
 
 # Singleton — import this everywhere

@@ -21,7 +21,7 @@ def test_resolved_planner_model_defaults_to_stronger_openai_model(monkeypatch):
 def test_resolved_planner_model_defaults_to_stronger_anthropic_model(monkeypatch):
     monkeypatch.setattr(settings, "llm_provider", "anthropic")
     monkeypatch.setattr(settings, "planner_llm_model", None)
-    assert settings.resolved_planner_model == "claude-3-5-sonnet-20241022"
+    assert settings.resolved_planner_model == "claude-sonnet-5"
 
 
 def test_resolved_planner_model_respects_explicit_override(monkeypatch):
@@ -46,7 +46,7 @@ def test_resolved_guardrail_model_defaults_to_stronger_openai_model(monkeypatch)
 def test_resolved_guardrail_model_defaults_to_stronger_anthropic_model(monkeypatch):
     monkeypatch.setattr(settings, "llm_provider", "anthropic")
     monkeypatch.setattr(settings, "guardrail_llm_model", None)
-    assert settings.resolved_guardrail_model == "claude-3-5-sonnet-20241022"
+    assert settings.resolved_guardrail_model == "claude-sonnet-5"
 
 
 def test_resolved_guardrail_model_respects_explicit_override(monkeypatch):
