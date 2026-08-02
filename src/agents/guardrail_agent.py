@@ -29,6 +29,7 @@ from src.agents.base_agent import BaseAgent
 from src.agents.insight_agent import _classify_evidence_level
 from src.config.agent_prompts import GUARDRAIL_SYSTEM
 from src.config.settings import settings
+from src.eval.metrics import render_data_quality, render_findings, render_rag_context
 from src.state.graph_state import MAEDAState
 from src.utils.logger import get_logger
 from src.utils.retry import call_with_rate_limit_retry
@@ -210,17 +211,30 @@ class GuardrailAgent(BaseAgent):
         analysis_results: list[dict],
         query: str,
     ) -> list[CheckResult]:
-        """Run hallucination detection and claim grounding via LLM."""
-        findings_summary = "; ".join(
-            r.get("result_summary", "")
-            for r in analysis_results
-            if not r.get("failed") and r.get("result_summary")
-        )[:800]
+        """Run hallucination detection and claim grounding via LLM.
 
+        Findings/RAG-context/data-quality rendering reuses the exact same
+        functions the eval judge's prompt is built from (render_findings /
+        render_rag_context / render_data_quality in src/eval/metrics.py)
+        instead of this method's own inline, truncated (800 chars / 1500
+        chars) context-builder. Found via a real judge-calibration labeling
+        session on case C02 (roadmap.md #26, docs/judge_calibration.md):
+        the old 800-char findings cap cut off the exact substring
+        ("comparison: top=Search") that would have told this hallucination
+        check Search's data existed, so the guardrail fabricated a false
+        accusation that a report was citing data absent from the findings
+        when it wasn't -- arguably worse than a missed hallucination, since
+        it teaches the pipeline to distrust valid output. This is the same
+        bug in spirit as the one already fixed in _build_judge_prompt, just
+        living in a second, independently-drifting context-builder that fix
+        never touched -- now unified so the two views can't diverge again.
+        """
         context = (
             f"### Original Query\n{query}\n\n"
-            f"### Analysis Findings\n{findings_summary or 'None'}\n\n"
-            f"### Report to Evaluate\n{report_text[:1500]}\n"
+            f"### Analysis Findings\n{render_findings(analysis_results)}\n\n"
+            f"### Data Quality\n{render_data_quality(state.get('data_quality_report'))}\n\n"
+            f"### RAG Context\n{render_rag_context(state.get('rag_context') or []) or 'None'}\n\n"
+            f"### Report to Evaluate\n{report_text}\n"
         )
 
         async def _call_llm():

@@ -118,66 +118,104 @@ and the natural continuation of the eval-first narrative.
     positives but also zero observed genuine catches — reported honestly
     rather than overclaimed, plausibly because #15/#28 already reduce how
     often a report is left with only row-level evidence in the first place.
-25. **Planner sometimes runs a comparison/significance test on
-    already-aggregated data.** Found via the user's own judge-calibration
-    labeling session (eval v2 Step 3, see
-    [judge_calibration.md](judge_calibration.md), case C01) — this is a
-    genuine Planner defect, not just the nan-significance display bug
-    fixed alongside it. C01's plan: step 2 groupby-aggregates revenue down
-    to one row per quarter, then step 3 runs `comparison` (ANOVA) grouped
-    by quarter *again*, over data that's already one-row-per-group — every
-    group has count=1, so mean/median/sum all collapse to the same single
-    value and std/F-statistic/p-value are all structurally undefined
-    (`nan`), regardless of what the underlying data actually looks like.
-    The fix already shipped (`_significance_flag()` in
-    `src/tools/stats_tool.py`, see `judge_calibration.md`) stops the
-    system from *reporting* an undefined test as a real null result, but
-    doesn't stop the Planner from writing this kind of step sequence in
-    the first place — comparison/significance-test steps need to run
-    against row-level data, not a prior step's aggregated output.
-    Deliberately not fixed now: touching `analysis_agent.py`'s planning
-    logic is generation-relevant and would invalidate the replay corpus
-    the user is actively labeling against (`logs/replay_cache/corpus.json`).
-    **Pick up after Step 4** (eval_v2_plan.md) once the golden suite has
-    expanded past 20 cases and isn't a fixed target being actively labeled
-    — likely fix direction: either have the Planner check `depends_on` for
-    an already-aggregated intermediate before emitting a `comparison`
-    step, or have `compare_segments` itself validate `count > 1` per group
-    and refuse (loudly, not `nan`) rather than let scipy silently produce
-    an undefined result.
-26. **`GuardrailAgent._llm_judge`'s own hallucination check has the same
-    truncation bug the eval judge had — never fixed, because it's a
-    different code path.** Found via the user's own labeling, case C02
-    (see [judge_calibration.md](judge_calibration.md)): the report's
+25. ✅ **Done (2026-08-02) — Planner no longer runs a comparison/significance
+    test on already-aggregated data.** Found via the user's own
+    judge-calibration labeling session (eval v2 Step 3, see
+    [judge_calibration.md](judge_calibration.md), case C01) — a genuine
+    Planner defect, not just the nan-significance display bug fixed
+    alongside it at the time. C01's plan: step 2 groupby-aggregates revenue
+    down to one row per quarter, then step 3 runs `comparison` (ANOVA)
+    grouped by quarter *again*, over data that's already one-row-per-group
+    — every group has count=1, so std/F-statistic/p-value are all
+    structurally undefined (`nan`) regardless of what the data looks like.
+    Deliberately deferred past Step 4 (touching `analysis_agent.py`'s
+    planning logic would have invalidated the replay corpus being actively
+    labeled against); picked up once all 100 cases were labeled. Fix:
+    `_select_input_dataframe` in `src/agents/analysis_agent.py` now detects
+    this shape directly — a `comparison` step whose chosen dependency has
+    already been reduced to ≤1 row per value of the step's own
+    `segment_col` — and falls back to the original, un-aggregated dataset
+    instead (only when `segment_col`/`value_col` exist there too, so a
+    truly-derived column that only exists on the aggregating step's output
+    is left alone rather than silently recomputed against the wrong data).
+    Deterministic, not reliant on Planner prompt engineering. Verified live
+    against the real pipeline: C01 regenerated post-fix now shows
+    `significance_test: {"test": "one-way ANOVA", "statistic": 129.97,
+    "p_value": 0.0, "significant": true}` with `count: 2927` per quarter
+    (real per-transaction rows), not `count: 1`. New regression test:
+    `test_comparison_step_falls_back_to_original_data_when_dependency_is_pre_aggregated`
+    in `tests/unit/test_phase5.py`.
+26. ✅ **Done (2026-08-02) — `GuardrailAgent._llm_judge`'s own truncation
+    bug fixed, same day as #25.** Found via the user's own labeling, case
+    C02 (see [judge_calibration.md](judge_calibration.md)): the report's
     Automated Caveats section flatly asserted "the provided data does not
-    include any information about the Search channel," which is false —
-    Search's numbers (conversion rate 6.49%, the actual top segment) are
+    include any information about the Search channel," which was false —
+    Search's numbers (conversion rate 6.49%, the actual top segment) were
     in `analysis_results`, just past where the guardrail's own truncation
-    cuts them off. Confirmed by direct reproduction:
-    [src/agents/guardrail_agent.py:214-223](../src/agents/guardrail_agent.py#L214)
-    joins `result_summary` across all steps and caps it at **800 chars**
-    (for C02, `"comparison: top=Search"` — literally the one substring
-    that would have told the guardrail Search's data existed — sits at
-    character 950, past the cut) and separately caps the report at
-    **1500 chars**. This is a sibling of the bug fixed in `src/eval/
-    metrics.py`'s `_build_judge_prompt` (`render_findings`/no-truncation,
-    see `judge_calibration.md`'s bug #1) — same shape, same root cause
-    (an LLM-as-judge call built from a truncated view of the same
-    findings/report everything else now sees in full), but a completely
-    separate function in a separate file that the earlier fix never
-    touched. Practical consequence: the guardrail can (and, in this
-    observed case, did) fabricate a hallucination finding — accusing a
-    report of citing data that doesn't exist, when the data exists but
-    the guardrail itself couldn't see it — which is arguably worse than
-    missing a real hallucination, since it teaches the pipeline to
-    distrust correct output. **Not fixed now**, same reason as #25:
-    `guardrail_agent.py` is generation-relevant, changing it invalidates
-    the corpus mid-labeling. **Pick up alongside #25, after Step 4** —
-    likely fix: reuse `render_findings`/`render_rag_context` from
-    `src/eval/metrics.py` here too (untruncated, single source of truth
-    for "what does an LLM judge of this pipeline's output get to see"),
-    rather than `_llm_judge` maintaining its own truncated,
-    independently-drifting context-builder.
+    cut them off (`result_summary` joined across steps and capped at 800
+    chars; report separately capped at 1500). Same shape, same root cause
+    as the eval judge's bug #1 above, but a completely separate function
+    in a separate file that fix never touched. Fix: `_llm_judge` now builds
+    its context with `render_findings`/`render_rag_context`/
+    `render_data_quality` from `src/eval/metrics.py` — the exact same
+    functions the eval judge's own prompt uses — instead of its own inline,
+    truncated context-builder, so the two views can never diverge again.
+    Verified live: C02 regenerated post-fix now correctly discusses
+    Search's real conversion rate (ANOVA statistic 994.85, p=0.0, matching
+    the actual data) with `guardrail_passed: true` and zero fabricated
+    caveats — the false accusation is gone. New regression test:
+    `test_llm_judge_context_is_not_truncated` in `tests/unit/test_phase8.py`.
+    Both fixes are generation-relevant, so the replay corpus (all 100
+    cases) was regenerated afterward — see `docs/eval_v2_plan.md` for the
+    before/after baseline this produced.
+27. **Guardrail severity is decided by substring-matching the LLM's own
+    check name, not by the actual content of the finding.** Found while
+    interpreting the #25/#26 before/after numbers: `_parse_llm_checks` in
+    `src/agents/guardrail_agent.py` only escalates a failed check to
+    `"critical"` (block + retry) if its name contains one of
+    `("pii", "safety", "hallucin", "fabricat", "claim_ground", "grounding")`
+    — anything else, including a check the LLM itself named
+    `"Factual accuracy"`, is `"warning"` (deliver with a caveat, never
+    blocks), no matter how wrong the finding is. `GUARDRAIL_SYSTEM`
+    ([agent_prompts.py:348](../src/config/agent_prompts.py:348)) asks the
+    LLM to check four things — factual accuracy, hallucination, PII
+    leakage, misleading framing — and across all 100 post-#25/#26 cases
+    the LLM reliably names them exactly `Hallucination`, `PII leakage`,
+    `Factual accuracy`, `Misleading framing`, every time. The first two
+    match the keyword list and block; the second two — arguably the more
+    central checks for a data-analysis system's core promise — structurally
+    cannot, regardless of severity. Confirmed live: 16 of 100 cases have a
+    failed `Factual accuracy` and/or `Misleading framing` check that never
+    blocks (e.g. case P05: "the report says May 2023 had the highest churn
+    rate at 13.74%, but March 2024's 39.07% is actually highest" — a real,
+    specific factual error, delivered anyway with only a caveat attached).
+    The same substantive problem gets blocked or waved through depending on
+    which of two near-synonymous labels the LLM happened to pick that call
+    — not on how serious the problem actually is. Fix direction: escalate
+    on the check's own `passed`/content (e.g. any failed check is at least
+    "warning," and a dedicated field or a stricter prompt contract decides
+    "critical" — not a keyword scan over a name the model invents fresh
+    each call), or fold `Factual accuracy` into the existing `hallucin`/
+    `fabricat` keyword set outright, since a "factual accuracy" failure on
+    a data-analysis report *is* a hallucination by any reasonable reading.
+28. **A #4-style false-superlative claim was caught live in the pipeline
+    itself, not just in the eval judge.** Case P05, from the #25/#26
+    before/after run: the report claims "May 2023 recorded the highest
+    churn rate at approximately 13.74%," but the analysis findings show
+    March 2024 at 39.07% is the actual highest — the same shape of error
+    as the "Product 2 has the highest margin" bug found and fixed in the
+    groundedness judge (A2, `docs/judge_calibration.md`), except this one
+    is the *Insight Agent fabricating the claim in the first place*, not
+    the eval judge failing to catch it after the fact (the guardrail's own
+    `Factual accuracy` check *did* catch this one correctly — see #27 above
+    for why it didn't block anyway). Suggests the false-superlative pattern
+    isn't confined to the judge layer; the generation layer (Insight Agent,
+    `src/agents/insight_agent.py`) may be prone to the same "state an
+    extreme without checking the full comparison set" failure mode A2 fixed
+    on the judging side. Not investigated further yet — worth a dedicated
+    pass (e.g. grep a batch of regenerated reports for "highest"/"lowest"
+    claims and spot-check each against its findings) before assuming this
+    is a one-off.
 
 ## Tier 3 — Engineering robustness
 

@@ -747,6 +747,48 @@ class TestStepExecutor:
         assert len(result["analysis_results"]) == 2
         assert all(not r["failed"] for r in result["analysis_results"]), result["analysis_results"]
 
+    def test_comparison_step_falls_back_to_original_data_when_dependency_is_pre_aggregated(
+        self, sales_df, tmp_path
+    ):
+        """Roadmap.md #25, found via a real judge-calibration labeling
+        session on case C01 (docs/judge_calibration.md): a plan that runs a
+        `comparison` step on a prior groupby step's already-aggregated
+        one-row-per-segment output makes any significance test structurally
+        undefined -- every group has exactly one observation, so within-group
+        variance can't be computed no matter what the data says. The
+        executor must detect this and fall back to the original,
+        un-aggregated data instead of quietly producing a nan p-value."""
+        csv = tmp_path / "sales.csv"
+        sales_df.to_csv(str(csv), index=False)
+
+        plan_data = [
+            {"step_number": 1, "method": "groupby_quarter", "tool": "pandas_transform",
+             "parameters": {"operation": "groupby", "group_by": ["quarter"],
+                             "agg_col": "revenue", "agg_func": "sum"},
+             "depends_on": [], "expected_output": "revenue by quarter", "rationale": ""},
+            {"step_number": 2, "method": "compare_quarters", "tool": "comparison",
+             "parameters": {"segment_col": "quarter", "value_col": "revenue", "agg": "sum"},
+             "depends_on": [1], "expected_output": "quarter comparison", "rationale": ""},
+        ]
+        agent = AnalysisAgent(llm=_mock_llm(plan_data))
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(csv)}])
+        state["active_source"] = {"type": "csv", "path": str(csv)}
+        state["analysis_plan"] = plan_data
+        result = asyncio.run(agent.execute(state))
+
+        comparison_result = result["analysis_results"][1]
+        assert comparison_result["failed"] is False
+        segments = comparison_result["result"]["segments"]
+        # Each quarter has 4 rows in sales_df -- if the fix worked, the
+        # comparison ran against the original data (count=4 per segment),
+        # not step 1's aggregated output (which would show count=1).
+        assert all(s["count"] == 4 for s in segments), segments
+        sig = comparison_result["result"]["significance_test"]
+        assert sig["significant"] is not None, (
+            "significance test should be computable against real per-observation "
+            "data, not structurally undefined against pre-aggregated data"
+        )
+
     def test_execute_unknown_tool_marks_failed(self, sales_df, tmp_path):
         csv = tmp_path / "d.csv"
         sales_df.to_csv(str(csv), index=False)

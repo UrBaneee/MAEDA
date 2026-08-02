@@ -443,12 +443,45 @@ def _select_input_dataframe(
     steps).
 
     A step that does declare dependencies chains off the most recent
-    dependency (in depends_on order) that actually produced a DataFrame.
+    dependency (in depends_on order) that actually produced a DataFrame —
+    except a `comparison` step whose chosen dependency has already been
+    aggregated down to one row per value of the step's own segment_col
+    (roadmap.md #25, found via a real judge-calibration labeling session on
+    case C01 — see docs/judge_calibration.md). E.g. a prior groupby-by-quarter
+    step feeding a "compare across quarters" step: every group ends up with
+    exactly one observation, so within-group variance — and therefore any
+    significance test — is undefined no matter what the data says. Falls
+    back to the original, un-aggregated dataset instead, so the comparison
+    runs against real per-observation rows and produces a genuine result
+    rather than a structurally-guaranteed nan. Deliberately conservative:
+    only applies when segment_col/value_col both exist on the original data
+    too — a column that was *derived* by the aggregating step (and so only
+    exists on its output) is left alone, since silently recomputing against
+    the wrong data would be worse than failing loudly through the normal
+    step-repair path.
     """
     for dep in reversed(step.depends_on):
         if dep in result_dfs:
-            return result_dfs[dep]
+            candidate = result_dfs[dep]
+            if step.tool == "comparison" and _is_degenerate_for_comparison(candidate, step.parameters, original_df):
+                return original_df
+            return candidate
     return original_df
+
+
+def _is_degenerate_for_comparison(
+    candidate: pd.DataFrame, parameters: dict, original_df: pd.DataFrame
+) -> bool:
+    """True iff `candidate` has already been reduced to <=1 row per value of
+    the comparison step's segment_col — see _select_input_dataframe."""
+    segment_col = parameters.get("segment_col")
+    value_col = parameters.get("value_col")
+    if not segment_col or segment_col not in candidate.columns:
+        return False
+    if segment_col not in original_df.columns or (value_col and value_col not in original_df.columns):
+        return False  # can't safely fall back -- the column doesn't exist pre-aggregation
+    counts = candidate[segment_col].value_counts()
+    return len(counts) > 0 and counts.max() <= 1
 
 
 def _load_dataframe(state: MAEDAState) -> pd.DataFrame:

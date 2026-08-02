@@ -356,6 +356,65 @@ def test_llm_judge_flags_hallucination():
     assert hallucination.severity == "critical"
 
 
+def test_llm_judge_context_is_not_truncated():
+    """Roadmap.md #26, found via a real judge-calibration labeling session
+    on case C02 (docs/judge_calibration.md): _llm_judge used to build its
+    own inline context capped at 800 chars for findings / 1500 chars for
+    the report -- separate, independently-drifting code from the eval
+    judge's _build_judge_prompt, whose own truncation bug was already
+    fixed. For C02 the 800-char cap cut off the exact substring
+    ("comparison: top=Search") that would have told this hallucination
+    check Search's data existed, so the guardrail fabricated a false
+    accusation that the report cited data absent from the findings. Now
+    unified with render_findings/render_rag_context/render_data_quality
+    (src/eval/metrics.py), the same functions the eval judge's prompt uses,
+    so the two views can't diverge again."""
+    from src.agents.guardrail_agent import GuardrailAgent
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.content = json.dumps({
+        "passed": True,
+        "checks": [
+            {"check": "hallucination_check", "passed": True, "finding": None},
+            {"check": "claim_grounding", "passed": True, "finding": None},
+        ],
+        "overall_verdict": "approved",
+        "retry_reason": None,
+    })
+    mock_response.usage_metadata = {"input_tokens": 20, "output_tokens": 15}
+    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+    agent = GuardrailAgent(llm=mock_llm)
+    state = initial_state("How does conversion rate differ by channel?")
+    state["data_quality_report"] = {
+        "row_count": 2000,
+        "quality_issues": [{"issue": "high_outlier_share", "severity": "info", "detail": "high outlier share"}],
+    }
+    state["rag_context"] = [{"content": "domain note about channel benchmarks"}]
+
+    # Padding early findings well past the old 800-char cap, then the
+    # Search-channel comparison landing after that cutoff -- exactly C02's
+    # shape, where the real finding was silently cut off.
+    padding = "x" * 900
+    analysis_results = [
+        {"method": "derive_conversion_rate", "result_summary": padding, "failed": False},
+        {"method": "compare_by_channel", "result_summary": "comparison: top=Search",
+         "result": {"top_segment": "Search", "segments": [{"channel": "Search", "mean": 0.0649}]},
+         "failed": False},
+    ]
+    asyncio.run(agent._llm_judge(
+        state, "# Report\nSearch has the highest conversion rate.",
+        [], analysis_results, "How does conversion rate differ by channel?",
+    ))
+
+    sent_context = mock_llm.ainvoke.call_args[0][0][1].content
+    assert "comparison: top=Search" in sent_context, (
+        "the finding that would confirm Search's data exists must not be truncated away"
+    )
+    assert "high outlier share" in sent_context, "data quality section must be included"
+    assert "domain note about channel benchmarks" in sent_context, "RAG context must be included"
+
+
 def test_llm_judge_fallback_on_error():
     from src.agents.guardrail_agent import GuardrailAgent
     mock_llm = MagicMock()

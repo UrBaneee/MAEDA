@@ -674,17 +674,99 @@ the judge). All tools are kept apart from the original 20's
 self-consistency retest so none of them contaminate each other — see
 [judge_calibration.md](judge_calibration.md) for every live link.
 
-**Queued for right after this step**: [roadmap.md #25](roadmap.md) — the
-Planner sometimes runs a comparison/significance test on data a prior step
-already aggregated to one row per group (found via the user's own
-judge-calibration labeling, case C01 — see
-[judge_calibration.md](judge_calibration.md)), making the test
-structurally undefined regardless of what the data says. The display-level
-symptom (`nan` silently reported as `significant: false`) is already fixed;
-the Planner-level cause isn't. Deliberately deferred past Step 4 since
-`analysis_agent.py`'s planning logic is generation-relevant — fixing it
-now would invalidate the replay corpus the user is actively labeling
-against.
+**DONE (2026-08-02)**: [roadmap.md #25](roadmap.md) and
+[#26](roadmap.md) — the Planner sometimes ran a comparison/significance
+test on data a prior step already aggregated to one row per group (found
+via the user's own judge-calibration labeling, case C01 — see
+[judge_calibration.md](judge_calibration.md)), and the Guardrail's own
+hallucination check had a truncation bug the eval judge's fix never
+touched (case C02). Both deliberately deferred until all 100 cases were
+labeled, then fixed together; both are generation-relevant, so the full
+replay corpus was regenerated afterward ($1.82, ~15 min, 100/100 cases
+fresh). Full detail in [roadmap.md](roadmap.md)'s #25/#26 entries.
+
+**Before/after on the dev split (59 cases), same replay-mode measurement
+both times** (`scripts/replay_eval.py`, no other code changed between the
+two runs):
+
+| | Before (pre-#25/#26) | After (post-#25/#26) |
+|---|---|---|
+| Overall aggregate | 0.751 | 0.779 |
+| `answer_relevance` (mean) | 0.737 | 0.797 |
+| `groundedness` (mean) | 0.789 | 0.822 |
+| `factual_accuracy` (mean) | 0.655 | 0.689 |
+| Safe refusals | 20/59 (33.9%) | **7/59 (11.9%)** |
+
+**The aggregate move (+0.028) is not, on its own, distinguishable from
+noise — check this against a measured floor before trusting it.**
+`docs/noise_floor.md` measured `overall_aggregate`'s 2σ at **0.028** across
+8 identical reruns of the same 20-case suite with nothing changed. The
+observed +0.028 sits exactly at that boundary. Reported as a genuine
+finding anyway, but explicitly *not* as "the fix improved the aggregate" —
+this is exactly the kind of number Step 1 exists to keep people from
+over-claiming.
+
+**The refusal-rate drop is the real signal, but it also needed calibrating
+against noise before treating it as one — same process, more careful this
+time.** Refusal counts from those same 8 identical dev-suite reruns
+(`logs/noise_runs/full_noise_1785391747.json`, n=20 each): 7, 7, 7, 8, 9,
+10, 10, 11 refusals — mean 8.6, std 1.6, i.e. **refusal rate itself
+naturally swings ~35%-55% with zero code change**, and 10 of the 20 cases
+flip between "refused" and "passed" across otherwise-identical runs.
+Scaling that std to n=59 puts the noise band at roughly **±9 points**. The
+observed drop, 33.9% → 11.9% (22 points), is about **2.4x that band** —
+outside it, a real effect, not a coincidence of which run happened to
+land where. The single strongest piece of evidence for this: **C02, DG03,
+and E03 were refused in 8/8 identical pre-fix reruns** (not
+probabilistically — every single time) and now pass cleanly; a
+deterministic failure flipping to a pass isn't explainable by rerun noise.
+
+Of the 15 cases that stopped being refused, direct inspection of the
+guardrail's actual before/after reasoning (not just the pass/fail label)
+sorts into two groups:
+- **12 genuinely fixed** by #26 (C02, DG04, DG11, DG03, E03, E12, E13, P03,
+  P07, P09, plus 2 more) — the pre-fix refusal reason was some form of "X
+  isn't supported by the findings," and direct verification confirms the
+  cited number *was* real, just outside the old 800-char/`result_summary`-
+  only context (e.g. DG04's guardrail context, reconstructed exactly:
+  correlation coefficients 0.732/0.6142/0.024/-0.0096 appear zero times in
+  the old inline context — `result_summary` never included the `result`
+  dict at all, a worse gap than "truncated," it was structurally absent —
+  and all four appear in the new `render_findings`-based context).
+- **2 not clearly attributable to the fix** (C19: a rounding-precision
+  complaint, 10.00% vs. 9.9968%, unrelated to truncation; D19: fails a
+  separate rule-based check, `_check_population_claim_grounding`, that
+  never calls the LLM at all and #26 cannot have touched — its
+  pass/fail here is plausibly just this run's own stochasticity).
+
+**A structural gap in the guardrail surfaced while doing this
+verification, now tracked as [roadmap.md #27](roadmap.md):** severity
+(blocking vs. warning-only) is decided by *substring-matching the LLM's
+own self-chosen check name* against a fixed keyword list
+(`pii`/`safety`/`hallucin`/`fabricat`/`claim_ground`/`grounding`). Of
+`GUARDRAIL_SYSTEM`'s four requested checks, only `Hallucination` and `PII
+leakage` match; `Factual accuracy` and `Misleading framing` structurally
+can never block, no matter how wrong the finding is. Confirmed live: 16 of
+100 post-fix cases have a failed `Factual accuracy`/`Misleading framing`
+check that was delivered anyway with just a caveat — including case P05,
+where the report claims "May 2023 had the highest churn rate at 13.74%"
+when March 2024's 39.07% is actually highest (the guardrail's own
+`Factual accuracy` check correctly caught this, then didn't block on it).
+That same P05 case is also tracked as [roadmap.md #28](roadmap.md): a
+false-superlative claim caught live in the *generation* layer (the Insight
+Agent), not just the eval judge — suggesting the pattern A2 fixed on the
+judging side (missing "highest"/"lowest" claims that contradict other
+visible values) may also exist upstream in what gets generated in the
+first place. Neither #27 nor #28 fixed here — found while interpreting
+these results, not chased down yet.
+
+**Caveat, stated for the same reason as the earlier A2 caveat**: this
+before/after uses the dev split as defined (established *after* #25/#26
+were already known bugs, though before they were fixed), so it's a real,
+useful signal — but the formal "official reveal" is the held-out test
+split, not run yet as of this writing; see the note above about what the
+dev/test split can and can't prove given when it was created relative to
+this project's own iteration history.
 
 ### Fix a structural problem before expanding anything
 
