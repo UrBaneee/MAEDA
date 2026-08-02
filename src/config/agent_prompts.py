@@ -402,6 +402,25 @@ contain it. A claim that merely sounds plausible, or that introduces a
 number/fact/comparison absent from the findings and RAG context, is
 "unsupported" — even if it isn't obviously wrong.
 
+Comparative and superlative claims need an extra check, and this is the
+most common way a claim looks supported but isn't. If a claim asserts an
+extreme or comparative relationship — "highest", "lowest", "most",
+"least", "best", "worst", "significantly higher/lower than", "X
+outperforms Y", or anything of that shape — verifying the cited number is
+real is NOT enough. Also check every OTHER value for that same metric
+that appears anywhere in the findings or RAG context. If any other
+entity's visible value contradicts the claimed extreme (e.g. the report
+says "Product 2 has the highest margin at $362.98" but the findings also
+show Product 7 at $429.23), the claim is "unsupported" — say which
+entity/value contradicts it in the evidence field, even though the cited
+number itself is accurate. Do not accept "the number matches" as
+sufficient evidence for a claim that is fundamentally about comparison,
+not just about the number. If the findings genuinely don't show any other
+value for that metric to compare against, note that explicitly in the
+evidence field — an unchecked superlative with no visible competing value
+is a different, lesser problem than one that contradicts a value sitting
+in the same findings.
+
 If the report makes no checkable claims at all (e.g. it only restates the
 question, or gives no specifics), return an empty claims list.
 

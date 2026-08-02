@@ -1,0 +1,506 @@
+{
+  "exported_at": "pooled",
+  "n_cases": 100,
+  "labels": {
+    "C01": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": "Relevance: The report states: \"On January 1, Widget A generated $549.67 in the North Region via the Online channel\", this is irrelevant to \"comparing the four quarters\".\nRelevance: User wants to know \"sales performance\", while \"revenue is the only metric being mentioned in the report--not 100% match."
+    },
+    "C02": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.25,
+      "notes": "1 Groundedness: \u201cThe Email channel has a conversion rate of approximately 4.71%, which is higher than the Affiliate (2.69%) and Social (1.41%) channels.\u201d These are all based on one certain campaign, instead of the average of every marketing channel.\n2 \"The report claims that the Search channel has the highest conversion rate, but the provided data does not include any information about the Search channel.\" Wrong\n3 relevance: the report almost didn't mention \"Display\" channel."
+    },
+    "C03": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": "1 relevance: Analysis findings don't contain anything related to new & returning customers. And this has been mentioned clearly in the report. Therefore, the report wants to answer, but it failed due to a lack of info.\n"
+    },
+    "C04": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: product 2 doesn't generate the highest margin; it should be Product 7, which generates the highest margin at $429.23\n2 Product 8 and 12 are also operating at a loss"
+    },
+    "D01": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": "1 relevance: the report doesn't mention south region\n2 In ## Automated Caveats, the statement \"The report incorrectly states that the West region has the second highest revenue\" is wrong. The report says \"the West region has the second highest revenue\" is a grounded truth. But I don't take \"Automated Caveats\" as a consideration when I score. "
+    },
+    "D02": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D03": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"The analysis indicates a high confidence level (0.9) in the accuracy of these findings.\" doesn't been mentioned\n2 relevance: The report doesn't answer the question\"How many customers do we have per country?\" clearly. and some countries'data has been missed"
+    },
+    "D04": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": "1 relevance: the report only provides details for the top 5 products instead of \"top 10\" in question. but this one is being mentioned by Automated Caveats"
+    },
+    "D05": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"the 'month' column was not found in the dataframe\" wrong\n2 groundedness: The highest revenue from a single order was not  generated on October 9, 2022 and The second highest revenue was not from order_id 1\n3 "
+    },
+    "DG01": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"[groupby_aggregate_revenue]\"in analysis findings shows that there's the highest revenue in quarter 3. So when the report claims, \"This figure highlights a significant drop compared to previous quarters.\" It's wrong"
+    },
+    "DG02": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groundedness\uff1a\u201cCustomers who logged in less frequently (0 login days in the last 30 days) have a notably high churn rate\u201d is not true.  There is a negative correlation of only -0.0113 between Login Days and churn, which is not notably high\n2 groudedness: The report claims specific churn rates for Basic, Premium, and Standard plans, but the analysis findings provided do not include any data or calculations that support these specific percentages."
+    },
+    "DG03": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"significantly lower than top performers in other regions,\"doesn't been mentioned\n2 groundedness:\"The Online channel's revenue is the lowest among top channels\" wrong. should be Retail channel"
+    },
+    "DG04": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: The analysis of support calls in the last 90 days revealed a high outlier share, with 7.3% of values falling outside 1.5\u00d7IQR. This does not affect the reliability of insights drawn from this variable. "
+    },
+    "E01": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E02": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"representing approximately 1.58% of the total observations. This suggests significant deviations from typical revenue patterns\" i don't think \"1.58%\" is \"significant\""
+    },
+    "E03": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 Groundedness: the data doesn't \"suggesting seasonal buying trends\"\n2groundedness: \"Consumer segment outperforms Corporate.\"not true"
+    },
+    "E04": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groudedness\uff1a\u201cThe correlation matrix heatmap reveals strong positive correlations among several key variables, suggesting interconnected relationships that could be leveraged for strategic planning.\u201d"
+    },
+    "P01": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.25,
+      "notes": "1 groundedness: \u201cpredicted value approximately 513.42\u201d, \u201cindicating consistent growth over time\u201d, \u201cconfidence level = 0.4\u201d\uff0c\u201cperiod ending Dec 31 2024\u201d"
+    },
+    "P02": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 relevance: doesn't really answer \u201cnext 30 days\u201d\n2 Groundedness: \u201cR\u00b2=0.0029\u201d doesn't mean \"Churn rates are increasing\" or \"chart clearly shows upward trend\"\n3"
+    },
+    "P03": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "C05": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: There's no data support what's the churn rate of \"Customers with 10 or more login days in the last 30 days\" "
+    },
+    "C06": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:  \"The confidence level for these findings is moderate at 60%.\" out of nowhere\n"
+    },
+    "C07": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"The highest revenue recorded on January 1, 2022, was $652.30 from the North region's Service Pack through the Partner channel.\" not sure if it's the highest\n2 groundedness:\" The East region generated the highest revenue in 2022\" wrong"
+    },
+    "C08": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"The highest revenue from orders in Q4 was generated by order_id 2, totaling $2,812.70, while Q1's highest revenue came from order_id 1 at $1,822.28, \" doesn't have solid proof"
+    },
+    "D06": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"The confidence level in this finding is 100%, indicating high reliability\" not supported\n2 groundedness: not been mentioned whether is \"The USA\" or not"
+    },
+    "D07": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"The Email channel generated the highest revenue \" wrong"
+    },
+    "D08": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D09": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 \"The UK was identified as the country generating the highest revenue from orders, primarily due to this single order.\" doesn't mention"
+    },
+    "DG05": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "DG06": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Campaign CAM0001 achieved the highest ROI of 2023.7 \" not sure"
+    },
+    "DG07": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Product 2 has the highest profit margin\" wrong"
+    },
+    "DG08": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E05": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E06": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E07": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Potential areas for further investigation\" \"Optimize campaign effectiveness and budget adherence\""
+    },
+    "E08": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "P04": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"Forecast predicts a marketing spend of approximately 4979.79.\""
+    },
+    "P05": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "P06": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "P07": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "C09": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"the highest click-through rate recorded at 3.52% \""
+    },
+    "C10": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"This finding suggests a strong willingness to pay for enhanced services among Premium subscribers\"\n2 groundedness:\"The findings indicate that customers with longer tenures tend to have higher monthly charges and lower churn rates\""
+    },
+    "C11": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C12": {
+      "answer_relevance": 1,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "D10": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D11": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": "1 relevance: Doesn't mention \u201cWidget A\u201d at all. "
+    },
+    "D12": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D13": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "DG09": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: the highest ROI of 1208.2"
+    },
+    "DG10": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": ""
+    },
+    "DG11": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.25,
+      "notes": "1. Groundedness: \"which is lower than other categories\", \"Product 2 generates the highest margin\",\"Product 6 stands out with the highest profit margin\""
+    },
+    "DG12": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.25,
+      "notes": "1 relevance: \"due to missing data on the loyalty tier column\""
+    },
+    "E09": {
+      "answer_relevance": 0.75,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E10": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundednesss:\"Confidence = 100%\""
+    },
+    "E11": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"which highlighted strong positive correlations among several key variables\""
+    },
+    "E12": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "E13": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "P08": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": ""
+    },
+    "P09": {
+      "answer_relevance": 1,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "P11": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": "1 relevance: doesn't answer the question directly"
+    },
+    "C13": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C14": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"Campaign CAM0010 achieved the highest ROI\"\n2 groundedness: \"Given the high ROI from Search campaigns\""
+    },
+    "C15": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C16": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"the East region's Widget A achieved the highest revenue of $421.51 through online sales\""
+    },
+    "D14": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Clothing has the highest total quantity ordered\""
+    },
+    "D15": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D16": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D17": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "DG13": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \" suggesting that while Furniture has higher total revenue,\""
+    },
+    "DG14": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "DG15": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"Product 1 has been sold in 97 orders,.\"\" Product 1 has the highest loss\""
+    },
+    "DG16": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groudedness\uff1a\u201cThere is a high outlier share (7.3%) in the 'support_calls_last_90d' data, which may affect the reliability of related analyses\u201d"
+    },
+    "E14": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E15": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Product 2 has the highest profit margin at 362.98\""
+    },
+    "E17": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E18": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groudedness:\"conversions (6.9%), revenue (7.5%), and ROI (5.7%) \""
+    },
+    "E19": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"churn rates have shown a slight upward trend over the past five months\"\u201cThere are no outliers in monthly charges, suggesting consistent pricing across the customer base\u201d"
+    },
+    "P12": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"with predicted values around $4,979.79 to $4,979.84.\" \"confidence level of 0.2\"\u201cincluding a high outlier share in conversions (6.9% of values outside 1.5\u00d7IQR), revenue (7.5% of values outside 1.5\u00d7IQR), and ROI (5.7% of values outside 1.5\u00d7IQR). These outliers may affect the reliability of the trend analysis and should be addressed in future analyses.\u201d"
+    },
+    "P13": {
+      "answer_relevance": 0.5,
+      "groundedness": 1,
+      "notes": "1 relevance\uff1adoesn't mention \u201cHome Office\u201d at all"
+    },
+    "P14": {
+      "answer_relevance": 1,
+      "groundedness": 0.25,
+      "notes": "1 groundedness:\"5.48 \"out of nowhere, the same as \"next quarter predicts order quantities of 5.4783, 5.4783, and 5.4782, \"\n2 groundedness:\"The highest revenue\""
+    },
+    "C17": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C18": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"indicating a notable difference in consumer preference or engagement.\""
+    },
+    "C19": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "C20": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"Churned customers exhibit significantly higher average monthly charges compared to those who remain with the service. \"wrong"
+    },
+    "D18": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D19": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "D20": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.75,
+      "notes": "1 relevance: doesn't mention all the \"product category\""
+    },
+    "D21": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "DG17": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.75,
+      "notes": "1 groundedness: \"Customers with monthly charges below $15 show no instances of churn, suggesting that lower pricing may enhance customer retention.\" Several samples can not tell the whole story."
+    },
+    "DG18": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "DG19": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"the highest discount of approximately 10.12% \""
+    },
+    "DG20": {
+      "answer_relevance": 0.25,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E20": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "E21": {
+      "answer_relevance": 1,
+      "groundedness": 1,
+      "notes": ""
+    },
+    "E22": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.5,
+      "notes": "1 groundedness:\"highest unit price reaching $431.89\"\"Costs range from $68.91 to $194.51\""
+    },
+    "E23": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "E24": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "1 groundedness:\"Potential unusual customer behavior or errors in order processing\""
+    },
+    "P15": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "P16": {
+      "answer_relevance": 1,
+      "groundedness": 0.75,
+      "notes": "groundedness:\"forecast=0.0982\""
+    },
+    "P17": {
+      "answer_relevance": 1,
+      "groundedness": 0.5,
+      "notes": "1 groundedness: \"forecast \u2248 609.6\",\" continued declines\", \"Immediate reassessment is essential\""
+    }
+  }
+}

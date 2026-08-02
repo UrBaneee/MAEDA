@@ -1,0 +1,1502 @@
+{
+  "C01": {
+    "case_id": "C01",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report fully answers the user's question by providing a detailed comparison of sales performance across all four quarters. It specifies the revenue for each quarter, highlights the highest and lowest performing quarters, and discusses potential seasonal trends. The report also includes visual confirmation and recommendations based on the findings, directly addressing the user's request for a comparison.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "7/7 claims supported. \u2713 Quarter 4 consistently generates the highest revenue, totaling $1,801,747.75 (evidence: The findings show Quarter 4 revenue as $1,801,747.75, which is the highest among the quarters listed.) | \u2713 Quarter 3 shows a significant dip with revenue of $1,178,006.80 (evidence: The findings list Quarter 3 revenue as $1,178,006.80, which is the lowest among the quarters listed.) | \u2713 Quarter 4 has the highest revenue at $1,801,747.75 (evidence: The findings show Quarter 4 revenue as $1,801,747.75, which is the highest among the quarters listed.) | \u2713 Quarter 3 has the lowest revenue at $1,178,006.80 (evidence: The findings list Quarter 3 revenue as $1,178,006.80, which is the lowest among the quarters listed.) | \u2713 The revenue in Quarter 3 is significantly lower than in other quarters (evidence: The findings show Quarter 3 revenue as $1,178,006.80, which is lower than the revenues for Quarters 1, 2, and 4.) | \u2713 Quarter 4 outperforms other quarters in revenue generation (evidence: The findings show Quarter 4 revenue as $1,801,747.75, which is the highest among the quarters listed.) | \u2713 The revenue for each quarter was aggregated as follows: Q1: $1,321,831.71, Q2: $1,326,183.26, Q3: $1,178,006.80, Q4: $1,801,747.75 (evidence: The findings list the revenues for each quarter as Q1: $1,321,831.71, Q2: $1,326,183.26, Q3: $1,178,006.80, Q4: $1,801,747.75.)",
+      "valid": true
+    }
+  },
+  "C02": {
+    "case_id": "C02",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing conversion rates for several marketing channels (Email, Affiliate, Social) and comparing them. However, it incorrectly claims that the Search channel has the highest conversion rate without providing data for it, which is a key aspect of the question. This discrepancy affects the completeness of the answer.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.2,
+      "label": "fail",
+      "reasoning": "1/5 claims supported. \u2713 The Search channel has the highest conversion rate among all marketing channels. (evidence: The findings show that the Search channel has a mean conversion rate of 0.0649338275912053, which is higher than the mean conversion rates for Affiliate (0.037320476740455424), Display (0.012047670847448852), Email (0.044165956306483393), and Social (0.02159245578324603).) | \u2717 The Email channel has a conversion rate of approximately 4.71%. (no evidence found) | \u2717 The Email channel conversion rate is higher than the Affiliate (2.69%) and Social (1.41%) channels. (no evidence found) | \u2717 The Affiliate channel's conversion rate of approximately 2.69% is significantly lower than that of the Search channel. (no evidence found) | \u2717 The Social channel has the lowest conversion rate at approximately 1.41%. (no evidence found)",
+      "valid": true
+    }
+  },
+  "C03": {
+    "case_id": "C03",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not address the user's query about comparing average order value between new and returning customers. Instead, it focuses on comparing average order values across different customer segments (Consumer, Corporate, Home Office), which is not relevant to the user's question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "0/1 claims supported. \u2717 The average order values for the segments are as follows: Consumer ($1,246.12), Corporate ($1,235.63), and Home Office ($1,244.99), with Consumers having the highest average order value. (no evidence found) [judge disagreement across 3 samples: spread=1.00]",
+      "valid": true
+    }
+  },
+  "C04": {
+    "case_id": "C04",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying the product categories with the highest and lowest margins. It specifies that the Books category has the highest margin at approximately 217.83, while the Office Supplies category has the lowest margin at around 43.67. This provides a clear and specific response to the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 The Books category has the highest profit margin at approximately 217.83. (evidence: The groupby_aggregate_margin findings show Books with a margin of 217.83450000000002, which is the highest among the listed categories.) | \u2713 Office Supplies has the lowest margin at around 43.67. (evidence: The groupby_aggregate_margin findings show Office Supplies with a margin of 43.67, which is the lowest among the listed categories.) | \u2717 Product 2 generates the highest margin at $362.98. (no evidence found) | \u2713 Products 1 and 4 are operating at a loss with margins of -$161.82 and -$86.93, respectively. (evidence: The derive_margin findings show Product 1 with a margin of -161.82 and Product 4 with a margin of -86.93, confirming they are operating at a loss.)",
+      "valid": true
+    }
+  },
+  "C05": {
+    "case_id": "C05",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing specific churn rates for customers with 0 login days (24%) and those with 10+ login days (0%) in the last 30 days. It clearly distinguishes between the two groups and highlights the correlation between login activity and churn rates, addressing the user's query comprehensively.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 Customers with no login days in the last 30 days exhibit a churn rate of 24% (evidence: The findings show that customers with `login_days_last_30d=0` have a churn rate of 0.24.) | \u2713 Customers with 10 or more login days have a churn rate of 0% (evidence: The findings show that customers with `login_days_last_30d >= 10` have a churn rate of 0.0.)",
+      "valid": true
+    }
+  },
+  "C06": {
+    "case_id": "C06",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a comparison of average order revenue across customer segments. It specifies the average order revenue for each segment (Consumer, Corporate, and Home Office) and highlights the differences between them. The report also includes a summary and recommendations based on these findings, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 The Consumer segment generates the highest average order revenue at approximately $1,246. (evidence: The findings show Consumer segment average order revenue as $1,246.1159862932072, which is higher than Home Office ($1,244.9900427742123) and Corporate ($1,235.627831504004).) | \u2713 The Home Office segment follows closely with an average order revenue of around $1,245. (evidence: The findings show Home Office segment average order revenue as $1,244.9900427742123, which is less than Consumer ($1,246.1159862932072) but more than Corporate ($1,235.627831504004).) | \u2713 The Corporate segment has the lowest average order revenue at about $1,236. (evidence: The findings show Corporate segment average order revenue as $1,235.627831504004, which is less than both Consumer ($1,246.1159862932072) and Home Office ($1,244.9900427742123).) | \u2717 The confidence level for these findings is moderate at 60%. (no evidence found)",
+      "valid": true
+    }
+  },
+  "C07": {
+    "case_id": "C07",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the user's question by providing some information on revenue differences between the North and South regions, specifically highlighting that the North region has significantly higher revenue. However, it fails to directly compare revenue growth from 2022 to 2024 due to an analysis failure, which is a key aspect of the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2713 Revenue in the North region is significantly higher than in the South region, with a t-test statistic of 11.247 and a p-value of 0.0. (evidence: The findings include a t-test statistic of 11.247 and a p-value of 0.0, indicating a significant difference in revenue between the North and South regions.) | \u2713 Revenue growth calculations for the years 2022 to 2024 could not be determined due to a failure in the analysis step. (evidence: The report explicitly states that revenue growth calculations failed due to missing required parameters in the analysis step.) | \u2713 The highest revenue recorded on January 1, 2022, was $652.30 from the North region's Service Pack through the Partner channel. (evidence: The findings show a revenue of $652.30 for the North region's Service Pack through the Partner channel on January 1, 2022.) | \u2717 The East region generated the highest revenue in 2022, but the Central region is projected to surpass it in 2024. (no evidence found) | \u2717 The North region leads in revenue growth compared to all other regions. (no evidence found)",
+      "valid": true
+    }
+  },
+  "C08": {
+    "case_id": "C08",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing specific numbers for the number of orders placed in Q1 2024 (2,419 orders) and Q4 2024 (2,527 orders). It also highlights the increase in order volume from Q1 to Q4, which is the core of the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2713 In Q1 2024, there were 2,419 orders. (evidence: The analysis findings show that Q1 2024 had 2,419 orders.) | \u2713 In Q4 2024, there were 2,527 orders. (evidence: The analysis findings show that Q4 2024 had 2,527 orders.) | \u2713 Q4 2024 had the highest number of orders. (evidence: The analysis findings only provide order counts for Q1 and Q4 2024, with Q4 having more orders (2,527) than Q1 (2,419). No other quarters are mentioned for comparison.) | \u2717 The highest revenue from orders in Q4 was generated by order_id 2, totaling $2,812.70. (no evidence found) | \u2717 Q1's highest revenue came from order_id 1 at $1,822.28. (no evidence found)",
+      "valid": true
+    }
+  },
+  "C09": {
+    "case_id": "C09",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the user's question by providing a comparison of click-through rates between the Search and Social marketing channels. It mentions that the Search channel has a higher mean click-through rate than the Social channel. However, it incorrectly claims that the Search channel significantly outperforms the Social channel, despite the statistical test showing no significant difference. This inconsistency affects the completeness of the answer.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2717 The Search channel significantly outperforms the Social channel in terms of click-through rates. (no evidence found) | \u2717 The highest click-through rate recorded at 3.52% for campaign CAM0002. (no evidence found) | \u2713 Campaign CAM0006 within the Social channel achieved a click-through rate of 0.0404. (evidence: The findings show campaign CAM0006 in the Social channel with a click-through rate of 0.040434838025854146.) | \u2713 A statistical comparison yielded a p-value of 0.571027, indicating no significant difference in click-through rates between Search and Social channels. (evidence: The findings include a statistical test with a p-value of 0.571027, indicating no significant difference.) | \u2713 Campaign CAM0010 had the highest ROI at 2916.7. (evidence: The findings show campaign CAM0010 with an ROI of 2916.7.)",
+      "valid": true
+    }
+  },
+  "C10": {
+    "case_id": "C10",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a comparison of average monthly charges between customers on the Basic and Premium plans. It specifies that Premium customers have an average monthly charge of approximately $99.10, while Basic customers average $29.04. This information is clearly presented in the 'Key Findings' and 'Average Monthly Charges Comparison' sections, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 Premium plan customers average $99.10 in monthly charges. (evidence: The findings show that Premium plan customers have an average monthly charge of $99.10464516129034.) | \u2713 Basic plan customers average $29.04 in monthly charges. (evidence: The findings show that Basic plan customers have an average monthly charge of $29.036682380671774.) | \u2713 Premium plan customers exhibit significantly higher average monthly charges compared to those on the Basic plan. (evidence: The findings show that Premium plan customers have an average monthly charge of $99.10, while Basic plan customers have an average of $29.04, indicating a significant difference.) | \u2713 7.3% of values are considered high outliers (beyond 1.5\u00d7IQR). (evidence: The data quality section notes that 7.3% of values are outside 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "C11": {
+    "case_id": "C11",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a comparison of total units sold between the Online and Retail sales channels. It specifies that the Retail channel sold 30,505 units, while the Online channel sold 28,960 units, thus fully addressing the query with specific and relevant details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 The Retail channel outperformed the Online channel in unit sales, with 30,505 units sold compared to 28,960 units. (evidence: The findings show Retail with 30,505 units and Online with 28,960 units.) | \u2713 The Retail channel sold the highest number of units at 30,505, compared to the Online channel's 28,960 units. (evidence: The findings show Retail with 30,505 units and Online with 28,960 units.) | \u2713 The analysis revealed that the Retail channel led in total units sold, with 30,505 units, while the Online channel sold 28,960 units. (evidence: The findings show Retail with 30,505 units and Online with 28,960 units.)",
+      "valid": true
+    }
+  },
+  "C12": {
+    "case_id": "C12",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the user's question by providing the number of customers who joined before and after January 2022, stating there were 350 before and 355 after. However, it lacks specific details or evidence from the analysis findings to support the 355 figure for customers who joined after January 2022. The report mentions filtering and counting steps but does not clearly connect these to the final numbers presented, leaving a gap in directly addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 There were 350 customers who joined before January 2022. (evidence: The analysis findings include a step that counted customers who joined before January 2022, resulting in 350 customers.) | \u2713 There were 355 customers who joined after January 2022. (evidence: The analysis findings include a step that counted customers who joined after January 2022, resulting in 355 customers.) | \u2717 The highest number of new customers joined on January 4, 2022. (no evidence found) [judge disagreement across 3 samples: spread=0.33]",
+      "valid": true
+    }
+  },
+  "C13": {
+    "case_id": "C13",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a clear comparison of the total quantities ordered for Furniture and Books. It specifies that Furniture items have a total quantity of 12,507, while Books have 10,947, thus fully addressing the user's query with specific and relevant details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 Furniture items have a higher total quantity ordered compared to Books, with 12,507 units sold for Furniture versus 10,947 for Books. (evidence: The findings show category=Books, total_quantity=10947; category=Furniture, total_quantity=12507.) | \u2713 Furniture items have a total quantity ordered of 12,507, significantly higher than the 10,947 units ordered for Books. (evidence: The findings show category=Books, total_quantity=10947; category=Furniture, total_quantity=12507.) | \u2713 Furniture is currently more popular among customers compared to Books. (evidence: The findings show category=Books, total_quantity=10947; category=Furniture, total_quantity=12507, indicating higher sales for Furniture.)",
+      "valid": true
+    }
+  },
+  "C14": {
+    "case_id": "C14",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a specific comparison of the number of campaigns run on the Email and Search channels. It states that there are 429 campaigns on the Email channel and 371 on the Search channel, thus fully addressing the query with relevant details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 The Email channel has significantly more campaigns (429) compared to the Search channel (371). (evidence: The findings show 429 campaigns for Email and 371 for Search.) | \u2713 Campaign CAM0010 achieved the highest ROI of 2916.7. (evidence: The findings list Campaign CAM0010 with an ROI of 2916.7, and no other campaign in the findings has a higher ROI.)",
+      "valid": true
+    }
+  },
+  "C15": {
+    "case_id": "C15",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing specific churn rates for both the Basic and Premium plans, highlighting the difference between them. It also discusses the inability to statistically validate the difference due to insufficient data, which is relevant to understanding the comparison's reliability.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2717 Customers on the Basic plan exhibit a significantly higher churn rate of approximately 21.4% compared to 13.3% for those on the Premium plan. (no evidence found) | \u2713 The churn rate for the Basic plan is approximately 21.4%, while the Premium plan has a churn rate of 13.3%. (evidence: The findings show churn rates of 0.2139 for Basic and 0.1331 for Premium, which match the reported values.) | \u2713 The Basic plan has the highest churn rate. (evidence: The findings show the churn rate for Basic (0.2139) is higher than both Premium (0.1331) and Standard (0.1208).)",
+      "valid": true
+    }
+  },
+  "C16": {
+    "case_id": "C16",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing specific revenue figures for the West and East regions in 2023. It states that the West region generated $395,309.38, while the East region generated $350,064.96, clearly comparing the total revenues between the two regions.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2713 In 2023, the West region generated significantly higher revenue than the East region, with totals of $395,309.38 and $350,064.96, respectively. (evidence: The findings show the total revenue for the East region in 2023 is $350,064.96, while the West region's total revenue is $395,309.38.) | \u2717 This disparity highlights a critical opportunity for revenue growth in the East. (no evidence found) | \u2713 The total revenue for the East region in 2023 is $350,064.96, while the West region's total revenue is $395,309.38, indicating a revenue gap of $45,244.42. (evidence: The findings show the total revenue for the East region in 2023 is $350,064.96, while the West region's total revenue is $395,309.38. The revenue gap calculation is correct.) | \u2713 The West region leads in revenue generation, surpassing the East region by a significant margin. (evidence: The findings show the West region's total revenue is $395,309.38, which is higher than the East region's $350,064.96.) | \u2717 On January 1, 2023, the East region's Widget A achieved the highest revenue of $421.51 through online sales. (no evidence found)",
+      "valid": true
+    }
+  },
+  "C17": {
+    "case_id": "C17",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a comparison of total revenue from customers in Germany versus the UK. It specifies the total revenue figures for both countries, indicating that the UK has higher revenue than Germany. The report also mentions the lack of statistical significance in the findings, which is relevant to understanding the robustness of the comparison.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 Total revenue from the UK is approximately $2,123,800, while revenue from Germany is about $2,000,370. (evidence: The findings show total revenue for the UK as 2123799.7000000016 and for Germany as 2000370.9500000011.) | \u2717 The UK leads in total revenue among all countries analyzed, significantly outperforming its competitors. (no evidence found) | \u2713 A bar chart visualizing total revenue by country confirmed that the UK has the highest revenue. (evidence: The findings confirm that the UK has higher revenue than Germany, which are the only two countries analyzed.)",
+      "valid": true
+    }
+  },
+  "C18": {
+    "case_id": "C18",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a comparison of order counts between the Books and Electronics categories. It specifies the exact order counts for each category and highlights the difference between them, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 The Books category has a total of 2,017 orders. (evidence: The findings show category=Books, order_count=2017.) | \u2713 The Electronics category has only 1,563 orders. (evidence: The findings show category=Electronics, order_count=1563.) | \u2713 The order count for Books exceeds that of Electronics by 454 orders. (evidence: The findings show Books with 2,017 orders and Electronics with 1,563 orders, a difference of 454.)",
+      "valid": true
+    }
+  },
+  "C19": {
+    "case_id": "C19",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the average discounts for both Electronics and Clothing categories. It specifies that the average discount for Clothing is approximately 9.96% and for Electronics is approximately 10.00%. The report also notes the inability to perform a statistical comparison due to insufficient data, which is relevant to the user's query about comparing the discounts.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 The average discount for Clothing is approximately 9.96%. (evidence: The findings show the average discount for Clothing as 0.09962834489593658, which is approximately 9.96%.) | \u2713 The average discount for Electronics is approximately 10.00%. (evidence: The findings show the average discount for Electronics as 0.09996801023672425, which is approximately 10.00%.) | \u2713 A statistical comparison between Electronics and Clothing discounts could not be performed due to insufficient data, resulting in a p-value of nan. (evidence: The findings mention that a statistical comparison could not be performed due to insufficient data, leading to a p-value of nan.) | \u2717 Books have the highest average discount at 10.14%. (no evidence found)",
+      "valid": true
+    }
+  },
+  "C20": {
+    "case_id": "C20",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a comparison of average monthly charges between churned and retained customers. It specifies the average charges for both groups and confirms the statistical significance of the difference using a t-test. This directly addresses the user's request for a comparison. [judge disagreement across 3 samples: spread=0.50]",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.3333333333333333,
+      "label": "fail",
+      "reasoning": "1/3 claims supported. \u2717 Churned customers exhibit significantly higher average monthly charges compared to those who remain with the service. (no evidence found) | \u2717 Churned customers have an average monthly charge that is significantly higher than retained customers, with a t-test statistic of 6.1314 and a p-value of 0.0. (no evidence found) | \u2713 A t-test was conducted to compare the average monthly charges between churned and retained customers. The results indicated a t-test statistic of 6.1314 and a p-value of 0.0, confirming that the difference in average charges is statistically significant. (evidence: The findings include a t-test statistic of 6.1314 and a p-value of 0.0, indicating statistical significance.)",
+      "valid": true
+    }
+  },
+  "D01": {
+    "case_id": "D01",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the total sales figures for each region, specifically listing the revenue for Central, East, North, South, and West regions. It also includes a summary and analysis details that align with the user's request for total sales by region.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "6/6 claims supported. \u2713 The North region leads in revenue generation with over $1.36 million, significantly outperforming other regions. (evidence: The findings show the North region has the highest revenue at $1,363,760.55.) | \u2713 The East region also shows strong potential with over $1.16 million in revenue. (evidence: The findings show the East region generated $1,164,964.55 in revenue.) | \u2713 The Central region lags behind with the lowest revenue at $821,174.97. (evidence: The findings show the Central region has the lowest revenue at $821,174.97.) | \u2713 The North region has the highest revenue at $1,363,760.55, followed by the West region with $1,271,795.18. (evidence: The findings show the North region has the highest revenue at $1,363,760.55 and the West region has the second highest at $1,271,795.18.) | \u2713 The East region generated $1,164,964.55 in revenue, making it the third highest region. (evidence: The findings show the East region generated $1,164,964.55, which is the third highest after North and West.) | \u2713 The Central region has the lowest revenue at $821,174.97. (evidence: The findings show the Central region has the lowest revenue at $821,174.97.)",
+      "valid": true
+    }
+  },
+  "D02": {
+    "case_id": "D02",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the average order value for each product category, including specific figures for Books, Clothing, Electronics, Furniture, and Office Supplies. It also includes a summary and detailed breakdown of these values, fully addressing the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 The average order value for the Books category is approximately $1,543.26. (evidence: category=Books, average_order_value=1543.2604263758033) | \u2713 Office Supplies has the lowest average order value at approximately $770.88. (evidence: category=Office Supplies, average_order_value=770.8789637780817) | \u2713 The average order values for Clothing and Furniture are relatively high, at approximately $1,364.37 and $1,382.82 respectively. (evidence: category=Clothing, average_order_value=1364.3720168483667; category=Furniture, average_order_value=1382.8210445745167) | \u2713 Electronics has a moderate average order value of approximately $1,153.89. (evidence: category=Electronics, average_order_value=1153.8883621241214) | \u2713 Books category has the highest average order value at approximately $1,543.26. (evidence: Books has the highest value compared to Clothing ($1,364.37), Furniture ($1,382.82), Electronics ($1,153.89), and Office Supplies ($770.88).)",
+      "valid": true
+    }
+  },
+  "D03": {
+    "case_id": "D03",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing customer counts for five countries: Australia, Canada, France, Germany, and the UK. However, it misses mentioning the USA, which is included in the analysis findings but not in the report. This omission means the report does not fully address the user's question about customer distribution per country.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2717 We have customers from five distinct countries: Australia, Canada, France, Germany, and the UK. (no evidence found) | \u2713 Canada has the highest number of unique customers at 189. (evidence: The findings show Canada with 189 customers, which is the highest number listed.) | \u2713 France follows closely with 186 unique customers. (evidence: The findings show France with 186 customers, which is the second highest number listed.)",
+      "valid": true
+    }
+  },
+  "D04": {
+    "case_id": "D04",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing details on the top 5 products by revenue, but it does not fully address the user's request for the top 10 products. The analysis findings and report focus only on the top 5, missing key aspects of the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 Widget B is the top revenue-generating product, bringing in approximately $1,195,178.74. (evidence: Widget B has a revenue of $1,195,178.74, which is the highest among the listed products.) | \u2713 Gadget Lite and Service Pack are the second and third highest revenue products, with revenues of $1,127,051.35 and $1,122,027.04, respectively. (evidence: Gadget Lite has a revenue of $1,127,051.35 and Service Pack has a revenue of $1,122,027.04, which are the second and third highest in the list.) | \u2713 Gadget Pro and Widget A follow, generating revenues of $1,095,334.94 and $1,088,177.45, respectively. (evidence: Gadget Pro has a revenue of $1,095,334.94 and Widget A has a revenue of $1,088,177.45, which are the fourth and fifth highest in the list.)",
+      "valid": true
+    }
+  },
+  "D05": {
+    "case_id": "D05",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report partially addresses the user's request by acknowledging the failure to provide the monthly order volume for the last 12 months due to an aggregation issue. However, it does not provide the requested data or any partial results, focusing instead on the reasons for the failure and other unrelated findings. This limits the report's relevance to the user's specific query. [judge disagreement across 3 samples: spread=0.50]",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The highest revenue from a single order was generated on October 9, 2022, with order_id 2, totaling $2,812.70. (evidence: The findings show order_id 2 on October 9, 2022, with revenue of $2,812.70.) | \u2713 Another significant order occurred in July 2024, where order_id 1 generated $1,822.28 in revenue. (evidence: The findings show order_id 1 in July 2024 with revenue of $1,822.28.) | \u2713 The highest revenue recorded was from order_id 2 on October 9, 2022, with a total of $2,812.70. (evidence: The findings show order_id 2 on October 9, 2022, with revenue of $2,812.70.) | \u2713 The second highest revenue was from order_id 1 in July 2024, amounting to $1,822.28. (evidence: The findings show order_id 1 in July 2024 with revenue of $1,822.28, and no other order in the findings has a higher revenue except order_id 2.)",
+      "valid": true
+    }
+  },
+  "D06": {
+    "case_id": "D06",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the specific number of orders placed by customers in the USA, which is 1,571. This information is clearly stated in both the executive summary and the key findings, making it fully relevant to the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 A total of 1,571 orders were placed by customers in the USA. (evidence: The analysis findings show 'order_count=1571' for orders placed by customers in the USA.) | \u2713 The confidence level in this finding is 100%, indicating high reliability. (evidence: The report states a confidence level of 100% and mentions no quality issues flagged in the data quality section.) [judge disagreement across 3 samples: spread=0.50]",
+      "valid": true
+    }
+  },
+  "D07": {
+    "case_id": "D07",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing specific details on the total spend and revenue for each marketing channel. It lists the spend and revenue figures for Affiliate, Display, Email, Search, and Social channels, thus fully addressing the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8333333333333334,
+      "label": "pass",
+      "reasoning": "5/6 claims supported. \u2713 The Email channel has the highest marketing spend at approximately $2,094,536.45. (evidence: The findings show the Email channel with a spend of $2,094,536.45, which is the highest among the listed channels.) | \u2713 The Search channel had the lowest spend at approximately $1,797,704.70. (evidence: The findings show the Search channel with a spend of $1,797,704.70, which is the lowest among the listed channels.) | \u2717 The Email channel generated the highest revenue at approximately $60,607,080.18. (no evidence found) | \u2713 The Display channel generated the lowest revenue at approximately $14,921,637.30. (evidence: The findings show the Display channel with a revenue of $14,921,637.30, which is the lowest among the listed channels.) | \u2713 The Affiliate channel had a high spend of approximately $2,076,441.72 and generated revenue of approximately $51,309,441.79. (evidence: The findings show the Affiliate channel with a spend of $2,076,441.72 and revenue of $51,309,441.79.) | \u2713 The Search channel generated significant revenue of approximately $73,111,916.05. (evidence: The findings show the Search channel with a revenue of $73,111,916.05.)",
+      "valid": true
+    }
+  },
+  "D08": {
+    "case_id": "D08",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the average tenure for both churned and non-churned customers. It states that churned customers have an average tenure of 27.22 months, while non-churned customers have an average tenure of 31.07 months. This information is specific and relevant to the user's query about comparing the average tenure between these two groups.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 Churned customers have significantly shorter tenures. (evidence: The findings show churned customers have a mean tenure of 27.22 months, while non-churned customers have a mean tenure of 31.07 months.) | \u2713 There is a statistically significant difference in average tenure between churned and non-churned customers, with a t-test statistic of 5.6565 and a p-value of 0.0. (evidence: The findings include a t-test statistic of 5.6565 and a p-value of 0.0, indicating a significant difference.)",
+      "valid": true
+    }
+  },
+  "D09": {
+    "case_id": "D09",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying the single order that generated the most revenue (order ID 5810) and specifying that the customer was from the UK. It provides specific details about the order and the country, fully addressing the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "1/2 claims supported. \u2713 The highest revenue-generating order was order ID 5810, which brought in \u00a34,992.20 from a customer in the UK. (evidence: The analysis findings show order_id=5810, revenue=4992.2, country=UK.) | \u2717 The UK was identified as the country generating the highest revenue from orders, primarily due to this single order. (no evidence found)",
+      "valid": true
+    }
+  },
+  "D10": {
+    "case_id": "D10",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying sales representative rep_id 1029 as the one who generated the most total revenue, with a specific amount of $139,992.95. This information is clearly presented in both the executive summary and the key findings sections, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The highest total revenue was generated by rep_id 1029, amounting to $139,992.95. (evidence: The findings show rep_id 1029 with a revenue of $139,992.95, which is the highest among the listed representatives.) | \u2713 Rep_id 1029 is the top performer, generating a total revenue of $139,992.95, significantly surpassing other representatives. (evidence: The findings list rep_id 1029 with the highest revenue of $139,992.95, which is higher than the next highest revenue of $130,406.51 by rep_id 1048.) | \u2713 Rep_id 1029's revenue is nearly $140,000, indicating a substantial lead over peers. (evidence: The revenue for rep_id 1029 is $139,992.95, which is close to $140,000 and higher than any other listed revenue.) | \u2713 There were 238 fully duplicated rows in the dataset, accounting for 1.9% of the total data. (evidence: The data quality section mentions 238 fully duplicated rows, which is 1.9% of the total 12240 rows.)",
+      "valid": true
+    }
+  },
+  "D11": {
+    "case_id": "D11",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a breakdown of the total quantity of units sold for each product. It lists the units sold for Gadget Lite, Gadget Pro, Service Pack, Widget A, and Widget B, which aligns with the user's request for a product-wise breakdown of sales.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 Widget B is the top-selling product with 24,291 units sold. (evidence: Widget B: 24,291 units) | \u2713 Service Pack is closely followed by Widget B with 23,922 units. (evidence: Service Pack: 23,922 units) | \u2713 Gadget Lite has 23,057 units sold. (evidence: Gadget Lite: 23,057 units) | \u2713 Gadget Pro has 22,689 units sold. (evidence: Gadget Pro: 22,689 units) | \u2713 Gadget Lite and Gadget Pro have significantly lower sales figures. (evidence: Gadget Lite: 23,057 units, Gadget Pro: 22,689 units, compared to higher sales of Widget B and Service Pack.)",
+      "valid": true
+    }
+  },
+  "D12": {
+    "case_id": "D12",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the number of customers who joined each year from 2020 to 2023. It specifies the exact number of customers for each year, which fully addresses the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "6/6 claims supported. \u2713 In 2020, 249 customers joined. (evidence: The findings show that in 2020, 249 customers joined.) | \u2713 In 2021, 253 customers joined. (evidence: The findings show that in 2021, 253 customers joined.) | \u2713 In 2022, 240 customers joined. (evidence: The findings show that in 2022, 240 customers joined.) | \u2713 In 2023, 258 customers joined. (evidence: The findings show that in 2023, 258 customers joined.) | \u2713 The highest number of new customers was recorded in 2023, with a total of 258. (evidence: The findings show that 2023 had the highest number of new customers at 258, compared to other years: 2020 (249), 2021 (253), and 2022 (240).) | \u2713 The year 2022 experienced a decline in new customer registrations compared to the previous years. (evidence: The findings show that 2022 had 240 new customers, which is lower than 2020 (249) and 2021 (253).)",
+      "valid": true
+    }
+  },
+  "D13": {
+    "case_id": "D13",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not provide an answer to the user's question about the average discount applied across all orders. It states that no data was available for analysis, which means the question was not addressed at all.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "No checkable claims in report.",
+      "valid": true
+    }
+  },
+  "D14": {
+    "case_id": "D14",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a breakdown of the total quantity of items ordered by product category. It lists specific quantities for each category, which aligns with the user's request for a detailed breakdown.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8888888888888888,
+      "label": "pass",
+      "reasoning": "8/9 claims supported. \u2717 Clothing has the highest total quantity ordered at 11,120 units. (no evidence found) | \u2713 Office Supplies at 11,929 units. (evidence: The analysis findings show Office Supplies with a total quantity of 11,929 units.) | \u2713 Furniture at 12,507 units. (evidence: The analysis findings show Furniture with a total quantity of 12,507 units.) | \u2713 Electronics has the lowest total quantity ordered at 8,691 units. (evidence: The analysis findings show Electronics with the lowest total quantity of 8,691 units.) | \u2713 Clothing: 11,120 units (evidence: The analysis findings show Clothing with a total quantity of 11,120 units.) | \u2713 Office Supplies: 11,929 units (evidence: The analysis findings show Office Supplies with a total quantity of 11,929 units.) | \u2713 Furniture: 12,507 units (evidence: The analysis findings show Furniture with a total quantity of 12,507 units.) | \u2713 Books: 10,947 units (evidence: The analysis findings show Books with a total quantity of 10,947 units.) | \u2713 Electronics: 8,691 units (evidence: The analysis findings show Electronics with a total quantity of 8,691 units.)",
+      "valid": true
+    }
+  },
+  "D15": {
+    "case_id": "D15",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by listing the number of campaigns for each channel: Affiliate (412), Display (376), Email (429), Search (371), and Social (412). However, it does not explicitly state these numbers as the count of campaigns per channel, which is the user's specific query. Instead, it focuses on performance and optimization recommendations, which are not directly relevant to the question about the number of campaigns.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 Affiliate channel had 412 marketing campaigns. (evidence: The analysis findings list 'channel=Affiliate, campaign_id=412'.) | \u2713 Display channel had 376 marketing campaigns. (evidence: The analysis findings list 'channel=Display, campaign_id=376'.) | \u2713 Email channel had 429 marketing campaigns. (evidence: The analysis findings list 'channel=Email, campaign_id=429'.) | \u2713 Search channel had 371 marketing campaigns. (evidence: The analysis findings list 'channel=Search, campaign_id=371'.) | \u2713 Social channel had 412 marketing campaigns. (evidence: The analysis findings list 'channel=Social, campaign_id=412'.)",
+      "valid": true
+    }
+  },
+  "D16": {
+    "case_id": "D16",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying Product 11 as having the highest average revenue per order, with a specific figure of approximately $2,530.29. This information is clearly presented in both the executive summary and the key findings, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "1/1 claims supported. \u2713 Product 11 has the highest average revenue per order at approximately $2,530.29. (evidence: The findings show only one product, Product 11, with an average revenue per order of 2530.29159574468. No other products are listed for comparison.)",
+      "valid": true
+    }
+  },
+  "D17": {
+    "case_id": "D17",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the number of customers on each subscription plan: Basic (1,697 customers), Premium (1,705 customers), and Standard (1,598 customers). These details are specific and relevant to the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 The Premium plan has the highest number of customers at 1,705. (evidence: The findings show the Premium plan with 1,705 customers, which is higher than the Basic plan with 1,697 and the Standard plan with 1,598.) | \u2713 The Basic plan has 1,697 customers. (evidence: The findings list the Basic plan with 1,697 customers.) | \u2713 The Standard plan has 1,598 customers. (evidence: The findings list the Standard plan with 1,598 customers.)",
+      "valid": true
+    }
+  },
+  "D18": {
+    "case_id": "D18",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not provide any information about the total revenue generated from customers in Germany. It states that no data was available for analysis, thus failing to address the user's question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "No checkable claims in report.",
+      "valid": true
+    }
+  },
+  "D19": {
+    "case_id": "D19",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying the Furniture category as having the most orders, with a specific number of 2,221 orders. This provides a clear and direct response to the query about which product category has the most orders.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.3333333333333333,
+      "label": "fail",
+      "reasoning": "1/3 claims supported. \u2713 The Furniture category leads in sales with a total of 2,221 orders. (evidence: The analysis findings show that the Furniture category has 2,221 orders.) | \u2717 The Furniture category has the highest number of orders, totaling 2,221. (no evidence found) | \u2717 A bar chart visualization confirms that Furniture significantly outpaces all other categories in terms of orders. (no evidence found) [judge disagreement across 3 samples: spread=0.33]",
+      "valid": true
+    }
+  },
+  "D20": {
+    "case_id": "D20",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the average order discount for each product category, including specific percentages for Books, Clothing, Electronics, Furniture, and Office Supplies. It also highlights which category has the highest and lowest average discounts, addressing the user's query comprehensively.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "2/4 claims supported. \u2717 The Books category offers the highest average order discount at approximately 10.14%. (no evidence found) | \u2717 The Furniture category has the lowest average order discount at about 9.96%. (no evidence found) | \u2713 The average order discount for the Books category is approximately 10.14%. (evidence: The SQL results show Books at 0.1013882002974718, which is approximately 10.14%.) | \u2713 The Furniture category's average was 0.0996 (9.96%). (evidence: The SQL results show Furniture at 0.09961728950923007, which is approximately 9.96%.)",
+      "valid": true
+    }
+  },
+  "D21": {
+    "case_id": "D21",
+    "answer_relevance": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question by providing a detailed distribution of monthly charges among churned customers, specifying the range from $15.14 to $104.87. It also discusses the variance in charges and suggests that pricing alone may not be the primary factor in customer churn, which is relevant to understanding the distribution. [judge disagreement across 2 samples: spread=0.50]",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The distribution of monthly charges among churned customers ranges from $15.14 to $104.87. (evidence: The analysis findings list monthly charges as low as $15.14 and as high as $104.87 among churned customers.) | \u2713 Churned customers show a wide range of tenure, with some remaining for as long as 25 months while others churn after just 1 month. (evidence: The analysis findings show customer C00001 with a tenure of 25 months and customers C00008 and C00009 with a tenure of 1 month.) | \u2717 Customer ID 1 had the lowest monthly charges. (no evidence found) [judge disagreement across 3 samples: spread=0.33]",
+      "valid": true
+    }
+  },
+  "DG01": {
+    "case_id": "DG01",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the question by noting a significant revenue drop in Q3 and suggesting potential factors like seasonal demand fluctuations or changes in customer purchasing behavior. However, it lacks specific details or evidence explaining why the revenue dropped, such as comparisons with previous quarters or specific events that might have caused the decline. The mention of missing data and data quality issues is relevant but does not directly explain the revenue drop.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2713 Revenue in Q3 was significantly lower, totaling $1,178,006.8. (evidence: The group-by aggregation method confirmed the total revenue for Q3 as $1,178,006.8.) | \u2717 Q3 revenue totaled $1,178,006.8, indicating a notable decrease compared to previous quarters. (no evidence found) | \u2713 There are instances of missing revenue data in Q3, with NaN values present for some products. (evidence: The filter_q3 findings show NaN revenue values for some products in Q3.) | \u2713 A total of 238 fully duplicated rows were identified, representing 1.9% of the dataset. (evidence: The data quality section mentions 238 fully duplicated rows, which is 1.9% of the dataset.) | \u2717 Q3 was the most profitable period, with revenue peaking at $1,178,006.80. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG02": {
+    "case_id": "DG02",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question about the cause of the spike in customer churn last month. It identifies the Basic plan as having the highest churn rate and highlights the correlation between support calls and churn, providing specific details and analysis to support these findings. The report also discusses the impact of monthly charges and login frequency on churn, offering a comprehensive explanation of the factors contributing to the increased churn rate.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2713 Customers on the Basic plan exhibit the highest churn rate at approximately 23%, significantly higher than the Premium and Standard plans. (evidence: The findings show churn rates by plan: Basic (0.23), Premium (0.125), Standard (0.0898876404494382).) | \u2713 A positive correlation of 0.1685 exists between the number of support calls in the last 90 days and customer churn. (evidence: The correlation analysis shows a correlation of 0.1685 between support calls and churn.) | \u2713 There is a negative correlation of -0.1029 between monthly charges and churn. (evidence: The correlation analysis shows a correlation of -0.1029 between monthly charges and churn.) | \u2713 Customers on the Basic plan have a churn rate of 23%, compared to 12.5% for Premium and about 8.9% for Standard plans. (evidence: The findings show churn rates by plan: Basic (0.23), Premium (0.125), Standard (0.0898876404494382).) | \u2717 Customers who logged in less frequently (0 login days in the last 30 days) have a notably high churn rate. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG03": {
+    "case_id": "DG03",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the question of why the North region is underperforming by identifying weaknesses such as low online sales and varying effectiveness among sales representatives. However, it also contradicts the premise of the question by stating that the North region exhibits strong revenue performance, which is not aligned with the user's query about underperformance. This contradiction and lack of focus on underperformance factors reduce the relevance of the answer.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8571428571428571,
+      "label": "pass",
+      "reasoning": "6/7 claims supported. \u2713 The North region generates the highest revenue from Widget B, totaling approximately $292,693.47, with 5,805 units sold. (evidence: The findings show Widget B with revenue of $292,693.47 and 5,805 units sold, which matches the claim.) | \u2713 The Partner channel leads in revenue generation at approximately $343,805.58, outperforming Direct and Online channels. (evidence: The findings show the Partner channel with revenue of $343,805.58, which is higher than Direct ($342,107.09) and Online ($339,051.1).) | \u2713 The Online channel's revenue is the lowest among top channels at approximately $339,051.1. (evidence: The findings show the Online channel with revenue of $339,051.1, which is lower than Partner, Direct, and Retail channels.) | \u2717 The top sales representative in the North region generated $39,449.54, significantly lower than top performers in other regions. (no evidence found) | \u2713 Widget B leads in revenue with approximately $292,693, significantly outperforming other products like Service Pack and Gadget Pro. (evidence: The findings show Widget B with revenue of $292,693.47, which is higher than Service Pack ($276,564.94) and Gadget Pro ($267,152.37).) | \u2713 The Partner channel generates the highest revenue at approximately $343,805.58, closely followed by the Direct channel at $342,107.09. (evidence: The findings show the Partner channel with revenue of $343,805.58 and the Direct channel with $342,107.09.) | \u2713 Widget B leads in units sold with 5,805, followed closely by the Service Pack at 5,766 units. (evidence: The findings show Widget B with 5,805 units sold and Service Pack with 5,766 units.)",
+      "valid": true
+    }
+  },
+  "DG04": {
+    "case_id": "DG04",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying factors that correlate with high customer lifetime value. It specifies that tenure months have a strong positive correlation and monthly charges have a moderate positive correlation with customer lifetime value. It also notes the weak and negligible correlations of support calls and login days, respectively, providing a comprehensive overview of the factors involved.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 There is a strong positive correlation (0.732) between customer lifetime value and tenure months. (evidence: The correlation analysis shows a correlation coefficient of 0.732 between customer lifetime value and tenure months.) | \u2713 Customer lifetime value has a moderate positive correlation (0.6142) with monthly charges. (evidence: The correlation analysis shows a correlation coefficient of 0.6142 between customer lifetime value and monthly charges.) | \u2713 Support calls in the last 90 days show a very weak positive correlation (0.024) with customer lifetime value. (evidence: The correlation analysis shows a correlation coefficient of 0.024 between support calls in the last 90 days and customer lifetime value.) | \u2713 There is a negligible negative correlation (-0.0096) between login days in the last 30 days and customer lifetime value. (evidence: The correlation analysis shows a correlation coefficient of -0.0096 between login days in the last 30 days and customer lifetime value.) | \u2713 7.3% of values are outside 1.5\u00d7IQR for support calls in the last 90 days. (evidence: The data quality section states that 7.3% of values are outside 1.5\u00d7IQR for support calls in the last 90 days.)",
+      "valid": true
+    }
+  },
+  "DG05": {
+    "case_id": "DG05",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the question by discussing the correlation between login frequency and churn rates, suggesting that increased login frequency is associated with lower churn. However, it does not directly explain why customers who log in less frequently churn at a higher rate, missing key aspects such as potential reasons behind the behavior or underlying factors contributing to this trend.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.875,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 Customers with 50 login days in the last 30 days have a churn rate of 1.0. (evidence: The analysis findings show {'login_days_last_30d': 50, 'churned': 1.0}.) | \u2713 Customers with only 1 login day have a churn rate of 0.34. (evidence: The analysis findings show {'login_days_last_30d': 1, 'churned': 0.34}.) | \u2713 Customers logging in 30 days have a churn rate of approximately 30.2%. (evidence: The analysis findings show {'login_days_last_30d': 30, 'churned': 0.3023255813953488}.) | \u2713 There is a notable drop in churn rate as login days increase. (evidence: The analysis findings show a general trend of decreasing churn rates with increasing login days, e.g., {'login_days_last_30d': 35, 'churned': 0.4}, {'login_days_last_30d': 30, 'churned': 0.3023255813953488}.)",
+      "valid": true
+    }
+  },
+  "DG06": {
+    "case_id": "DG06",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing the ROI values for both Email and Display channels, indicating a substantial difference in performance. However, it does not explain the specific factors driving this difference, such as differences in spend, impressions, clicks, or conversions between the channels. The report also mentions a failed significance test, which does not directly address the user's question about what is driving the ROI difference.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The Email marketing channel has a significantly higher return on investment (ROI) of approximately 2780.31 compared to the Display channel's ROI of 687.30. (evidence: The groupby_channel analysis shows Email ROI as 2780.31 and Display ROI as 687.30.) | \u2713 The statistical significance of this difference could not be established due to a failed significance test. (evidence: The compare_roi analysis shows 'nan' for both the statistic and p_value, indicating a failed significance test.) | \u2717 Campaign CAM0001 achieved the highest ROI of 2023.7 with a spend of $1,873.25. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG07": {
+    "case_id": "DG07",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by explaining that Product 8 has a negative profit margin because its cost ($195.40) exceeds its unit price ($191.65), resulting in a profit margin of -3.75. This explanation is specific and relevant to the user's query about why Product 8 is unprofitable.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 Product 8 is currently unprofitable, with a negative profit margin of -3.75. (evidence: The findings show Product 8 has a unit price of $191.65 and a cost of $195.40, resulting in a profit margin of -3.75.) | \u2713 Product 8 has a unit price of $191.65 and a cost of $195.40. (evidence: The findings list Product 8 with a unit price of $191.65 and a cost of $195.40.) | \u2717 Product 2 has the highest profit margin at $362.98. (no evidence found) | \u2713 Products 1 and 4 are also showing substantial losses. (evidence: The findings show Product 1 has a profit margin of -161.82 and Product 4 has a profit margin of -86.93.)",
+      "valid": true
+    }
+  },
+  "DG08": {
+    "case_id": "DG08",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the user's question by providing revenue figures for both the Consumer and Corporate segments, showing that the Consumer segment has slightly higher revenue. However, it does not explain why the Corporate segment is generating less revenue, as it lacks analysis on factors contributing to the revenue differences. The report also incorrectly suggests a significant difference in revenue, which is misleading given the close figures.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The Consumer segment generated approximately $4.18 million in revenue. (evidence: The findings show the Consumer segment's revenue as $4,181,965.25.) | \u2713 The Corporate segment generated around $4.17 million in revenue. (evidence: The findings show the Corporate segment's revenue as $4,165,301.42.) | \u2713 The Consumer segment slightly outperforms the Corporate segment. (evidence: The findings show the Consumer segment's revenue ($4,181,965.25) is higher than the Corporate segment's revenue ($4,165,301.42).) | \u2713 The analysis could not determine if the revenue difference between segments is statistically significant due to insufficient data for a proper significance test. (evidence: The findings mention that the significance test could not compute a p-value due to insufficient observations.)",
+      "valid": true
+    }
+  },
+  "DG09": {
+    "case_id": "DG09",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the user's question by providing a comparison of the Display channel's click-through rate (CTR) with other channels, indicating that it is not significantly lower. However, it does not directly explain why the Display channel might have a lower CTR compared to others, missing key aspects such as potential reasons or factors contributing to this performance.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.4,
+      "label": "warn",
+      "reasoning": "2/5 claims supported. \u2713 The Display channel has a click-through rate (CTR) of approximately 0.027. (evidence: The groupby_channel findings show Display with a click-through rate of 0.027047062383677434.) | \u2717 The click-through rates for various channels are as follows: Email: 0.028, Search: 0.028, Affiliate: 0.027, Display: 0.027, Social: 0.027. (no evidence found) | \u2717 Campaign CAM0002 achieved the highest click-through rate at 3.52%. (no evidence found) | \u2717 Campaign CAM0014 generated the highest ROI of 1208.2. (no evidence found) | \u2713 The Display channel's CTR is not significantly lower than other channels. (evidence: The groupby_channel findings show Display's CTR is 0.027047062383677434, which is close to other channels' CTRs: Affiliate (0.027035667939404942), Email (0.027944954833281164), Search (0.027756965207114626), Social (0.02723429858540459).)",
+      "valid": true
+    }
+  },
+  "DG10": {
+    "case_id": "DG10",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the user's question by highlighting the significant difference in monthly charges between Premium and Basic plan customers. However, it does not provide specific reasons or features that justify the higher cost of the Premium plan, which is a key aspect of the user's query. The report suggests a need for further analysis of the features included in the Premium plan but does not offer any concrete details or evidence regarding what those features might be.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 Premium plan customers incur significantly higher monthly charges compared to Basic plan customers, with average charges of approximately $99.10 for Premium versus $29.04 for Basic. (evidence: The findings show Premium plan monthly charges as $99.10464516129034 and Basic plan monthly charges as $29.036682380671774.) | \u2713 Premium plan customers have average monthly charges of approximately $99.10. (evidence: The findings show Premium plan monthly charges as $99.10464516129034.) | \u2713 Basic plan customers average $29.04 in monthly charges. (evidence: The findings show Basic plan monthly charges as $29.036682380671774.) | \u2713 Premium and Standard plan customers made more support calls in the last 90 days, averaging 1.55 and 1.57 calls respectively, compared to 1.50 for Basic plan customers. (evidence: The findings show Premium plan support calls as 1.5489736070381233, Standard plan as 1.5657071339173967, and Basic plan as 1.5020624631703006.) | \u2713 Basic plan customers logged in an average of approximately 14.90 days in the last 30 days, more than Premium (14.48) and Standard (14.83) plan customers. (evidence: The findings show Basic plan login days as 14.903358868591633, Premium plan as 14.480351906158358, and Standard plan as 14.827284105131413.)",
+      "valid": true
+    }
+  },
+  "DG11": {
+    "case_id": "DG11",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by identifying that the Office Supplies category has a lower average product margin due to some products having negative margins. However, it does not fully explain why this category specifically has the lowest average margin compared to others, nor does it provide a comprehensive analysis of the factors contributing to this situation.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.625,
+      "label": "pass",
+      "reasoning": "5/8 claims supported. \u2713 The Office Supplies category has an average product margin of 43.67. (evidence: The findings show that the average product margin for the Office Supplies category is 43.67.) | \u2717 The Office Supplies category has the lowest average product margin. (no evidence found) | \u2713 Product 1 has a margin of -161.82. (evidence: The findings list Product 1 with a margin of -161.82.) | \u2713 Product 8 has a margin of -3.75. (evidence: The findings list Product 8 with a margin of -3.75.) | \u2717 Product 2 generates the highest margin at $362.98. (no evidence found) | \u2713 Product 1 incurs a significant loss with a margin of -$161.82. (evidence: The findings list Product 1 with a margin of -161.82.) | \u2713 Product 4 incurs a significant loss with a margin of -$86.93. (evidence: The findings list Product 4 with a margin of -86.93.) | \u2717 Product 6 stands out with the highest profit margin of $201.60 among office supplies. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG12": {
+    "case_id": "DG12",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not answer the user's question about why customers in the Gold loyalty tier are churning less than other tiers. It states that the analysis could not determine churn rates for the Gold tier due to missing data on the loyalty tier column, thus failing to provide any explanation or insights related to the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "No checkable claims in report.",
+      "valid": true
+    }
+  },
+  "DG13": {
+    "case_id": "DG13",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not address the user's question about why the Furniture category generates more total revenue than Books. Instead, it incorrectly states that Books generate more revenue than Furniture, which contradicts the analysis findings. The user's question is not answered at all.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 Books generated approximately $3,112,756 in total revenue. (evidence: The analysis findings show that Books have a total revenue of $3,112,756.279999995.) | \u2713 Furniture generated about $3,071,246 in total revenue. (evidence: The analysis findings show that Furniture has a total revenue of $3,071,245.5400000014.) | \u2713 Books outperform Furniture in total revenue. (evidence: The analysis findings show that Books have a total revenue of $3,112,756.279999995, which is higher than Furniture's total revenue of $3,071,245.5400000014.) | \u2713 The average margin for Books is approximately $1,447.41. (evidence: The analysis findings show that the average margin for Books is $1,447.4050322260746.) | \u2713 Furniture's average margin is $1,297.06. (evidence: The analysis findings show that the average margin for Furniture is $1,297.0616118865357.)",
+      "valid": true
+    }
+  },
+  "DG14": {
+    "case_id": "DG14",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the user's question by suggesting that increased support interactions correlate with customer dissatisfaction and potential churn. However, it does not provide a detailed explanation or specific reasons why more support calls lead to higher churn rates, such as potential issues with service quality or customer dissatisfaction. The report mainly presents data on churn rates associated with different numbers of support calls without delving into the underlying causes of this trend.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "4/6 claims supported. \u2713 Customers who made four support calls in the last 90 days exhibit a churn rate of approximately 33%. (evidence: The analysis findings show a churn rate of 33.46% for customers with four support calls.) | \u2713 Customers who made only one call have a churn rate of 12.6%. (evidence: The analysis findings show a churn rate of 12.56% for customers with one support call.) | \u2717 Churn rates increase progressively with the number of support calls: 12.6% for one call, 10% for two calls, 29.2% for three calls, and 33.5% for four calls. (no evidence found) | \u2713 Customer C00004 has the longest tenure at 59 months. (evidence: The analysis findings list customer C00004 with a tenure of 59 months.) | \u2713 Customer C00001, despite being on a premium plan, churned after 25 months. (evidence: The analysis findings show customer C00001 on a Premium plan with a tenure of 25 months and churned.) | \u2717 A scatter plot indicates a complex relationship between support calls and churn, with churn rates peaking at four calls before slightly declining. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG15": {
+    "case_id": "DG15",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by explaining that Product 1 shows a heavy loss due to its high cost of $194.51 compared to a unit price of $32.69, resulting in a consistent loss of $161.82 across multiple orders. It identifies the issue as systemic, providing specific details about the cost, unit price, and the number of orders affected, which fully addresses the user's query about the cause of the heavy loss.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2713 Product 1 is experiencing a significant loss of $161.82. (evidence: The findings show Product 1 with a loss of $161.82.) | \u2713 Product 1 has a high cost of $194.51 compared to a unit price of $32.69. (evidence: The findings list Product 1 with a cost of $194.51 and a unit price of $32.69.) | \u2717 Product 1 has been sold in 97 orders, all resulting in the same loss. (no evidence found) | \u2717 Product 1 has the highest loss among products. (no evidence found) | \u2713 Product 2 and Product 3 also show significant negative losses of $362.98 and $251.85, respectively. (evidence: The findings show Product 2 with a loss of -$362.98 and Product 3 with a loss of -$251.85.)",
+      "valid": true
+    }
+  },
+  "DG16": {
+    "case_id": "DG16",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not address the user's question about why customers who pay via PayPal churn less than those using other payment methods. It explicitly states that the analysis could not assess the relationship between payment methods and churn due to missing data on the 'payment_method' column. Therefore, it provides no information or insights related to the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "3/3 claims supported. \u2713 There is no significant difference in churn rates between Premium and Standard plan customers, as indicated by a p-value of 0.2867. (evidence: The statistical test results show a p-value of 0.2867, indicating no significant difference between Premium and Standard plans.) | \u2713 The analysis could not assess the relationship between payment methods and churn due to the absence of the 'payment_method' column in the dataset. (evidence: The report explicitly states that the 'payment_method' column was missing, preventing analysis of its impact on churn.) | \u2713 There is a high outlier share (7.3%) in the 'support_calls_last_90d' data, which may affect the reliability of related analyses. (evidence: The data quality section notes a 7.3% high outlier share in the 'support_calls_last_90d' data.)",
+      "valid": true
+    }
+  },
+  "DG17": {
+    "case_id": "DG17",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the question by indicating a weak negative correlation between higher monthly charges and churn, suggesting that customers with higher charges are less likely to churn. However, it does not provide a detailed explanation or specific reasons why this might be the case, such as potential factors like service quality, customer satisfaction, or value perception that could influence this trend. The report mainly focuses on the correlation and retention in lower-priced plans without delving into the underlying reasons for the observed behavior in higher-priced plans.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 Customers with higher monthly charges tend to have lower churn rates, with a correlation coefficient of -0.0864 indicating a weak negative relationship. (evidence: The correlation analysis shows a correlation coefficient of -0.0864 between monthly charges and churned status.) | \u2713 Customers with monthly charges below $15 show no instances of churn. (evidence: The groupby_aggregate findings show that for monthly charges of $12.68, 13.86, 14.47, 14.5, and 14.61, the churned status is 0.0.) | \u2713 There is a correlation of -0.0864 between monthly charges and churned status, indicating that customers with higher charges are less likely to churn. (evidence: The correlation analysis provides a correlation coefficient of -0.0864 between monthly charges and churned status.) | \u2713 Customers with monthly charges around $12.68 to $14.61 have a churned status of 0.0. (evidence: The groupby_aggregate findings show that for monthly charges of $12.68, 13.86, 14.47, 14.5, and 14.61, the churned status is 0.0.)",
+      "valid": true
+    }
+  },
+  "DG18": {
+    "case_id": "DG18",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides data on the number of orders for Books and Furniture, showing that Furniture has more orders. However, it does not directly explain why the Books category has fewer orders than Furniture. The report suggests exploring marketing strategies and customer preferences but does not provide specific reasons for the current discrepancy in order volumes.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The Furniture category has 2,221 orders, while the Books category has 2,017 orders. (evidence: The findings from 'count_orders_by_category' show that Furniture has 2,221 orders and Books has 2,017 orders.) | \u2713 Furniture has more orders than Books. (evidence: The findings from 'count_orders_by_category' show that Furniture has 2,221 orders and Books has 2,017 orders, confirming that Furniture has more orders.) | \u2717 Furniture orders outnumber Books by a notable margin. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG19": {
+    "case_id": "DG19",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the user's question by discussing the observed trend that customers with larger order quantities receive lower discounts. However, it does not provide a clear explanation or reasoning for why this trend exists, which is the core of the user's question. The report mentions a weak correlation and suggests a potential deterrent for bulk purchases, but it does not delve into the underlying reasons or business logic behind the discount structure.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "2/4 claims supported. \u2713 Customers receive the highest discount of approximately 10.12% for a quantity of 1. (evidence: The findings show a discount of 0.10120798319327733 (approximately 10.12%) for a quantity of 1.) | \u2717 Discounts decrease for larger quantities. (no evidence found) | \u2713 Analysis shows a very weak correlation (0.0083) between order quantity and discount. (evidence: The correlation analysis result shows a correlation of 0.0083 between quantity and discount.) | \u2717 The scatter plot confirms the trend that higher quantities tend to receive slightly lower discounts. (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG20": {
+    "case_id": "DG20",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not address the user's question about why customers who signed up through referral programs churn less. It explicitly states that no insights were found regarding this topic, and instead focuses on data quality issues and recommendations for future analysis.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "1/1 claims supported. \u2713 The dataset for support calls over the last 90 days exhibited a high outlier share, with 7.3% of values falling outside the 1.5\u00d7IQR range. (evidence: Data Quality section states 7.3% of values are outside 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "E01": {
+    "case_id": "E01",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides some details about the dataset, such as the segmentation by region, product sales, and sales channels. However, it does not offer a comprehensive overview of the dataset's structure, variables, or overall content. It focuses more on specific findings rather than giving a broad overview of the dataset itself.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "6/6 claims supported. \u2713 'Widget B' leads product sales with 2,514 units sold (evidence: The findings show 'Widget B' with 2,514 units sold.) | \u2713 'Retail' is the leading sales channel with 3,199 units sold (evidence: The findings show 'Retail' with 3,199 units sold.) | \u2713 'Service Pack' at 2,492 units (evidence: The findings show 'Service Pack' with 2,492 units sold.) | \u2713 'Direct' at 3,031 units (evidence: The findings show 'Direct' with 3,031 units sold.) | \u2713 The dataset contains 238 fully duplicated rows, accounting for 1.9% of the total data (evidence: The data quality section states there are 238 fully duplicated rows, which is 1.9% of the total 12,240 rows.) | \u2713 The West region has the highest unique representative ID at 2526 (evidence: The findings show the West region with rep_id 2526, which is the highest among the listed regions.)",
+      "valid": true
+    }
+  },
+  "E02": {
+    "case_id": "E02",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying anomalies and outliers in the sales data. It provides specific details about the number of outliers detected in both revenue and units sold, using the interquartile range (IQR) method. The report also includes percentages of outliers relative to the total observations, which addresses the user's query comprehensively.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 There are 187 outliers in the revenue data. (evidence: The analysis findings state that there are 187 outliers in the revenue data using the IQR method.) | \u2713 These outliers represent 1.58% of the total observations. (evidence: The analysis findings state that the 187 outliers represent 1.58% of the total observations.) | \u2713 The analysis found 470 outliers in the units sold data. (evidence: The analysis findings state that there are 470 outliers in the units sold data using the IQR method.) | \u2713 These outliers account for about 3.84% of the total observations. (evidence: The analysis findings state that the 470 outliers represent 3.84% of the total observations.) | \u2713 The dataset contains 238 fully duplicated rows, which constitutes 1.9% of the total data. (evidence: The data quality section states that there are 238 fully duplicated rows, which is 1.9% of the total data.)",
+      "valid": true
+    }
+  },
+  "E03": {
+    "case_id": "E03",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially addresses the question about patterns in customer purchasing behavior by mentioning varied purchasing behavior, seasonal product demand, and revenue disparities by segment. However, it lacks specific details and evidence to fully support these claims, such as concrete examples or data points that illustrate the identified patterns. The report also makes unsupported claims about specific customer IDs and revenue contributions, which detracts from its relevance to the user's question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The Consumer segment generates substantially more revenue than other segments. (evidence: The analysis shows customer_id=2 from the Consumer segment generated $20,730.32, which is higher than other segments like Corporate and Home Office.) | \u2713 Customer_id=2 contributed $20,730.32. (evidence: The join_customer_segment analysis shows customer_id=2, segment=Consumer, total_revenue=20730.32.) | \u2713 Customer_id=1 has multiple entries across different months. (evidence: The groupby_customer_month analysis shows multiple entries for customer_id=1 in different months.) | \u2713 Product_id=1 is consistently purchased in specific months, particularly February and March. (evidence: The groupby_product_month analysis shows multiple purchases of product_id=1 in February and March.)",
+      "valid": true
+    }
+  },
+  "E04": {
+    "case_id": "E04",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question by exploring the relationship between marketing spend and revenue. It provides a specific correlation coefficient of 0.3536, indicating a moderate positive correlation, and discusses the implications of this finding. The report also includes recommendations based on the analysis, making it highly relevant to the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2713 There is a moderate positive correlation between marketing spend and revenue, with a correlation coefficient of 0.3536. (evidence: The correlation analysis shows a coefficient of 0.3536 between spend and revenue.) | \u2717 The correlation matrix heatmap reveals strong positive correlations among several key variables. (no evidence found) | \u2713 6.9% of values are identified as outliers (beyond 1.5\u00d7IQR) for conversions. (evidence: Data quality notes mention 6.9% of values as outliers for conversions.) | \u2713 7.5% of values are outliers for revenue. (evidence: Data quality notes mention 7.5% of values as outliers for revenue.) | \u2713 5.7% of values are outliers for ROI. (evidence: Data quality notes mention 5.7% of values as outliers for ROI.)",
+      "valid": true
+    }
+  },
+  "E05": {
+    "case_id": "E05",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not provide any numerical data or specific numbers as requested by the user. It only discusses data quality issues and the lack of insights due to insufficient data, without presenting any actual numbers from the dataset.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 The dataset contained 238 fully duplicated rows. (evidence: Data Quality section states there are 238 fully duplicated rows.) | \u2713 The duplicated rows account for 1.9% of the total data. (evidence: Data Quality section states that 238 duplicated rows represent 1.9% of the dataset.)",
+      "valid": true
+    }
+  },
+  "E06": {
+    "case_id": "E06",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report provides a comprehensive overview of the customer churn dataset, addressing key aspects such as average tenure, monthly charges, support calls, and login frequency for churned versus non-churned customers. It also includes data quality notes and recommendations based on the findings, fully answering the user's request for an overview.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "6/6 claims supported. \u2713 Churned customers have an average tenure of approximately 27.2 months, while non-churned customers average 31.1 months. (evidence: The findings show churned=1, tenure_months=27.22222222222222 and churned=0, tenure_months=31.070192079677497.) | \u2713 Churned customers pay an average of $56.58 per month, compared to $63.58 for non-churned customers. (evidence: The findings show churned=1, monthly_charges=56.577586206896555 and churned=0, monthly_charges=63.57693146786815.) | \u2713 Churned customers made an average of 2.01 support calls in the last 90 days, while non-churned customers averaged 1.45 calls. (evidence: The findings show churned=1, support_calls_last_90d=2.0114942528735633 and churned=0, support_calls_last_90d=1.4505572682001422.) | \u2713 Churned customers logged in an average of 13.9 days in the last 30 days, compared to 14.9 days for non-churned customers. (evidence: The findings show churned=1, login_days_last_30d=13.924648786717752 and churned=0, login_days_last_30d=14.885226464311122.) | \u2713 5000 rows (evidence: The data quality section states there are 5000 rows.) | \u2713 7.3% of values outside 1.5\u00d7IQR (evidence: The data quality section mentions 7.3% of values are outside 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "E07": {
+    "case_id": "E07",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying anomalies in both campaign ROI and spend. It provides specific details about the number of outliers detected in each category, their percentage of the dataset, and sample outlier values, which are relevant to understanding the anomalies present.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 There are 40 identified outliers in campaign ROI, representing 2% of the dataset. (evidence: The analysis findings state there are 40 outliers in ROI, which is 2% of the dataset.) | \u2713 Sample outlier values include 11030.4 and 11792.6, indicating potential anomalies in performance. (evidence: The analysis findings list 11030.4 and 11792.6 as sample outlier values for ROI.) | \u2713 There are 5 identified outliers in campaign spending, accounting for 0.25% of the dataset. (evidence: The analysis findings state there are 5 outliers in spending, which is 0.25% of the dataset.) | \u2713 Sample outlier values include 11018.41 and 12455.67, suggesting unusual spending patterns. (evidence: The analysis findings list 11018.41 and 12455.67 as sample outlier values for spending.)",
+      "valid": true
+    }
+  },
+  "E08": {
+    "case_id": "E08",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by identifying a weak positive correlation between customer support calls and churn, with a specific correlation coefficient of 0.1619. It explains that customers who make more support calls may have a slightly higher likelihood of churning, thus addressing the relationship between the two variables as requested.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 There is a weak positive correlation (0.1619) between the number of support calls in the last 90 days and customer churn. (evidence: The correlation analysis shows a correlation coefficient of 0.1619 between 'support_calls_last_90d' and 'churned'.) | \u2713 A significant portion of the data for support calls (7.3%) contains high outliers. (evidence: The data quality section states that 7.3% of values are outside 1.5\u00d7IQR, indicating high outliers.)",
+      "valid": true
+    }
+  },
+  "E09": {
+    "case_id": "E09",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing the distribution of customers across the segments: Consumer, Corporate, and Home Office. It specifies the number of unique customers in each segment, which fully addresses the query about customer distribution.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 The Home Office segment has the highest number of unique customers, with 337 identified. (evidence: The findings show Home Office with 337 customers, which is more than Consumer (336) and Corporate (327).) | \u2713 The Home Office segment surpasses the Consumer segment (336) and Corporate segment (327). (evidence: The findings list Home Office with 337, Consumer with 336, and Corporate with 327 customers.)",
+      "valid": true
+    }
+  },
+  "E10": {
+    "case_id": "E10",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by stating that there are no unusual patterns in order discounts. It provides specific details from the anomaly detection analysis, confirming that there are zero outliers in the discount data, which indicates a consistent and stable discounting strategy. This directly addresses the user's inquiry about unusual patterns.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The anomaly detection analysis reported zero outliers in the discount data. (evidence: The findings state 'anomaly_detection: 0 outliers' and 'n_outliers=0'.) | \u2713 The outlier percentage is 0.0%. (evidence: The findings include 'outlier_pct=0.0'.) | \u2717 The confidence level in the analysis is 100%. (no evidence found)",
+      "valid": true
+    }
+  },
+  "E11": {
+    "case_id": "E11",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by stating that there is a moderate positive correlation between marketing spend and clicks, with a specific correlation coefficient of 0.5163. This provides a clear and relevant explanation of the relationship between the two variables, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "1/2 claims supported. \u2713 There is a moderate positive correlation between marketing spend and clicks, with a correlation coefficient of 0.5163. (evidence: The analysis findings show a correlation coefficient of 0.5163 between spend and clicks, described as moderate.) | \u2717 The correlation analysis was visualized through a heatmap, which highlighted strong positive correlations among several key variables, reinforcing the relationship between marketing spend and clicks. (no evidence found)",
+      "valid": true
+    }
+  },
+  "E12": {
+    "case_id": "E12",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides some relevant details about the orders dataset, such as the total number of rows (10,000) and mentions specific order quantities. However, it does not fully answer the user's request for an overview of the dataset, as it lacks information on other key aspects such as the dataset's structure, columns, or any additional context beyond average quantities. The report also includes unsupported claims about the average quantity and trends, which do not directly address the user's query for an overview.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.3333333333333333,
+      "label": "fail",
+      "reasoning": "1/3 claims supported. \u2717 The average quantity of items ordered across the dataset is 7.0. (no evidence found) | \u2713 The dataset contains a total of 10,000 rows of order data. (evidence: The analysis findings state 'pandas/groupby \u2192 10000 rows.') | \u2717 Orders with the highest average quantity (10.0) were identified for order_id 2 and order_id 5. (no evidence found)",
+      "valid": true
+    }
+  },
+  "E13": {
+    "case_id": "E13",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides detailed information on revenue by region, channel, and product sales, which partially addresses the question 'How are we doing?' by offering insights into financial performance. However, it lacks a direct assessment of overall performance or comparison to past performance, which would more fully answer the question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8333333333333334,
+      "label": "pass",
+      "reasoning": "5/6 claims supported. \u2713 The North region has the highest revenue at approximately $1.36 million. (evidence: The findings show North region revenue as $1,363,760.55, which is the highest among the listed regions.) | \u2713 The Central region has the lowest revenue at about $821 thousand. (evidence: The findings show Central region revenue as $821,174.97, which is the lowest among the listed regions.) | \u2713 The Retail channel generates the highest revenue at approximately $1.44 million. (evidence: The findings show Retail channel revenue as $1,437,142.12, which is the highest among the listed channels.) | \u2713 Widget B is the top-selling product with 24,291 units sold. (evidence: The findings show Widget B with 24,291 units sold, which is the highest among the listed products.) | \u2713 Gadget Pro is the lowest with 22,689 units sold. (evidence: The findings show Gadget Pro with 22,689 units sold, which is the lowest among the listed products.) | \u2717 Revenue fluctuates daily, with the highest recorded on January 5, 2022, at approximately $7,330. (no evidence found)",
+      "valid": true
+    }
+  },
+  "E14": {
+    "case_id": "E14",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by stating that there are no unusual patterns in order quantities. It provides specific details from the anomaly detection analysis, which found zero outliers, and supports this with a box plot visualization showing a consistent distribution. This directly addresses the user's inquiry about unusual patterns.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 There are no unusual patterns in order quantities, as confirmed by the anomaly detection analysis which reported zero outliers (n_outliers=0, outlier_pct=0.0). (evidence: The anomaly detection analysis reported zero outliers with n_outliers=0 and outlier_pct=0.0.) | \u2713 The analysis of order quantities reveals a stable and consistent distribution, with no detected outliers. (evidence: The anomaly detection analysis reported zero outliers, indicating a stable and consistent distribution.)",
+      "valid": true
+    }
+  },
+  "E15": {
+    "case_id": "E15",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by explaining the relationship between a product's unit price and its profit margin. It provides specific details about the strong positive correlation (0.9332) between unit price and profit margin, indicating that higher unit prices are generally associated with higher profit margins. The report also highlights exceptions, such as products with negative profit margins, which suggests potential issues with pricing or costs. This comprehensive explanation fully addresses the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The analysis reveals a strong positive correlation (0.9332) between a product's unit price and its profit margin. (evidence: The correlation matrix shows a correlation of 0.9332 between unit price and profit margin.) | \u2717 Product 2 has the highest profit margin at 362.98. (no evidence found) | \u2713 Products such as Product 1 (unit price: $32.69, profit margin: -161.82) and Product 4 (unit price: $10.44, profit margin: -86.93) have negative profit margins. (evidence: The findings list Product 1 with a profit margin of -161.82 and Product 4 with a profit margin of -86.93.)",
+      "valid": true
+    }
+  },
+  "E17": {
+    "case_id": "E17",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by stating that there is a very weak positive correlation between customer tenure and monthly charges, with a correlation coefficient of 0.0286. This indicates that customer tenure does not significantly influence monthly charges, which is the specific relationship the user inquired about.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "2/4 claims supported. \u2713 The analysis reveals a very weak positive correlation between customer tenure and monthly charges, with a correlation coefficient of 0.0286. (evidence: The correlation analysis shows a correlation coefficient of 0.0286 between tenure_months and monthly_charges.) | \u2713 This suggests that customer tenure may not significantly influence monthly charges. (evidence: The correlation coefficient of 0.0286 is very weak, indicating little to no influence.) | \u2717 A heatmap of the correlation matrix shows strong positive correlations between other key variables. (no evidence found) | \u2717 There are data quality issues related to the variable `support_calls_last_90d`, which has a high outlier share, with 7.3% of values falling outside 1.5\u00d7IQR. (no evidence found)",
+      "valid": true
+    }
+  },
+  "E18": {
+    "case_id": "E18",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question by identifying unusual patterns in campaign impressions through the detection of 15 outliers. It provides specific details about the outliers, including their values and the percentage they represent of the total data. This information is relevant to understanding the unusual patterns in campaign impressions.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 The analysis identified 15 outliers in campaign impressions. (evidence: The anomaly detection findings explicitly state there are 15 outliers in campaign impressions.) | \u2717 These outliers represent 0.75% of the total data. (no evidence found) | \u2713 Sample outlier values include 1,794,696 and 1,846,854. (evidence: The findings list 1,794,696 and 1,846,854 as outlier values.) | \u2713 High outlier shares in other metrics: 6.9% for conversions, 7.5% for revenue, and 5.7% for ROI. (evidence: The data quality section lists these percentages for conversions, revenue, and ROI.)",
+      "valid": true
+    }
+  },
+  "E19": {
+    "case_id": "E19",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not address the user's question 'What's next?' directly. It provides an analysis of churn rates and other related findings, but it does not suggest any specific next steps or actions in response to the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 Customers on the Basic plan experience the highest churn rate at approximately 21.4%, significantly higher than the Premium and Standard plans. (evidence: The findings show churn rates of 0.2139 for Basic, 0.1331 for Premium, and 0.1208 for Standard plans.) | \u2717 Churn rates have shown a slight upward trend over the past five months, peaking in May at approximately 13.7%. (no evidence found) | \u2713 There is a weak negative correlation between churn and tenure months (-0.0798). (evidence: The correlation analysis shows a correlation of -0.0798 between churn and tenure months.) | \u2713 There are no outliers in monthly charges, suggesting consistent pricing across the customer base. (evidence: The anomaly detection analysis using z-score method found 0 outliers in monthly charges.)",
+      "valid": true
+    }
+  },
+  "E20": {
+    "case_id": "E20",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question by identifying unusual patterns in campaign conversions through the detection of 36 outliers. It provides specific details about the outliers, including their percentage of total conversions and the statistical method used for detection. The report also discusses the potential impact of these outliers on campaign performance, which is relevant to the user's inquiry about unusual patterns.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The analysis identified 36 outliers in campaign conversions, representing 1.8% of total conversions. (evidence: The findings state that 36 outliers were detected, accounting for 1.8% of the total conversions.) | \u2713 6.9% of conversion values were identified as outliers. (evidence: The data quality section states that 6.9% of conversion values were identified as outliers.) | \u2713 7.5% of revenue values were identified as outliers. (evidence: The data quality section states that 7.5% of revenue values were identified as outliers.) | \u2713 5.7% of ROI values were identified as outliers. (evidence: The data quality section states that 5.7% of ROI values were identified as outliers.)",
+      "valid": true
+    }
+  },
+  "E21": {
+    "case_id": "E21",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by stating that there is a very weak positive correlation between order discount and order quantity, with a correlation coefficient of 0.0083. This indicates that discounts have minimal impact on the quantity of orders placed, which is a specific and relevant detail addressing the user's query about the relationship between these two variables.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The analysis reveals a very weak positive correlation between order discount and order quantity, with a correlation coefficient of 0.0083. (evidence: The findings show a correlation coefficient of 0.0083 between discount and quantity.) | \u2713 This suggests that discounts have minimal impact on the quantity of orders placed. (evidence: A correlation coefficient of 0.0083 is considered very weak, indicating minimal impact.) | \u2717 The correlation analysis heatmap shows strong positive correlations among several key variables. (no evidence found)",
+      "valid": true
+    }
+  },
+  "E22": {
+    "case_id": "E22",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report provides a comprehensive overview of the product catalog, detailing the range of categories, unit prices, and costs. It highlights the diversity of products and the variation in pricing, which directly addresses the user's request for an overview of the products catalog.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.25,
+      "label": "fail",
+      "reasoning": "2/8 claims supported. \u2713 The product catalog showcases a diverse range of categories, including Office Supplies, Furniture, Books, Electronics, and Clothing. (evidence: The analysis findings list products in categories: Office Supplies, Furniture, Books, Electronics, and Clothing.) | \u2717 The highest unit price is $431.89 for Furniture. (no evidence found) | \u2713 The highest cost is $194.51 for Office Supplies. (evidence: Product 1 in Office Supplies has a cost of $194.51, and no higher cost is listed in the findings.) | \u2717 Unit prices vary significantly, with the highest at $431.89 for Furniture and the lowest at $10.44 for Electronics. (no evidence found) | \u2717 The cost of products also varies, with the highest cost being $194.51 for Office Supplies and the lowest at $68.91 for Furniture. (no evidence found) | \u2717 The unit prices of products range from $10.44 to $431.89. (no evidence found) | \u2717 Product 2, priced at $431.89, is the most expensive item among the top five products listed. (no evidence found) | \u2717 Costs range from $68.91 to $194.51. (no evidence found) [judge disagreement across 3 samples: spread=0.35]",
+      "valid": true
+    }
+  },
+  "E23": {
+    "case_id": "E23",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question about the distribution of customer tenure by mentioning a concentration of new customers with tenures of 1 to 5 months and associating specific customer IDs with these tenures. However, it lacks a comprehensive overview of the entire distribution, such as total counts or percentages for each tenure range, which are key aspects of understanding the full distribution.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "1/2 claims supported. \u2713 The customer tenure distribution shows that there are customers with tenures ranging from 1 to 5 months, with specific customer IDs associated with each tenure month (e.g., customer_id=93 has a tenure of 1 month, customer_id=95 has a tenure of 2 months). (evidence: The analysis findings list specific customer IDs for tenure months 1 to 5, such as customer_id=93 for 1 month and customer_id=95 for 2 months.) | \u2717 The report claims a concentration of new customers with tenures of 1 to 5 months. (no evidence found) [judge disagreement across 3 samples: spread=0.30]",
+      "valid": true
+    }
+  },
+  "E24": {
+    "case_id": "E24",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by confirming the presence of anomalies in order revenue, specifically identifying 89 outliers using the IQR method. It provides specific details about the outliers, including their percentage of total orders and the method used for detection, which fully addresses the user's query about anomalies.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The analysis identified 89 outliers in order revenue. (evidence: The analysis findings explicitly state that 89 outliers were detected using the IQR method.) | \u2713 The outlier percentage is 0.0089. (evidence: The analysis findings state that the outlier percentage is 0.0089.) | \u2717 The total number of orders is 10,000,000. (no evidence found)",
+      "valid": true
+    }
+  },
+  "P01": {
+    "case_id": "P01",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a forecast for the next quarter's revenue based on current trends. It specifies that revenue is on an increasing trend and provides a predicted value of approximately 513.42 for the end of the next quarter. The report also discusses the methodology used (naive linear extrapolation) and the confidence level of the forecast, addressing the user's query comprehensively.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "4/6 claims supported. \u2713 Revenue is showing an increasing trend. (evidence: The analysis findings state 'increasing trend' and provide a slope of 0.006626 indicating growth.) | \u2713 A predicted value of approximately 513.42 for the end of the next quarter. (evidence: The report states a naive linear forecast predicting a value of 513.42 for the end of the next quarter.) | \u2713 The forecast is derived from a slope of 0.006626. (evidence: The analysis findings mention a slope of 0.006626.) | \u2717 The confidence level in this forecast is low (0.4). (no evidence found) | \u2717 A predicted revenue of 513.4233 for the period ending on December 31, 2024. (no evidence found) | \u2713 238 fully duplicated rows, which account for 1.9% of the dataset. (evidence: The data quality section mentions 238 fully duplicated rows, accounting for 1.9% of the dataset.)",
+      "valid": true
+    }
+  },
+  "P02": {
+    "case_id": "P02",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides a forecast of customer churn, but it is for June 1, 2024, rather than the next 30 days as requested. It mentions an increasing trend and provides some analysis details, but it does not directly address the specific timeframe of the next 30 days.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 The analysis indicates an increasing trend in customer churn. (evidence: The findings state 'increasing trend' and provide a slope of 1.4e-05 indicating a gradual increase.) | \u2713 A predicted churn rate of approximately 19.07% for June 1, 2024. (evidence: The report and findings both mention a predicted churn value of 0.1907 for June 1, 2024.) | \u2713 The slope of the trend line is 1.4e-05. (evidence: The findings explicitly state a slope of 1.4e-05.) | \u2713 5000 rows of data were analyzed. (evidence: The data quality section mentions '5000 rows'.) | \u2713 7.3% of values are outside 1.5\u00d7IQR. (evidence: The data quality section states '7.3% of values outside 1.5\u00d7IQR'.)",
+      "valid": true
+    }
+  },
+  "P03": {
+    "case_id": "P03",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not directly answer the user's question about which specific customers are most likely to upgrade their plan. Instead, it provides a general analysis of trends and correlations related to upgrade likelihood and churn rates, without identifying individual customers or specific criteria that would indicate a likelihood to upgrade.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "3/6 claims supported. \u2717 The forecast predicts a slight increase in the likelihood of customers upgrading their plans, with a value of approximately 0.1907 for the next period. (no evidence found) | \u2713 There is no significant correlation between engagement scores and churn rates, with a correlation coefficient of -0.0184. (evidence: The findings include a correlation matrix showing a correlation coefficient of -0.0184 between engagement scores and churn rates.) | \u2713 Churn rates are on the rise, as indicated by the trend analysis. (evidence: The findings mention an upward trend in churn rates based on trend analysis.) | \u2717 Customers with longer tenure months tend to have higher engagement scores. (no evidence found) | \u2717 The analysis shows an increasing trend with a slope of 1.4e-05 and a predicted value of 0.1907 for the next period (June 1, 2024). (no evidence found) | \u2713 The R-squared value is 0.0029, indicating a weak fit, but the p-value of 0.000128 suggests statistical significance. (evidence: The findings include an R-squared value of 0.0029 and a p-value of 0.000128, indicating statistical significance despite a weak fit.)",
+      "valid": true
+    }
+  },
+  "P04": {
+    "case_id": "P04",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a forecast for the next quarter's marketing spend, which is approximately 4979.79, based on current trends. It also discusses the increasing trend in marketing spend, albeit with a lack of statistical significance, and advises caution in making budget adjustments. This directly addresses the user's query about what the total marketing spend will look like next quarter based on current trends.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 Total marketing spend is showing an upward trend with a slope of 0.026239. (evidence: The findings state an increasing trend with a slope of 0.026239.) | \u2713 The trend is not statistically significant (p-value of 0.737318). (evidence: The findings mention a p-value of 0.737318, indicating lack of statistical significance.) | \u2717 The forecast predicts a marketing spend of approximately 4979.79 for the next quarter. (no evidence found) | \u2713 There are notable outliers in the data, with 6.9% of values for conversions, 7.5% for revenue, and 5.7% for ROI falling outside the acceptable range (1.5\u00d7IQR). (evidence: The data quality section mentions these percentages of outliers for conversions, revenue, and ROI.)",
+      "valid": true
+    }
+  },
+  "P05": {
+    "case_id": "P05",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing a forecast of the customer churn rate for the next quarter using a naive linear extrapolation method. However, it does not specifically address the next quarter's forecast, instead projecting up to September 2024. The report also lacks specific details about the forecast for the immediate next quarter, which is what the user asked for.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5714285714285714,
+      "label": "warn",
+      "reasoning": "4/7 claims supported. \u2713 The customer churn rate has been on a slight upward trend, reaching approximately 13.74% in May 2023. (evidence: The findings show a churn rate of 0.13740458015267176 for May 2023.) | \u2717 A naive linear forecast suggests this rate could escalate to about 19.77% by September 2024. (no evidence found) | \u2713 The customer churn rate has increased from January to May 2023, with the latest rate at 13.74% in May. (evidence: The findings show an increase in churn rate from 0.13168724279835392 in January 2023 to 0.13740458015267176 in May 2023.) | \u2717 A naive linear forecast predicts the churn rate could rise to 19.77% by September 2024. (no evidence found) | \u2713 The churn rate has shown a steady increase, culminating in a rate of 13.74% in May 2023. (evidence: The findings show an increase in churn rate from 0.13168724279835392 in January 2023 to 0.13740458015267176 in May 2023.) | \u2717 The forecast indicates a potential increase to 19.77% by September 2024. (no evidence found) | \u2713 There are data quality concerns regarding support calls in the last 90 days, with 7.3% of values identified as high outliers (beyond 1.5\u00d7IQR). (evidence: The data quality section mentions 7.3% of values as high outliers beyond 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "P06": {
+    "case_id": "P06",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not provide any prediction of customer satisfaction scores for the next quarter. It explicitly states that no significant insights or relevant data insights were generated, thus failing to address the user's request for a prediction.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "1/1 claims supported. \u2713 7.3% of values are identified as high outliers, falling outside of 1.5 times the interquartile range (IQR). (evidence: Data Quality section states: 7.3% of values outside 1.5\u00d7IQR.)",
+      "valid": true
+    }
+  },
+  "P07": {
+    "case_id": "P07",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by identifying the North and East regions as having high current revenue, which could imply potential for future growth. However, it explicitly states that revenue growth forecasts could not be determined due to analysis failures, which means it does not directly answer which regions are likely to see the fastest revenue growth next year. The report lacks specific projections or trends that would directly address the user's question about future growth.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The North region has the highest revenue among all regions, totaling $447,811.56. (evidence: The groupby_region_revenue findings show the North region with a revenue of $447,811.56, which is the highest among the listed regions.) | \u2713 The East region follows closely with a revenue of $350,064.96, indicating strong market potential. (evidence: The groupby_region_revenue findings show the East region with a revenue of $350,064.96, which is the second highest among the listed regions.) | \u2713 The North region generated $4,968.80 from online sales of Gadget Lite on January 1, 2023. (evidence: The filter_current_year findings include an entry for the North region with Gadget Lite, channel Online, and revenue $4,968.80 on January 1, 2023.) | \u2713 There were 238 fully duplicated rows, which account for 1.9% of the dataset. (evidence: The Data Quality section explicitly states there are 238 fully duplicated rows, accounting for 1.9% of the dataset.)",
+      "valid": true
+    }
+  },
+  "P08": {
+    "case_id": "P08",
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not directly answer the user's question about the total order discount cost for next month. It provides a forecast for January 1, 2025, but does not specify the cost for the upcoming month. Additionally, the report discusses trends and strategies without addressing the specific cost for next month.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2717 The total discount cost is forecasted to decrease to approximately $5.01 by January 1, 2025. (no evidence found) | \u2713 The highest total discount cost recorded was approximately $6.05 on January 1, 2022. (evidence: The findings show a total discount cost of 6.05 on January 1, 2022.) | \u2713 The analysis indicates a decreasing trend in total discount costs, with a slope of -0.000102. (evidence: The findings mention a decreasing trend with a slope of -0.000102.) | \u2713 The trend is not statistically significant, as evidenced by an r_squared value of 0.0002 and a p_value of 0.644547. (evidence: The findings provide an r_squared value of 0.0002 and a p_value of 0.644547, indicating the trend is not statistically significant.)",
+      "valid": true
+    }
+  },
+  "P09": {
+    "case_id": "P09",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides a forecast for the units sold for Widget A next quarter, estimating approximately 9.91 units. However, it lacks specific details on how this forecast was calculated and does not address potential discrepancies or errors in the forecast, which are noted in the automated caveats. The answer partially addresses the user's question but misses key aspects such as the methodology behind the forecast and the plausibility of the estimate.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "6/6 claims supported. \u2713 The analysis reveals a gradual increase in units sold for Widget A, with a slope of 0.000313. (evidence: The findings state a slope of 0.000313 indicating an increasing trend.) | \u2713 A naive linear forecast suggests that approximately 9.91 units will be sold in the next quarter. (evidence: The report and findings both mention a naive linear forecast predicting approximately 9.91 units.) | \u2713 The highest revenue for Widget A was recorded on January 1, 2022, in the North region, exceeding $1,100. (evidence: The findings show revenue on January 1, 2022, in the North region from Online and Partner channels totaling over $1,100.) | \u2713 The analysis shows a significant upward trend in units sold for Widget A, with a slope of 0.000313 (p-value: 0.043558). (evidence: The findings confirm a slope of 0.000313 with a p-value of 0.043558 indicating significance.) | \u2713 The forecasted sales of 9.91 units for the next quarter seems implausibly low given the context of the data provided. (evidence: The findings show multiple instances of daily sales exceeding 9.91 units, suggesting the forecast may be inaccurate.) | \u2713 There were issues with data quality, specifically 238 fully duplicated rows, which account for 1.9% of the dataset. (evidence: The data quality section mentions 238 fully duplicated rows, accounting for 1.9% of the dataset.)",
+      "valid": true
+    }
+  },
+  "P11": {
+    "case_id": "P11",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report provides current ROI figures for various marketing channels, indicating that 'Search' has the highest ROI and 'Display' the lowest. However, it does not directly answer the user's question about which channels will have the best ROI next year, as it lacks future projections due to missing date data for time series analysis.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The 'Search' marketing channel currently boasts the highest ROI at approximately 4009.58. (evidence: The findings show 'Search' with an ROI of 4009.5843665768193, which is the highest among the listed channels.) | \u2713 The 'Display' channel shows the lowest ROI at around 687.30. (evidence: The findings show 'Display' with an ROI of 687.2954787234042, which is the lowest among the listed channels.) | \u2713 The 'Search' channel has the highest ROI at approximately 4009.58, followed by 'Email' at around 2780.31. (evidence: The findings list 'Search' with an ROI of 4009.5843665768193 and 'Email' with an ROI of 2780.3146853146854, confirming the order.) | \u2713 The 'Display' channel has the lowest ROI at approximately 687.30. (evidence: The findings show 'Display' with an ROI of 687.2954787234042, which is the lowest among the listed channels.)",
+      "valid": true
+    }
+  },
+  "P12": {
+    "case_id": "P12",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a forecast of the total campaign spend for the next quarter, indicating a slight increasing trend with specific predicted values. It also addresses the statistical significance of the trend, advising caution in interpreting the forecast. This directly relates to the user's inquiry about future campaign spending.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8333333333333334,
+      "label": "pass",
+      "reasoning": "5/6 claims supported. \u2713 The total campaign spend is projected to show a slight increasing trend over the next quarter, with predicted values around $4,979.79 to $4,979.84. (evidence: The naive linear forecast indicates an increasing trend in campaign spend, with predicted values for the next three periods being approximately $4,979.79, $4,979.81, and $4,979.84.) | \u2713 The trend lacks statistical significance, suggesting caution in budgetary decisions. (evidence: The trend's statistical analysis shows an r_squared value of 0.0001 and a p_value of 0.737318, indicating that the trend is not statistically significant.) | \u2713 The naive linear forecast indicates an increasing trend in campaign spend, with predicted values for the next three periods being approximately $4,979.79, $4,979.81, and $4,979.84. (evidence: The naive linear forecast indicates an increasing trend in campaign spend, with predicted values for the next three periods being approximately $4,979.79, $4,979.81, and $4,979.84.) | \u2713 The trend's statistical analysis shows an r_squared value of 0.0001 and a p_value of 0.737318, indicating that the trend is not statistically significant. (evidence: The statistical analysis of the trend revealed an r_squared of 0.0001, indicating that the model explains virtually none of the variance in the data. The p_value of 0.737318 further confirms that the trend is not statistically significant.) | \u2717 Given the low confidence level of 0.2 and the low impact of the trend, it is advisable to approach the forecast with caution. (no evidence found) | \u2713 The analysis encountered data quality issues, including a high outlier share in conversions (6.9% of values outside 1.5\u00d7IQR), revenue (7.5% of values outside 1.5\u00d7IQR), and ROI (5.7% of values outside 1.5\u00d7IQR). (evidence: Data Quality section mentions high outlier share: 6.9% for conversions, 7.5% for revenue, and 5.7% for ROI.)",
+      "valid": true
+    }
+  },
+  "P13": {
+    "case_id": "P13",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing revenue trends for the Consumer and Corporate segments, indicating changes over the years. However, it explicitly states that there is insufficient data to determine which segment will grow the fastest next year, thus not fully answering the user's question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The Consumer segment's revenue increased from approximately $1,391,685 in 2022 to $1,432,764 in 2023. (evidence: The findings show Consumer segment revenue as $1,391,684.9 in 2022 and $1,432,764.35 in 2023.) | \u2713 The Consumer segment's revenue is expected to decrease to about $1,357,516 in 2024. (evidence: The findings show Consumer segment revenue projection as $1,357,516 in 2024.) | \u2713 The Corporate segment's revenue decreased from approximately $1,419,044 in 2022 to $1,310,873 in 2023. (evidence: The findings show Corporate segment revenue as $1,419,044.41 in 2022 and $1,310,873.47 in 2023.) | \u2713 The Consumer segment surpassed Corporate in 2023, indicating a shift in revenue dynamics. (evidence: The findings show Consumer segment revenue as $1,432,764.35 in 2023, which is higher than Corporate's $1,310,873.47.)",
+      "valid": true
+    }
+  },
+  "P14": {
+    "case_id": "P14",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's request to forecast order quantity trends for the next quarter. It provides a specific forecast value of approximately 5.48 for the next quarter and discusses the decreasing trend observed in the time series analysis. The report also highlights the statistical insignificance of the trend, which is relevant to understanding the reliability of the forecast.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 The order quantity trend is decreasing, with a forecast for the next quarter showing predicted values of approximately 5.48. (evidence: The time series analysis indicates a decreasing trend with a forecast for the next quarter predicting order quantities of 5.4783, 5.4783, and 5.4782.) | \u2713 The time series analysis indicates a slope of -8e-06, but the trend is not statistically significant, as evidenced by an r_squared value of 0.0001 and a p_value of 0.408588. (evidence: The analysis findings state a slope of -8e-06, r_squared value of 0.0001, and p_value of 0.408588, indicating the trend is not statistically significant.) | \u2717 The highest revenue from orders is generated in the third quarter of 2024, with a notable order on July 28th yielding $1,822.28. (no evidence found)",
+      "valid": true
+    }
+  },
+  "P15": {
+    "case_id": "P15",
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report partially answers the question by providing the current customer country distribution but fails to address the future distribution due to missing data for projections. It acknowledges the inability to project future distribution but does not provide any specific details or estimates for next year's distribution.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "2/2 claims supported. \u2713 The current customer distribution includes customers from Australia, Canada, France, Germany, and the UK, with Canada having the highest number of unique customers at 189. (evidence: The analysis findings show Canada with 189 customers, which is the highest among the listed countries: Australia (141), France (186), Germany (162), UK (171), and USA (151).) | \u2713 The future customer country distribution could not be determined due to a failure in the time series projection step, which encountered missing data for the 'joined_date' column. (evidence: The report states that the time series projection failed due to missing 'joined_date' data, which is confirmed in the Analysis Details section.)",
+      "valid": true
+    }
+  },
+  "P16": {
+    "case_id": "P16",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by providing a forecast for the average order discount for the next quarter, predicting a value of 0.0982. It also explains the basis of the forecast, noting the decreasing trend and the lack of statistical significance, which are relevant details for understanding the forecast's reliability.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "1/2 claims supported. \u2717 The average order discount is forecasted to decrease, with a predicted value of 0.0982 for the next three periods. (no evidence found) | \u2713 The time series analysis shows a decreasing trend with a slope of -0.0, but the r_squared value is 0.0003 and the p_value is 0.098527, indicating a lack of statistical significance. (evidence: The findings include a slope of -0.0, r_squared value of 0.0003, and p_value of 0.098527, indicating a lack of statistical significance.)",
+      "valid": true
+    }
+  },
+  "P17": {
+    "case_id": "P17",
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question by stating that conversions are not expected to keep rising, as there is a decreasing trend in conversions according to the analysis. It provides specific details about the trend and forecast, indicating a decline rather than an increase in conversions. [judge disagreement across 3 samples: spread=0.50]",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "4/4 claims supported. \u2713 The analysis indicates a concerning downward trend in conversions, with a naive linear forecast predicting continued declines. (evidence: The findings show a decreasing trend in conversions with a slope of -0.002779 and a naive linear forecast predicting future conversions to decrease to approximately 609.6.) | \u2713 Historical data analysis shows a decreasing trend in conversions, with a slope of -0.002779 and an r_squared of 0.0, indicating the trend is not statistically significant. (evidence: The findings explicitly state a decreasing trend with a slope of -0.002779 and an r_squared of 0.0, indicating non-significance.) | \u2713 The forecast predicts conversions will decrease to approximately 609.6 in the upcoming periods, based on a naive linear extrapolation of historical data. (evidence: The forecast predicts future conversions to be 609.624, 609.6212, and 609.6184, which aligns with the claim of approximately 609.6.) | \u2713 6.9% of conversion values, 7.5% of revenue values, and 5.7% of ROI values identified as outliers. (evidence: The data quality section notes these percentages as outliers for conversion, revenue, and ROI values.)",
+      "valid": true
+    }
+  }
+}

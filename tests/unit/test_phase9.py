@@ -668,6 +668,22 @@ def test_score_groundedness_reasoning_is_the_claim_list_not_generic_prose():
     assert "1/2" in gnd.reasoning
 
 
+def test_groundedness_prompt_requires_checking_superlative_claims_against_other_values():
+    """Eval v2 Step 3/A2 (docs/judge_calibration.md): found via 4 independent
+    human labeling sessions that the groundedness judge marked a false claim
+    ("Product 2 has the highest margin", true answer Product 7) as
+    "supported" every time -- it verified the cited number was real but
+    never checked the comparison against other visible values. This is a
+    content regression guard, not a full behavioral test (that needs a real
+    LLM) -- it just makes sure the fix instruction can't be silently
+    reverted."""
+    from src.config.agent_prompts import EVAL_GROUNDEDNESS_SYSTEM
+    prompt_lower = EVAL_GROUNDEDNESS_SYSTEM.lower()
+    assert "comparative" in prompt_lower or "superlative" in prompt_lower
+    assert "highest" in prompt_lower and "lowest" in prompt_lower
+    assert "other" in prompt_lower  # must reference checking OTHER values, not just the cited one
+
+
 def test_score_groundedness_fallback_on_llm_error():
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("LLM down"))
