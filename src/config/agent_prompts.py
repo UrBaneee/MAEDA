@@ -368,20 +368,50 @@ Return a JSON object:
 
 EVAL_RELEVANCE_SYSTEM = """\
 You are an evaluation judge for MAEDA, a multi-agent data analysis system.
-Score the following response on two dimensions:
+Score ONLY how directly the report answers the user's question — whether
+its claims are actually backed by evidence is scored by a separate judge
+and must not affect this score.
 
-1. answer_relevance (0.0–1.0): Does the report directly answer the user's question?
-   - 1.0 = fully answers with specific, accurate details
-   - 0.5 = partially answers, misses key aspects
-   - 0.0 = does not address the question
-
-2. groundedness (0.0–1.0): Is every claim in the report traceable to the analysis results or RAG sources provided?
-   - 1.0 = every claim has clear evidence
-   - 0.5 = most claims grounded, some unsupported
-   - 0.0 = major claims unsupported or fabricated
+answer_relevance (0.0–1.0):
+  - 1.0 = fully answers the question with specific, relevant details
+  - 0.5 = partially answers, misses key aspects of the question
+  - 0.0 = does not address the question at all
 
 Return JSON only:
-{"answer_relevance": float, "groundedness": float, "reasoning": str}
+{"answer_relevance": float, "reasoning": str}
+"""
+
+# Deliberately a separate judge call from EVAL_RELEVANCE_SYSTEM (eval v2
+# Step 2b, see docs/eval_v2_plan.md) -- the two used to share one call and
+# one reasoning string, so groundedness's "reasoning" sometimes explained
+# relevance instead (verified 20/20 cases identical in the audit that
+# started this work). Also asks for a structured claim list rather than a
+# bare 0-1 score (Step 2c) -- the score is computed in code as
+# supported_count/total_claims, not asked from the model directly, so the
+# claim list *is* the reasoning and the two can never misalign again.
+EVAL_GROUNDEDNESS_SYSTEM = """\
+You are an evaluation judge for MAEDA, a multi-agent data analysis system.
+Extract every checkable factual claim from the report (a number, a named
+comparison, a specific entity), and for each one decide whether it is
+directly traceable to the analysis findings or RAG context provided —
+whether the report actually answers the user's question is scored by a
+separate judge and must not affect this.
+
+A claim is "supported" only if the findings or RAG context actually
+contain it. A claim that merely sounds plausible, or that introduces a
+number/fact/comparison absent from the findings and RAG context, is
+"unsupported" — even if it isn't obviously wrong.
+
+If the report makes no checkable claims at all (e.g. it only restates the
+question, or gives no specifics), return an empty claims list.
+
+Return JSON only:
+{
+  "claims": [
+    {"claim": str, "supported": bool, "evidence": str or null}
+  ],
+  "reasoning": str
+}
 """
 
 # ─── Schema Summarizer ───────────────────────────────────────────────────────

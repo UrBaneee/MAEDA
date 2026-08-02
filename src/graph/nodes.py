@@ -259,7 +259,7 @@ async def run_eval_node(state: MAEDAState) -> MAEDAState:
     runner = _get_eval_runner()
     result = await runner.score(state, run_id=state.get("run_id"))
     state["eval_scores"] = {
-        s.metric: {"score": s.score, "label": s.label, "reasoning": s.reasoning}
+        s.metric: {"score": s.score, "label": s.label, "reasoning": s.reasoning, "valid": s.valid}
         for s in result.scores
     }
     state["eval_scores"]["_aggregate"] = result.aggregate_score
