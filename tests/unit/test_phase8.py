@@ -356,6 +356,57 @@ def test_llm_judge_flags_hallucination():
     assert hallucination.severity == "critical"
 
 
+def test_llm_judge_factual_accuracy_failure_is_critical_not_warning():
+    """Roadmap.md #27: GUARDRAIL_SYSTEM asks for a "Factual accuracy" check
+    alongside "Hallucination", and the LLM reliably uses exactly that name --
+    but only "Hallucination"/"PII leakage" matched the old keyword list, so
+    a failed Factual accuracy check could never block regardless of how
+    wrong the finding was (confirmed live: case P05 named the wrong month
+    as having the highest churn rate and was delivered anyway with just a
+    caveat). A factual accuracy failure on a data-analysis report's claims
+    is a hallucination by any reasonable reading."""
+    from src.agents.guardrail_agent import GuardrailAgent
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.content = json.dumps({
+        "passed": False,
+        "checks": [
+            {"check": "Factual accuracy", "passed": False,
+             "finding": "Report names May 2023 as the highest churn rate month; "
+                        "March 2024 is actually highest per the analysis findings."},
+            {"check": "Hallucination", "passed": True, "finding": None},
+            {"check": "PII leakage", "passed": True, "finding": None},
+            {"check": "Misleading framing", "passed": False,
+             "finding": "Overstates urgency given a non-significant trend"},
+        ],
+        "overall_verdict": "retry",
+        "retry_reason": "Wrong month cited as highest",
+    })
+    mock_response.usage_metadata = {"input_tokens": 20, "output_tokens": 20}
+    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+    agent = GuardrailAgent(llm=mock_llm)
+    state = initial_state("What month had the highest churn rate?")
+    result = asyncio.run(agent._llm_judge(
+        state,
+        "# Report\nMay 2023 had the highest churn rate at 13.74%.",
+        [],
+        [{"result_summary": "March 2024 churn rate: 39.07% (highest)", "failed": False}],
+        "What month had the highest churn rate?",
+    ))
+    factual = next(c for c in result if c.check == "Factual accuracy")
+    assert not factual.passed
+    assert factual.severity == "critical", (
+        "a failed Factual accuracy check must block like a hallucination, "
+        "not be waved through as a warning-only caveat"
+    )
+    # Misleading framing stays warning-tier -- deliberately not folded into
+    # the critical keyword set (see the comment above _CRITICAL_CHECK_KEYWORDS).
+    framing = next(c for c in result if c.check == "Misleading framing")
+    assert not framing.passed
+    assert framing.severity == "warning"
+
+
 def test_llm_judge_context_is_not_truncated():
     """Roadmap.md #26, found via a real judge-calibration labeling session
     on case C02 (docs/judge_calibration.md): _llm_judge used to build its

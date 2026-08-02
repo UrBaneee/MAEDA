@@ -47,3 +47,8 @@ logs/replay_cache/
 # evidence). The actual *_noise_*.json measurement reports in
 # logs/noise_runs/ are intentionally kept, same as logs/eval_runs/.
 logs/noise_runs/judge_fixed_states.json
+
+# Byte-identical mirror of CLAUDE.md for AGENTS.md-reading tools (Codex CLI,
+# Cursor, etc.) — kept locally, not tracked, so it doesn't have to be
+# hand-synced with CLAUDE.md on every edit.
+AGENTS.md

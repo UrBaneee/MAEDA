@@ -168,36 +168,48 @@ and the natural continuation of the eval-first narrative.
     Both fixes are generation-relevant, so the replay corpus (all 100
     cases) was regenerated afterward — see `docs/eval_v2_plan.md` for the
     before/after baseline this produced.
-27. **Guardrail severity is decided by substring-matching the LLM's own
-    check name, not by the actual content of the finding.** Found while
-    interpreting the #25/#26 before/after numbers: `_parse_llm_checks` in
-    `src/agents/guardrail_agent.py` only escalates a failed check to
-    `"critical"` (block + retry) if its name contains one of
+27. ✅ **Done (2026-08-02) — guardrail severity no longer waves through a
+    failed Factual accuracy check.** Found while interpreting the #25/#26
+    before/after numbers: `_parse_llm_checks` in
+    `src/agents/guardrail_agent.py` only escalated a failed check to
+    `"critical"` (block + retry) if its name contained one of
     `("pii", "safety", "hallucin", "fabricat", "claim_ground", "grounding")`
     — anything else, including a check the LLM itself named
-    `"Factual accuracy"`, is `"warning"` (deliver with a caveat, never
-    blocks), no matter how wrong the finding is. `GUARDRAIL_SYSTEM`
+    `"Factual accuracy"`, was `"warning"` (deliver with a caveat, never
+    blocks), no matter how wrong the finding. `GUARDRAIL_SYSTEM`
     ([agent_prompts.py:348](../src/config/agent_prompts.py:348)) asks the
-    LLM to check four things — factual accuracy, hallucination, PII
-    leakage, misleading framing — and across all 100 post-#25/#26 cases
-    the LLM reliably names them exactly `Hallucination`, `PII leakage`,
-    `Factual accuracy`, `Misleading framing`, every time. The first two
-    match the keyword list and block; the second two — arguably the more
-    central checks for a data-analysis system's core promise — structurally
-    cannot, regardless of severity. Confirmed live: 16 of 100 cases have a
-    failed `Factual accuracy` and/or `Misleading framing` check that never
-    blocks (e.g. case P05: "the report says May 2023 had the highest churn
+    LLM to check four things, and across all 100 post-#25/#26 cases it
+    reliably named them exactly `Hallucination`, `PII leakage`,
+    `Factual accuracy`, `Misleading framing` every time — the first two
+    matched the keyword list and blocked; the second two structurally
+    couldn't, regardless of severity. Confirmed live: 16 of 100 cases had a
+    failed `Factual accuracy` and/or `Misleading framing` check delivered
+    anyway (e.g. case P05: "the report says May 2023 had the highest churn
     rate at 13.74%, but March 2024's 39.07% is actually highest" — a real,
-    specific factual error, delivered anyway with only a caveat attached).
-    The same substantive problem gets blocked or waved through depending on
-    which of two near-synonymous labels the LLM happened to pick that call
-    — not on how serious the problem actually is. Fix direction: escalate
-    on the check's own `passed`/content (e.g. any failed check is at least
-    "warning," and a dedicated field or a stricter prompt contract decides
-    "critical" — not a keyword scan over a name the model invents fresh
-    each call), or fold `Factual accuracy` into the existing `hallucin`/
-    `fabricat` keyword set outright, since a "factual accuracy" failure on
-    a data-analysis report *is* a hallucination by any reasonable reading.
+    specific factual error, waved through with only a caveat).
+    **Fix**: added `"factual"`/`"accuracy"` to `_CRITICAL_CHECK_KEYWORDS`,
+    so a failed Factual accuracy check now escalates to critical (block +
+    retry) exactly like Hallucination. **Deliberately did NOT fold in
+    `"Misleading framing"`**: spot-checked its own 3 standalone failures
+    (DG13, D18, P17) and found a genuinely mixed bag — a real tone/urgency
+    overstatement (P17: correctly non-critical), a comparison mix-up
+    (DG13), and a possibly-mislabeled fabrication (D18) — not the same
+    clean, consistent pattern Factual accuracy showed, so escalating it
+    isn't well-evidenced yet. **Verification method, and why it differs
+    from #25/#26**: this is a pure severity-classification fix (no
+    generation-content dependency), so a mocked-LLM-response unit test
+    (`test_llm_judge_factual_accuracy_failure_is_critical_not_warning` in
+    `tests/unit/test_phase8.py`) is a *more* reliable proof than trying to
+    reproduce the exact same hallucination via a live regeneration — tried
+    regenerating P05 anyway as a spot-check, and (being stochastic) it
+    happened not to reproduce the specific error this time, which is
+    itself the reason a deterministic mock test is the right tool here,
+    not a gap in verification. **Corpus regeneration deferred**: this
+    change is generation-relevant (changes which reports get blocked vs.
+    delivered), but a full 100-case regen is deliberately not done yet —
+    more pipeline-layer work is queued (MCP connection, real agent tool
+    use) that would invalidate it again; regenerate once, after all of
+    that lands, before the eventual test-split reveal.
 28. **A #4-style false-superlative claim was caught live in the pipeline
     itself, not just in the eval judge.** Case P05, from the #25/#26
     before/after run: the report claims "May 2023 recorded the highest

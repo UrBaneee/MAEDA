@@ -400,7 +400,24 @@ def _check_completeness(report: str, query: str) -> CheckResult:
 # hallucination/fabrication are both critical (block + retry); everything
 # else (readability, completeness, misleading framing, etc.) is a warning
 # (attach caveat, deliver).
-_CRITICAL_CHECK_KEYWORDS = ("pii", "safety", "hallucin", "fabricat", "claim_ground", "grounding")
+#
+# "factual"/"accuracy" added (roadmap.md #27, 2026-08-02): GUARDRAIL_SYSTEM
+# asks the LLM for 4 checks, and it reliably names them "Factual accuracy",
+# "Hallucination", "PII leakage", "Misleading framing" every time (verified
+# across 100 real cases) -- but only 2 of those 4 names matched this list,
+# so a failed "Factual accuracy" check could never block, no matter how
+# wrong the finding. Confirmed live: 16/100 post-#25/#26 cases had a failed
+# Factual accuracy check delivered anyway with just a caveat -- e.g. case
+# P05, where the report named the wrong month as having the highest churn
+# rate, a specific checkable factual error, not merely a framing/tone
+# issue. A "factual accuracy" failure on a data-analysis report's claims is
+# a hallucination by any reasonable reading; the LLM just used a different
+# word for it. "Misleading framing" is deliberately NOT added here --
+# spot-checking its own failures (DG13, D18, P17) found a genuinely mixed
+# bag (a real tone/emphasis overstatement, a comparison mix-up, a
+# possibly-mislabeled fabrication), not the same clean, consistent pattern
+# "Factual accuracy" showed, so folding it in here isn't well-evidenced.
+_CRITICAL_CHECK_KEYWORDS = ("pii", "safety", "hallucin", "fabricat", "claim_ground", "grounding", "factual", "accuracy")
 
 
 def _parse_llm_checks(raw: dict) -> list[CheckResult]:
