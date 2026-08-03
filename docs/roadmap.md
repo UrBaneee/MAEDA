@@ -228,6 +228,34 @@ and the natural continuation of the eval-first narrative.
     pass (e.g. grep a batch of regenerated reports for "highest"/"lowest"
     claims and spot-check each against its findings) before assuming this
     is a one-off.
+29. **Every QWK/before-after number produced so far was measured with a
+    judge that shares a provider with the pipeline it's judging — the
+    self-preference safeguard exists in code but is currently disabled by
+    environment, not design.** `settings.resolved_eval_provider`
+    ([settings.py:108](../src/config/settings.py#L108)) is explicitly built
+    to prefer a provider *different* from the agent's own (`llm_provider`)
+    so the judge isn't scoring a sibling of itself — but it falls back to
+    the agent's own provider if no real key exists for the other one, and
+    in this environment `ANTHROPIC_API_KEY` isn't a real key
+    (`_looks_like_real_key` returns `False`), so `resolved_eval_provider`
+    has resolved to `openai` — same as the pipeline — for every measurement
+    in this project: the original noise floor, all 5 judge-calibration
+    labeling passes, A2's before/after, and #25/#26's before/after. None of
+    those results are wrong because of this (the human-labeling work
+    measured real agreement against a real judge, and the mechanism fixes
+    were verified by reading the judge's actual reasoning, not just
+    trusting a score) — but none of them can currently rule out
+    self-preference as a contributing factor either, and this project
+    specifically built the judge-tiering design to guard against exactly
+    that. Previously only a scattered caveat across `noise_floor.md` and
+    `judge_calibration.md`; formalized here as a tracked item. **Blocked
+    on a real `ANTHROPIC_API_KEY`** — once available, cheapest next step is
+    the judge-model comparison table already scaffolded in
+    `judge_calibration.md` ("Reusing the same labels to settle the
+    judge-model question"): re-score the existing 120 human-labeled cases
+    with `claude-sonnet-5` as the judge and recompute QWK against the
+    labels already collected — no new labeling round needed, turns "why
+    gpt-4o" from an assumption into a measured comparison.
 
 ## Tier 3 — Engineering robustness
 
