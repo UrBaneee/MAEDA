@@ -317,6 +317,36 @@ and the natural continuation of the eval-first narrative.
     with `claude-sonnet-5` as the judge and recompute QWK against the
     labels already collected — no new labeling round needed, turns "why
     gpt-4o" from an assumption into a measured comparison.
+30. **`EVAL_RELEVANCE_SYSTEM`'s own judge contradicts its stated score on a
+    clear-cut off-topic case — a real, pre-existing calibration gap, found
+    while diagnosing an unrelated CI failure, not introduced by it.**
+    `tests/integration/test_eval_judge_calibration.py::test_judge_scores_off_topic_report_low_relevance`
+    feeds the judge a report entirely about customer churn against a query
+    asking for revenue by region — about as clear-cut an off-topic case as
+    exists — and asserts `answer_relevance <= 0.4`. CI (2026-08-03, first
+    run in three weeks) got `0.5` and failed; reran once with the identical
+    result (not flaky), and reproduced locally, live, forcing the `openai`
+    provider to match CI exactly (independent of the anthropic-path fixes
+    landing in the same push, which don't touch this code path at all).
+    The judge's own `reasoning` string: *"the report itself does not
+    address the question at all, focusing instead on customer churn"* —
+    which is verbatim the prompt's own 0.0 criterion — yet it scored 0.5,
+    not something near 0.0. Most likely cause: the prompt's instruction to
+    ignore whether claims are "backed by evidence" doesn't stop the model
+    from crediting that the *findings* (not the report) could answer the
+    query, pulling the score up despite the report itself failing to. This
+    is `EVAL_JUDGE_SAMPLES`'s 3-sample median, not a single noisy call, so
+    it's a stable judge behavior right now, not one-off variance. **Not
+    fixed yet, deliberately** — the user's call was to record this now and
+    leave CI red with the reason understood, rather than loosen the test
+    threshold (which would hide the gap, not close it) or patch the prompt
+    without first designing the fix properly. Next step when picked up:
+    tighten `EVAL_RELEVANCE_SYSTEM` so a reasoning string matching its own
+    "does not address the question at all" language forces the score
+    down — same family of fix as #27 (severity keywords) and #28
+    (superlative-claim grounding): a written rule the model already has
+    but isn't reliably following, backstopped with something more
+    deterministic than "ask nicely" once a fix is designed.
 
 ## Tier 3 — Engineering robustness
 
