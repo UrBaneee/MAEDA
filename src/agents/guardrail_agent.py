@@ -167,6 +167,9 @@ class GuardrailAgent(BaseAgent):
         # 8.8 Population-claim grounding (rule-based)
         checks.append(_check_population_claim_grounding(report_text, analysis_results))
 
+        # Superlative-claim grounding (rule-based, roadmap.md #28)
+        checks.append(_check_superlative_claim_grounding(report_text, analysis_results))
+
         # 8.5 Hallucination detector + 8.2 claim grounding (LLM-as-judge)
         llm_checks = await self._llm_judge(state, report_text, insights, analysis_results, query)
         checks.extend(llm_checks)
@@ -377,6 +380,138 @@ def _check_population_claim_grounding(report: str, results: list[dict]) -> Check
         f"unclassifiable results are available. This looks like a "
         f"generalization from a sample, not a computed pattern.",
     )
+
+
+_SUPERLATIVE_CLAIM_RE = re.compile(
+    r"\b([A-Za-z][\w\-\/ ]{0,40}?)\s+(?:had|recorded|showed|saw|achieved|reached|was)\s+"
+    r"the\s+(highest|lowest|largest|smallest)\s+([\w %\-]{0,40}?)\s+(?:at|of|with)\s+"
+    r"(?:approximately\s+)?(-?[\d,]+\.?\d*)\s*%?",
+    re.IGNORECASE,
+)
+_SUPERLATIVE_STOPWORDS = {"the", "a", "an", "of", "rate", "for", "in", "at"}
+
+
+def _tokenize_for_column_match(s: str) -> set:
+    return {w for w in re.findall(r"[a-z]+", s.lower()) if w not in _SUPERLATIVE_STOPWORDS}
+
+
+def _trim_leading_clause(entity: str) -> str:
+    """The entity capture is deliberately wide (up to 40 chars, to catch
+    multi-word names) and sometimes swallows a leading clause fragment
+    ("chart illustrated that Campaign CAM0001") -- trim back to the last
+    run starting at a capitalized word, which is where the actual entity
+    name begins in every case seen live. Cosmetic only (the substring
+    match against row labels below works either way); this just keeps
+    the guardrail's own finding text readable."""
+    words = entity.split()
+    for i, w in enumerate(words):
+        if w[:1].isupper():
+            return " ".join(words[i:])
+    return entity
+
+
+def _best_numeric_column(keys: list, metric_text: str) -> Optional[str]:
+    """Which of a row's columns (besides the first/label column) the claim's
+    metric text (e.g. "click-through rate") most likely refers to, by
+    keyword overlap with the column name (e.g. "click_through_rate")."""
+    mtoks = _tokenize_for_column_match(metric_text)
+    if not mtoks:
+        return None
+    scored = [
+        (len(mtoks & _tokenize_for_column_match(k.replace("_", " "))), k)
+        for k in keys[1:]
+    ]
+    scored = [s for s in scored if s[0] > 0]
+    if not scored:
+        return None
+    scored.sort(reverse=True)
+    return scored[0][1]
+
+
+def _check_superlative_claim_grounding(report: str, results: list[dict]) -> CheckResult:
+    """
+    Catch a report naming a specific entity as having the "highest"/
+    "lowest" value of some metric, with a specific number attached, when a
+    row-level analysis result actually shows a DIFFERENT entity holds that
+    extreme.
+
+    Roadmap.md #28: found live in the marketing-campaign corpus (cases
+    C02, C09, C14, DG09) -- e.g. "Campaign CAM0001 achieved the highest
+    ROI of 2023.7" when CAM1939's roi=19741.6 (~10x higher) was simply
+    outside the always-unsorted 5-row sample
+    (insight_agent._extract_result_detail) the Insight Agent happened to
+    see. Giving the LLM the true per-column min/max
+    (insight_agent._numeric_column_ranges) reduces but does NOT eliminate
+    this live: regenerating C02 after that fix showed the same report
+    correctly use the true max for conversion_rate in one paragraph, then
+    fabricate the identical wrong ROI claim in another. This check is the
+    deterministic backstop -- mirrors _check_population_claim_grounding's
+    role for generalization claims, same trade-off: only fires when a
+    row-level result can be positively matched to both the named entity
+    and a metric column by keyword overlap; silently passes on anything
+    it can't confidently resolve rather than attempting real NLP.
+    """
+    if not report:
+        return CheckResult("superlative_claim_grounding", True, "info")
+
+    for match in _SUPERLATIVE_CLAIM_RE.finditer(report):
+        entity, direction, metric, value_str = match.groups()
+        entity = _trim_leading_clause(entity.strip())
+        if len(entity) < 3:
+            continue
+        try:
+            claimed_val = float(value_str.replace(",", ""))
+        except ValueError:
+            continue
+
+        for step in results:
+            if step.get("failed"):
+                continue
+            rows = step.get("result")
+            if not (isinstance(rows, list) and rows and isinstance(rows[0], dict)):
+                continue
+            keys = list(rows[0].keys())
+            if len(keys) < 2:
+                continue
+            label_key = keys[0]
+            value_key = _best_numeric_column(keys, metric)
+            if not value_key:
+                continue
+            row = next(
+                (r for r in rows if str(r.get(label_key, "")) and (
+                    str(r.get(label_key)).lower() in entity.lower()
+                    or entity.lower() in str(r.get(label_key)).lower()
+                )),
+                None,
+            )
+            if row is None or not isinstance(row.get(value_key), (int, float)):
+                continue
+
+            vals = [(r.get(label_key), r.get(value_key)) for r in rows if isinstance(r.get(value_key), (int, float))]
+            if len(vals) < 2:
+                continue
+            if direction.lower() in ("highest", "largest"):
+                true_label, true_val = max(vals, key=lambda t: t[1])
+            else:
+                true_label, true_val = min(vals, key=lambda t: t[1])
+
+            claim_matches_true = (
+                str(true_label).lower() in entity.lower() or entity.lower() in str(true_label).lower()
+            )
+            if claim_matches_true:
+                continue
+            if abs(true_val - claimed_val) <= max(abs(claimed_val) * 0.01, 1e-9):
+                continue
+
+            return CheckResult(
+                "superlative_claim_grounding", False, "critical",
+                f"Report claims {entity!r} has the {direction.lower()} {metric.strip()!r} "
+                f"({claimed_val}), but the underlying data shows {true_label!r} at "
+                f"{true_val} is actually {direction.lower()} — a specific, checkable "
+                f"factual error, not the true extreme.",
+            )
+
+    return CheckResult("superlative_claim_grounding", True, "info")
 
 
 def _check_completeness(report: str, query: str) -> CheckResult:

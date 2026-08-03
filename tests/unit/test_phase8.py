@@ -238,6 +238,80 @@ def test_population_claim_bare_all_is_not_flagged():
     assert cr.passed
 
 
+# ─── Superlative-claim grounding (roadmap #28) ────────────────────────────────
+
+def _campaign_rows():
+    return [
+        {"campaign_id": "CAM0001", "roi": 2023.7},
+        {"campaign_id": "CAM0002", "roi": 2144.2},
+        {"campaign_id": "CAM1939", "roi": 19741.6},
+    ]
+
+
+def test_superlative_claim_passes_no_report():
+    from src.agents.guardrail_agent import _check_superlative_claim_grounding
+    cr = _check_superlative_claim_grounding("", [])
+    assert cr.passed
+
+
+def test_superlative_claim_passes_no_superlative_language():
+    from src.agents.guardrail_agent import _check_superlative_claim_grounding
+    report = "Campaign CAM0001 spent $1,873.25 and generated $39,782.60 in revenue."
+    cr = _check_superlative_claim_grounding(report, [])
+    assert cr.passed
+
+
+def test_superlative_claim_critical_when_named_entity_is_not_the_true_extreme():
+    """Reproduces case C02: the report names CAM0001 as having the highest
+    ROI (an unsorted 5-row sample would show it as locally largest), but
+    the full row-level result shows CAM1939 is far higher."""
+    from src.agents.guardrail_agent import _check_superlative_claim_grounding
+    report = "Campaign CAM0001 achieved the highest ROI of 2023.7 in the period."
+    results = [{"method": "derive_roi", "failed": False, "result": _campaign_rows()}]
+    cr = _check_superlative_claim_grounding(report, results)
+    assert not cr.passed
+    assert cr.severity == "critical"
+    assert "CAM1939" in cr.finding
+    assert "19741.6" in cr.finding
+
+
+def test_superlative_claim_passes_when_named_entity_is_the_true_extreme():
+    """Reproduces case DG02: the Basic plan really does have the highest
+    churn rate among plans -- must not be flagged."""
+    from src.agents.guardrail_agent import _check_superlative_claim_grounding
+    report = "The Basic plan had the highest churn rate at 23%."
+    results = [{
+        "method": "churn_by_plan", "failed": False,
+        "result": [
+            {"plan": "Basic", "churned": 0.23},
+            {"plan": "Pro", "churned": 0.11},
+            {"plan": "Enterprise", "churned": 0.05},
+        ],
+    }]
+    cr = _check_superlative_claim_grounding(report, results)
+    assert cr.passed
+
+
+def test_superlative_claim_ignores_failed_steps_as_evidence():
+    from src.agents.guardrail_agent import _check_superlative_claim_grounding
+    report = "Campaign CAM0001 achieved the highest ROI of 2023.7 in the period."
+    results = [{"method": "derive_roi", "failed": True, "result": _campaign_rows()}]
+    cr = _check_superlative_claim_grounding(report, results)
+    assert cr.passed  # no usable evidence to contradict the claim, so it can't be checked
+
+
+def test_superlative_claim_passes_when_metric_has_no_matching_column():
+    """The claim's metric text ("engagement score") has no keyword overlap
+    with any column in the only available row-level result -- the check
+    can't confidently resolve it, so (matching the population-claim
+    check's coarse-but-precise design) it stays silent rather than guess."""
+    from src.agents.guardrail_agent import _check_superlative_claim_grounding
+    report = "Campaign CAM0001 achieved the highest engagement score of 99 in the period."
+    results = [{"method": "derive_roi", "failed": False, "result": _campaign_rows()}]
+    cr = _check_superlative_claim_grounding(report, results)
+    assert cr.passed
+
+
 # ─── 8.7 Aggregator ───────────────────────────────────────────────────────────
 
 def test_aggregate_all_pass():

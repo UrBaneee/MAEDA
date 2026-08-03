@@ -327,6 +327,46 @@ def _format_findings(results: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _numeric_column_ranges(rows: list[dict]) -> str:
+    """True min/max per numeric column across ALL rows of a row-level
+    result, not just the bounded sample shown alongside it.
+
+    Roadmap.md #28: without this, a row-level (ROW-LEVEL SAMPLE/UNKNOWN)
+    step only reached the Insight Agent as its first 5 rows in file order
+    -- always the same 5 rows regardless of which are actually extreme,
+    since nothing sorts them. The model would then treat whichever value
+    was locally highest in that arbitrary peek as the dataset's "highest",
+    violating the very rule INSIGHT_GENERATOR_SYSTEM already states (a
+    ROW-LEVEL claim may only cite an example, never a superlative).
+    Confirmed live: 6/6 checkable "highest X at Y" claims across 4 corpus
+    cases (C02, C09, C14, DG09) named the wrong entity -- e.g. C02 claims
+    Campaign CAM0001's ROI of 2023.7 is "the highest" when CAM1939's
+    19741.6 (absent from the 5-row sample, since CAM0001-CAM0005 always
+    sort first in file order) is actually ~10x higher. Computing the true
+    range here, in code, means a superlative claim about a row-level
+    result is either correctly grounded or not made at all -- not a
+    guess extrapolated from 5 arbitrary rows.
+    """
+    if not rows or not isinstance(rows[0], dict):
+        return ""
+    keys = list(rows[0].keys())
+    label_key = keys[0]
+    parts = []
+    for col in keys[1:]:
+        vals = [
+            (r.get(label_key), r.get(col)) for r in rows
+            if isinstance(r.get(col), (int, float)) and not isinstance(r.get(col), bool)
+        ]
+        if len(vals) < 2:
+            continue
+        min_label, min_val = min(vals, key=lambda t: t[1])
+        max_label, max_val = max(vals, key=lambda t: t[1])
+        if min_val == max_val:
+            continue
+        parts.append(f"{col}: min={min_val} ({min_label}), max={max_val} ({max_label})")
+    return "; ".join(parts)
+
+
 def _extract_result_detail(result: Any) -> str:
     """
     Surface concrete numbers and caveats from a step's raw result payload.
@@ -343,7 +383,11 @@ def _extract_result_detail(result: Any) -> str:
     if isinstance(result, list):
         if not result:
             return "0 rows"
-        return f"{len(result)} rows, sample={json.dumps(result[:5], default=str)}"
+        sample = f"{len(result)} rows, sample={json.dumps(result[:5], default=str)}"
+        ranges = _numeric_column_ranges(result)
+        if not ranges:
+            return sample
+        return f"{sample}\n  True column min/max across all {len(result)} rows (not just the sample above): {ranges}"
 
     if not isinstance(result, dict):
         return ""

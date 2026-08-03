@@ -341,6 +341,57 @@ def test_format_assistant_turn_summary_handles_no_insights():
     assert "query_type=descriptive" in summary
 
 
+# ─── Row-level result grounding (roadmap #28) ─────────────────────────────────
+
+def test_numeric_column_ranges_finds_true_extreme_outside_the_sample():
+    """Reproduces case C02: a row-level result where the true max (CAM1939,
+    roi=19741.6) is far outside the first 5 rows (CAM0001-CAM0005) that
+    _extract_result_detail samples -- the true fix must surface it anyway."""
+    from src.agents.insight_agent import _numeric_column_ranges
+    rows = [{"campaign_id": f"CAM{i:04d}", "roi": 1000.0 + i} for i in range(1, 6)]
+    rows.append({"campaign_id": "CAM1939", "roi": 19741.6})
+    ranges = _numeric_column_ranges(rows)
+    assert "max=19741.6 (CAM1939)" in ranges
+    assert "min=1001.0 (CAM0001)" in ranges
+
+
+def test_numeric_column_ranges_skips_non_numeric_and_constant_columns():
+    from src.agents.insight_agent import _numeric_column_ranges
+    rows = [
+        {"id": "A", "label": "x", "score": 5},
+        {"id": "B", "label": "y", "score": 5},
+    ]
+    ranges = _numeric_column_ranges(rows)
+    assert "label" not in ranges
+    assert "score" not in ranges  # constant across all rows -- not a real range
+
+
+def test_numeric_column_ranges_empty_list_returns_empty_string():
+    from src.agents.insight_agent import _numeric_column_ranges
+    assert _numeric_column_ranges([]) == ""
+
+
+def test_extract_result_detail_includes_true_ranges_for_row_level_results():
+    """The actual bug: only the unsorted 5-row sample reached the LLM, so
+    it read CAM0001's roi=2023.7 as the max, never seeing CAM1939's
+    19741.6. _extract_result_detail must now also surface the true range."""
+    from src.agents.insight_agent import _extract_result_detail
+    rows = [{"campaign_id": f"CAM{i:04d}", "roi": 1000.0 + i} for i in range(1, 6)]
+    rows.append({"campaign_id": "CAM1939", "roi": 19741.6})
+    detail = _extract_result_detail(rows)
+    assert "sample=" in detail
+    assert "CAM0001" in detail  # sample is still shown, just no longer the only signal
+    assert "True column min/max" in detail
+    assert "max=19741.6 (CAM1939)" in detail
+
+
+def test_extract_result_detail_row_level_result_without_numeric_columns_has_no_ranges_line():
+    from src.agents.insight_agent import _extract_result_detail
+    rows = [{"note": "a"}, {"note": "b"}]
+    detail = _extract_result_detail(rows)
+    assert "True column min/max" not in detail
+
+
 # ─── 7.5 Report generator ─────────────────────────────────────────────────────
 
 def test_report_is_markdown():

@@ -210,24 +210,85 @@ and the natural continuation of the eval-first narrative.
     more pipeline-layer work is queued (MCP connection, real agent tool
     use) that would invalidate it again; regenerate once, after all of
     that lands, before the eventual test-split reveal.
-28. **A #4-style false-superlative claim was caught live in the pipeline
-    itself, not just in the eval judge.** Case P05, from the #25/#26
-    before/after run: the report claims "May 2023 recorded the highest
-    churn rate at approximately 13.74%," but the analysis findings show
-    March 2024 at 39.07% is the actual highest — the same shape of error
-    as the "Product 2 has the highest margin" bug found and fixed in the
-    groundedness judge (A2, `docs/judge_calibration.md`), except this one
-    is the *Insight Agent fabricating the claim in the first place*, not
-    the eval judge failing to catch it after the fact (the guardrail's own
-    `Factual accuracy` check *did* catch this one correctly — see #27 above
-    for why it didn't block anyway). Suggests the false-superlative pattern
-    isn't confined to the judge layer; the generation layer (Insight Agent,
-    `src/agents/insight_agent.py`) may be prone to the same "state an
-    extreme without checking the full comparison set" failure mode A2 fixed
-    on the judging side. Not investigated further yet — worth a dedicated
-    pass (e.g. grep a batch of regenerated reports for "highest"/"lowest"
-    claims and spot-check each against its findings) before assuming this
-    is a one-off.
+28. ✅ **Done (2026-08-02) — the false-superlative pattern flagged at P05 is
+    real and recurring, not a one-off; fixed at both the generation and
+    guardrail layers.** Follow-up investigation: wrote a script to grep all
+    100 cached reports for a superlative claim citing a specific number
+    ("X achieved the highest/lowest Y at/of Z") and cross-check the named
+    entity against the matching row-level analysis result. 10 such claims
+    were found; 6 were checkable against a matching data column, and **all
+    6 named the wrong entity** — 4 distinct cases (C02, C09 ×2 phrasings,
+    C14, DG09), all in the marketing-campaign dataset's "individual
+    campaign spotlight" narrative pattern (e.g. C02: "Campaign CAM0001
+    achieved the highest ROI of 2023.7" when CAM1939's roi=19741.6, ~10x
+    higher, is the true max). The other 2 checkable claims (DG02, DG03)
+    were genuinely correct and, as expected, were not flagged by anything
+    built here.
+
+    **Root cause, found by inspecting what the Insight Agent actually
+    sees**: `_extract_result_detail` in `src/agents/insight_agent.py`
+    showed row-level (list-typed) analysis results only as `result[:5]` —
+    an *unsorted* 5-row sample, always the first 5 rows in file order
+    (`CAM0001`–`CAM0005` in every affected case, since none of these steps
+    sort their output). The LLM then reads whichever value is locally
+    largest within that arbitrary 5-row peek and reports it as the
+    dataset's global "highest" — confirmed directly: `CAM0001` is real
+    data (`roi=2023.7` matches exactly) but ranks 236th of 429 same-channel
+    campaigns by ROI, nowhere near the top. `INSIGHT_GENERATOR_SYSTEM`
+    ([agent_prompts.py:290](../src/config/agent_prompts.py#L290)) already
+    has an explicit rule that a [ROW-LEVEL SAMPLE]-tagged step "may [only]
+    cite ... as an example ... never generalize ... into a claim" — this
+    is the cheap generation-tier model (roadmap #24) violating an existing
+    instruction, not an absent one.
+
+    **Fix, generation layer**: new `_numeric_column_ranges()` in
+    `src/agents/insight_agent.py` computes the true min/max (with which
+    row achieves it) per numeric column across *all* rows of a row-level
+    result, appended to the prompt alongside the existing 5-row sample.
+    `INSIGHT_GENERATOR_SYSTEM`'s [ROW-LEVEL SAMPLE] rule extended to name
+    this explicitly: the sample is never sorted and must not be used for a
+    superlative claim, but the "True column min/max" line is a real
+    computed aggregate and may be cited. **Verified live, and honestly
+    incomplete**: regenerating C02 after this fix shows the SAME report
+    correctly use the true max for `conversion_rate` (now says
+    "~13.00%", the real value) in one paragraph, then *still* fabricate
+    the identical wrong `CAM0001` ROI claim in another paragraph of the
+    same report — giving the model correct data measurably helps but does
+    not reliably stop a cheap model from ignoring it, so this alone isn't
+    a fix, only a mitigation.
+
+    **Fix, guardrail layer (the actual backstop)**: new deterministic
+    check `_check_superlative_claim_grounding` in
+    `src/agents/guardrail_agent.py`, registered alongside
+    `_check_population_claim_grounding` (#12) — same coarse-but-precise
+    design philosophy: regex-matches a superlative claim with an explicit
+    number, resolves its metric to a column by keyword overlap against any
+    row-level result available, and flags `critical` (block + retry) if
+    the named entity is not that column's true extreme by more than 1%.
+    Silently passes anything it can't confidently resolve (no matching
+    column, entity not found, or a genuinely correct claim like DG02's
+    "Basic plan has the highest churn rate", which really is true). Live
+    on the same corpus: **4/4 known-wrong claims flagged critical, 0/100
+    false positives** across the whole cached corpus (including the 2
+    known-correct claims and the ~50 other cases with non-numeric
+    superlative language this regex doesn't even attempt to check). Live
+    end-to-end on C02's regenerated state: `GuardrailAgent.process()` now
+    returns `overall_verdict="retry"`, `guardrail_passed=False`, with
+    `retry_reason` naming the exact fabricated claim — where the LLM
+    judge's own `Factual accuracy` check passed it through unflagged on
+    that same run, this is the deterministic check doing precisely the
+    backstop job it was built for.
+
+    New tests: `test_numeric_column_ranges_*` and
+    `test_extract_result_detail_*` in `tests/unit/test_phase7.py`;
+    `test_superlative_claim_*` in `tests/unit/test_phase8.py`. Full suite:
+    559 passed (was 548). **Corpus regeneration deferred**, same reasoning
+    as #27: this changes `INSIGHT_GENERATOR_SYSTEM` (generation-relevant,
+    invalidates the replay fingerprint for all 100 cases) but more
+    pipeline-layer work is queued that would invalidate it again —
+    regenerate once, after that lands, before the eventual test-split
+    reveal. Only C02 was spot-check-regenerated live, as verification, the
+    same pattern #27 used for P05.
 29. **Every QWK/before-after number produced so far was measured with a
     judge that shares a provider with the pipeline it's judging — the
     self-preference safeguard exists in code but is currently disabled by

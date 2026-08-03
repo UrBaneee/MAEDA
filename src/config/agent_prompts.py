@@ -295,11 +295,17 @@ Rules:
     comparison). This is the ONLY evidence level that may support a
     group-level claim like "churned customers are more likely to be on
     plan X" or "category Y has the highest margin".
-  * [ROW-LEVEL SAMPLE] — a filter or derived column; the rows shown are
-    individual examples, not a population summary. You may cite these
-    only as an example ("for instance, customer C00001, who is on the
-    Premium plan, churned") — never generalize a sample row into a claim
-    about "customers in general" or "X are more likely to Y".
+  * [ROW-LEVEL SAMPLE] — a filter or derived column; the rows shown under
+    "sample=" are individual examples, not a population summary. You may
+    cite a sample row only as an example ("for instance, customer C00001,
+    who is on the Premium plan, churned") — never generalize a sample row
+    into a claim about "customers in general" or "X are more likely to
+    Y". This includes superlative claims like "X has the highest Y" —
+    the sample is 5 arbitrary rows, never sorted by any column, so
+    whichever happens to look largest among them is NOT the dataset's
+    true highest. If (and only if) a "True column min/max across all N
+    rows" line is present for that step, that line — not the sample — is
+    the actual computed extreme and may be cited as such.
   * [UNKNOWN] — a raw query result whose aggregation level can't be
     determined from the label; treat it the same as ROW-LEVEL SAMPLE
     unless the data itself is unambiguous (e.g. it has exactly one row
