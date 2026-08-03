@@ -76,6 +76,34 @@ def _label(score: float, warn: float = 0.6, fail: float = 0.4) -> str:
     return "fail"
 
 
+def _response_text(response) -> str:
+    """Normalize response.content to a plain string.
+
+    Found live the first time the "anthropic" eval-judge path was ever
+    actually exercised with a real API key (roadmap.md #29,
+    ANTHROPIC_API_KEY was a placeholder until then): current-generation
+    Claude models (e.g. claude-sonnet-5) return extended-thinking content
+    as a list of typed blocks (`{"type": "thinking", ...}` followed by
+    `{"type": "text", "text": "..."}`), not a plain string -- `.content`
+    being a str was true for every model actually exercised until now
+    (gpt-4o, older Claude snapshots), so no call site ever needed to
+    handle the list case. 86/100 real cases hit this on the first live
+    run (`'list' object has no attribute 'strip'`), all on the
+    groundedness path specifically (its longer response more reliably
+    triggers a visible thinking block than relevance's short one).
+    """
+    content = response.content
+    if isinstance(content, str):
+        return content
+    parts = []
+    for block in content or []:
+        if isinstance(block, dict) and block.get("type") == "text":
+            parts.append(block.get("text") or "")
+        elif isinstance(block, str):
+            parts.append(block)
+    return "".join(parts)
+
+
 # ─── LLM factory ─────────────────────────────────────────────────────────────
 
 def _build_eval_llm(max_tokens: int = 256):
@@ -98,8 +126,16 @@ def _build_eval_llm(max_tokens: int = 256):
     """
     if settings.resolved_eval_provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
+        # temperature is deliberately omitted, not just set to 0.0: the
+        # current-generation Claude 5 models (e.g. claude-sonnet-5) reject
+        # `temperature` outright ("deprecated for this model", a real 400
+        # from the API, found live the first time this path was actually
+        # exercised -- ANTHROPIC_API_KEY was a placeholder until now, so
+        # this call had never really been made before). Determinism for
+        # judge scoring instead comes from EVAL_JUDGE_SAMPLES's median
+        # aggregation across independent calls, not from temperature=0.
         return ChatAnthropic(
-            model=settings.resolved_eval_model, temperature=0.0,
+            model=settings.resolved_eval_model,
             max_tokens=max_tokens, api_key=settings.anthropic_api_key or "sk-no-key",
         )
     from langchain_openai import ChatOpenAI
@@ -270,7 +306,7 @@ async def score_answer_relevance(
                 SystemMessage(content=EVAL_RELEVANCE_SYSTEM),
                 HumanMessage(content=prompt),
             ])
-            raw = _parse_json(response.content.strip())
+            raw = _parse_json(_response_text(response).strip())
             if "answer_relevance" not in raw:
                 # A missing field is a malformed response, not "the judge
                 # scored it 0.5" -- raising here (instead of raw.get(key,
@@ -329,7 +365,7 @@ async def score_groundedness(
                 SystemMessage(content=EVAL_GROUNDEDNESS_SYSTEM),
                 HumanMessage(content=prompt),
             ])
-            raw = _parse_json(response.content.strip())
+            raw = _parse_json(_response_text(response).strip())
             claims = raw.get("claims")
             if not isinstance(claims, list):
                 raise ValueError(f"Judge response missing 'claims' list: {raw!r}")

@@ -625,6 +625,32 @@ def test_score_groundedness_computes_score_from_claim_list():
     assert gnd.valid is True
 
 
+def test_score_groundedness_handles_claude_extended_thinking_content_blocks():
+    """Roadmap.md #29: found live the first time the anthropic eval-judge
+    path was actually exercised with a real key. Current-generation Claude
+    models (claude-sonnet-5) return response.content as a list of typed
+    blocks -- a thinking block followed by a text block -- not a plain
+    string, which every prior model actually used (gpt-4o, older Claude
+    snapshots) always returned. 86/100 real cases failed on this before
+    the fix (_response_text in src/eval/metrics.py)."""
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.content = [
+        {"type": "thinking", "thinking": "Let me check each claim...", "text": None},
+        {"type": "text", "text": json.dumps({
+            "claims": [{"claim": "Revenue is $100", "supported": True, "evidence": "revenue=100"}],
+            "reasoning": "Matches the finding.",
+        })},
+    ]
+    mock_response.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
+    mock_llm.ainvoke = AsyncMock(return_value=mock_response)
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm))
+    assert gnd.valid is True
+    assert gnd.score == 1.0
+
+
 def test_score_groundedness_all_claims_supported_scores_one():
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(return_value=_mock_groundedness_response([
