@@ -63,6 +63,19 @@ class MAEDASettings(BaseSettings):
     A mismatch is a contract-version error — fails in both strict and
     degraded, never treated as a transient/fallback-able error."""
 
+    data_cleaner_planner_mode: Literal["rule", "llm"] = Field(
+        default="rule", alias="DATA_CLEANER_PLANNER_MODE"
+    )
+    """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #6 / M4. Which planner clean_dataset
+    asks the cleaner to use. "llm" is a hard dependency on the cleaner
+    process having a working LLM key configured (agentic-data-cleaner-v2
+    附录 D C5's `health` tool reports this via `planner_modes_available`) —
+    the cleaner silently falls back to rule internally if it isn't, and
+    reports that in execution_plan.planner_mode_used/planner_fallback_reason.
+    In strict mode a requested "llm" that came back as "rule" is a hard
+    failure (集成计划: "不得静默接受降级"); in degraded mode it's allowed,
+    but must still be logged, not swallowed."""
+
     # ── Data Sources ─────────────────────────────────────────────────────────
     default_data_dir: str = Field(default="./data/sample", alias="MAEDA_DEFAULT_DATA_DIR")
 

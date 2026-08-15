@@ -224,6 +224,20 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     connector = _get_data_connector()
     mcp_client = _get_subsystem_client()
 
+    # M4 / 定案 #16: per-call run_id derived from the pipeline's own run_id,
+    # now that cleaner's C3 actually honors it (附录 E P4 is resolved).
+    # Each call gets a DISTINCT id, not one shared id for the whole pipeline
+    # run: run_two_stage's stage1/stage2 directories are fixed names under
+    # run_root, so reusing the same run_id across two separate clean_dataset
+    # calls would silently overwrite round 1's artifacts with round 2's.
+    # The shared prefix still lets every artifact from this pipeline run be
+    # found/grouped by directory-name prefix (附录 E.2 P1).
+    pipeline_run_id = state.get("run_id", "")
+    round_index = state.get("iteration_count", 0)
+
+    def _round_run_id(label: str, index: int) -> str:
+        return f"{pipeline_run_id}_{label}{index}" if pipeline_run_id else ""
+
     # Step 1: Connect and extract schema + NL summary
     try:
         schema, nl_summary = await connector.connect_with_summary(source)
@@ -243,7 +257,9 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
 
     # Step 2: Delegate quality profiling to Data Cleaner MCP
     try:
-        report, prof_log = await mcp_client.profile_dataset(effective_path)
+        report, prof_log = await mcp_client.profile_dataset(
+            effective_path, run_id=_round_run_id("profile", round_index),
+        )
     except SubSystemHardFailure as exc:
         # 错误处理矩阵 (M1): param/contract/data-input errors must not be
         # papered over in either mode -- surface as a real pipeline error
@@ -302,7 +318,16 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         # expects back — feeding it back gets rejected server-side with
         # "Plan missing top-level field: 'intent'". Passing no plan lets
         # clean_dataset generate and use its own internally-valid one.
-        result, clean_log = await mcp_client.clean_dataset(effective_path)
+        # M4: planner_mode read from Settings (定案 #6) and max_rounds
+        # pinned to 1 (定案 #5) — MAEDA's graph loop is the outer round
+        # controller, cleaner's own internal multi-round feedback loop
+        # would be a second, uncoordinated one if left at its default.
+        result, clean_log = await mcp_client.clean_dataset(
+            effective_path,
+            planner_mode=settings.data_cleaner_planner_mode,
+            max_rounds=1,
+            run_id=_round_run_id("clean", round_index + 1),
+        )
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), clean_log]
     except SubSystemHardFailure as exc:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
@@ -317,6 +342,19 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # attempts despite _MAX_CLEAN_ITERATIONS = 3), and not gated on whether
     # the output turns out to be usable below ("调用成功返回后自增").
     state["iteration_count"] = state.get("iteration_count", 0) + 1
+
+    # M4: record the execution plan cleaner actually used (live since its
+    # C3) as its own decision-trace entry — separate from the round-summary
+    # trace below because this is worth recording even on the branches that
+    # return early afterward (needs_review, unusable output, no_diff, ...).
+    plan = result.execution_plan
+    _trace(
+        state, "data_connector", "clean_dataset_execution_plan",
+        f"planner_mode_requested={plan.get('planner_mode_requested')!r}, "
+        f"planner_mode_used={plan.get('planner_mode_used')!r}, "
+        f"planner_fallback_reason={plan.get('planner_fallback_reason')!r}, "
+        f"steps={len(plan.get('steps', []))}",
+    )
 
     if result.needs_review:
         state["cleaning_stop_reason"] = "needs_review"
@@ -378,7 +416,9 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # this replaces the stale pre-clean report that used to linger for the
     # rest of the run.
     try:
-        report2, prof2_log = await mcp_client.profile_dataset(cleaned_path)
+        report2, prof2_log = await mcp_client.profile_dataset(
+            cleaned_path, run_id=_round_run_id("reprofile", state["iteration_count"]),
+        )
     except SubSystemHardFailure as exc:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
         state["error"] = f"Re-profiling cleaned data failed ({exc.error_class}): {exc}"
@@ -400,7 +440,9 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # validate_quality as the actual exit check (附录 B.4 #1) — previously
     # wired up in mcp_client but never called from the graph at all.
     try:
-        validation, val_log = await mcp_client.validate_quality(cleaned_path)
+        validation, val_log = await mcp_client.validate_quality(
+            cleaned_path, run_id=_round_run_id("validate", state["iteration_count"]),
+        )
     except SubSystemHardFailure as exc:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
         state["error"] = f"validate_quality failed ({exc.error_class}): {exc}"

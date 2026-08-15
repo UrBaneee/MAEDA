@@ -920,6 +920,116 @@ class TestFieldPresenceCheck:
         assert validation.passed is True
 
 
+# ─── M4: clean_dataset explicit args + planner_mode degradation check ─────────
+
+class TestCleanDatasetExplicitArgs:
+    def test_sends_planner_mode_max_rounds_run_id(self):
+        transport = _mock_dc_transport({
+            "clean_dataset": {
+                "cleaned_path": "x_clean.csv", "changes_summary": {}, "rows_affected": 0,
+                "execution_plan": {
+                    "plan_id": "p1", "planner_mode_requested": "rule",
+                    "planner_mode_used": "rule", "planner_fallback_reason": None, "steps": [],
+                },
+            }
+        })
+        client = DataCleanerClient(transport)
+        asyncio.run(client.clean_dataset("x.csv", planner_mode="rule", max_rounds=1, run_id="r1"))
+        sent_args = transport.call_tool.await_args.args[1]
+        assert sent_args["planner_mode"] == "rule"
+        assert sent_args["max_rounds"] == 1
+        assert sent_args["run_id"] == "r1"
+
+    def test_omits_run_id_when_not_given(self):
+        """FastMCP silently ignores unknown fields (附录 E P4) -- but an
+        empty run_id is a valid-looking value, not an unknown field, so it
+        must not be sent at all when the caller didn't ask for one."""
+        transport = _mock_dc_transport({
+            "clean_dataset": {"cleaned_path": "x.csv", "changes_summary": {}, "rows_affected": 0}
+        })
+        client = DataCleanerClient(transport)
+        asyncio.run(client.clean_dataset("x.csv"))
+        sent_args = transport.call_tool.await_args.args[1]
+        assert "run_id" not in sent_args
+
+    def test_execution_plan_parsed_onto_result(self):
+        transport = _mock_dc_transport({
+            "clean_dataset": {
+                "cleaned_path": "x.csv", "changes_summary": {}, "rows_affected": 0,
+                "execution_plan": {
+                    "plan_id": "p1", "planner_mode_requested": "rule",
+                    "planner_mode_used": "rule", "planner_fallback_reason": None,
+                    "steps": [{"step_id": "s1", "mcp_tool": "handle_missing"}],
+                },
+            }
+        })
+        client = DataCleanerClient(transport)
+        result = asyncio.run(client.clean_dataset("x.csv"))
+        assert result.execution_plan["plan_id"] == "p1"
+        assert len(result.execution_plan["steps"]) == 1
+
+
+class TestPlannerModeDegradation:
+    """定案 #6: the cleaner's own LLMPlanner already degrades from llm to
+    rule internally and reports it via execution_plan -- strict mode must
+    not silently accept that; degraded mode may, but must log it."""
+
+    @pytest.fixture(autouse=True)
+    def _reset_strict_mode(self):
+        from src.config.settings import settings as _settings
+        original = _settings.mcp_strict_mode
+        yield
+        _settings.mcp_strict_mode = original
+
+    @staticmethod
+    def _degraded_response():
+        return {
+            "cleaned_path": "x.csv", "changes_summary": {}, "rows_affected": 0,
+            "execution_plan": {
+                "plan_id": "p1", "planner_mode_requested": "llm",
+                "planner_mode_used": "rule",
+                "planner_fallback_reason": "litellm.AuthenticationError: missing key",
+                "steps": [],
+            },
+        }
+
+    def test_strict_mode_raises_on_silent_llm_to_rule_fallback(self):
+        from src.config.settings import settings as _settings
+        from src.mcp_client.client import MCPContractError
+
+        _settings.mcp_strict_mode = "strict"
+        transport = _mock_dc_transport({"clean_dataset": self._degraded_response()})
+        client = DataCleanerClient(transport)
+        with pytest.raises(MCPContractError):
+            asyncio.run(client.clean_dataset("x.csv", planner_mode="llm"))
+
+    def test_degraded_mode_accepts_fallback_with_warning(self, caplog):
+        from src.config.settings import settings as _settings
+
+        _settings.mcp_strict_mode = "degraded"
+        transport = _mock_dc_transport({"clean_dataset": self._degraded_response()})
+        client = DataCleanerClient(transport)
+        result = asyncio.run(client.clean_dataset("x.csv", planner_mode="llm"))
+        assert result.execution_plan["planner_mode_used"] == "rule"
+
+    def test_rule_requested_never_triggers_the_check(self):
+        """rule has no external dependency -- must never raise regardless
+        of what execution_plan happens to say."""
+        from src.config.settings import settings as _settings
+        from src.mcp_client.client import MCPContractError
+
+        _settings.mcp_strict_mode = "strict"
+        transport = _mock_dc_transport({"clean_dataset": self._degraded_response()})
+        client = DataCleanerClient(transport)
+        # Even though the canned response claims a "llm -> rule" fallback,
+        # this call only ever requested "rule" -- the check is a no-op.
+        try:
+            result = asyncio.run(client.clean_dataset("x.csv", planner_mode="rule"))
+        except MCPContractError:
+            pytest.fail("planner_mode='rule' must never trigger the degradation check")
+        assert result.cleaned_path == "x.csv"
+
+
 # ─── M1: error-matrix classification in SubSystemWithFallback ─────────────────
 
 class TestErrorMatrix:

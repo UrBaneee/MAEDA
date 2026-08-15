@@ -188,6 +188,11 @@ class CleaningResult:
     changes_summary: dict
     rows_affected: int
     needs_review: bool = False  # 附录 B.3 — not emitted today, see DataQualityReport.needs_review
+    # M4 / 附录 D-I C3: {plan_id, planner_mode_requested, planner_mode_used,
+    # planner_fallback_reason, steps[]} — #17's target-state field, separate
+    # from changes_summary (results) and executed_steps (outcomes). Live
+    # since cleaner's C3 (2026-08-15); empty dict if the server predates it.
+    execution_plan: dict = field(default_factory=dict)
 
     @classmethod
     def from_mcp_response(cls, data: dict) -> "CleaningResult":
@@ -203,6 +208,7 @@ class CleaningResult:
             changes_summary=data.get("changes_summary") or {},
             rows_affected=int(data.get("rows_affected", 0)),
             needs_review=bool(data.get("needs_review", False)),
+            execution_plan=data.get("execution_plan") or {},
         )
 
 

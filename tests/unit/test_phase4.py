@@ -514,6 +514,58 @@ class TestCleaningLoop:
         assert result["cleaning_stop_reason"] == "passed"
         assert result["iteration_count"] == 1
 
+    def test_run_ids_distinct_and_execution_plan_traced(self, tmp_path):
+        """M4: each MCP call in the round gets its own run_id (reusing one
+        id across separate clean_dataset calls would make cleaner overwrite
+        round 1's artifacts with round 2's -- see the module docstring on
+        _round_run_id), all sharing the pipeline's run_id as a prefix; and
+        the execution_plan cleaner returns lands in decision_trace."""
+        from src.mcp_client.models import (
+            CleaningResult, DataQualityReport, QualityValidation,
+        )
+        from src.state.graph_state import initial_state
+
+        dirty = tmp_path / "dirty.csv"
+        dirty.write_text("a,b\n1,\n2,\n3,\n4,\n5,1\n")
+        cleaned = tmp_path / "cleaned.csv"
+        cleaned.write_text("a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n")
+
+        dirty_report = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=True)
+        clean_result = CleaningResult(
+            cleaned_path=str(cleaned), changes_summary={}, rows_affected=0,
+            execution_plan={
+                "plan_id": "p1", "planner_mode_requested": "rule",
+                "planner_mode_used": "rule", "planner_fallback_reason": None,
+                "steps": [{"step_id": "s1"}, {"step_id": "s2"}],
+            },
+        )
+        clean_report = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=False)
+        validation = QualityValidation(passed=True, score=1.0, issues=[], details={})
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(dirty_report, self._log("profile_dataset")),
+                              (clean_report, self._log("profile_dataset"))],
+            clean_dataset=[(clean_result, self._log("clean_dataset"))],
+            validate_quality=[(validation, self._log("validate_quality"))],
+        )
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
+        pipeline_run_id = state["run_id"]
+        result = self._run(state, mock_mcp)
+
+        profile_run_ids = [c.kwargs.get("run_id") for c in mock_mcp.profile_dataset.call_args_list]
+        clean_run_id = mock_mcp.clean_dataset.call_args.kwargs.get("run_id")
+        validate_run_id = mock_mcp.validate_quality.call_args.kwargs.get("run_id")
+
+        all_ids = [*profile_run_ids, clean_run_id, validate_run_id]
+        assert all(rid.startswith(pipeline_run_id) for rid in all_ids), all_ids
+        assert len(set(all_ids)) == len(all_ids), f"expected all distinct, got {all_ids}"
+
+        plan_traces = [t for t in result["decision_trace"] if t["action"] == "clean_dataset_execution_plan"]
+        assert len(plan_traces) == 1
+        assert "planner_mode_used='rule'" in plan_traces[0]["reasoning"]
+        assert "steps=2" in plan_traces[0]["reasoning"]
+
     def test_iteration_count_zero_when_nothing_to_clean(self, csv_file):
         """附录 B.5: the counter tracks *completed clean_dataset calls*, not
         node entries -- must stay 0 when cleaning was never triggered."""

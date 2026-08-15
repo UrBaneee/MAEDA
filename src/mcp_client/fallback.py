@@ -204,11 +204,11 @@ class SubSystemWithFallback:
 
     # ── Data Cleaner delegation ───────────────────────────────────────────────
 
-    async def profile_dataset(self, path: str) -> tuple[DataQualityReport, dict]:
+    async def profile_dataset(self, path: str, run_id: str = "") -> tuple[DataQualityReport, dict]:
         """Profile dataset via Data Cleaner MCP; fall back to pandas on failure."""
         return await _call_with_matrix(
-            "data_cleaner", "profile_dataset", {"dataset_path": path},
-            call=lambda: self._dc.profile_dataset(path),
+            "data_cleaner", "profile_dataset", {"dataset_path": path, "run_id": run_id},
+            call=lambda: self._dc.profile_dataset(path, run_id=run_id),
             fallback_factory=lambda: _basic_pandas_profile(path),
         )
 
@@ -221,12 +221,20 @@ class SubSystemWithFallback:
         )
 
     async def clean_dataset(
-        self, path: str, plan: Optional[CleaningPlan] = None
+        self,
+        path: str,
+        plan: Optional[CleaningPlan] = None,
+        planner_mode: str = "rule",
+        max_rounds: int = 1,
+        run_id: str = "",
     ) -> tuple[CleaningResult, dict]:
         """Clean dataset via Data Cleaner; fall back to returning path as-is."""
         return await _call_with_matrix(
-            "data_cleaner", "clean_dataset", {"dataset_path": path},
-            call=lambda: self._dc.clean_dataset(path, plan),
+            "data_cleaner", "clean_dataset",
+            {"dataset_path": path, "planner_mode": planner_mode, "max_rounds": max_rounds, "run_id": run_id},
+            call=lambda: self._dc.clean_dataset(
+                path, plan, planner_mode=planner_mode, max_rounds=max_rounds, run_id=run_id,
+            ),
             fallback_factory=lambda: CleaningResult(
                 cleaned_path=path,
                 changes_summary={"fallback_reason": "Data Cleaner unavailable; no cleaning applied"},
@@ -234,11 +242,11 @@ class SubSystemWithFallback:
             ),
         )
 
-    async def validate_quality(self, path: str) -> tuple[QualityValidation, dict]:
+    async def validate_quality(self, path: str, run_id: str = "") -> tuple[QualityValidation, dict]:
         """Validate data quality; fall back to 'passed' if unavailable."""
         return await _call_with_matrix(
-            "data_cleaner", "validate_quality", {"dataset_path": path},
-            call=lambda: self._dc.validate_quality(path),
+            "data_cleaner", "validate_quality", {"dataset_path": path, "run_id": run_id},
+            call=lambda: self._dc.validate_quality(path, run_id=run_id),
             fallback_factory=lambda: QualityValidation(passed=True, score=1.0, issues=[]),
         )
 

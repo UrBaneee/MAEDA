@@ -91,17 +91,46 @@ def _check_contract_version(raw: dict, tool: str) -> None:
         )
 
 
+def _check_planner_mode_not_silently_degraded(result: CleaningResult, requested: str) -> None:
+    """
+    定案 #6 / M4: the cleaner's own LLMPlanner already degrades gracefully
+    from "llm" to "rule" internally (agentic-data-cleaner-v2 附录 D F2 fix)
+    and reports what really happened via execution_plan.planner_mode_used/
+    planner_fallback_reason (live since cleaner's C3). strict mode must not
+    silently accept that degradation — that is exactly the kind of "ran,
+    but not the way you asked" failure strict mode exists to surface.
+    degraded mode is allowed to accept it (the result is still usable data),
+    but must not do so silently — hence the warning either way.
+    """
+    if requested != "llm":
+        return  # "rule" has no external dependency; nothing can degrade
+    used = result.execution_plan.get("planner_mode_used")
+    if used == "llm":
+        return
+    reason = result.execution_plan.get("planner_fallback_reason")
+    message = (
+        f"clean_dataset: requested planner_mode='llm' but the server used "
+        f"{used!r} instead ({reason or 'no reason reported'})"
+    )
+    if settings.mcp_strict_mode == "strict":
+        raise MCPContractError(message, error_type="PlannerModeDegraded")
+    logger.warning("%s (degraded mode: proceeding with the actual result)", message)
+
+
 class DataCleanerClient:
     """High-level client for the Agentic Data Cleaner MCP server."""
 
     def __init__(self, transport: MCPClient):
         self._transport = transport
 
-    async def profile_dataset(self, path: str) -> DataQualityReport:
+    async def profile_dataset(self, path: str, run_id: str = "") -> DataQualityReport:
         """Profile a dataset and return a DataQualityReport."""
-        logger.debug("profile_dataset | path=%s", path)
+        logger.debug("profile_dataset | path=%s run_id=%s", path, run_id)
+        args: dict = {"dataset_path": path}
+        if run_id:
+            args["run_id"] = run_id
         raw = await self._transport.call_tool(
-            "profile_dataset", {"dataset_path": path}, timeout=15.0, deadline=30.0,
+            "profile_dataset", args, timeout=15.0, deadline=30.0,
         )
         _raise_if_error_envelope(raw, "profile_dataset")
         _check_field_present(raw, "profile_dataset", "has_critical_issues")
@@ -118,11 +147,21 @@ class DataCleanerClient:
         return CleaningPlan.from_mcp_response(raw)
 
     async def clean_dataset(
-        self, path: str, plan: CleaningPlan | None = None
+        self,
+        path: str,
+        plan: CleaningPlan | None = None,
+        planner_mode: str = "rule",
+        max_rounds: int = 1,
+        run_id: str = "",
     ) -> CleaningResult:
         """Execute cleaning (optionally with a pre-built plan) and return results."""
-        logger.debug("clean_dataset | path=%s", path)
-        args: dict = {"dataset_path": path}
+        logger.debug(
+            "clean_dataset | path=%s planner_mode=%s max_rounds=%s run_id=%s",
+            path, planner_mode, max_rounds, run_id,
+        )
+        args: dict = {"dataset_path": path, "planner_mode": planner_mode, "max_rounds": max_rounds}
+        if run_id:
+            args["run_id"] = run_id
         if plan is not None:
             # cleaner's real signature is `plan: str = ""` — a JSON string
             # it json.loads()s itself (mcp_app.py::clean_dataset), not a
@@ -137,13 +176,18 @@ class DataCleanerClient:
             "clean_dataset", args, timeout=90.0, deadline=180.0,
         )
         _raise_if_error_envelope(raw, "clean_dataset")
-        return CleaningResult.from_mcp_response(raw)
+        result = CleaningResult.from_mcp_response(raw)
+        _check_planner_mode_not_silently_degraded(result, planner_mode)
+        return result
 
-    async def validate_quality(self, path: str) -> QualityValidation:
+    async def validate_quality(self, path: str, run_id: str = "") -> QualityValidation:
         """Validate final data quality after cleaning."""
-        logger.debug("validate_quality | path=%s", path)
+        logger.debug("validate_quality | path=%s run_id=%s", path, run_id)
+        args: dict = {"dataset_path": path}
+        if run_id:
+            args["run_id"] = run_id
         raw = await self._transport.call_tool(
-            "validate_quality", {"dataset_path": path}, timeout=15.0, deadline=30.0,
+            "validate_quality", args, timeout=15.0, deadline=30.0,
         )
         _raise_if_error_envelope(raw, "validate_quality")
         _check_field_present(raw, "validate_quality", "passed")
