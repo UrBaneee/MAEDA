@@ -36,6 +36,19 @@ from src.eval.replay_cache import ReplayCache
 
 ANNOTATIONS_DIR = Path("data/annotations")
 
+# Each case makes 2 metric calls (relevance + groundedness), and each metric
+# call internally fires settings.eval_judge_samples (default 3) independent
+# LLM calls to median-aggregate away single-call noise -- so one case is
+# really ~6 real API calls, not 1. The first live run of this script (2026)
+# gathered all 100 cases with NO concurrency cap at all, unlike
+# generate_replay_corpus.py's deliberate Semaphore(12) (added earlier for
+# the exact same reason, against OpenAI -- this script just didn't carry
+# that pattern over when it was written): ~600 calls fired essentially at
+# once against Anthropic, triggering heavy rate-limit retries and burning
+# through the account's credit balance in an uncontrolled burst before
+# finishing. Mirrors generate_replay_corpus.py's default exactly.
+_DEFAULT_CONCURRENCY = 12
+
 
 async def _score_case(cid: str, state: dict) -> dict:
     query = state.get("user_query", "")
@@ -63,6 +76,8 @@ async def main():
                         help="A human_labels_*.json (or bare {case_id:...} file) -- scores exactly its case ids")
     parser.add_argument("--out", type=str, required=True, help="Output answer-key path")
     parser.add_argument("--label", type=str, default=None, help="Judge label for the printed summary only")
+    parser.add_argument("--concurrency", type=int, default=_DEFAULT_CONCURRENCY,
+                         help="Max cases scored at once (each case is ~6 real LLM calls -- see module docstring)")
     args = parser.parse_args()
 
     raw = json.loads(Path(args.cases_from).read_text())
@@ -75,13 +90,23 @@ async def main():
         case_ids = [c for c in case_ids if c not in missing]
 
     judge = args.label or f"{settings.resolved_eval_provider}:{settings.resolved_eval_model}"
-    print(f"Scoring {len(case_ids)} cached case(s) with judge={judge!r} "
+    print(f"Scoring {len(case_ids)} cached case(s) with judge={judge!r}, "
+          f"concurrency={args.concurrency} (~{len(case_ids) * 6} real LLM calls total) "
           f"(each case's OWN stored report, not regenerated)...\n")
 
+    sem = asyncio.Semaphore(args.concurrency)
+    done = 0
+
+    async def _bounded(cid: str) -> dict:
+        nonlocal done
+        async with sem:
+            result = await _score_case(cid, cache._entries[cid].state)
+        done += 1
+        print(f"  [{done}/{len(case_ids)}] {cid} done")
+        return result
+
     t0 = time.time()
-    results = await asyncio.gather(*[
-        _score_case(cid, cache._entries[cid].state) for cid in case_ids
-    ])
+    results = await asyncio.gather(*[_bounded(cid) for cid in case_ids])
     elapsed = time.time() - t0
 
     answer_key = {r["case_id"]: {k: v for k, v in r.items() if k != "case_id"} for r in results}
@@ -91,7 +116,7 @@ async def main():
 
     invalid = [(r["case_id"], m) for r in results for m in ("answer_relevance", "groundedness")
                if not r[m]["valid"]]
-    print(f"Scored {len(results)} case(s) in {elapsed:.1f}s. {len(invalid)} invalid metric call(s): {invalid}")
+    print(f"\nScored {len(results)} case(s) in {elapsed:.1f}s. {len(invalid)} invalid metric call(s): {invalid}")
     print(f"Answer key saved to {out_path}")
 
 
