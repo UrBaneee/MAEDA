@@ -1,0 +1,1402 @@
+{
+  "C01": {
+    "answer_relevance": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "The report addresses the core question by comparing Q1-Q4 sales performance, citing the ANOVA test and noting Q4 outperforms other quarters. However, it lacks specific numeric detail per quarter (e.g., mean/sum revenue for each quarter, which was available in the findings) and instead recommends 'detailed quarterly analysis' as a next step, effectively deferring part of the comparison rather than fully presenting it. The report also includes a slightly misleading 'highest revenue' claim about a single row rather than quarterly aggregates, which somewhat dilutes direct comparison. Overall it captures the general trend and significance but misses providing full quarter-by-quarter breakdown that was readily available.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"One-way ANOVA test statistic of 129.9744\", \"supported\": true, \"evidence\": \"Findings show significance_test statistic: 129.9744\"},\\n    {\"claim\": \"ANOVA p-value of 0.0\", \"'",
+      "valid": false
+    }
+  },
+  "C02": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question of how conversion rate differs by marketing channel, providing specific mean conversion rates per channel (Search 0.065, Email 0.044, Affiliate 0.037, Social 0.022, Display 0.012), citing statistical significance (ANOVA), ranking channels, and giving actionable recommendations based on these differences. It thoroughly covers the comparative aspect requested.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "C03": {
+    "answer_relevance": {
+      "score": 0.2,
+      "label": "fail",
+      "reasoning": "The user asked specifically for a comparison of average order value between new and returning customers, but the report does not provide this comparison at all. Instead, it presents average order value by customer type (Consumer, Corporate, Home Office), which is a different dimension unrelated to new vs. returning status. The report explicitly acknowledges this gap and recommends further analysis, but does not attempt any proxy or partial answer to the actual question. While transparent about the limitation, it fails to directly address the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"Consumer customer type average order value is $1246.12\", \"supported\": true, \"evidence\": \"Findings show customer_id=789, customer_type=Consumer, average_order_value=1246.'",
+      "valid": false
+    }
+  },
+  "C04": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and clearly answers the question by identifying Books as the highest-margin category (217.83) and Office Supplies as the lowest-margin category (43.67), matching the data. It also provides full ranking context (Furniture, Electronics, Clothing in between) and adds relevant supporting detail on product-level performance, plus actionable recommendations tied directly to the question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 Books category has the highest profit margin at approximately 217.83 (evidence: groupby_aggregate_margin shows Books=217.8345, which is the highest of the 5 categories listed (Furniture 180.20, Electronics 153.57, Clothing 153.23, Office Supplies 43.67)) | \u2713 Office Supplies has the lowest margin at around 43.67 (evidence: groupby_aggregate_margin shows Office Supplies=43.67, the lowest of the 5 categories listed) | \u2717 Product 2 generates the highest margin at $362.98, significantly outperforming other products (no evidence found) | \u2713 Products 1 and 4 are incurring substantial losses (evidence: derive_margin shows Product 1 margin=-161.82 and Product 4 margin=-86.93, both negative)",
+      "valid": true
+    }
+  },
+  "C05": {
+    "answer_relevance": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "The report directly compares 0 login days (24% churn) but instead of comparing against the full 10+ login days aggregate group as requested, it compares against only the single value of 10 login days (14.16%), missing the actual '10+' aggregate comparison the user asked for. It does provide additional breakdowns of individual login-day values which are somewhat relevant but not the specific 10+ grouped comparison. This partially answers the question but misses the key requested aggregation (10+ days as a group), so it does not fully satisfy the query as framed.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "C06": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and thoroughly compares average order revenue across all three customer segments, providing specific figures, ranking them, and offering additional context and recommendations relevant to the comparison requested.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"Consumer segment has the highest average order revenue at approximately $1,246\", \"supported\": true, \"evidence\": \"Findings show Consumer=1246.1159862932072, which is inde'",
+      "valid": false
+    }
+  },
+  "C07": {
+    "answer_relevance": {
+      "score": 0.9,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's request to compare revenue growth in North and South regions from 2022 to 2024, providing specific yearly figures for both regions, noting the trend directions (North's steady growth vs South's decline then recovery), and even including average revenue comparisons. It covers the full timeframe requested and both regions explicitly. Minor deduction because explicit growth rate percentages were not calculated (mentioned as a failure), which would have made the comparison more precise, but the core comparative question is still answered with concrete numbers and trends.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"North region revenue was $439,901.01 in 2022\", \"supported\": true, \"evidence\": \"groupby_aggregate_revenue: year=2022, region=North, revenue=439901.01\"},\\n    {\"claim\": \"No'",
+      "valid": false
+    }
+  },
+  "C08": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the user's question by comparing order counts between Q1 2024 (2,419) and Q4 2024 (2,527), explicitly stating which quarter had more orders and by how much. It includes the core comparison in the executive summary, key findings, and analysis details sections. While it adds some tangential revenue details (mixing in Q3 data unnecessarily), the central question of comparing order volume between Q1 and Q4 2024 is clearly and directly addressed with specific numbers.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "C09": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's request to compare click-through rates between Search and Social channels, providing specific CTR values (mean, top campaign rates), statistical test results (t-test, p-value), and campaign-level details. It thoroughly covers the comparison with concrete numbers and even includes caveats about the statistical significance, fully engaging with the question asked.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "C10": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and clearly answers the user's question by comparing average monthly charges between Basic ($29.04) and Premium ($99.10) plans, with specific numeric values in both the executive summary and key findings sections. It fully addresses the core comparison requested, though it also adds tangential content (churn analysis, marketing recommendations) that goes beyond the scope of the question\u2014this does not detract from relevance since the core comparison is thoroughly and specifically answered.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Premium plan customers average approximately $99.10 in monthly charges\",\\n      \"supported\": true,\\n      \"evidence\": \"groupby_aggregate findings: plan=Premium, mon'",
+      "valid": false
+    }
+  },
+  "C11": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and specifically compares total units sold between Online (28,960) and Retail (30,505) channels, exactly as requested, with clear figures, a comparative statement, and supporting narrative. It fully addresses the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"Retail sales channel sold 30,505 units\", \"supported\": true, \"evidence\": \"groupby_aggregate result: channel=Retail, units=30505\"},\\n    {\"claim\": \"Online sales channel sol'",
+      "valid": false
+    }
+  },
+  "C12": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly compares the number of customers who joined before versus after January 2022, giving explicit counts (350 vs 355), a statistical test result, and additional breakdowns by segment/country and acquisition trends. This directly and thoroughly addresses the user's question, providing specific numbers and context beyond a bare comparison. Whether those numbers are accurate is a separate evidence-based concern, not relevant to this relevance score.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "C13": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly compares total quantities of Furniture (12,507) versus Books (10,947) ordered, exactly as requested. It provides specific numbers, a clear comparison, and supporting visualization, fully addressing the user's question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "5/5 claims supported. \u2713 Total quantity of Furniture items ordered is 12,507 (evidence: Findings: category=Furniture, total_quantity=12507) | \u2713 Total quantity of Books ordered is 10,947 (evidence: Findings: category=Books, total_quantity=10947) | \u2713 Furniture items are more popular/have higher total quantity than Books (evidence: Findings show only two categories: Furniture=12507, Books=10947, so comparison holds with the only two values present.) | \u2713 Furniture outperforms Books in sales (bar chart visualization) (evidence: Same two values (12507 vs 10947) support this comparative claim; no other categories present to contradict it.) | \u2713 Data quality checks passed, no significant issues identified (evidence: Data Quality section: '1000 rows \u2014 no quality issues flagged')",
+      "valid": true
+    }
+  },
+  "C14": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and clearly answers the user's question by comparing the number of campaigns on Email (429) vs Search (371) channels, with explicit numbers and a clear comparison. It goes beyond the core question with additional context (ROI, recommendations) but fully addresses the specific comparison requested.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CdfAmSiAgVqLkZRk8qLTN'}",
+      "valid": false
+    }
+  },
+  "C15": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and specifically compares churn rates between Basic (21.4%) and Premium (13.3%) plans as requested, providing exact figures, a clear comparison, visualization reference, and actionable recommendations tied directly to the comparison. It fully addresses the question asked.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Basic plan churn rate is approximately 21.4% (0.2139)\",\\n      \"supported\": true,\\n      \"evidence\": \"groupby_aggregate shows plan=Basic, churned=0.2139068945197407'",
+      "valid": false
+    }
+  },
+  "C16": {
+    "answer_relevance": {
+      "score": 0.1,
+      "label": "fail",
+      "reasoning": "The user asked specifically for a comparison of total revenue between West and East regions in 2023. The analysis findings actually contain exactly this data (East sum=$350,064.96, West sum=$395,309.38), but the report explicitly fails to extract or report these figures, instead claiming they could not be determined. The report focuses on North region performance, which was not asked about, and does not answer the actual question posed. This is a near-total failure to address the query despite the needed data being available.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "C17": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and specifically answers the query by comparing total revenue between Germany and the UK, providing exact figures ($2,000,370.95 vs $2,123,799.70), identifying the UK as higher, and discussing the comparison's limitations (significance test). It fully addresses the question asked.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.7142857142857143,
+      "label": "pass",
+      "reasoning": "5/7 claims supported. \u2713 UK total revenue is approximately $2.12 million, higher than Germany's approximately $2 million (evidence: Findings show UK total_revenue=2123799.70 and Germany total_revenue=2000370.95) | \u2713 Significance of the difference could not be determined due to data limitations (nan values) (evidence: compare_revenue significance_test shows statistic=nan, p_value=nan, significant=None) | \u2713 Total revenue for UK is $2,123,799.70 (evidence: Matches join_and_filter and compare_revenue results) | \u2713 Total revenue for Germany is $2,000,370.95 (evidence: Matches join_and_filter and compare_revenue results) | \u2713 UK outperforms Germany in revenue generation (evidence: Directly supported by the two revenue figures shown) | \u2717 The UK leads in total revenue among all countries analyzed, significantly outperforming its competitors (no evidence found) | \u2717 A bar chart was generated showing the UK leading with approximately $2.12 million (no evidence found)",
+      "valid": true
+    }
+  },
+  "C18": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly compares order counts between Books and Electronics, providing the exact figures (2,017 vs 1,563), the difference, and additional context/recommendations. It fully addresses the user's request.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 Books category order count is 2,017 (evidence: Findings show category=Books, order_count=2017) | \u2713 Electronics category order count is 1,563 (evidence: Findings show category=Electronics, order_count=1563) | \u2713 Books significantly outperforms Electronics in order count (2,017 vs 1,563) (evidence: Both values match findings; only two categories present and Books' value is higher, so comparison is verifiable from the two data points given) | \u2717 A bar chart was created visualizing the disparity in order counts (no evidence found)",
+      "valid": true
+    }
+  },
+  "C19": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by comparing average discounts for Electronics (9.997%) and Clothing (9.963%), explicitly stating which category has a higher discount and by how much. It includes specific figures, a clear comparison, and additional context (visualization, recommendations) that fully addresses the user's request.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "4/6 claims supported. \u2713 Average discount for Electronics orders is 9.997% (evidence: Findings show average_discount=0.09996801023672429 for Electronics, which rounds to 9.997%) | \u2713 Average discount for Clothing orders is 9.963% (evidence: Findings show average_discount=0.09962834489593685 for Clothing, which rounds to 9.963%) | \u2713 Electronics average discount is slightly higher than Clothing's (evidence: Findings show Electronics=0.09996801 vs Clothing=0.09962834, confirming Electronics is higher; only two categories present in findings, both checked) | \u2717 The confidence level for this finding is moderate at 60% (no evidence found) | \u2717 A bar chart was generated to visually represent the average discounts by category (no evidence found) | \u2713 Data quality checks passed, no significant data quality issues were identified (evidence: Data Quality section states '1000 rows \u2014 no quality issues flagged')",
+      "valid": true
+    }
+  },
+  "C20": {
+    "answer_relevance": {
+      "score": 0.3,
+      "label": "fail",
+      "reasoning": "The report addresses the requested comparison topic (churned vs retained monthly charges) and cites the correct statistical test values, but it directly inverts the actual finding\u2014claiming churned customers have higher charges when the data shows retained customers ($63.58) have higher charges than churned ($56.58). Since the core directional answer to the user's question is wrong, the report fails to correctly answer what was asked, despite superficially engaging with the topic.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "3/6 claims supported. \u2717 Churned customers have significantly higher average monthly charges compared to retained customers (no evidence found) | \u2713 t-test statistic of 6.1314 (evidence: Matches significance_test.statistic=6.1314 in findings) | \u2713 p-value of 0.0 (evidence: Matches significance_test.p_value=0.0 in findings) | \u2713 There is a statistically significant difference between the two groups (evidence: significance_test.significant=True in findings) | \u2717 A strong correlation between higher charges and customer churn exists, i.e., higher charges are linked to churn (no evidence found) | \u2717 Data quality issue is with the variable support_calls_last_90d, with 7.3% of values outside 1.5\u00d7IQR (no evidence found)",
+      "valid": true
+    }
+  },
+  "D01": {
+    "answer_relevance": {
+      "score": 0.9,
+      "label": "pass",
+      "reasoning": "The report directly answers the query by presenting total sales (revenue) by region, listing all five regions with figures, ranking them, and visualizing via a bar chart. It slightly omits the South region's figure in the key findings/analysis details list but includes it in the raw data reference implicitly through the aggregation description. Overall it closely and specifically addresses the request.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"North region has revenue over $1.36 million\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show North region=1363760.55, matches \\'over $1.36 million\\'.\"\\n  '",
+      "valid": false
+    }
+  },
+  "D02": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by providing the average order value for each of the five product categories (Books, Furniture, Office Supplies explicitly, and mentions Clothing and Electronics in context), matching the data. It highlights the highest and lowest values and includes all categories from the findings, fully addressing the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "8/8 claims supported. \u2713 Books category has the highest average order value at approximately $1,543.26 (evidence: Books=1543.26, highest among all listed categories (Clothing 1364.37, Electronics 1153.89, Furniture 1382.82, Office Supplies 770.88)) | \u2713 Books significantly surpasses other categories (evidence: Books 1543.26 vs next highest Furniture 1382.82, a meaningful gap consistent with findings) | \u2713 Office Supplies has the lowest average order value at around $770.88 (evidence: Office Supplies=770.88, lowest of all five categories in findings) | \u2713 Furniture category follows with a high average order value of approximately $1,382.82 (evidence: Furniture=1382.82, second highest after Books (1543.26), consistent with 'follows') | \u2713 Books significantly outpace other categories like Clothing and Electronics (evidence: Books=1543.26 vs Clothing=1364.37 and Electronics=1153.89, consistent with the claim) | \u2713 Average order value for Books is $1,543.26 (evidence: Matches findings value 1543.2604263758033) | \u2713 Average order value for Furniture is $1,382.82 (evidence: Matches findings value 1382.8210445745167) | \u2713 Average order value for Office Supplies is $770.88 (evidence: Matches findings value 770.8789637780817)",
+      "valid": true
+    }
+  },
+  "D03": {
+    "answer_relevance": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "The report directly addresses the question of customer counts per country, providing specific numbers for most countries (Canada 189, France 186, etc.), which matches the user's request for a per-country breakdown. However, it omits the USA (151 customers) entirely from the discussion and lists only five countries instead of six, missing a key part of the complete answer. This omission reduces the completeness of the direct answer, though the core structure (counts per country) is present and mostly specific.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Customers are distributed across five countries: Australia, Canada, France, Germany, and the UK\",\\n      \"supported\": false,\\n      \"evidence\": \"Findings show 6 cou'",
+      "valid": false
+    }
+  },
+  "D04": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The user asked for the top 10 products by revenue, but the report only provides 5 products (which matches the underlying data's limitation to 5 distinct products). The report does address the core question format (ranked products by revenue with specific figures) and even flags the discrepancy in its Automated Caveats. However, since the question explicitly asks for 10 and only 5 are given, the response only partially fulfills the request as literally asked, despite being a reasonable and transparent answer given the data constraints.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"Widget B revenue is approximately $1,195,178.74\", \"supported\": true, \"evidence\": \"Matches groupby_aggregate/limit_results findings exactly.\"},\\n    {\"claim\": \"Gadget Lite'",
+      "valid": false
+    }
+  },
+  "D05": {
+    "answer_relevance": {
+      "score": 0.3,
+      "label": "fail",
+      "reasoning": "The user asked for monthly order volume over the last 12 months, and the underlying data actually contains all 12 months of aggregated results. However, the report only presents and discusses 5 of the 12 months (January-May), explicitly claiming the full 12-month analysis was not possible, which is factually incorrect per the automated caveats. This means the report fails to directly answer the question as asked \u2014 it omits 7 months of relevant volume data that was available, and instead pivots to revenue peaks and recommendations for future analysis rather than delivering the requested monthly volume breakdown for the full year.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "D06": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and precisely answers the question, stating clearly that 1,571 orders were placed by customers in the USA, matching the query result. It fully addresses the specific question asked.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "1/2 claims supported. \u2713 A total of 1,571 orders were placed by customers in the USA (evidence: Findings show order_count=1571) | \u2717 This indicates a significant level of engagement (no evidence found)",
+      "valid": true
+    }
+  },
+  "D07": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by providing total spend and revenue for each of the five marketing channels (Affiliate, Display, Email, Search, Social), with specific figures for both metrics. It goes further to compare and contrast channels, discuss efficiency, and provide actionable recommendations, all directly tied to the spend/revenue by channel question. All channels and both metrics requested are covered comprehensively.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "D08": {
+    "answer_relevance": {
+      "score": 0.4,
+      "label": "warn",
+      "reasoning": "The user asked specifically for the average tenure values for churned vs. non-churned customers. The findings data contains exact means (31.07 vs 27.22 months), but the report never states these actual numbers. Instead it only discusses statistical significance (t-test, p-value) and vaguely says churned customers have 'shorter tenure' without giving the specific averages requested. It even recommends 'investigating the specific average tenures' as a next step, despite that data already being available. This misses the core, specific answer to the question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"There is a statistically significant difference in average tenure between churned and retained customers, with a t-test statistic of 5.6565 and a p-value of 0.0\",'",
+      "valid": false
+    }
+  },
+  "D09": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers both parts of the question: it identifies order_id 5810 as the single order generating the most revenue ($4,992.20) and specifies the customer's country as the UK. This is stated clearly in the executive summary, key findings, and analysis details, fully addressing the user's query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "3/5 claims supported. \u2713 The highest revenue generated from a single order was $4,992.20, associated with order_id 5810. (evidence: find_max_revenue_order shows order_id=5810, revenue=4992.2 as top result.) | \u2713 Order_id 5810 generated the highest revenue, tied with order_id 6553. (evidence: Findings list order_id=6553 with revenue=4992.2, matching order_id=5810's revenue, confirming the tie.) | \u2713 The customer linked to the highest revenue order (order_id 5810) is from the UK. (evidence: join_with_customers result: {'order_id': 5810, 'revenue': 4992.2, 'country': 'UK'}.) | \u2717 The UK leads in revenue generation. (no evidence found) | \u2717 Order_id 5810 is a key contributor to overall sales performance. (no evidence found)",
+      "valid": true
+    }
+  },
+  "D10": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and clearly answers the question, identifying rep_id 1029 as the top revenue-generating sales rep with a specific figure ($139,992.95), and provides supporting context and comparison to other reps.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Rep_id 1029 generated total revenue of $139,992.95\",\\n      \"supported\": true,\\n      \"evidence\": \"Matches groupby_aggregate top result: rep_id=1029, revenue=139992'",
+      "valid": false
+    }
+  },
+  "D11": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by providing the total units sold broken down by each of the five products, matching the data in the findings (Widget B: 24,291; Service Pack: 23,922; Widget A: 22,916; Gadget Lite: 23,057; Gadget Pro: 22,689 - though Widget A's figure isn't explicitly restated, all others are covered). It includes a clear breakdown, ranking, and even a visualization reference, fully addressing the specific request for quantity by product.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "D12": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by providing the exact count of customers who joined each year (2020: 249, 2021: 253, 2022: 240, 2023: 258), fully addressing the user's query with specific data.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Customer acquisition has shown a positive trend over the past four years, with a peak of 258 new customers in 2023.\",\\n      \"supported\": true,\\n      \"evidence\": \"'",
+      "valid": false
+    }
+  },
+  "D13": {
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report fails to provide the average discount value or any relevant computation addressing the user's question. It only states that no data/insights were available, which does not answer the query at all.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "No checkable claims in report.",
+      "valid": true
+    }
+  },
+  "D14": {
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report fails to provide any breakdown of item quantities by product category, which was the core request. It only states that no data was available, despite 1000 rows existing with no quality issues flagged, suggesting an analysis failure rather than an actual absence of data. No specific details, numbers, or categories are given.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "No checkable claims in report.",
+      "valid": true
+    }
+  },
+  "D15": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "D16": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by identifying Product 11 as the product with the highest average revenue per order and provides the specific value ($2,530.29). It clearly addresses the user's query with relevant details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.3333333333333333,
+      "label": "fail",
+      "reasoning": "1/3 claims supported. \u2713 Product 11 has the highest average revenue per order at approximately $2,530.29 (evidence: Findings show only Product 11 with average_revenue_per_order=2530.29; only 1 row returned, so 'highest' is a single data point, but the number matches.) | \u2717 Product 11 significantly outperforms other products in average revenue per order (no evidence found) | \u2717 A bar chart was generated illustrating average revenue per order by product showing Product 11 significantly outperforms competitors (no evidence found)",
+      "valid": true
+    }
+  },
+  "D17": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and specifically answers the question, providing exact customer counts for each of the three subscription plans (Basic: 1,697, Premium: 1,705, Standard: 1,598), which is precisely what was asked.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.7142857142857143,
+      "label": "pass",
+      "reasoning": "5/7 claims supported. \u2713 There are three subscription plans: Basic, Premium, and Standard (evidence: Findings show plan=Basic, Premium, Standard as 3 rows) | \u2713 The Premium plan has the highest number of subscribers (evidence: Findings: Premium=1705 > Basic=1697 > Standard=1598, consistent across all visible values) | \u2713 Basic plan: 1,697 customers (evidence: Findings: plan=Basic, customer_id=1697) | \u2713 Premium plan: 1,705 customers (evidence: Findings: plan=Premium, customer_id=1705) | \u2713 Standard plan: 1,598 customers (evidence: Findings: plan=Standard, customer_id=1598) | \u2717 A bar chart was generated to visually represent the number of customers by plan (no evidence found) | \u2717 7.3% of values are high outliers specifically for support calls in the last 90 days (no evidence found)",
+      "valid": true
+    }
+  },
+  "D18": {
+    "answer_relevance": {
+      "score": 0.7,
+      "label": "pass",
+      "reasoning": "The report does state the figure ($2,000,370.95) that answers the specific question, and the recommendations/analysis reference Germany. However, the report is poorly framed: the Executive Summary and Key Findings describe it generically as 'total revenue generated from customers' without explicitly stating it is Germany-specific revenue, which could cause ambiguity despite mentioning Germany elsewhere. This slightly obscures direct relevance to the specific question asked.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.3333333333333333,
+      "label": "fail",
+      "reasoning": "1/3 claims supported. \u2713 Total revenue generated from customers is approximately $2,000,371 (specifically $2,000,370.95) (evidence: Matches findings: total_revenue=2000370.9500000011) | \u2717 This figure represents revenue from the German market specifically (no evidence found) | \u2717 The confidence level in this revenue figure is moderate at 60% (no evidence found) [judge disagreement across 3 samples: spread=0.42]",
+      "valid": true
+    }
+  },
+  "D19": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by identifying Furniture as the product category with the most orders (2,221), stated clearly in the executive summary and key findings.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.4,
+      "label": "warn",
+      "reasoning": "2/5 claims supported. \u2713 The Furniture category has 2,221 orders (evidence: Findings state category='Furniture', orders=2221) | \u2717 Furniture category leads / has the highest number of orders among categories (no evidence found) | \u2717 Furniture 'significantly surpasses' other categories in orders (no evidence found) | \u2717 A bar chart visualization confirms Furniture significantly outpaces all other categories (no evidence found) | \u2713 Data quality checks passed, indicating the information is reliable and accurate (evidence: Data Quality section states '1000 rows \u2014 no quality issues flagged')",
+      "valid": true
+    }
+  },
+  "D20": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and fully answers the question by providing the average order discount for each of the 5 product categories, with a clear breakdown, summary, and comparison. All categories are addressed with specific percentages.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "D21": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The report addresses the distribution of monthly charges among churned customers by noting the range ($15.14 to $104.87), but this only captures the min/max values rather than a true distribution (e.g., mean, median, quartiles, histogram/shape, or spread). It misinterprets the 'customer_id: 1' counts in the groupby output as an actual customer ID rather than a count of occurrences, leading to a confusing and partially incorrect 'Monthly Charges vs. Customer ID' section that doesn't meaningfully describe distribution. Key distributional statistics (mean, median, percentiles, plan-based breakdown) are missing, so the question is only partially answered.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG01": {
+    "answer_relevance": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "The report addresses the question by reporting Q3 revenue and pointing to missing data (NaN revenue values) and duplicates as potential contributing factors. However, it never actually compares Q3 revenue to other quarters to substantiate that a 'drop' occurred, nor does it quantify the decline or identify which products/regions/channels drove the change. It acknowledges 'exact revenue from previous quarter is not provided,' meaning the core causal question ('why did revenue drop') is only partially and speculatively answered, missing a direct comparative analysis.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Q3 revenue was $1,178,006.80\",\\n      \"supported\": true,\\n      \"evidence\": \"Matches groupby_aggregate_revenue result: {\\'quarter\\': 3, \\'revenue\\': 1178006.8}\"\\n    },\\n'",
+      "valid": false
+    }
+  },
+  "DG02": {
+    "answer_relevance": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "The user asked specifically what caused the spike in churn 'last month.' The report provides relevant correlational findings (plan type, support calls, login activity) that address general churn drivers, but it never explicitly identifies or quantifies a 'spike' last month, nor compares last month's churn rate to prior periods despite the analysis having filtered data for the last month. This omission leaves the core temporal aspect of the question unanswered, though the causal factors discussed are still relevant to churn drivers overall.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG03": {
+    "answer_relevance": {
+      "score": 0.125,
+      "label": "fail",
+      "reasoning": "The user asked why the North region is underperforming, but the report never establishes underperformance at all\u2014it doesn't compare North's revenue to other regions or provide any baseline showing it lags behind. Instead, the report presents North data (product, channel, rep, units breakdowns) as if it were a general strength analysis, framing findings positively ('strong revenue potential', 'clear opportunities') rather than diagnosing a performance gap. The underlying analysis also lacks any cross-region comparison (no groupby_region results), so the report cannot and does not explain the 'why' behind the premise. It addresses North region data broadly but fails to engage with the core question of underperformance causes.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG04": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and thoroughly addresses the question of what factors correlate with high customer lifetime value. It identifies tenure months and monthly charges as significant correlates (strong and moderate respectively), notes support calls and login days as negligible factors, and provides specific correlation coefficients for each. It also offers actionable recommendations tied to these factors. The response is comprehensive and directly on-topic.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG05": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\"answer_relevance\": 0.4, \"reasoning\": \"The user asked specifically why customers who log in LESS frequently churn at a HIGHER rate. The report actually presents data showing the opposite pattern in i'",
+      "valid": false
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Customers with 50 and 45 login days in the last 30 days have a churn rate of 1.0\",\\n      \"supported\": true,\\n      \"evidence\": \"Matches groupby_aggregate results: '",
+      "valid": false
+    }
+  },
+  "DG06": {
+    "answer_relevance": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "The report confirms and quantifies the ROI gap between Email (2780.31) and Display (687.30) with statistical significance, directly addressing part of the question. However, it stops short of explaining *what drives* the difference in underlying mechanics\u2014e.g., it doesn't analyze cost-per-conversion, spend efficiency, or revenue-per-click differences between channels. It gestures at conversions as a driver but the comparison is inconsistent (CAM0013 Display had comparable conversions to Email examples, undermining the 'conversions drive it' claim) and doesn't systematically explain the causal driver. So it partially answers 'what's driving' rather than fully explaining the mechanism.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Email channel ROI is approximately 2780.31\",'",
+      "valid": false
+    }
+  },
+  "DG07": {
+    "answer_relevance": {
+      "score": 0.85,
+      "label": "pass",
+      "reasoning": "The report directly addresses the question by explaining that Product 8's negative profit margin (-3.75) stems from its cost (195.4) exceeding its unit price (191.65), which is the core reason for the negative margin. It also provides context via comparison to other products and offers actionable recommendations tied to the cause. However, it doesn't explore deeper 'why' factors (e.g., why costs are high relative to price, market positioning, or category-specific cost drivers), staying mostly at a surface-level restatement of the numbers rather than a deeper causal explanation.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Product 8 has a unit price of 191.65\",\\n      \"supported\": true,\\n      \"evidence\": \"filter_product and derive_profit_margin both list Product 8 unit_price=191.65\"\\n'",
+      "valid": false
+    }
+  },
+  "DG08": {
+    "answer_relevance": {
+      "score": 0.1,
+      "label": "fail",
+      "reasoning": "The user's question presupposes that Corporate generates significantly less revenue than Consumer and asks for the reasons why. The report directly contradicts this premise, showing the two segments are nearly identical in revenue ($4.18M vs $4.17M), and explicitly flags this contradiction in the Automated Caveats. While correcting a false premise is valuable, the report does not attempt to address the 'why' aspect at all (e.g., no exploration of causes like pricing, order volume, discounting, or customer behavior differences). It pivots to comparing Consumer vs Home Office instead, which is not what was asked. The report fails to engage substantively with the actual question posed.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG09": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\"answer_relevance\": 0.3, \"reasoning\": \"The user asked WHY Display\\'s CTR is low compared to other channels, expecting an explanation of causes (e.g., creative fatigue, targeting, ad blindness, placeme'",
+      "valid": false
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG10": {
+    "answer_relevance": {
+      "score": 0.4,
+      "label": "warn",
+      "reasoning": "The user asked WHY Premium customers pay more than Basic customers - essentially asking for a causal or explanatory reason. The report confirms the magnitude of the difference and its statistical significance, but never actually explains why the difference exists. It only speculates that Premium 'may offer more features' without any evidence-based explanation of the underlying cause. The report answers 'how much more' and 'is it significant' rather than 'why', leaving the core question largely unaddressed beyond restating the data and suggesting further investigation is needed.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Premium plan customers pay an average of $99.10 per month\",\\n      \"supported\": true,\\n      \"evidence\": \"Matches groupby_aggregate result: plan=Premium, monthly_ch'",
+      "valid": false
+    }
+  },
+  "DG11": {
+    "answer_relevance": {
+      "score": 0.85,
+      "label": "pass",
+      "reasoning": "The report directly addresses why Office Supplies has the lowest average margin, citing the specific average (43.67), highlighting negative-margin products (Product 1, Product 4) and mixed product profitability within the category as contributing causes. It also notes Product 4 is actually Electronics, a minor inconsistency, but the overall narrative stays focused on explaining the low margin and offers relevant supporting detail and recommendations. It doesn't explicitly compare against other categories' averages to substantiate 'lowest', slightly limiting full relevance.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Office Supplies category has an average product margin of 43.67\",\\n      \"supported\": true,\\n      \"evidence\": \"calculate_average_margin finding: {\\'category\\': \\'Offi'",
+      "valid": false
+    }
+  },
+  "DG12": {
+    "answer_relevance": {
+      "score": 0.2,
+      "label": "fail",
+      "reasoning": "The user asked specifically why Gold loyalty tier customers churn less than other tiers, but the report explicitly states this could not be determined due to missing loyalty_tier data. It pivots to an unrelated analysis (plan type churn comparison) which, while informative, does not address the Gold tier question at all. The report acknowledges the failure but provides no actual answer or reasonable proxy insight connecting to loyalty tiers specifically.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG13": {
+    "answer_relevance": {
+      "score": 0.3,
+      "label": "fail",
+      "reasoning": "The report fails to directly answer the 'why' question posed by the user. It does not provide category-level revenue totals for Furniture vs Books, nor does it explain the mechanism (e.g., volume differences) that would reconcile higher Furniture revenue with higher Books margin. Instead it only cites a single top product's revenue as evidence of Furniture's dominance and explicitly admits it could not analyze margins due to missing category data. The core comparative and explanatory aspects of the question are left unaddressed.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"The Furniture category generates more total revenue than the Books category\",\\n      \"supported\": false,\\n      \"evidence\": \"Findings only contain product_id-level '",
+      "valid": false
+    }
+  },
+  "DG14": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG15": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\"answer_relevance\": 0.95, \"reasoning\": \"The report directly and specifically answers why Product 1 has a heavy loss, explaining that its cost ($194.51) far exceeds its un'",
+      "valid": false
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG16": {
+    "answer_relevance": {
+      "score": 0.1,
+      "label": "fail",
+      "reasoning": "The user asked specifically why PayPal customers churn less than other payment methods. The report does not address this at all\u2014it pivots to churn rates by subscription plan (Basic/Premium/Standard), which is unrelated to payment methods, and only notes that the payment method analysis failed due to missing data. It explicitly admits it could not answer the actual question, providing no relevant details, explanations, or hypotheses about PayPal vs other payment methods.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Basic plan churn rate is approximately 21.4% (0.2139)\",\\n      \"supported\": true,\\n      \"evidence\": \"Matches sql_query result: plan=Basic, churn_rate=0.21390689451'",
+      "valid": false
+    }
+  },
+  "DG17": {
+    "answer_relevance": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question by presenting the correlation finding and attempting to explain the relationship between monthly charges and churn, including specific price points and recommendations. It engages with the 'why' aspect somewhat, though it mostly restates the statistical finding (negative correlation) rather than providing a substantive causal explanation for why higher charges might reduce churn (e.g., customer segment differences, service tier value). It does cover the topic thoroughly with findings, details, and recommendations, but the explanatory depth on 'why' is limited, keeping it from being a fully complete answer.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "DG18": {
+    "answer_relevance": {
+      "score": 0.3,
+      "label": "fail",
+      "reasoning": "The user asked 'why' Books has fewer orders than Furniture, expecting an explanation of causes. The report only confirms the counts (2,017 vs 2,221) and explicitly states the reasons remain unclear, offering no explanatory analysis of causes\u2014only recommendations to investigate further. It restates the question's premise without answering it, so relevance to the actual 'why' is low, though it does address the factual counting aspect.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2713 Furniture category has 2,221 orders (evidence: count_orders_by_category result: {'category': 'Furniture', 'order_id': 2221}) | \u2713 Books category has 2,017 orders (evidence: count_orders_by_category result: {'category': 'Books', 'order_id': 2017}) | \u2713 Furniture outperforms Books in order volume (evidence: Only two categories compared in count_orders_by_category (Books=2017, Furniture=2221); Furniture is higher, no other category values contradict this specific comparison) | \u2713 A total of 4,238 rows of orders were filtered by categories (evidence: filter_categories step: 'pandas/filter \u2192 4238 rows') | \u2717 Clothing dominates the order categories (no evidence found)",
+      "valid": true
+    }
+  },
+  "DG19": {
+    "answer_relevance": {
+      "score": 0.4,
+      "label": "warn",
+      "reasoning": "The user asked 'why' larger order quantities receive lower discounts, implying a causal explanation is expected. The report does not provide any explanation of why this occurs (e.g., business logic, policy, or underlying driver); it only restates the observed pattern (discount for quantity 1 vs 2) and notes a weak correlation contradicting the premise. It addresses the surface-level question by describing the trend but fails to address the 'why' aspect at all, and even undermines the premise without offering an alternative causal explanation. This is a partial response to the question's intent.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"The highest discount of approximately 10.12% occurs for a quantity of 1\",\\n      \"supported\": false,\\n      \"evidence\": \"Findings show quantity=6 has discount=0.104'",
+      "valid": false
+    }
+  },
+  "DG20": {
+    "answer_relevance": {
+      "score": 0.05,
+      "label": "fail",
+      "reasoning": "The report explicitly states no insights were generated regarding why referred customers churn less, failing to address the user's question about the underlying reasons. It only offers generic recommendations for future analysis, providing essentially no direct answer to the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 7.3% of values outside 1.5\u00d7IQR (high outlier share) (evidence: Matches Data Quality section: 'high_outlier_share (info): 7.3% of values outside 1.5\u00d7IQR') | \u2717 The high outlier share pertains to 'support call metrics' / 'support calls over the last 90 days' (no evidence found) | \u2713 The analysis did not yield any insights or findings regarding customer churn related to referral program sign-ups (evidence: Findings explicitly state '(no successful analysis steps)', consistent with no insights being generated.)",
+      "valid": true
+    }
+  },
+  "E01": {
+    "answer_relevance": {
+      "score": 0.3,
+      "label": "fail",
+      "reasoning": "The user asked for a general overview of the dataset (e.g., structure, columns, size, types of data, summary statistics). The report only mentions row count and duplicate rows, without describing columns, data types, distributions, or any substantive overview of the dataset's content. It addresses a narrow data-quality aspect rather than the broader 'overview' requested, so it only partially answers the question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "1/1 claims supported. \u2713 The dataset has 238 fully duplicated rows, accounting for 1.9% of the total entries. (evidence: Data Quality section states 238 fully duplicated rows (1.9%))",
+      "valid": true
+    }
+  },
+  "E02": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question about anomalies/outliers, providing specific counts (114 outliers, 0.96%), methodology (z-score), sample values, and additional context on duplicate rows as a related data quality issue. It fully covers the question with specific, relevant details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8333333333333334,
+      "label": "pass",
+      "reasoning": "5/6 claims supported. \u2713 114 outliers were detected in the sales/revenue data (evidence: anomaly_detection n_outliers: 114) | \u2713 Outliers represent approximately 0.96% of the total revenue data points (evidence: outlier_pct: 0.0096) | \u2713 Outlier detection was performed using z-score analysis (evidence: method: 'zscore') | \u2713 Sample outlier values include 2978.0, 3998.4, 2498.9, 4609.4, and 3994.0 (evidence: outlier_values list starts with these exact numbers) | \u2717 A box plot was generated during the analysis visually confirming the outliers (no evidence found) | \u2713 There are 238 fully duplicated rows, representing 1.9% of the dataset (evidence: Data Quality: duplicate_rows warning, 238 fully duplicated rows (1.9%))",
+      "valid": true
+    }
+  },
+  "E03": {
+    "answer_relevance": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "The report addresses purchasing behavior patterns by covering revenue trends over time, segment performance, category preferences, customer concentration, and product popularity \u2014 all relevant facets of purchasing behavior. However, it leans heavily on revenue/sales aggregates and misses deeper behavioral patterns explicitly implied by the question, such as purchase frequency, order timing/seasonality, discount usage patterns, quantity per order trends, or repeat purchase behavior over time. The customer concentration and product popularity sections do touch on behavior, but the overall framing is more revenue-summary than behavior-pattern focused, leaving some aspects of the question only partially answered.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"2024 total revenue reached approximately $4.18 million ($4,183,854.57)\", \"supported\": true, \"evidence\": \"groupby_aggregate order_year=2024, revenue=4183854.57\"},\\n    {\"c'",
+      "valid": false
+    }
+  },
+  "E04": {
+    "answer_relevance": {
+      "score": 0.95,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's request to explore the relationship between marketing spend and revenue, reporting the correlation coefficient (0.3536), interpreting it as a moderate positive relationship, and providing actionable recommendations tied to this relationship. It stays focused on the query throughout, with only minor tangential mentions (e.g., heatmap 'strong positive correlations' among other variables not fully specified, which slightly dilutes focus but doesn't detract from answering the core question).",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Correlation coefficient between marketing spend and revenue is 0.3536\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show matrix spend-revenue = 0.3536\"\\n '",
+      "valid": false
+    }
+  },
+  "E05": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The user asked a very open-ended request to 'show me the numbers.' The report responds with concrete, specific figures across multiple dimensions (region revenue, product units, channel revenue, rep performance), directly satisfying the vague request for data. It fully addresses the query by presenting relevant numeric findings.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"The North region has the highest revenue at approximately $1.36 million\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show North region revenue = 1363760'",
+      "valid": false
+    }
+  },
+  "E06": {
+    "answer_relevance": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "The user asked for a general overview of the customer churn dataset, but the report dives directly into specific churn-driver comparisons (support calls, login days, monthly charges) without providing basic overview elements like dataset size (5000 rows), churn distribution (4217 vs 783), or overall structure/composition of the data. It captures some relevant descriptive statistics from the findings but frames them as an analytical/diagnostic report rather than a broad overview, missing key aspects like class balance, plan distribution counts, and general dataset shape that would typically constitute an 'overview'.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Churned customers made an average of approximately 2.01 support calls in the last 90 days, compared to about 1.45 for non-churned customers\",\\n      \"supported\": t'",
+      "valid": false
+    }
+  },
+  "E07": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and thoroughly addresses the user's question about anomalies in campaign ROI and spend. It specifies the exact number of outliers (114 for ROI, 6 for spend), their percentages, the detection method used, and sample outlier values for both metrics. It also provides context via data quality notes and actionable recommendations tied directly to the anomalies found. All key aspects of the question are covered with specific details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"114 outliers found in campaign ROI\", \"supported\": true, \"evidence\": \"anomaly_detection roi result shows n_outliers: 114\"},\\n    {\"claim\": \"ROI outliers represent approxim'",
+      "valid": false
+    }
+  },
+  "E08": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and specifically addresses the user's question about the relationship between support calls and churn, providing the correlation coefficient, interpreting its magnitude and direction, and offering actionable recommendations tied to this relationship. It fully covers the question's scope with specific details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.75,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 Correlation coefficient of approximately 0.1619 between support calls in last 90 days and churn (evidence: matrix shows support_calls_last_90d vs churned = 0.1619) | \u2713 This indicates a weak positive relationship/correlation (evidence: 0.1619 is a low positive value, consistent with 'weak' characterization) | \u2717 Heatmap of correlation matrix showed strong positive correlations among several key variables (no evidence found) | \u2713 7.3% of support call values are outliers (outside 1.5\u00d7IQR) (evidence: Data Quality section: 'high_outlier_share (info): 7.3% of values outside 1.5\u00d7IQR')",
+      "valid": true
+    }
+  },
+  "E09": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question about customer distribution across segments, providing specific counts for each of the three segments (Consumer: 336, Corporate: 327, Home Office: 337), along with a breakdown, visualization reference, and comparative analysis. It fully addresses the query with specific, relevant details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2713 Consumer segment has 336 unique customers (evidence: Findings: segment=Consumer, customer_id=336) | \u2713 Corporate segment has 327 unique customers (evidence: Findings: segment=Corporate, customer_id=327) | \u2713 Home Office segment has 337 unique customers (evidence: Findings: segment=Home Office, customer_id=337) | \u2713 Home Office segment has the highest number of unique customers, surpassing Consumer (336) and Corporate (327) (evidence: Findings show Home Office=337, Consumer=336, Corporate=327, confirming Home Office is the highest of the three visible values) | \u2717 A bar chart was generated to illustrate the distribution of customer IDs by segment (no evidence found)",
+      "valid": true
+    }
+  },
+  "E10": {
+    "answer_relevance": {
+      "score": 0.9,
+      "label": "pass",
+      "reasoning": "The report directly answers whether there are unusual patterns in order discounts, clearly stating none were found and providing supporting statistics (n_outliers=0, mean, std context). It addresses the question fully within the scope of the available analysis (z-score based outlier detection), though it could have explored other angles (e.g., discount distribution by category/segment) to be more thorough.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8,
+      "label": "pass",
+      "reasoning": "4/5 claims supported. \u2713 n_outliers=0 in discount data (evidence: Findings: anomaly/zscore n_outliers 0) | \u2713 outlier_pct=0.0 (evidence: Findings: outlier_pct 0.0) | \u2713 No unusual patterns in order discounts (evidence: Directly matches zscore anomaly detection result of 0 outliers) | \u2717 A box plot was generated to illustrate outlier detection for discounts (no evidence found) | \u2713 Data quality checks passed, data is reliable and accurate (evidence: Data Quality section states 1000 rows, no quality issues flagged)",
+      "valid": true
+    }
+  },
+  "E11": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and specifically answers the question about the relationship between marketing spend and clicks, stating the correlation coefficient (0.5163), characterizing it as moderate positive, and providing interpretation, recommendations, and caveats. It fully addresses the query's intent.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.16666666666666666,
+      "label": "fail",
+      "reasoning": "1/6 claims supported. \u2713 Correlation coefficient of 0.5163 between marketing spend and clicks (moderate positive) (evidence: Findings show matrix spend-clicks correlation 0.5163, strength moderate) | \u2717 The correlation analysis highlights strong positive relationships among several key variables, as shown in the correlation matrix heatmap (no evidence found) | \u2717 A heatmap of the correlation matrix was generated, revealing strong positive correlations between various key variables (no evidence found) | \u2717 High outlier share in conversions (6.9%) (no evidence found) | \u2717 High outlier share in revenue (7.5%) (no evidence found) | \u2717 High outlier share in ROI (5.7%) (no evidence found)",
+      "valid": true
+    }
+  },
+  "E12": {
+    "answer_relevance": {
+      "score": 0.4,
+      "label": "warn",
+      "reasoning": "The user asked for a general overview of the orders dataset, which would typically include dataset size, structure, columns, ranges, distributions, and general characteristics. Instead, the report narrowly focuses on discount and quantity analysis, framed as business recommendations, without providing a broad dataset overview (e.g., number of orders, columns present, date ranges, other fields like customer/product info). It only partially addresses the request by covering two specific metrics rather than a holistic overview.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"The average discount across orders is low, with many orders having no discount at all (0.0)\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show multiple o'",
+      "valid": false
+    }
+  },
+  "E13": {
+    "answer_relevance": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "The vague query 'How are we doing?' implies a general business performance check-in, ideally including overall totals, trends over time (growth/decline), and comparisons to prior periods. The report provides relevant breakdowns (region, channel, product) and highlights top performers, which is useful, but it never gives an overall revenue total, growth trend, or time-based comparison (e.g., month-over-month or trend direction) that would directly answer 'how are we doing' in a holistic sense. It focuses on rankings rather than overall health/trajectory, so it partially but not fully addresses the question's intent.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"North region is the top performer in revenue generation, bringing in approximately $1.36 million\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show regio'",
+      "valid": false
+    }
+  },
+  "E14": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question of whether there are unusual patterns in order quantities, clearly stating there are none, backed by specific IQR outlier detection results (n_outliers=0, outlier_pct=0.0), and provides supporting context via the box plot visualization. It fully addresses the query with specific details relevant to the question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.6666666666666666,
+      "label": "pass",
+      "reasoning": "2/3 claims supported. \u2713 Anomaly detection reported n_outliers=0 and outlier_pct=0.0 for order quantities (evidence: Matches findings: anomaly/iqr result shows n_outliers=0, outlier_pct=0.0) | \u2717 A box plot was generated to visualize the distribution of order quantities, corroborating the anomaly detection findings (no evidence found) | \u2713 Data quality checks passed, indicating the data was reliable and free from significant issues (evidence: Matches Data Quality section: '1000 rows \u2014 no quality issues flagged')",
+      "valid": true
+    }
+  },
+  "E15": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and thoroughly answers the question about the relationship between unit price and profit margin, stating the strong positive correlation (0.9332), explaining its meaning, providing specific examples of products with negative margins and top performers, and giving actionable recommendations based on this relationship. All key aspects of the question are addressed with specific supporting details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.675,
+      "label": "pass",
+      "reasoning": "3/4 claims supported. \u2713 Strong positive correlation of 0.9332 between unit price and profit margin (evidence: correlation_analysis result shows correlation 0.9332 between unit_price and profit_margin, strength 'strong') | \u2713 Product 1 has unit price 32.69 and profit margin -161.82 (evidence: derive_profit_margin full result lists product_id=1, unit_price=32.69, profit_margin=-161.82) | \u2713 Product 4 has unit price 10.44 and profit margin -86.93 (evidence: derive_profit_margin full result lists product_id=4, unit_price=10.44, profit_margin=-86.93) | \u2717 Product 2 has the highest profit margin at 362.98, significantly outperforming other products (no evidence found)",
+      "valid": true
+    }
+  },
+  "E17": {
+    "answer_relevance": {
+      "score": 0.85,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question by stating the correlation coefficient (0.0286) between tenure and monthly charges and interpreting it as a very weak positive relationship with negligible practical significance. It provides clear findings and recommendations tied to the question. Minor issues: it references a heatmap with 'strong correlations among other variables' not present in the actual findings (only two variables were analyzed), and misattributes the outlier data quality note to a variable not mentioned in the original findings, slightly reducing precision but not overall relevance to the core question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"Correlation coefficient between tenure and monthly charges is 0.0286\", \"supported\": true, \"evidence\": \"Matches \\'matrix\\' value 0.0286 in correlation_analysis findings.\"},'",
+      "valid": false
+    }
+  },
+  "E18": {
+    "answer_relevance": {
+      "score": 0.95,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's question about unusual patterns in campaign impressions, providing specific details on the number of outliers (15), their percentage (0.75%), sample outlier values, and mean/std context. It also contextualizes with related high outlier shares in other metrics and offers actionable recommendations for investigating the anomalies, fully engaging with the query's intent.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "2/4 claims supported. \u2713 15 outliers were identified in campaign impressions, representing 0.75% of the total data (evidence: anomaly_detection zscore result: n_outliers=15, outlier_pct=0.0075) | \u2713 Sample outlier values include 1,794,696 and 1,846,854 (evidence: outlier_values list contains 1794696.0 and 1846854.0) | \u2717 High outlier share of 6.9% for conversions, 7.5% for revenue, and 5.7% for ROI (no evidence found) | \u2717 A box plot was generated to illustrate the outlier detection in impressions (no evidence found)",
+      "valid": true
+    }
+  },
+  "E19": {
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The user's query 'What's next?' is ambiguous but likely asks for follow-up steps, next actions, or a forward-looking direction (e.g., what analysis to do next, or what actions to take). The report is a generic churn analysis summary with findings and recommendations, but it does not explicitly frame itself as answering 'what's next' - it reads as a standalone analysis report rather than a direct response to a next-steps question. While the Recommendations section does list next actions, the report as a whole doesn't clearly connect to or acknowledge the specific query, making it unclear if this is even the right context/response for this question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Basic plan customers have the highest churn rate at approximately 21.4%\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show plan=Basic, churned=0.2139 vs '",
+      "valid": false
+    }
+  },
+  "E20": {
+    "answer_relevance": {
+      "score": 0.9,
+      "label": "pass",
+      "reasoning": "The report directly addresses the question about unusual patterns in campaign conversions, providing specific outlier statistics (137 outliers, 6.85%), explains the detection method, notes the values are unusually high (potential positive anomalies), and offers actionable next steps. It also contextualizes with related metrics (revenue, ROI outliers). Minor deduction because it doesn't explore temporal/categorical patterns (e.g., which campaigns, time periods) that could deepen the 'unusual patterns' answer, but overall it is highly relevant and specific to the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"137 outliers were detected in campaign conversions\",\\n      \"supported\": true,\\n      \"evidence\": \"Matches anomaly_detection finding: n_outliers: 137\"\\n    },\\n    {\\n'",
+      "valid": false
+    }
+  },
+  "E21": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and clearly answers the user's question about the relationship between order discount and order quantity, stating the correlation coefficient (0.0083) and interpreting it as a very weak/negligible positive relationship. It provides specific details, context via the heatmap discussion, and actionable recommendations tied to the finding. The response is fully focused on the query without straying off-topic.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "2/4 claims supported. \u2713 Correlation coefficient between order discount and order quantity is 0.0083 (evidence: matrix shows discount-quantity correlation = 0.0083) | \u2713 The correlation is a very weak positive correlation (evidence: 0.0083 is indeed a very weak positive value, consistent with strong_pairs being empty) | \u2717 The heatmap shows strong positive correlations among several key variables (no evidence found) | \u2717 Other factors may be more influential in driving order quantity, based on heatmap insights (no evidence found)",
+      "valid": true
+    }
+  },
+  "E22": {
+    "answer_relevance": {
+      "score": 0.9,
+      "label": "pass",
+      "reasoning": "The report directly addresses the request for a catalog overview, covering categories present, price ranges, cost ranges, and includes a visualization reference. It gives a reasonable summary of the product catalog's structure and variation. However, it only discusses min/max values from a subset (first 5 rows shown) rather than truly aggregating across all 100 products, and lacks category-level breakdowns (e.g., counts per category, average price per category), which would more fully satisfy an 'overview' request. Still, it substantially answers the question with specific relevant details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\"claim\": \"The product catalog includes categories: Office Supplies, Furniture, Books, Electronics, and Clothing'",
+      "valid": false
+    }
+  },
+  "E23": {
+    "answer_relevance": {
+      "score": 0.3,
+      "label": "fail",
+      "reasoning": "The user asked for the distribution of customer tenure across the full dataset, but the report only discusses the first 5 rows (tenure 1-5 months) and misinterprets this small excerpt as representing 'most customers', missing the actual full distribution (60 tenure groups spanning up to 60 months, with counts per group). It fails to summarize overall shape (e.g., mean, spread, skew) or use the full 60-row result meaningfully. It does address the topic and provides some structure (findings, visualization, recommendations), but misrepresents the data and omits the true distribution, so relevance is only partial.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "E24": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly and thoroughly answers the question of whether there are anomalies in order revenue, confirming yes with specific details: 89 outliers (0.89%), the IQR method used, thresholds, and sample outlier values. It also provides context on potential causes and recommendations, fully addressing the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.8333333333333334,
+      "label": "pass",
+      "reasoning": "5/6 claims supported. \u2713 89 outliers were identified in order revenue (evidence: anomaly_detection findings: n_outliers: 89) | \u2713 Outliers represent approximately 0.89% of the total revenue data (evidence: outlier_pct: 0.0089 matches 0.89%) | \u2713 The interquartile range (IQR) method was used to detect anomalies (evidence: method: 'iqr' in findings) | \u2713 Sample outlier values include 4593.72, 4283.36, 4508.8, 4430.42, and 4965.5 (evidence: these values appear in the outlier_values list in the findings) | \u2713 Data quality checks passed, indicating the data is reliable and accurate with no significant issues (evidence: Data Quality section states '1000 rows \u2014 no quality issues flagged') | \u2717 A box plot was generated to illustrate the outlier detection in revenue (no evidence found)",
+      "valid": true
+    }
+  },
+  "P01": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by providing a specific forecast value (~513.42) for next quarter revenue, explains the trend direction and magnitude, discusses the forecasting methodology, and appropriately caveats the reliability of the prediction. All key aspects of the query (revenue outlook, current trend basis) are addressed with specific details.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Revenue is predicted to reach approximately 513.42 by the end of the next quarter\",\\n      \"supported\": false,\\n      \"evidence\": \"The findings only state \\'naive li'",
+      "valid": false
+    }
+  },
+  "P02": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The user asked for a 30-day churn forecast, but the analysis only produced a 1-period naive linear forecast (a single predicted value), not an actual 30-day forward projection. The report addresses churn trend direction and gives a single forecasted value, which is relevant to the topic, but it does not deliver a genuine 30-day forecast (e.g., day-by-day or cumulative churn over the next month). It reframes the single-period forecast as applicable to 'the next month' in recommendations, which partially addresses the time horizon but not with the specificity requested. Thus it partially answers the question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"The analysis indicates an increasing trend in customer churn.\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show trend.direction = \\'increasing\\' with sign'",
+      "valid": false
+    }
+  },
+  "P03": {
+    "answer_relevance": {
+      "score": 0.95,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by identifying specific customers most likely to upgrade (C00937, C00877, C03136, C01050, C00739, etc.), providing their upgrade likelihood scores, explaining the underlying methodology (engagement score correlation), and offering actionable recommendations targeting these customers. It covers the key aspects of the query comprehensively with specific customer IDs and supporting detail.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "P04": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly answers the question by providing a specific forecasted value for next quarter's marketing spend (~4979.79) based on current trend analysis, explains the trend direction (increasing but not statistically significant), and contextualizes the forecast's reliability. It addresses the 'next quarter' timeframe and 'current trends' basis explicitly as asked.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"The trend in marketing spend is increasing with a slope of 0.026239\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings: trend direction \\'increasing\\', slope 0.'",
+      "valid": false
+    }
+  },
+  "P05": {
+    "answer_relevance": {
+      "score": 0.7,
+      "label": "pass",
+      "reasoning": "The user asked for a forecast of next quarter's churn rate. The report does include the forecast (rising to ~19.03%-19.77% by Q3 2024, i.e., next quarter periods), and appropriately caveats it as a naive/low-confidence estimate. However, it front-loads the summary with outdated/misleading framing (citing May 2023 as 'the latest rate' when data extends to mid-2024), and doesn't clearly summarize the full next-quarter forecast (three months: July-Sept 2024) in the executive summary, only mentioning July's single value prominently. This creates some confusion about what the actual forecasted next-quarter value is, though the core requested forecast is present in the Forecasting section.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "P06": {
+    "answer_relevance": {
+      "score": 0.05,
+      "label": "fail",
+      "reasoning": "The report fails to provide any prediction of customer satisfaction scores for the next quarter, which was the core request. It only states that no insights were generated and offers generic recommendations to gather more data, without attempting any forecast, trend analysis, or even a rough estimate. This does not address the user's actual question at all.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "0/1 claims supported. \u2717 7.3% of values in support_calls_last_90d dataset are identified as high outliers (beyond 1.5\u00d7IQR) (no evidence found) [judge disagreement across 3 samples: spread=0.50]",
+      "valid": true
+    }
+  },
+  "P07": {
+    "answer_relevance": {
+      "score": 0.0,
+      "label": "fail",
+      "reasoning": "The report does not identify any regions or provide any indication of revenue growth trends, failing to address the user's question at all. It only explains that no analysis was performed, offering no relevant details related to the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "1/1 claims supported. \u2713 238 fully duplicated rows representing 1.9% of the dataset (evidence: Matches Data Quality section: '238 fully duplicated rows (1.9%)')",
+      "valid": true
+    }
+  },
+  "P08": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\"answer_rel'",
+      "valid": false
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "P09": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the user's request to forecast units sold for Widget A next quarter, providing specific forecasted values (~9.91 units per period for three periods), trend analysis supporting the forecast, and caveats about the naive method's limitations. It stays focused on the forecasting question while providing appropriate context (trend, significance) that supports interpretation of the forecast.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Units sold for Widget A shows an increasing trend with a slope of 0.000313\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings report trend direction \\'increasi'",
+      "valid": false
+    }
+  },
+  "P11": {
+    "answer_relevance": {
+      "score": 0.6,
+      "label": "pass",
+      "reasoning": "The user asked specifically about which channels will have the best ROI 'next year' (a forward-looking/predictive question). The report clearly states that forecasting could not be performed due to missing date data, and instead substitutes historical ROI by channel as a proxy, ranking Search, Email, and Affiliate as top performers. This partially addresses the question by providing relevant historical ROI data and reasonable recommendations, but it explicitly fails to deliver the forward-looking prediction the user asked for, only offering a workaround. This makes it a partial answer that misses the key temporal aspect of the query.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Search channel has the highest ROI at approximately 4009.58\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show'",
+      "valid": false
+    }
+  },
+  "P12": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the question by providing specific forecasted spend values for the next quarter (three periods), along with context on trend direction and statistical confidence. It includes actionable caveats and recommendations tied directly to the forecast, fully engaging with the user's query about future campaign spend.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"The naive linear forecast predicts campaign spend values of $4,979.79, $4,979.81, and $4,979.84 for the next three periods.\",\\n      \"supported\": false,\\n      \"evi'",
+      "valid": false
+    }
+  },
+  "P13": {
+    "answer_relevance": {
+      "score": 0.55,
+      "label": "warn",
+      "reasoning": "The report addresses the question of segment growth by analyzing Consumer, Corporate, and Home Office segments' historical revenue trends, but it fails to directly and clearly answer 'which segment will grow fastest next year' (i.e., 2025). It uses 2022-2024 historical data as if projecting forward, but the 2024 figures are actually already-known values, not forecasts, and the report doesn't clarify this. The recommendation section hedges between Consumer and Corporate without a clear, confident answer to the specific question asked. This creates ambiguity that reduces direct relevance despite covering the topic area extensively.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "P14": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the request to forecast order quantity trends for next quarter, providing a specific predicted value (5.4783), trend direction, statistical caveats (r_squared, p_value), and actionable recommendations. It covers the forecast, its reliability, and next steps, fully engaging with the user's question.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"The order quantity trend is decreasing\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show trend.direction = \\'decreasing\\'\"\\n    },\\n    {\\n      \"claim\": \"Pr'",
+      "valid": false
+    }
+  },
+  "P15": {
+    "answer_relevance": {
+      "score": 0.5,
+      "label": "warn",
+      "reasoning": "The user asked specifically about next year's projected customer country distribution. The report transparently states this could not be determined due to missing data, which is relevant context but does not answer the actual question asked. It compensates by providing current distribution data as a substitute, which is only tangentially related. The report does address the question by explaining why an answer isn't possible, but it doesn't provide any forward-looking estimate or partial projection, so it only partially satisfies the user's request.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: ''",
+      "valid": false
+    }
+  },
+  "P16": {
+    "answer_relevance": {
+      "score": 1.0,
+      "label": "pass",
+      "reasoning": "The report directly addresses the query by providing a forecasted average order discount value (~0.0982) for next quarter, discusses the trend direction and its statistical reliability, and contextualizes the forecast with caveats. It fully engages with the specific ask of forecasting the metric.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.7142857142857143,
+      "label": "pass",
+      "reasoning": "5/7 claims supported. \u2717 The average order discount is forecasted to decrease to approximately 0.0982 over the next quarter (no evidence found) | \u2713 The time series forecast shows a decreasing trend in discounts over time (evidence: Findings state trend direction 'decreasing') | \u2713 The trend has an r_squared of 0.0003 (evidence: Findings: 'r_squared': 0.0003) | \u2713 The trend has a p_value of 0.098527 (evidence: Findings: 'p_value': 0.098527) | \u2713 The trend is not statistically significant (evidence: Findings: 'significant': False) | \u2717 The impact of this trend on customer retention is considered low, necessitating further monitoring and potential intervention (no evidence found) | \u2713 Data quality checks have passed, ensuring that the analysis is based on reliable data (evidence: Data Quality section states '1000 rows \u2014 no quality issues flagged')",
+      "valid": true
+    }
+  },
+  "P17": {
+    "answer_relevance": {
+      "score": 0.85,
+      "label": "pass",
+      "reasoning": "The report directly addresses whether conversions will keep rising by stating the trend is actually decreasing (not statistically significant) and providing a forecast estimate. It answers the core question with specific figures (slope, r_squared, forecast value) and includes campaign-level variability context. It slightly overstates the finding as 'concerning' despite non-significance, but this is flagged in caveats. The answer is thorough and directly responsive to the trend question, though it could more explicitly state 'no, conversions are not rising' as a direct one-line answer up front.",
+      "valid": true
+    },
+    "groundedness": {
+      "score": 0.5,
+      "label": "error",
+      "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Conversions show a decreasing trend with slope -0.002779 and r_squared of 0.0 (not statistically significant)\",\\n      \"supported\": true,\\n      \"evidence\": \"Matche'",
+      "valid": false
+    }
+  }
+}
