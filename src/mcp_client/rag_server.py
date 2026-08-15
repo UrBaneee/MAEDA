@@ -22,11 +22,25 @@ from __future__ import annotations
 
 from typing import Optional
 
-from src.mcp_client.client import MCPClient
+from src.mcp_client.client import MCPClient, MCPToolError
 from src.mcp_client.models import Collection, RAGChunk
 from src.utils.logger import get_logger
 
 logger = get_logger("maeda.mcp.rag_server")
+
+
+def _raise_if_error_field(raw: dict, tool: str) -> None:
+    """
+    rag-framework signals an internal failure via a top-level `error`
+    string field (定案 #13 migration-era shape), distinct from a
+    legitimate zero-hit `{"chunks": []}`. Before this check existed,
+    nothing here looked for it, so a failure would silently resolve to
+    `raw.get("chunks", [])` == [] — indistinguishable from "the query
+    legitimately matched nothing".
+    """
+    error = raw.get("error") if isinstance(raw, dict) else None
+    if error:
+        raise MCPToolError(f"{tool} reported an error: {error}", raw=raw)
 
 
 class RAGServerClient:
@@ -43,7 +57,10 @@ class RAGServerClient:
         input_args: dict = {"query": query, "top_k": top_k}
         if collection:
             input_args["collection"] = collection
-        raw = await self._transport.call_tool("retrieve", {"input": input_args})
+        raw = await self._transport.call_tool(
+            "retrieve", {"input": input_args}, timeout=15.0, deadline=30.0,
+        )
+        _raise_if_error_field(raw, "retrieve")
         return [RAGChunk.from_mcp_response(c) for c in raw.get("chunks", [])]
 
     async def retrieve_with_metadata(
@@ -64,11 +81,15 @@ class RAGServerClient:
         input_args: dict = {"query": query, "top_k": top_k}
         if collection:
             input_args["collection"] = collection
-        raw = await self._transport.call_tool("retrieve_with_metadata", {"input": input_args})
+        raw = await self._transport.call_tool(
+            "retrieve_with_metadata", {"input": input_args}, timeout=15.0, deadline=30.0,
+        )
+        _raise_if_error_field(raw, "retrieve_with_metadata")
         return [RAGChunk.from_mcp_response(c) for c in raw.get("chunks", [])]
 
     async def list_collections(self) -> list[Collection]:
         """List available knowledge collections."""
         logger.debug("list_collections")
-        raw = await self._transport.call_tool("list_collections", {})
+        raw = await self._transport.call_tool("list_collections", {}, timeout=10.0, deadline=20.0)
+        _raise_if_error_field(raw, "list_collections")
         return [Collection.from_mcp_response(c) for c in raw.get("collections", [])]

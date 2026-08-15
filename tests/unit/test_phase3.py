@@ -46,14 +46,37 @@ class TestDataQualityReport:
         assert report.columns[0].name == "revenue"
         assert report.has_critical_issues is False
 
-    def test_critical_issue_detection(self):
+    def test_critical_issue_detection_reads_field_directly(self):
+        """has_critical_issues comes straight from the cleaner's own verdict
+        (附录 B.1, live since C1) — not derived from quality_issues, which
+        is why it must not crash on the real string-list shape below."""
         raw = {
             "row_count": 500,
             "columns": [],
-            "quality_issues": [{"severity": "critical", "issue": "duplicate_pk"}],
+            "quality_issues": [],
+            "has_critical_issues": True,
         }
         report = DataQualityReport.from_mcp_response(raw)
         assert report.has_critical_issues is True
+
+    def test_quality_issues_real_shape_is_string_list(self):
+        """The real cleaner (agentic-data-cleaner-v2 mcp_app.py profile_dataset)
+        returns quality_issues as list[str] issue codes, not list[dict] with
+        a "severity" key. Parsing this used to crash on `i.get("severity")`
+        (M2) -- this is the regression test for that fix."""
+        raw = {
+            "row_count": 500,
+            "columns": [],
+            "quality_issues": ["schema_inconsistency", "type_inconsistency"],
+            "has_critical_issues": True,
+            "quality_contract_version": "1",
+        }
+        report = DataQualityReport.from_mcp_response(raw)
+        assert [i.code for i in report.quality_issues] == [
+            "schema_inconsistency", "type_inconsistency",
+        ]
+        assert all(i.source == "cleaner" for i in report.quality_issues)
+        assert report.quality_contract_version == "1"
 
     def test_to_dict_roundtrip(self):
         raw = {
@@ -224,12 +247,50 @@ class TestMCPClient:
         assert ok is False
         assert latency is None
 
+    # ── M6: retry predicate + deadline ──────────────────────────────────────
+
+    def test_tool_error_is_not_retried(self):
+        """错误处理矩阵: schema/contract/auth/data-input errors are not
+        transient — retrying a tool-level error just wastes the deadline
+        arriving at the same failure. Only MCPConnectionError is retryable."""
+        client = MCPClient("http://localhost:8001", max_retries=2)
+        session = _FakeSession(call_tool_result=CallToolResult(
+            content=[TextContent(type="text", text="bad request")],
+            structuredContent=None, isError=True,
+        ))
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            with pytest.raises(MCPToolError):
+                asyncio.run(client.call_tool("profile_dataset", {}))
+        assert session.call_tool.call_count == 1  # no retry
+
+    def test_connection_error_retried_up_to_max_retries(self):
+        client = MCPClient("http://localhost:8001", max_retries=2)
+        session = _FakeSession(call_tool_side_effect=ConnectionRefusedError("refused"))
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            with pytest.raises(MCPConnectionError):
+                asyncio.run(client.call_tool("profile_dataset", {}))
+        assert session.call_tool.call_count == 3  # 1 initial + 2 retries
+
+    def test_deadline_exceeded_raises_connection_error(self):
+        async def _slow_call_tool(*args, **kwargs):
+            await asyncio.sleep(1.0)
+            return CallToolResult(content=[], structuredContent={}, isError=False)
+
+        client = MCPClient("http://localhost:8001", max_retries=0)
+        session = _FakeSession(call_tool_side_effect=_slow_call_tool)
+        p1, p2 = _patch_mcp_sdk(session)
+        with p1, p2:
+            with pytest.raises(MCPConnectionError, match="deadline"):
+                asyncio.run(client.call_tool("profile_dataset", {}, timeout=5.0, deadline=0.05))
+
 
 # ─── 3.2 DataCleanerClient ────────────────────────────────────────────────────
 
 def _mock_dc_transport(tool_responses: dict) -> MCPClient:
     transport = MagicMock(spec=MCPClient)
-    async def call_tool(name, args):
+    async def call_tool(name, args, **kwargs):
         return tool_responses[name]
     transport.call_tool = AsyncMock(side_effect=call_tool)
     return transport
@@ -243,6 +304,7 @@ class TestDataCleanerClient:
                 "columns": [{"name": "col1", "dtype": "str", "null_pct": 0.0,
                               "unique_count": 50, "sample_values": ["a"]}],
                 "quality_issues": [],
+                "quality_contract_version": "1",
             }
         })
         client = DataCleanerClient(transport)
@@ -266,7 +328,7 @@ class TestDataCleanerClient:
         transport = _mock_dc_transport({
             "clean_dataset": {
                 "cleaned_path": "/data/test_clean.csv",
-                "changes_summary": "Dropped 10 duplicates",
+                "changes_summary": {"total_rounds": 1, "plan_steps": 2},
                 "rows_affected": 10,
             }
         })
@@ -277,7 +339,7 @@ class TestDataCleanerClient:
 
     def test_validate_quality(self):
         transport = _mock_dc_transport({
-            "validate_quality": {"passed": True, "score": 0.97, "issues": []}
+            "validate_quality": {"passed": True, "score": 0.97, "issues": [], "quality_contract_version": "1"}
         })
         client = DataCleanerClient(transport)
         validation = asyncio.run(client.validate_quality("/data/test_clean.csv"))
@@ -290,7 +352,7 @@ class TestDataCleanerClient:
 
 def _mock_rag_transport(tool_responses: dict) -> MCPClient:
     transport = MagicMock(spec=MCPClient)
-    async def call_tool(name, args):
+    async def call_tool(name, args, **kwargs):
         return tool_responses[name]
     transport.call_tool = AsyncMock(side_effect=call_tool)
     return transport
@@ -335,6 +397,7 @@ class TestRAGServerClient:
         transport.call_tool.assert_awaited_once_with(
             "retrieve_with_metadata",
             {"input": {"query": "market analysis", "top_k": 5, "collection": "wake_apparel"}},
+            timeout=15.0, deadline=30.0,
         )
 
     def test_retrieve_with_metadata_omits_collection_when_unset(self):
@@ -349,6 +412,7 @@ class TestRAGServerClient:
         transport.call_tool.assert_awaited_once_with(
             "retrieve_with_metadata",
             {"input": {"query": "market analysis", "top_k": 5}},
+            timeout=15.0, deadline=30.0,
         )
 
     def test_list_collections(self):
@@ -378,14 +442,14 @@ def _build_fallback(
     if dc_side_effect:
         dc_transport.call_tool = AsyncMock(side_effect=dc_side_effect)
     elif dc_responses:
-        async def dc_call(name, args):
+        async def dc_call(name, args, **kwargs):
             return dc_responses[name]
         dc_transport.call_tool = AsyncMock(side_effect=dc_call)
 
     if rag_side_effect:
         rag_transport.call_tool = AsyncMock(side_effect=rag_side_effect)
     elif rag_responses:
-        async def rag_call(name, args):
+        async def rag_call(name, args, **kwargs):
             return rag_responses[name]
         rag_transport.call_tool = AsyncMock(side_effect=rag_call)
 
@@ -402,7 +466,7 @@ def _build_fallback(
 class TestSubSystemWithFallback:
     def test_profile_dataset_success(self):
         fb = _build_fallback(dc_responses={
-            "profile_dataset": {"row_count": 500, "columns": [], "quality_issues": []}
+            "profile_dataset": {"row_count": 500, "columns": [], "quality_issues": [], "quality_contract_version": "1"}
         })
         report, log = asyncio.run(fb.profile_dataset("/data/test.csv"))
         assert report.row_count == 500
@@ -446,6 +510,7 @@ class TestSubSystemWithFallback:
         rag_transport.call_tool.assert_awaited_once_with(
             "retrieve_with_metadata",
             {"input": {"query": "query", "top_k": 5, "collection": "wake_apparel"}},
+            timeout=15.0, deadline=30.0,
         )
 
     def test_get_cleaning_plan_fallback(self):
@@ -473,7 +538,7 @@ class TestSubSystemWithFallback:
 class TestMCPCallLogging:
     def test_log_has_required_fields(self):
         fb = _build_fallback(dc_responses={
-            "profile_dataset": {"row_count": 10, "columns": [], "quality_issues": []}
+            "profile_dataset": {"row_count": 10, "columns": [], "quality_issues": [], "quality_contract_version": "1"}
         })
         _, log = asyncio.run(fb.profile_dataset("/data/x.csv"))
         for field in ["system", "tool", "args", "duration_ms", "mode"]:
@@ -481,7 +546,7 @@ class TestMCPCallLogging:
 
     def test_log_records_timing(self):
         fb = _build_fallback(dc_responses={
-            "profile_dataset": {"row_count": 1, "columns": [], "quality_issues": []}
+            "profile_dataset": {"row_count": 1, "columns": [], "quality_issues": [], "quality_contract_version": "1"}
         })
         _, log = asyncio.run(fb.profile_dataset("/data/x.csv"))
         assert isinstance(log["duration_ms"], float)
@@ -559,8 +624,8 @@ class TestBasicPandasProfile:
         rows = "a,b\n1,\n2,\n3,\n4,\n5,1\n"
         csv.write_text(rows)
         report = _basic_pandas_profile(str(csv))
-        issues = [i for i in report.quality_issues if i["column"] == "b"]
-        assert any(i["issue"] == "high_null_rate" for i in issues)
+        issues = [i for i in report.quality_issues if i.column == "b"]
+        assert any(i.code == "high_null_rate" for i in issues)
 
     def test_unreadable_file_returns_empty_report(self):
         report = _basic_pandas_profile("/nonexistent/path/data.csv")
@@ -572,29 +637,29 @@ class TestBasicPandasProfile:
         csv = tmp_path / "dups.csv"
         csv.write_text("a,b\n1,x\n1,x\n2,y\n1,x\n")
         report = _basic_pandas_profile(str(csv))
-        dup = [i for i in report.quality_issues if i["issue"] == "duplicate_rows"]
+        dup = [i for i in report.quality_issues if i.code == "duplicate_rows"]
         assert len(dup) == 1
-        assert "2 fully duplicated rows" in dup[0]["detail"]
+        assert "2 fully duplicated rows" in dup[0].detail
 
     def test_detects_constant_column(self, tmp_path):
         csv = tmp_path / "const.csv"
         csv.write_text("region,value\nNorth,1\nNorth,2\nNorth,3\n")
         report = _basic_pandas_profile(str(csv))
-        issues = [i for i in report.quality_issues if i["issue"] == "constant_column"]
-        assert [i["column"] for i in issues] == ["region"]
+        issues = [i for i in report.quality_issues if i.code == "constant_column"]
+        assert [i.column for i in issues] == ["region"]
 
     def test_detects_mixed_type_column(self, tmp_path):
         csv = tmp_path / "mixed.csv"
         csv.write_text("amount\n100\n200\nN/A\n300\nunknown\n400\n")
         report = _basic_pandas_profile(str(csv))
-        issues = [i for i in report.quality_issues if i["issue"] == "mixed_types"]
-        assert [i["column"] for i in issues] == ["amount"]
+        issues = [i for i in report.quality_issues if i.code == "mixed_types"]
+        assert [i.column for i in issues] == ["amount"]
 
     def test_all_text_column_not_flagged_as_mixed(self, tmp_path):
         csv = tmp_path / "text.csv"
         csv.write_text("city\nParis\nLondon\nBerlin\n")
         report = _basic_pandas_profile(str(csv))
-        assert not [i for i in report.quality_issues if i["issue"] == "mixed_types"]
+        assert not [i for i in report.quality_issues if i.code == "mixed_types"]
 
     def test_detects_high_outlier_share(self, tmp_path):
         csv = tmp_path / "outliers.csv"
@@ -602,8 +667,8 @@ class TestBasicPandasProfile:
         values = [100, 101, 99, 100, 102, 98, 100, 101, 99, 100, 10000, -10000]
         csv.write_text("v\n" + "\n".join(str(v) for v in values) + "\n")
         report = _basic_pandas_profile(str(csv))
-        issues = [i for i in report.quality_issues if i["issue"] == "high_outlier_share"]
-        assert [i["column"] for i in issues] == ["v"]
+        issues = [i for i in report.quality_issues if i.code == "high_outlier_share"]
+        assert [i.column for i in issues] == ["v"]
 
     def test_clean_data_produces_no_issues(self, tmp_path):
         csv = tmp_path / "clean.csv"
@@ -641,6 +706,7 @@ class TestMCPIntegration:
                      "unique_count": 150, "sample_values": [1000.0]}
                 ],
                 "quality_issues": [],
+                "quality_contract_version": "1",
             }
         }
         rag_responses = {
@@ -697,3 +763,232 @@ class TestMCPIntegration:
         assert state["rag_context"] == []
         assert state["mcp_call_log"][1]["mode"] == "fallback"
         # No exceptions — MAEDA ran standalone
+
+
+# ─── M1: error-envelope detection at the typed-client boundary ────────────────
+#
+# Before this, DataCleanerClient/RAGServerClient silently parsed the
+# migration-era error envelope ({"error": true, ...} / {"error": "..."}) as
+# if it were a real successful response -- confirmed live via
+# scripts/check_ecosystem.py. These are the regression tests for that fix.
+
+class TestErrorEnvelopeDetection:
+    def test_cleaner_error_envelope_raises_tool_error(self):
+        transport = _mock_dc_transport({
+            "profile_dataset": {
+                "error": True, "error_type": "FileNotFoundError",
+                "message": "[Errno 2] No such file or directory: 'x.csv'",
+            }
+        })
+        client = DataCleanerClient(transport)
+        with pytest.raises(MCPToolError) as exc_info:
+            asyncio.run(client.profile_dataset("x.csv"))
+        assert exc_info.value.error_type == "FileNotFoundError"
+        assert exc_info.value.raw["error"] is True
+
+    def test_cleaner_success_envelope_does_not_raise(self):
+        transport = _mock_dc_transport({
+            "profile_dataset": {
+                "row_count": 5, "columns": [], "quality_issues": [],
+                "quality_contract_version": "1",
+            }
+        })
+        client = DataCleanerClient(transport)
+        report = asyncio.run(client.profile_dataset("x.csv"))
+        assert report.row_count == 5
+
+    def test_rag_error_field_raises_tool_error(self):
+        transport = _mock_rag_transport({
+            "retrieve": {"error": "INDEX_NOT_FOUND: no such collection"},
+        })
+        client = RAGServerClient(transport)
+        with pytest.raises(MCPToolError) as exc_info:
+            asyncio.run(client.retrieve("query"))
+        assert "INDEX_NOT_FOUND" in str(exc_info.value)
+
+    def test_rag_empty_chunks_is_not_an_error(self):
+        """A legitimate zero-hit query must not be confused with a failure."""
+        transport = _mock_rag_transport({"retrieve": {"chunks": []}})
+        client = RAGServerClient(transport)
+        chunks = asyncio.run(client.retrieve("query"))
+        assert chunks == []
+
+
+class TestContractVersionCheck:
+    def test_mismatched_version_raises_contract_error(self):
+        from src.mcp_client.client import MCPContractError
+
+        transport = _mock_dc_transport({
+            "profile_dataset": {
+                "row_count": 5, "columns": [], "quality_issues": [],
+                "quality_contract_version": "2",  # Settings expects "1"
+            }
+        })
+        client = DataCleanerClient(transport)
+        with pytest.raises(MCPContractError):
+            asyncio.run(client.profile_dataset("x.csv"))
+
+    def test_missing_version_raises_contract_error(self):
+        """A response with no quality_contract_version at all must not be
+        silently treated as version "1" by default."""
+        from src.mcp_client.client import MCPContractError
+
+        transport = _mock_dc_transport({
+            "profile_dataset": {"row_count": 5, "columns": [], "quality_issues": []}
+        })
+        client = DataCleanerClient(transport)
+        with pytest.raises(MCPContractError):
+            asyncio.run(client.profile_dataset("x.csv"))
+
+    def test_clean_dataset_has_no_version_field_to_check(self):
+        """定案 #4b / 附录 B.6: only profile_dataset and validate_quality
+        carry quality_contract_version -- clean_dataset must not require it."""
+        transport = _mock_dc_transport({
+            "clean_dataset": {"cleaned_path": "x.csv", "changes_summary": {}, "rows_affected": 0}
+        })
+        client = DataCleanerClient(transport)
+        result = asyncio.run(client.clean_dataset("x.csv"))
+        assert result.cleaned_path == "x.csv"
+
+
+class TestFieldPresenceCheck:
+    """
+    附录 B.3 "字段缺失" row: a response genuinely missing a field the
+    contract guarantees must not be silently treated as the safest-looking
+    default (e.g. has_critical_issues absent -> silently "False" -> a
+    dirty dataset walks right past cleaning). strict fails outright;
+    degraded proceeds with the default but must not do so silently.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _reset_strict_mode(self):
+        from src.config.settings import settings as _settings
+        original = _settings.mcp_strict_mode
+        yield
+        _settings.mcp_strict_mode = original
+
+    def test_missing_has_critical_issues_fails_in_strict_mode(self):
+        from src.config.settings import settings as _settings
+        from src.mcp_client.client import MCPContractError
+
+        _settings.mcp_strict_mode = "strict"
+        transport = _mock_dc_transport({
+            "profile_dataset": {
+                "row_count": 5, "columns": [], "quality_issues": [],
+                "quality_contract_version": "1",
+            }
+        })
+        client = DataCleanerClient(transport)
+        with pytest.raises(MCPContractError):
+            asyncio.run(client.profile_dataset("x.csv"))
+
+    def test_missing_has_critical_issues_defaults_false_in_degraded_mode(self):
+        from src.config.settings import settings as _settings
+
+        _settings.mcp_strict_mode = "degraded"
+        transport = _mock_dc_transport({
+            "profile_dataset": {
+                "row_count": 5, "columns": [], "quality_issues": [],
+                "quality_contract_version": "1",
+            }
+        })
+        client = DataCleanerClient(transport)
+        report = asyncio.run(client.profile_dataset("x.csv"))
+        assert report.has_critical_issues is False
+
+    def test_missing_passed_fails_in_strict_mode(self):
+        from src.config.settings import settings as _settings
+        from src.mcp_client.client import MCPContractError
+
+        _settings.mcp_strict_mode = "strict"
+        transport = _mock_dc_transport({
+            "validate_quality": {"score": 1.0, "issues": [], "quality_contract_version": "1"}
+        })
+        client = DataCleanerClient(transport)
+        with pytest.raises(MCPContractError):
+            asyncio.run(client.validate_quality("x.csv"))
+
+    def test_missing_passed_defaults_true_in_degraded_mode(self):
+        from src.config.settings import settings as _settings
+
+        _settings.mcp_strict_mode = "degraded"
+        transport = _mock_dc_transport({
+            "validate_quality": {"score": 1.0, "issues": [], "quality_contract_version": "1"}
+        })
+        client = DataCleanerClient(transport)
+        validation = asyncio.run(client.validate_quality("x.csv"))
+        assert validation.passed is True
+
+
+# ─── M1: error-matrix classification in SubSystemWithFallback ─────────────────
+
+class TestErrorMatrix:
+    """
+    ECOSYSTEM_INTEGRATION_PLAN.md 错误处理矩阵: only connection/
+    internal_unknown errors may ever produce a fallback result, and only in
+    degraded mode. data_input/contract errors fail in *both* modes.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _reset_strict_mode(self):
+        from src.config.settings import settings as _settings
+        original = _settings.mcp_strict_mode
+        yield
+        _settings.mcp_strict_mode = original
+
+    def test_data_input_error_fails_in_degraded_mode_too(self):
+        """A nonexistent file must not be papered over as an empty/fallback
+        profile in degraded mode — it's a real error, not an availability
+        problem the standalone guarantee is meant to cover."""
+        from src.config.settings import settings as _settings
+        from src.mcp_client.fallback import SubSystemHardFailure
+
+        _settings.mcp_strict_mode = "degraded"
+        fb = _build_fallback(dc_side_effect=MCPToolError(
+            "profile_dataset reported an internal error: not found",
+            error_type="FileNotFoundError",
+        ))
+        with pytest.raises(SubSystemHardFailure) as exc_info:
+            asyncio.run(fb.profile_dataset("/data/missing.csv"))
+        assert exc_info.value.error_class == "data_input"
+        assert exc_info.value.log["mode"] == "mcp"  # never "fallback"
+
+    def test_connection_error_fails_in_strict_mode(self):
+        """The same connection failure that falls back in degraded mode
+        must hard-fail in strict — strict exists precisely so problems
+        aren't hidden during CI/联调."""
+        from src.config.settings import settings as _settings
+        from src.mcp_client.fallback import SubSystemHardFailure
+
+        _settings.mcp_strict_mode = "strict"
+        fb = _build_fallback(dc_side_effect=MCPConnectionError("offline"))
+        with pytest.raises(SubSystemHardFailure) as exc_info:
+            asyncio.run(fb.profile_dataset("/data/x.csv"))
+        assert exc_info.value.error_class == "connection"
+
+    def test_connection_error_still_falls_back_in_degraded_mode(self):
+        """Regression guard: strict-mode behavior must not leak into the
+        default degraded mode other tests rely on."""
+        from src.config.settings import settings as _settings
+
+        _settings.mcp_strict_mode = "degraded"
+        fb = _build_fallback(dc_side_effect=MCPConnectionError("offline"))
+        report, log = asyncio.run(fb.profile_dataset("/data/x.csv"))
+        assert log["mode"] == "fallback"
+        assert log["error_class"] == "connection"
+        assert log["recoverable"] is True
+        assert log["service_reachable"] is False
+
+    def test_contract_error_fails_in_both_modes(self):
+        from src.config.settings import settings as _settings
+        from src.mcp_client.client import MCPContractError
+        from src.mcp_client.fallback import SubSystemHardFailure
+
+        for mode in ("strict", "degraded"):
+            _settings.mcp_strict_mode = mode
+            fb = _build_fallback(dc_side_effect=MCPContractError(
+                "version mismatch", error_type="ContractVersionMismatch",
+            ))
+            with pytest.raises(SubSystemHardFailure) as exc_info:
+                asyncio.run(fb.profile_dataset("/data/x.csv"))
+            assert exc_info.value.error_class == "contract", f"failed for mode={mode}"

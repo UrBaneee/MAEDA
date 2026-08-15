@@ -21,14 +21,37 @@ def route_after_intent(state: MAEDAState) -> str:
 
 def route_after_profiling(state: MAEDAState) -> str:
     """
-    After connect_and_profile_data:
-      - "error"  → no data source provided or unrecoverable connection error
-      - "clean"  → Data Cleaner MCP found critical quality issues; re-clean + re-profile
-      - "ready"  → data is ready for analysis
-    Caps at _MAX_CLEAN_ITERATIONS to prevent infinite loops.
+    After connect_and_profile_data (TB0.5 v1, ECOSYSTEM_INTEGRATION_PLAN.md
+    附录 B.3/B.4/B.5):
+      - "error"  → no data source provided, or an unrecoverable MCP failure
+                   (param/contract/data-input error — 附录 B.3's "工具错误"
+                   row; the node already turned this into state["error"],
+                   never a fake "empty dataset" that looks like "ready")
+      - "clean"  → still has_critical_issues and the cleaning loop hasn't
+                   hit a terminal stop condition yet (附录 B.4)
+      - "ready"  → data is ready for analysis, OR the loop already reached
+                   a terminal stop condition. The node is what tells the
+                   two apart: it writes `cleaning_stop_reason` (+
+                   `cleaning_caveat` when it isn't a clean "passed") the
+                   moment a round is terminal, so a capped/regressed/
+                   no-improvement stop still routes to "ready" but is never
+                   *silent* about it (M7: "不得静默按 ready 处理") — the
+                   caveat is what analysis/report generation surfaces.
+
+    `iterations` here counts *completed clean_dataset calls* (附录 B.5),
+    not how many times this node has been entered — fixes the pre-M7
+    off-by-one where the counter incremented on every entry, capping the
+    loop at 2 actual clean attempts despite `_MAX_CLEAN_ITERATIONS = 3`.
     """
     if state.get("error") or state.get("current_phase") == "error":
         return "error"
+
+    # The node already decided this round is terminal — proceed to
+    # analysis regardless of has_critical_issues. Kept as a plain read
+    # (routers in this module never mutate state); the node is solely
+    # responsible for setting cleaning_stop_reason before returning.
+    if state.get("cleaning_stop_reason"):
+        return "ready"
 
     report = state.get("data_quality_report") or {}
     has_critical = report.get("has_critical_issues", False)

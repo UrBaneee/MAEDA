@@ -461,11 +461,15 @@ def _format_quality_note(report: dict) -> str:
 
 
 def _format_quality_issue(issue: Any) -> str:
-    """Render one quality-issue dict as readable text for the report prompt."""
+    """
+    Render one quality-issue dict as readable text for the report prompt.
+    Shape is QualityIssue.to_dict() (src/mcp_client/models.py, M2):
+    {code, severity?, column?, detail?, source}.
+    """
     if not isinstance(issue, dict):
         return str(issue)
     column = issue.get("column")
-    kind = issue.get("issue", "unknown")
+    kind = issue.get("code", "unknown")
     detail = issue.get("detail", "")
     prefix = f"{column}: " if column else ""
     return f"{prefix}{kind}" + (f" ({detail})" if detail else "")

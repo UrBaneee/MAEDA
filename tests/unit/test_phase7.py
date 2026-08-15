@@ -461,15 +461,15 @@ def test_report_fallback_handles_empty_insights():
 def test_quality_note_reads_quality_issues_key():
     """DataQualityReport.to_dict() emits "quality_issues" — the note used to
     read a nonexistent "issues" key, so profiler findings never reached the
-    report at all."""
+    report at all. Shape is QualityIssue.to_dict() (M2): "code", not "issue"."""
     from src.agents.insight_agent import _format_quality_note
     report = {
         "row_count": 100,
         "quality_issues": [
-            {"column": "age", "issue": "high_null_rate", "severity": "warning",
-             "detail": "62.0% nulls"},
-            {"column": None, "issue": "duplicate_rows", "severity": "warning",
-             "detail": "3 fully duplicated rows (3.0%)"},
+            {"column": "age", "code": "high_null_rate", "severity": "warning",
+             "detail": "62.0% nulls", "source": "fallback"},
+            {"column": None, "code": "duplicate_rows", "severity": "warning",
+             "detail": "3 fully duplicated rows (3.0%)", "source": "fallback"},
         ],
         "has_critical_issues": False,
     }

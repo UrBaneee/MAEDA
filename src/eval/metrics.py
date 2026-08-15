@@ -224,8 +224,10 @@ def render_data_quality(data_quality_report: Optional[dict]) -> str:
     header = f"{row_count} rows" if row_count is not None else ""
     if not issues:
         return (header + " — no quality issues flagged") if header else "No quality issues flagged"
+    # Shape is QualityIssue.to_dict() (src/mcp_client/models.py, M2):
+    # {code, severity?, column?, detail?, source}.
     issue_lines = [
-        f"- {i.get('issue', '?')} ({i.get('severity', '?')}): {i.get('detail', '')}"
+        f"- {i.get('code', '?')} ({i.get('severity', '?')}): {i.get('detail', '')}"
         for i in issues
     ]
     return (header + "\n" if header else "") + "\n".join(issue_lines)

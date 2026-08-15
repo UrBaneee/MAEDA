@@ -30,22 +30,93 @@ class ColumnProfile:
 
 
 @dataclass
+class QualityIssue:
+    """
+    Normalized shape for one quality issue, regardless of where it came
+    from. The real Data Cleaner (agentic-data-cleaner-v2 mcp_app.py
+    profile_dataset) returns `quality_issues` as a flat list of issue-code
+    strings (e.g. "schema_inconsistency"), not the list-of-dicts shape this
+    boundary used to assume — that mismatch is what made the old
+    `i.get("severity")` critical-issue derivation crash. The pandas
+    fallback profiler (fallback.py) produces richer dicts with column/
+    severity/detail. Both normalize into this one shape so the Insight
+    Agent and eval renderer (src/agents/insight_agent.py,
+    src/eval/metrics.py) have exactly one format to read, tagged with
+    `source` so a caveat can say whether a finding came from the real
+    cleaner or the degraded local profiler.
+    """
+
+    code: str
+    severity: Optional[str] = None
+    column: Optional[str] = None
+    detail: Optional[str] = None
+    source: str = "cleaner"  # "cleaner" | "fallback"
+
+    @classmethod
+    def from_cleaner_string(cls, code: str) -> "QualityIssue":
+        return cls(code=code, source="cleaner")
+
+    @classmethod
+    def from_dict(cls, d: dict, source: str = "fallback") -> "QualityIssue":
+        return cls(
+            code=d.get("code") or d.get("issue") or "unknown",
+            severity=d.get("severity"),
+            column=d.get("column"),
+            detail=d.get("detail"),
+            source=d.get("source", source),
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "code": self.code,
+            "severity": self.severity,
+            "column": self.column,
+            "detail": self.detail,
+            "source": self.source,
+        }
+
+
+def _normalize_quality_issues(raw_issues: list, source: str) -> list[QualityIssue]:
+    """Accepts either the cleaner's `list[str]` shape or the fallback
+    profiler's `list[dict]` shape and normalizes both to QualityIssue."""
+    issues = []
+    for i in raw_issues:
+        if isinstance(i, str):
+            issues.append(QualityIssue.from_cleaner_string(i))
+        elif isinstance(i, dict):
+            issues.append(QualityIssue.from_dict(i, source=source))
+        # Anything else is a contract we don't understand yet; drop it
+        # rather than guess — silently fabricating a code would be worse.
+    return issues
+
+
+@dataclass
 class DataQualityReport:
     row_count: int
     columns: list[ColumnProfile]
-    quality_issues: list[dict]
+    quality_issues: list[QualityIssue]
     has_critical_issues: bool = False
+    quality_contract_version: Optional[str] = None
+    # TB0.5 附录 B.3: no cleaner tool emits this today (verified against
+    # mcp_app.py) -- forward-compat plumbing so M7's cleaning loop already
+    # honors it the moment C4/TB4 adds it, rather than needing another pass.
+    needs_review: bool = False
 
     @classmethod
     def from_mcp_response(cls, data: dict) -> "DataQualityReport":
         columns = [ColumnProfile.from_dict(c) for c in data.get("columns", [])]
-        issues = data.get("quality_issues") or []
-        critical = any(i.get("severity") == "critical" for i in issues)
+        issues = _normalize_quality_issues(data.get("quality_issues") or [], source="cleaner")
         return cls(
             row_count=int(data.get("row_count", 0)),
             columns=columns,
             quality_issues=issues,
-            has_critical_issues=critical,
+            # Read the cleaner's own verdict (附录 B.1, live since C1) rather
+            # than re-deriving it from quality_issues — deriving it from a
+            # `severity` key that string-shaped issues don't have is exactly
+            # what used to crash this boundary.
+            has_critical_issues=bool(data.get("has_critical_issues", False)),
+            quality_contract_version=data.get("quality_contract_version"),
+            needs_review=bool(data.get("needs_review", False)),
         )
 
     def to_dict(self) -> dict:
@@ -61,8 +132,10 @@ class DataQualityReport:
                 }
                 for c in self.columns
             ],
-            "quality_issues": self.quality_issues,
+            "quality_issues": [i.to_dict() for i in self.quality_issues],
             "has_critical_issues": self.has_critical_issues,
+            "quality_contract_version": self.quality_contract_version,
+            "needs_review": self.needs_review,
         }
 
 
@@ -71,7 +144,7 @@ class CleaningStep:
     operation: str
     target_column: str
     rationale: str
-    estimated_impact: str
+    estimated_impact: dict
 
     @classmethod
     def from_dict(cls, d: dict) -> "CleaningStep":
@@ -79,7 +152,10 @@ class CleaningStep:
             operation=d.get("operation", ""),
             target_column=d.get("target_column", ""),
             rationale=d.get("rationale", ""),
-            estimated_impact=d.get("estimated_impact", ""),
+            # Real shape (agentic-data-cleaner-v2 mcp_app.py get_cleaning_plan):
+            # {"confidence": float, "risk_level": str, "produces_diff": bool},
+            # not a string — verified against a live response (M3).
+            estimated_impact=d.get("estimated_impact") or {},
         )
 
 
@@ -109,15 +185,24 @@ class CleaningPlan:
 @dataclass
 class CleaningResult:
     cleaned_path: str
-    changes_summary: str
+    changes_summary: dict
     rows_affected: int
+    needs_review: bool = False  # 附录 B.3 — not emitted today, see DataQualityReport.needs_review
 
     @classmethod
     def from_mcp_response(cls, data: dict) -> "CleaningResult":
         return cls(
             cleaned_path=data.get("cleaned_path", ""),
-            changes_summary=data.get("changes_summary", ""),
+            # Real shape (agentic-data-cleaner-v2 mcp_app.py clean_dataset):
+            # {"overall_score", "metrics", "data_versions", "diff_paths",
+            # "total_rounds", "plan_steps" (an int count, not a step list —
+            # 附录 D F3/#17), "needs_review_count"}. Not a string — verified
+            # against a live response (M3). clean_dataset's response does
+            # NOT carry quality_contract_version (only profile_dataset and
+            # validate_quality do, per 附录 B.6) — nothing to read here.
+            changes_summary=data.get("changes_summary") or {},
             rows_affected=int(data.get("rows_affected", 0)),
+            needs_review=bool(data.get("needs_review", False)),
         )
 
 
@@ -125,14 +210,31 @@ class CleaningResult:
 class QualityValidation:
     passed: bool
     score: float
-    issues: list[dict]
+    issues: list[str]
+    quality_contract_version: Optional[str] = None
+    # Real shape (agentic-data-cleaner-v2 mcp_app.py validate_quality):
+    # {missing_score, duplicate_score, outlier_score, schema_score,
+    # mean_null_ratio, duplicate_row_ratio, outlier_row_ratio}. M7 reads
+    # mean_null_ratio/duplicate_row_ratio/schema_score to reconstruct the
+    # same three-dimension verdict has_critical_issues is built from
+    # (附录 B.0/B.1), so the cleaning loop can tell "no improvement between
+    # rounds" apart from "still bad but for a different reason" — the
+    # combined passed/score booleans alone can't make that distinction.
+    details: dict = field(default_factory=dict)
+    needs_review: bool = False  # 附录 B.3 — not emitted today, see DataQualityReport.needs_review
 
     @classmethod
     def from_mcp_response(cls, data: dict) -> "QualityValidation":
         return cls(
             passed=bool(data.get("passed", True)),
             score=float(data.get("score", 1.0)),
+            # Real shape (agentic-data-cleaner-v2 mcp_app.py validate_quality):
+            # a flat list[str] of human-readable sentences, not list[dict] —
+            # verified against a live response (M3).
             issues=data.get("issues") or [],
+            quality_contract_version=data.get("quality_contract_version"),
+            details=data.get("details") or {},
+            needs_review=bool(data.get("needs_review", False)),
         )
 
 

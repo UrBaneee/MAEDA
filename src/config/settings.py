@@ -45,6 +45,24 @@ class MAEDASettings(BaseSettings):
     surfacing chunks from unrelated documents sharing the same RAG-MCP-Server
     instance (see eval_report.md #23)."""
 
+    mcp_strict_mode: Literal["strict", "degraded"] = Field(
+        default="degraded", alias="MCP_STRICT_MODE"
+    )
+    """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #14. "strict" (联调/CI) fails on any
+    sub-system error per the 错误处理矩阵, never fabricating a result.
+    "degraded" (demo, the default so MAEDA still runs standalone out of the
+    box) falls back to built-in alternatives, but only for the matrix rows
+    that say so — connection failures and unclassified internal errors, NOT
+    param/contract/auth/data-input errors, which fail in both modes."""
+
+    data_cleaner_quality_contract_version: str = Field(
+        default="1", alias="DATA_CLEANER_QUALITY_CONTRACT_VERSION"
+    )
+    """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #4b / 附录 B. Expected
+    quality_contract_version on profile_dataset/validate_quality responses.
+    A mismatch is a contract-version error — fails in both strict and
+    degraded, never treated as a transient/fallback-able error."""
+
     # ── Data Sources ─────────────────────────────────────────────────────────
     default_data_dir: str = Field(default="./data/sample", alias="MAEDA_DEFAULT_DATA_DIR")
 

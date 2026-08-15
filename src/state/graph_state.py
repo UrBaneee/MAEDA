@@ -27,7 +27,23 @@ class MAEDAState(TypedDict):
     # === Data Quality (DELEGATED to Data Cleaner via MCP) ===
     data_quality_report: Optional[dict]   # From Data Cleaner MCP
     cleaning_applied: bool
-    cleaning_summary: Optional[str]
+    cleaning_summary: Optional[dict]  # CleaningResult.changes_summary — real shape is a dict (M3)
+    # M7 / TB0.5 附录 B: set once the cleaning loop reaches a terminal state.
+    # None while still looping. One of "passed"/"no_diff"/"no_improvement"/
+    # "regressed"/"max_rounds"/"needs_review" once stopped (附录 B.4).
+    cleaning_stop_reason: Optional[str]
+    # Human-readable note attached whenever the loop stops without a clean
+    # "passed" — surfaced by Insight Agent/report generation so a run that
+    # proceeds on still-imperfect data says so instead of presenting it as
+    # if cleaning fully succeeded.
+    cleaning_caveat: Optional[str]
+    # Round-over-round bookkeeping for 附录 B.4 stop conditions #3/#4 (no
+    # improvement / regression). {"missing": bool, "duplicate": bool,
+    # "schema": bool} — the same three dimensions has_critical_issues is
+    # built from (附录 B.0/B.1), recomputed from validate_quality.details
+    # since the cleaner doesn't expose them as a public verdict directly.
+    cleaning_last_signature: Optional[dict]
+    cleaning_last_score: Optional[float]
 
     # === Analysis ===
     analysis_plan: list[dict]    # [{step, method, rationale}]
@@ -57,7 +73,13 @@ class MAEDAState(TypedDict):
     current_phase: Literal["plan", "execute", "synthesize", "guardrail", "complete", "error"]
     error: Optional[str]
     error_type: Optional[Literal["safe_refusal", "pipeline_error"]]  # what kind of failure `error` represents
-    iteration_count: int         # For data-cleaning retry loops
+    # Number of *completed* clean_dataset calls (附录 B.5) — incremented only
+    # after clean_dataset returns successfully, not on every node entry.
+    # Previously incremented unconditionally at the top of
+    # connect_and_profile_node regardless of whether cleaning ran at all,
+    # which was both an off-by-one against `_MAX_CLEAN_ITERATIONS` and
+    # conflated "node re-entered" with "cleaning actually attempted".
+    iteration_count: int
     guardrail_retry_count: int   # For guardrail retry loops (separate counter)
     clarification_count: int     # For clarification loops (cap at 1)
 
@@ -88,6 +110,10 @@ def initial_state(
         data_quality_report=None,
         cleaning_applied=False,
         cleaning_summary=None,
+        cleaning_stop_reason=None,
+        cleaning_caveat=None,
+        cleaning_last_signature=None,
+        cleaning_last_score=None,
         analysis_plan=[],
         analysis_results=[],
         intermediate_data=None,

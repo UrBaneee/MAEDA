@@ -1,15 +1,30 @@
 """
-Graceful degradation layer for MCP sub-systems.
+Graceful degradation + error-matrix classification layer for MCP sub-systems.
 
-SubSystemWithFallback wraps DataCleanerClient and RAGServerClient.
-When a sub-system is offline (MCPConnectionError), it falls back to
-built-in alternatives so MAEDA can run standalone:
+SubSystemWithFallback wraps DataCleanerClient and RAGServerClient and routes
+every call through the ECOSYSTEM_INTEGRATION_PLAN.md 错误处理矩阵 (M1):
 
-  Data Cleaner unavailable → basic pandas profiling
-  RAG Server unavailable   → empty context (no domain enrichment)
+  错误类型                        | strict   | degraded          | 继续分析
+  连接失败 / 明确的瞬时超时        | 失败     | fallback           | degraded 下是
+  参数/schema/契约版本错误         | 失败     | 失败(不 fallback)  | 否
+  认证或权限错误                   | 失败     | 失败(不 fallback)  | 否
+  文件不存在/不可读/格式不支持     | 受控失败 | 受控失败(不 fallback) | 否
+  服务内部未知错误                 | 失败     | fallback(须留痕)   | degraded 下是
 
-MCP call logging (task 3.5) is also handled here: every call is timed and
-appended to state["mcp_call_log"] via the provided log_call callback.
+Only the "connection" and "internal_unknown" rows are ever allowed to
+produce a fallback result, and only in degraded mode (settings.mcp_strict_mode,
+定案 #14). Everything else — a bad file path, a contract-version mismatch —
+must not be silently papered over in either mode: it raises
+SubSystemHardFailure so the caller (a graph node) can transition to an
+explicit error state instead of presenting a fabricated result as if
+nothing was wrong.
+
+  Data Cleaner unavailable (connection/internal_unknown, degraded) → basic pandas profiling
+  RAG Server unavailable   (connection/internal_unknown, degraded) → empty context
+
+MCP call logging is also handled here: every call is timed and appended to
+state["mcp_call_log"] via the returned log dict, now carrying error_class/
+recoverable/service_reachable alongside the pre-existing mode/error fields.
 """
 from __future__ import annotations
 
@@ -18,7 +33,8 @@ from typing import Any, Callable, Optional
 
 import pandas as pd
 
-from src.mcp_client.client import MCPConnectionError
+from src.config.settings import settings
+from src.mcp_client.client import MCPConnectionError, MCPContractError, MCPToolError
 from src.mcp_client.data_cleaner import DataCleanerClient
 from src.mcp_client.models import (
     CleaningPlan,
@@ -26,6 +42,7 @@ from src.mcp_client.models import (
     Collection,
     ColumnProfile,
     DataQualityReport,
+    QualityIssue,
     QualityValidation,
     RAGChunk,
     SubSystemHealth,
@@ -36,7 +53,52 @@ from src.utils.logger import get_logger
 logger = get_logger("maeda.mcp.fallback")
 
 
-# ─── MCP call logger ─────────────────────────────────────────────────────────
+# ─── Error-matrix classification ───────────────────────────────────────────
+
+# error_type names (the Python exception class name cleaner puts in its
+# `{"error": true, "error_type": ...}` envelope) known today to be
+# data/input errors rather than internal bugs. There is no stable
+# error_code yet (附录 D C4 not landed — see 附录 E.1), so this is the best
+# classification available; revisit once cleaner ships one.
+_DATA_INPUT_ERROR_TYPES = {
+    "FileNotFoundError", "IsADirectoryError", "PermissionError",
+    "UnicodeDecodeError", "EmptyDataError", "ParserError",
+}
+
+
+class SubSystemHardFailure(Exception):
+    """
+    Raised when the 错误处理矩阵 says a call must NOT be papered over with a
+    fallback result, in either mode: param/schema/contract-version errors,
+    auth errors, and data/input errors. Callers must catch this and
+    transition to an explicit error state — letting it propagate uncaught
+    would skip guardrails/eval (CLAUDE.md: both run on every execution).
+    """
+
+    def __init__(self, message: str, error_class: str, log: dict):
+        super().__init__(message)
+        self.error_class = error_class
+        self.log = log
+
+
+def _classify(exc: Exception) -> tuple[str, bool, bool]:
+    """
+    Maps a caught exception to (error_class, recoverable, service_reachable).
+    error_class ∈ {"connection", "data_input", "contract", "internal_unknown"}.
+    "认证或权限错误" is a matrix row but neither sub-system emits a
+    distinguishable auth error today — it currently falls into
+    "internal_unknown" until C4 ships stable error codes.
+    """
+    if isinstance(exc, MCPConnectionError):
+        return "connection", True, False
+    if isinstance(exc, MCPContractError):
+        return "contract", False, True
+    if isinstance(exc, MCPToolError):
+        if exc.error_type in _DATA_INPUT_ERROR_TYPES:
+            return "data_input", False, True
+        return "internal_unknown", False, True
+    return "internal_unknown", False, True
+
 
 def _make_call_record(
     system: str,
@@ -46,6 +108,9 @@ def _make_call_record(
     duration_ms: float,
     error: Optional[str] = None,
     mode: str = "mcp",  # "mcp" | "fallback"
+    error_class: Optional[str] = None,
+    recoverable: Optional[bool] = None,
+    service_reachable: Optional[bool] = None,
 ) -> dict:
     return {
         "system": system,
@@ -55,7 +120,60 @@ def _make_call_record(
         "duration_ms": round(duration_ms, 1),
         "error": error,
         "mode": mode,
+        "error_class": error_class,
+        "recoverable": recoverable,
+        "service_reachable": service_reachable,
     }
+
+
+async def _call_with_matrix(
+    system: str,
+    tool: str,
+    args: dict,
+    call: Callable[[], Any],
+    fallback_factory: Callable[[], Any],
+) -> tuple[Any, dict]:
+    """
+    Shared error-matrix execution for one MCP call.
+
+    - Success: returns (result, log) with mode="mcp".
+    - connection / internal_unknown, degraded mode: returns
+      (fallback_factory(), log) with mode="fallback" — the only case that
+      ever calls fallback_factory.
+    - Everything else (connection/internal_unknown in strict; data_input
+      and contract in *either* mode): raises SubSystemHardFailure. The
+      matrix is explicit that data_input/contract errors fail in degraded
+      too — a bad path or a version mismatch is a real error, not a
+      "sub-system unavailable" situation the standalone guarantee covers.
+    """
+    start = time.monotonic()
+    try:
+        result = await call()
+        duration_ms = (time.monotonic() - start) * 1000
+        return result, _make_call_record(system, tool, args, result, duration_ms)
+    except (MCPConnectionError, MCPToolError) as exc:
+        duration_ms = (time.monotonic() - start) * 1000
+        error_class, recoverable, service_reachable = _classify(exc)
+        mode = settings.mcp_strict_mode
+        can_fallback = error_class in ("connection", "internal_unknown") and mode == "degraded"
+
+        log = _make_call_record(
+            system, tool, args, None, duration_ms, error=str(exc),
+            mode="fallback" if can_fallback else "mcp",
+            error_class=error_class, recoverable=recoverable,
+            service_reachable=service_reachable,
+        )
+
+        if can_fallback:
+            logger.warning(
+                "%s.%s degraded to fallback (error_class=%s): %s", system, tool, error_class, exc,
+            )
+            return fallback_factory(), log
+
+        logger.error(
+            "%s.%s hard failure (mode=%s, error_class=%s): %s", system, tool, mode, error_class, exc,
+        )
+        raise SubSystemHardFailure(str(exc), error_class, log) from exc
 
 
 # ─── SubSystemWithFallback ────────────────────────────────────────────────────
@@ -63,13 +181,17 @@ def _make_call_record(
 class SubSystemWithFallback:
     """
     Facade over DataCleanerClient and RAGServerClient with:
-      1. Graceful degradation on MCPConnectionError
+      1. Error-matrix-governed degradation (M1)
       2. Automatic MCP call logging (call log returned per-call for state append)
 
     Usage:
         client = SubSystemWithFallback(data_cleaner, rag_server)
         report, log = await client.profile_dataset("/data/sales.csv")
         state["mcp_call_log"] = [*state["mcp_call_log"], log]
+
+    profile_dataset/get_cleaning_plan/clean_dataset/validate_quality/
+    retrieve_knowledge/list_collections may now raise SubSystemHardFailure
+    per the matrix — callers must catch it (see src/graph/nodes.py).
     """
 
     def __init__(
@@ -84,85 +206,41 @@ class SubSystemWithFallback:
 
     async def profile_dataset(self, path: str) -> tuple[DataQualityReport, dict]:
         """Profile dataset via Data Cleaner MCP; fall back to pandas on failure."""
-        args = {"path": path}
-        start = time.monotonic()
-        try:
-            result = await self._dc.profile_dataset(path)
-            duration_ms = (time.monotonic() - start) * 1000
-            log = _make_call_record("data_cleaner", "profile_dataset", args, result, duration_ms)
-            return result, log
-        except MCPConnectionError as exc:
-            duration_ms = (time.monotonic() - start) * 1000
-            logger.warning("Data Cleaner unavailable, using pandas fallback: %s", exc)
-            result = _basic_pandas_profile(path)
-            log = _make_call_record(
-                "data_cleaner", "profile_dataset", args, result,
-                duration_ms, error=str(exc), mode="fallback"
-            )
-            return result, log
+        return await _call_with_matrix(
+            "data_cleaner", "profile_dataset", {"dataset_path": path},
+            call=lambda: self._dc.profile_dataset(path),
+            fallback_factory=lambda: _basic_pandas_profile(path),
+        )
 
     async def get_cleaning_plan(self, path: str) -> tuple[CleaningPlan, dict]:
         """Get cleaning plan from Data Cleaner; fall back to empty plan."""
-        args = {"path": path}
-        start = time.monotonic()
-        try:
-            result = await self._dc.get_cleaning_plan(path)
-            duration_ms = (time.monotonic() - start) * 1000
-            log = _make_call_record("data_cleaner", "get_cleaning_plan", args, result, duration_ms)
-            return result, log
-        except MCPConnectionError as exc:
-            duration_ms = (time.monotonic() - start) * 1000
-            logger.warning("Data Cleaner unavailable for cleaning plan: %s", exc)
-            result = CleaningPlan(steps=[])
-            log = _make_call_record(
-                "data_cleaner", "get_cleaning_plan", args, result,
-                duration_ms, error=str(exc), mode="fallback"
-            )
-            return result, log
+        return await _call_with_matrix(
+            "data_cleaner", "get_cleaning_plan", {"dataset_path": path},
+            call=lambda: self._dc.get_cleaning_plan(path),
+            fallback_factory=lambda: CleaningPlan(steps=[]),
+        )
 
     async def clean_dataset(
         self, path: str, plan: Optional[CleaningPlan] = None
     ) -> tuple[CleaningResult, dict]:
         """Clean dataset via Data Cleaner; fall back to returning path as-is."""
-        args = {"path": path}
-        start = time.monotonic()
-        try:
-            result = await self._dc.clean_dataset(path, plan)
-            duration_ms = (time.monotonic() - start) * 1000
-            log = _make_call_record("data_cleaner", "clean_dataset", args, result, duration_ms)
-            return result, log
-        except MCPConnectionError as exc:
-            duration_ms = (time.monotonic() - start) * 1000
-            logger.warning("Data Cleaner unavailable for cleaning: %s", exc)
-            result = CleaningResult(
+        return await _call_with_matrix(
+            "data_cleaner", "clean_dataset", {"dataset_path": path},
+            call=lambda: self._dc.clean_dataset(path, plan),
+            fallback_factory=lambda: CleaningResult(
                 cleaned_path=path,
-                changes_summary="Data Cleaner unavailable; no cleaning applied",
+                changes_summary={"fallback_reason": "Data Cleaner unavailable; no cleaning applied"},
                 rows_affected=0,
-            )
-            log = _make_call_record(
-                "data_cleaner", "clean_dataset", args, result,
-                duration_ms, error=str(exc), mode="fallback"
-            )
-            return result, log
+            ),
+        )
 
     async def validate_quality(self, path: str) -> tuple[QualityValidation, dict]:
         """Validate data quality; fall back to 'passed' if unavailable."""
-        args = {"path": path}
-        start = time.monotonic()
-        try:
-            result = await self._dc.validate_quality(path)
-            duration_ms = (time.monotonic() - start) * 1000
-            log = _make_call_record("data_cleaner", "validate_quality", args, result, duration_ms)
-            return result, log
-        except MCPConnectionError as exc:
-            duration_ms = (time.monotonic() - start) * 1000
-            logger.warning("Data Cleaner unavailable for validation: %s", exc)
-            result = QualityValidation(passed=True, score=1.0, issues=[])
-            log = _make_call_record(
-                "data_cleaner", "validate_quality", args, result,
-                duration_ms, error=str(exc), mode="fallback"
-            )
-            return result, log
+        return await _call_with_matrix(
+            "data_cleaner", "validate_quality", {"dataset_path": path},
+            call=lambda: self._dc.validate_quality(path),
+            fallback_factory=lambda: QualityValidation(passed=True, score=1.0, issues=[]),
+        )
 
     # ── RAG Server delegation ─────────────────────────────────────────────────
 
@@ -170,41 +248,20 @@ class SubSystemWithFallback:
         self, query: str, top_k: int = 5, collection: Optional[str] = None
     ) -> tuple[list[RAGChunk], dict]:
         """Retrieve domain knowledge; return empty list if RAG is unavailable."""
-        args = {"query": query, "top_k": top_k, "collection": collection}
-        start = time.monotonic()
-        try:
-            result = await self._rag.retrieve_with_metadata(query, top_k, collection=collection)
-            duration_ms = (time.monotonic() - start) * 1000
-            log = _make_call_record(
-                "rag_server", "retrieve_with_metadata", args,
-                f"{len(result)} chunks", duration_ms
-            )
-            return result, log
-        except MCPConnectionError as exc:
-            duration_ms = (time.monotonic() - start) * 1000
-            logger.warning("RAG Server unavailable, skipping domain enrichment: %s", exc)
-            log = _make_call_record(
-                "rag_server", "retrieve_with_metadata", args,
-                "0 chunks", duration_ms, error=str(exc), mode="fallback"
-            )
-            return [], log
+        return await _call_with_matrix(
+            "rag_server", "retrieve_with_metadata",
+            {"query": query, "top_k": top_k, "collection": collection},
+            call=lambda: self._rag.retrieve_with_metadata(query, top_k, collection=collection),
+            fallback_factory=lambda: [],
+        )
 
     async def list_collections(self) -> tuple[list[Collection], dict]:
         """List RAG collections; return empty list on failure."""
-        args: dict = {}
-        start = time.monotonic()
-        try:
-            result = await self._rag.list_collections()
-            duration_ms = (time.monotonic() - start) * 1000
-            log = _make_call_record("rag_server", "list_collections", args, result, duration_ms)
-            return result, log
-        except MCPConnectionError as exc:
-            duration_ms = (time.monotonic() - start) * 1000
-            log = _make_call_record(
-                "rag_server", "list_collections", args, [],
-                duration_ms, error=str(exc), mode="fallback"
-            )
-            return [], log
+        return await _call_with_matrix(
+            "rag_server", "list_collections", {},
+            call=lambda: self._rag.list_collections(),
+            fallback_factory=lambda: [],
+        )
 
     # ── Health check ──────────────────────────────────────────────────────────
 
@@ -258,24 +315,20 @@ def _basic_pandas_profile(path: str) -> DataQualityReport:
         return DataQualityReport(row_count=0, columns=[], quality_issues=[], has_critical_issues=False)
 
     columns = []
-    quality_issues = []
+    quality_issues: list[QualityIssue] = []
 
     if df.empty:
-        quality_issues.append({
-            "column": None,
-            "issue": "empty_dataset",
-            "severity": "warning",
-            "detail": "Dataset has no rows",
-        })
+        quality_issues.append(QualityIssue(
+            code="empty_dataset", severity="warning", detail="Dataset has no rows", source="fallback",
+        ))
 
     dup_count = int(df.duplicated().sum())
     if dup_count > 0:
-        quality_issues.append({
-            "column": None,
-            "issue": "duplicate_rows",
-            "severity": "warning",
-            "detail": f"{dup_count} fully duplicated rows ({dup_count / len(df):.1%})",
-        })
+        quality_issues.append(QualityIssue(
+            code="duplicate_rows", severity="warning",
+            detail=f"{dup_count} fully duplicated rows ({dup_count / len(df):.1%})",
+            source="fallback",
+        ))
 
     for col in df.columns:
         null_pct = float(df[col].isna().mean())
@@ -291,33 +344,28 @@ def _basic_pandas_profile(path: str) -> DataQualityReport:
             )
         )
         if null_pct > 0.5:
-            quality_issues.append({
-                "column": col,
-                "issue": "high_null_rate",
-                "severity": "warning",
-                "detail": f"{null_pct:.1%} nulls",
-            })
+            quality_issues.append(QualityIssue(
+                code="high_null_rate", severity="warning", column=col,
+                detail=f"{null_pct:.1%} nulls", source="fallback",
+            ))
 
         non_null = df[col].dropna()
         if len(df) > 1 and unique_count == 1 and len(non_null) == len(df):
-            quality_issues.append({
-                "column": col,
-                "issue": "constant_column",
-                "severity": "info",
-                "detail": f"Single value {non_null.iloc[0]!r} in every row",
-            })
+            quality_issues.append(QualityIssue(
+                code="constant_column", severity="info", column=col,
+                detail=f"Single value {non_null.iloc[0]!r} in every row", source="fallback",
+            ))
 
         if df[col].dtype == object and len(non_null) >= 2:
             numeric_pct = float(pd.to_numeric(non_null, errors="coerce").notna().mean())
             # All-numeric-as-strings and all-text are both internally
             # consistent; only a genuine mix is worth flagging.
             if 0.05 < numeric_pct < 0.95:
-                quality_issues.append({
-                    "column": col,
-                    "issue": "mixed_types",
-                    "severity": "warning",
-                    "detail": f"{numeric_pct:.0%} of values parse as numbers, the rest are text",
-                })
+                quality_issues.append(QualityIssue(
+                    code="mixed_types", severity="warning", column=col,
+                    detail=f"{numeric_pct:.0%} of values parse as numbers, the rest are text",
+                    source="fallback",
+                ))
 
         if pd.api.types.is_numeric_dtype(df[col]) and len(non_null) >= 10:
             q1, q3 = non_null.quantile(0.25), non_null.quantile(0.75)
@@ -327,12 +375,10 @@ def _basic_pandas_profile(path: str) -> DataQualityReport:
                     ((non_null < q1 - 1.5 * iqr) | (non_null > q3 + 1.5 * iqr)).mean()
                 )
                 if outlier_pct > 0.05:
-                    quality_issues.append({
-                        "column": col,
-                        "issue": "high_outlier_share",
-                        "severity": "info",
-                        "detail": f"{outlier_pct:.1%} of values outside 1.5×IQR",
-                    })
+                    quality_issues.append(QualityIssue(
+                        code="high_outlier_share", severity="info", column=col,
+                        detail=f"{outlier_pct:.1%} of values outside 1.5×IQR", source="fallback",
+                    ))
 
     return DataQualityReport(
         row_count=len(df),
@@ -359,7 +405,6 @@ def build_subsystem_client(
     Build the canonical SubSystemWithFallback from settings (or overrides).
     Import this wherever you need to call sub-systems.
     """
-    from src.config.settings import settings
     from src.mcp_client.client import MCPClient
 
     dc_url = data_cleaner_url or settings.data_cleaner_mcp_url

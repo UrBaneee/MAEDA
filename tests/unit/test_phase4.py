@@ -387,9 +387,9 @@ class TestMCPQualityDelegation:
         import src.graph.nodes as nodes
         from src.mcp_client.fallback import SubSystemWithFallback
         from src.mcp_client.models import (
-            CleaningPlan,
             CleaningResult,
             DataQualityReport,
+            QualityIssue,
         )
         from src.state.graph_state import initial_state
 
@@ -398,12 +398,16 @@ class TestMCPQualityDelegation:
 
         critical_report = DataQualityReport(
             row_count=5, columns=[], has_critical_issues=True,
-            quality_issues=[{"severity": "critical", "issue": "dup_pk"}]
+            quality_issues=[QualityIssue(code="dup_pk", severity="critical")],
         )
-        clean_plan = CleaningPlan(steps=[])
+        # cleaned_path == csv_file (byte-identical) so this round hits the
+        # no_diff stop condition and returns before re-profile/validate_quality
+        # -- keeps this test focused on "cleaning got invoked at all".
+        # Real shape (agentic-data-cleaner-v2 mcp_app.py clean_dataset) is a
+        # dict, not a string — see M3.
         clean_result = CleaningResult(
             cleaned_path=csv_file,
-            changes_summary="Dropped 2 duplicate rows",
+            changes_summary={"total_rounds": 1, "plan_steps": 2, "needs_review_count": 0},
             rows_affected=2,
         )
 
@@ -411,7 +415,8 @@ class TestMCPQualityDelegation:
                               "mode": "mcp", "args": {}, "duration_ms": 3.0}
         mock_mcp = MagicMock(spec=SubSystemWithFallback)
         mock_mcp.profile_dataset = AsyncMock(return_value=(critical_report, _log("profile_dataset")))
-        mock_mcp.get_cleaning_plan = AsyncMock(return_value=(clean_plan, _log("get_cleaning_plan")))
+        # 定案 #3: get_cleaning_plan is no longer called from the node —
+        # left unconfigured here; calling it would raise on the mock.
         mock_mcp.clean_dataset = AsyncMock(return_value=(clean_result, _log("clean_dataset")))
 
         old_connector = nodes._data_connector
@@ -427,8 +432,351 @@ class TestMCPQualityDelegation:
             nodes._subsystem_client = old_mcp
 
         assert result["cleaning_applied"] is True
-        assert "Dropped 2" in result["cleaning_summary"]
-        assert len(result["mcp_call_log"]) == 3  # profile + plan + clean
+        assert result["cleaning_summary"]["plan_steps"] == 2
+        assert result["cleaning_stop_reason"] == "no_diff"
+        assert len(result["mcp_call_log"]) == 2  # profile + clean
+        mock_mcp.get_cleaning_plan.assert_not_called()
+
+
+# ─── M7: cleaning loop (TB0.5 v1, ECOSYSTEM_INTEGRATION_PLAN.md 附录 B) ───────
+#
+# connect_and_profile_node's cleaning loop, rewritten in M7. Each test
+# drives the node directly -- twice in a row for the multi-round cases,
+# threading `state` through by hand the way the LangGraph cyclic edge
+# ("clean" -> connect_and_profile_data) would -- against a mocked
+# SubSystemWithFallback, since the loop's convergence logic is entirely
+# about how state flows between rounds.
+
+class TestCleaningLoop:
+    @staticmethod
+    def _mock_mcp(**method_side_effects):
+        from src.mcp_client.fallback import SubSystemWithFallback
+        mock = MagicMock(spec=SubSystemWithFallback)
+        for name, effect in method_side_effects.items():
+            setattr(mock, name, AsyncMock(side_effect=effect))
+        return mock
+
+    @staticmethod
+    def _log(tool):
+        return {"system": "data_cleaner", "tool": tool,
+                "mode": "mcp", "args": {}, "duration_ms": 1.0}
+
+    @staticmethod
+    def _run(state, mock_mcp):
+        import src.graph.nodes as nodes
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=MagicMock(content="Summary."))
+        old_connector = nodes._data_connector
+        old_mcp = nodes._subsystem_client
+        nodes._data_connector = DataConnector(llm=mock_llm)
+        nodes._subsystem_client = mock_mcp
+        try:
+            return asyncio.run(nodes.connect_and_profile_node(state))
+        finally:
+            nodes._data_connector = old_connector
+            nodes._subsystem_client = old_mcp
+
+    def test_cleaned_path_adopted_and_report_refreshed(self, tmp_path):
+        """The confirmed M7 bug: cleaned_path used to never be written back
+        into data_sources/active_source, and data_quality_report stayed
+        frozen at the pre-clean state -- so later rounds kept re-profiling
+        and re-cleaning the *original* dirty file forever. Proves the fix
+        end to end in a single round that converges."""
+        from src.mcp_client.models import (
+            CleaningResult, DataQualityReport, QualityValidation,
+        )
+        from src.state.graph_state import initial_state
+
+        dirty = tmp_path / "dirty.csv"
+        dirty.write_text("a,b\n1,\n2,\n3,\n4,\n5,1\n")
+        cleaned = tmp_path / "cleaned.csv"
+        cleaned.write_text("a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n")
+
+        dirty_report = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=True)
+        clean_result = CleaningResult(cleaned_path=str(cleaned), changes_summary={"total_rounds": 1}, rows_affected=0)
+        clean_report = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=False)
+        validation = QualityValidation(passed=True, score=1.0, issues=[], details={})
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(dirty_report, self._log("profile_dataset")),
+                              (clean_report, self._log("profile_dataset"))],
+            clean_dataset=[(clean_result, self._log("clean_dataset"))],
+            validate_quality=[(validation, self._log("validate_quality"))],
+        )
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
+        result = self._run(state, mock_mcp)
+
+        assert result["data_sources"][0]["path"] == str(cleaned)
+        assert result["active_source"]["path"] == str(cleaned)
+        assert result["data_quality_report"]["has_critical_issues"] is False
+        assert result["cleaning_applied"] is True
+        assert result["cleaning_stop_reason"] == "passed"
+        assert result["iteration_count"] == 1
+
+    def test_iteration_count_zero_when_nothing_to_clean(self, csv_file):
+        """附录 B.5: the counter tracks *completed clean_dataset calls*, not
+        node entries -- must stay 0 when cleaning was never triggered."""
+        from src.mcp_client.models import DataQualityReport
+        from src.state.graph_state import initial_state
+
+        clean_report = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=False)
+        mock_mcp = self._mock_mcp(profile_dataset=[(clean_report, self._log("profile_dataset"))])
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": csv_file}])
+        result = self._run(state, mock_mcp)
+
+        assert result["iteration_count"] == 0
+        assert result["cleaning_applied"] is False
+        assert result.get("cleaning_stop_reason") is None
+
+    def test_no_diff_stop_when_output_byte_identical(self, tmp_path):
+        """附录 B.4 #2: cleaner "succeeding" but pointing right back at the
+        same content must stop the loop rather than spin on a no-op round.
+        Also proves validate_quality/re-profile are skipped in this case --
+        an unconfigured side_effect on either would raise StopIteration."""
+        from src.mcp_client.models import CleaningResult, DataQualityReport
+        from src.state.graph_state import initial_state
+
+        dirty = tmp_path / "dirty.csv"
+        dirty.write_text("a,b\n1,\n2,\n")
+        dirty_report = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
+        clean_result = CleaningResult(cleaned_path=str(dirty), changes_summary={}, rows_affected=0)
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(dirty_report, self._log("profile_dataset"))],
+            clean_dataset=[(clean_result, self._log("clean_dataset"))],
+        )
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
+        result = self._run(state, mock_mcp)
+
+        assert result["cleaning_stop_reason"] == "no_diff"
+        assert result["iteration_count"] == 1
+        mock_mcp.validate_quality.assert_not_awaited()
+
+    def test_cleaning_not_applied_when_output_unreadable(self, tmp_path):
+        """附录 B: cleaning_applied=true only when the output file exists,
+        is readable, and was actually adopted -- a cleaner response
+        pointing at a missing file must not be treated as success."""
+        from src.mcp_client.models import CleaningResult, DataQualityReport
+        from src.state.graph_state import initial_state
+
+        dirty = tmp_path / "dirty.csv"
+        dirty.write_text("a,b\n1,\n2,\n")
+        dirty_report = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
+        missing_output = str(tmp_path / "does_not_exist.csv")
+        clean_result = CleaningResult(cleaned_path=missing_output, changes_summary={}, rows_affected=0)
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(dirty_report, self._log("profile_dataset"))],
+            clean_dataset=[(clean_result, self._log("clean_dataset"))],
+        )
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
+        result = self._run(state, mock_mcp)
+
+        assert result["cleaning_applied"] is False
+        assert result["cleaning_stop_reason"] == "no_diff"
+        assert result["data_sources"][0]["path"] == str(dirty)  # unusable output never adopted
+
+    def test_router_routes_ready_when_stop_reason_set_even_if_still_critical(self):
+        """附录 B.3: a terminal stop_reason must win over has_critical_issues
+        still being true -- "not silently ready" means attaching a caveat,
+        not refusing to proceed to analysis."""
+        from src.graph.router import route_after_profiling
+        from src.state.graph_state import initial_state
+
+        state = initial_state("q")
+        state["data_quality_report"] = {"has_critical_issues": True}
+        state["iteration_count"] = 1
+        state["cleaning_stop_reason"] = "max_rounds"
+        assert route_after_profiling(state) == "ready"
+
+    def test_two_rounds_then_passes(self, tmp_path):
+        """Drives the node twice, threading state through by hand the way
+        the graph's cyclic edge would, proving round 2 correctly picks up
+        round 1's adopted cleaned file rather than re-reading the original."""
+        from src.graph.router import route_after_profiling
+        from src.mcp_client.models import (
+            CleaningResult, DataQualityReport, QualityValidation,
+        )
+        from src.state.graph_state import initial_state
+
+        original = tmp_path / "v0.csv"
+        original.write_text("a,b\n1,\n2,\n3,\n4,\n5,1\n")
+        v1 = tmp_path / "v1.csv"
+        v1.write_text("a,b\n1,0\n2,\n3,\n4,\n5,1\n")
+        v2 = tmp_path / "v2.csv"
+        v2.write_text("a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n")
+
+        still_critical = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=True)
+        now_clean = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=False)
+
+        validation1 = QualityValidation(
+            passed=False, score=0.5, issues=["Missing values"],
+            details={"mean_null_ratio": 0.2, "duplicate_row_ratio": 0.0, "schema_score": 1.0},
+        )
+        validation2 = QualityValidation(passed=True, score=1.0, issues=[], details={})
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[
+                (still_critical, self._log("profile_dataset")),  # round 1 entry
+                (still_critical, self._log("profile_dataset")),  # round 1 re-profile
+                (still_critical, self._log("profile_dataset")),  # round 2 entry (re-reads v1)
+                (now_clean, self._log("profile_dataset")),        # round 2 re-profile
+            ],
+            clean_dataset=[
+                (CleaningResult(cleaned_path=str(v1), changes_summary={"round": 1}, rows_affected=0),
+                 self._log("clean_dataset")),
+                (CleaningResult(cleaned_path=str(v2), changes_summary={"round": 2}, rows_affected=0),
+                 self._log("clean_dataset")),
+            ],
+            validate_quality=[
+                (validation1, self._log("validate_quality")),
+                (validation2, self._log("validate_quality")),
+            ],
+        )
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(original)}])
+        state = self._run(state, mock_mcp)
+        assert state.get("cleaning_stop_reason") is None  # not passed, nothing to compare yet -- keep looping
+        assert state["iteration_count"] == 1
+        assert state["data_sources"][0]["path"] == str(v1)
+        assert route_after_profiling(state) == "clean"
+
+        state = self._run(state, mock_mcp)
+        assert state["cleaning_stop_reason"] == "passed"
+        assert state["iteration_count"] == 2
+        assert state["data_sources"][0]["path"] == str(v2)
+        assert route_after_profiling(state) == "ready"
+
+    def test_no_improvement_stops_when_signature_repeats(self, tmp_path):
+        """附录 B.4 #3: an identical three-dimension verdict two rounds
+        running means the loop is spinning, not converging -- must stop
+        even though has_critical_issues is still true."""
+        from src.mcp_client.models import (
+            CleaningResult, DataQualityReport, QualityValidation,
+        )
+        from src.state.graph_state import initial_state
+
+        v0 = tmp_path / "v0.csv"; v0.write_text("a\n1\n2\n")
+        v1 = tmp_path / "v1.csv"; v1.write_text("a\n1\n3\n")
+        v2 = tmp_path / "v2.csv"; v2.write_text("a\n1\n4\n")
+
+        still_critical = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
+        same_signature = {"mean_null_ratio": 0.2, "duplicate_row_ratio": 0.0, "schema_score": 1.0}
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(still_critical, self._log("profile_dataset"))] * 4,
+            clean_dataset=[
+                (CleaningResult(cleaned_path=str(v1), changes_summary={}, rows_affected=0), self._log("clean_dataset")),
+                (CleaningResult(cleaned_path=str(v2), changes_summary={}, rows_affected=0), self._log("clean_dataset")),
+            ],
+            validate_quality=[
+                (QualityValidation(passed=False, score=0.5, issues=["x"], details=same_signature),
+                 self._log("validate_quality")),
+                (QualityValidation(passed=False, score=0.5, issues=["x"], details=same_signature),
+                 self._log("validate_quality")),
+            ],
+        )
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(v0)}])
+        state = self._run(state, mock_mcp)
+        assert state.get("cleaning_stop_reason") is None
+
+        state = self._run(state, mock_mcp)
+        assert state["cleaning_stop_reason"] == "no_improvement"
+        assert state["iteration_count"] == 2
+
+    def test_regressed_stops_and_flags_for_review(self, tmp_path):
+        """附录 B.4 #4: quality getting worse round-over-round must stop
+        the loop, not just plow ahead hoping the next round helps."""
+        from src.mcp_client.models import (
+            CleaningResult, DataQualityReport, QualityValidation,
+        )
+        from src.state.graph_state import initial_state
+
+        v0 = tmp_path / "v0.csv"; v0.write_text("a\n1\n2\n")
+        v1 = tmp_path / "v1.csv"; v1.write_text("a\n1\n3\n")
+        v2 = tmp_path / "v2.csv"; v2.write_text("a\n1\n4\n")
+
+        still_critical = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(still_critical, self._log("profile_dataset"))] * 4,
+            clean_dataset=[
+                (CleaningResult(cleaned_path=str(v1), changes_summary={}, rows_affected=0), self._log("clean_dataset")),
+                (CleaningResult(cleaned_path=str(v2), changes_summary={}, rows_affected=0), self._log("clean_dataset")),
+            ],
+            validate_quality=[
+                (QualityValidation(passed=False, score=0.6, issues=["x"],
+                                    details={"mean_null_ratio": 0.2, "duplicate_row_ratio": 0.0, "schema_score": 1.0}),
+                 self._log("validate_quality")),
+                # Different signature (schema now flagged too) so
+                # no_improvement doesn't preempt the regression check.
+                (QualityValidation(passed=False, score=0.3, issues=["x", "y"],
+                                    details={"mean_null_ratio": 0.2, "duplicate_row_ratio": 0.0, "schema_score": 0.5}),
+                 self._log("validate_quality")),
+            ],
+        )
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(v0)}])
+        state = self._run(state, mock_mcp)
+        state = self._run(state, mock_mcp)
+
+        assert state["cleaning_stop_reason"] == "regressed"
+        assert "0.6" in state["cleaning_caveat"] and "0.3" in state["cleaning_caveat"]
+
+    def test_max_rounds_reached_after_configured_cap(self, tmp_path):
+        """Regression guard for the pre-M7 off-by-one: iteration_count now
+        means 'completed clean_dataset calls' (附录 B.5), so the loop must
+        run exactly _MAX_CLEAN_ITERATIONS clean rounds, not one fewer."""
+        from src.graph.router import _MAX_CLEAN_ITERATIONS, route_after_profiling
+        from src.mcp_client.models import (
+            CleaningResult, DataQualityReport, QualityValidation,
+        )
+        from src.state.graph_state import initial_state
+
+        files = [tmp_path / f"v{i}.csv" for i in range(_MAX_CLEAN_ITERATIONS + 1)]
+        for i, f in enumerate(files):
+            f.write_text(f"a,b\n1,\n2,{i}\n")
+
+        still_critical = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
+        profile_responses = [(still_critical, self._log("profile_dataset"))
+                              for _ in range(2 * _MAX_CLEAN_ITERATIONS)]
+        clean_responses = [
+            (CleaningResult(cleaned_path=str(files[i + 1]), changes_summary={}, rows_affected=0),
+             self._log("clean_dataset"))
+            for i in range(_MAX_CLEAN_ITERATIONS)
+        ]
+        # Alternate the "duplicate" dimension each round so consecutive
+        # signatures differ (avoids tripping no_improvement); keep score
+        # flat so it never decreases (avoids tripping regressed) --
+        # isolates the max_rounds path specifically.
+        validate_responses = [
+            (QualityValidation(
+                passed=False, score=0.5, issues=["x"],
+                details={"mean_null_ratio": 0.2, "schema_score": 1.0,
+                          "duplicate_row_ratio": 0.06 if i % 2 == 0 else 0.0},
+             ), self._log("validate_quality"))
+            for i in range(_MAX_CLEAN_ITERATIONS)
+        ]
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=profile_responses,
+            clean_dataset=clean_responses,
+            validate_quality=validate_responses,
+        )
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(files[0])}])
+        for _ in range(_MAX_CLEAN_ITERATIONS):
+            state = self._run(state, mock_mcp)
+
+        assert state["iteration_count"] == _MAX_CLEAN_ITERATIONS
+        assert state["cleaning_stop_reason"] == "max_rounds"
+        assert "maximum" in state["cleaning_caveat"]
+        assert route_after_profiling(state) == "ready"
 
 
 # ─── 4.6 Source Registry ─────────────────────────────────────────────────────
