@@ -28,6 +28,7 @@ recoverable/service_reachable alongside the pre-existing mode/error fields.
 """
 from __future__ import annotations
 
+import re
 import time
 from typing import Any, Callable, Optional
 
@@ -63,7 +64,41 @@ logger = get_logger("maeda.mcp.fallback")
 _DATA_INPUT_ERROR_TYPES = {
     "FileNotFoundError", "IsADirectoryError", "PermissionError",
     "UnicodeDecodeError", "EmptyDataError", "ParserError",
+    # TB2 live regression test (feeding cleaner a garbage-bytes .zip path)
+    # confirmed this is what cleaner's Excel-format reader raises for an
+    # unsupported/malformed file -- matrix row "格式不支持". Without it here
+    # this fell into internal_unknown and, in degraded mode, silently
+    # invoked the pandas fallback profiler on the same unreadable file,
+    # which fails identically and returns a fabricated empty-but-successful
+    # DataQualityReport(row_count=0, has_critical_issues=False) -- the exact
+    # G.1-shaped bug M1/M5 fixed for FileNotFoundError, just for a
+    # different exception name cleaner happens to raise.
+    "BadZipFile",
 }
+
+# rag-framework R3 (定案 #13) gives protocol-level tool errors on
+# retrieve/retrieve_with_metadata a stable "<CODE>: <detail>" text prefix
+# (rag/core/errors.py). MCPToolError.error_type is only populated for the
+# migration-era envelope shape (client.py), so a bare protocol-level error
+# from rag arrives with error_type=None and would otherwise default to
+# internal_unknown -- indistinguishable from a real service bug. That
+# matters concretely for INVALID_COLLECTION/INDEX_NOT_FOUND/
+# INDEX_CONFIG_MISMATCH: those are caller-input/config mistakes (a bad
+# collection name, or a query config that doesn't match what the corpus
+# was actually indexed with -- the "假 hybrid" case R2 exists to prevent),
+# not transient service trouble, so degraded mode must not fallback them
+# away silently. EMBEDDING_PROVIDER_UNAVAILABLE/RERANKER_UNAVAILABLE/
+# RETRIEVAL_INTERNAL_ERROR stay internal_unknown (fallback-eligible in
+# degraded, matching "服务内部未知错误").
+_RAG_ERROR_CODE_CLASS = {
+    "INDEX_NOT_FOUND": "data_input",
+    "INDEX_CONFIG_MISMATCH": "data_input",
+    "INVALID_COLLECTION": "data_input",
+    "EMBEDDING_PROVIDER_UNAVAILABLE": "internal_unknown",
+    "RERANKER_UNAVAILABLE": "internal_unknown",
+    "RETRIEVAL_INTERNAL_ERROR": "internal_unknown",
+}
+_RAG_ERROR_CODE_RE = re.compile(r"\b(" + "|".join(_RAG_ERROR_CODE_CLASS) + r")\b:")
 
 
 class SubSystemHardFailure(Exception):
@@ -96,6 +131,10 @@ def _classify(exc: Exception) -> tuple[str, bool, bool]:
     if isinstance(exc, MCPToolError):
         if exc.error_type in _DATA_INPUT_ERROR_TYPES:
             return "data_input", False, True
+        if exc.error_type is None:
+            match = _RAG_ERROR_CODE_RE.search(str(exc))
+            if match:
+                return _RAG_ERROR_CODE_CLASS[match.group(1)], False, True
         return "internal_unknown", False, True
     return "internal_unknown", False, True
 

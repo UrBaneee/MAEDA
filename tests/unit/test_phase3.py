@@ -1102,3 +1102,86 @@ class TestErrorMatrix:
             with pytest.raises(SubSystemHardFailure) as exc_info:
                 asyncio.run(fb.profile_dataset("/data/x.csv"))
             assert exc_info.value.error_class == "contract", f"failed for mode={mode}"
+
+    def test_bad_zip_file_is_data_input_not_internal_unknown(self):
+        """Live TB2 regression: feeding cleaner a garbage-bytes .zip path
+        raises {"error": true, "error_type": "BadZipFile", ...} (confirmed
+        against the real service, not guessed) -- matrix row "格式不支持".
+        Before BadZipFile was added to _DATA_INPUT_ERROR_TYPES this fell
+        into internal_unknown and, in degraded mode, silently invoked the
+        pandas fallback profiler on the same unreadable file, which fails
+        identically and returns a fabricated empty-but-successful report
+        (row_count=0, has_critical_issues=False) -- the G.1-shaped bug,
+        recurring under a different exception name."""
+        from src.config.settings import settings as _settings
+        from src.mcp_client.fallback import SubSystemHardFailure
+
+        for mode in ("strict", "degraded"):
+            _settings.mcp_strict_mode = mode
+            fb = _build_fallback(dc_side_effect=MCPToolError(
+                "profile_dataset reported an internal error: File is not a zip file",
+                error_type="BadZipFile",
+            ))
+            with pytest.raises(SubSystemHardFailure) as exc_info:
+                asyncio.run(fb.profile_dataset("/data/bad.zip"))
+            assert exc_info.value.error_class == "data_input", f"failed for mode={mode}"
+            assert exc_info.value.log["mode"] == "mcp"  # never "fallback"
+
+    def test_rag_invalid_collection_is_data_input_not_internal_unknown(self):
+        """rag-framework R3 gives protocol-level tool errors a stable
+        "<CODE>: <detail>" text prefix (rag/core/errors.py) but
+        MCPToolError.error_type stays None for that shape (only the
+        migration-era envelope populates it) -- so before this
+        classification, INVALID_COLLECTION fell through to
+        internal_unknown and was fallback-eligible in degraded mode,
+        indistinguishable from a real service bug. A bad collection name
+        is a caller mistake, same family as a bad file path, and must
+        hard-fail in both modes like any other data_input error."""
+        from src.config.settings import settings as _settings
+        from src.mcp_client.fallback import SubSystemHardFailure
+
+        for mode in ("strict", "degraded"):
+            _settings.mcp_strict_mode = mode
+            fb = _build_fallback(rag_side_effect=MCPToolError(
+                "MCP tool error: Error executing tool retrieve_with_metadata: "
+                "INVALID_COLLECTION: Collection 'ghost' does not exist. "
+                "Known collections: ['wake_apparel']."
+            ))
+            with pytest.raises(SubSystemHardFailure) as exc_info:
+                asyncio.run(fb.retrieve_knowledge("q"))
+            assert exc_info.value.error_class == "data_input", f"failed for mode={mode}"
+
+    def test_rag_index_config_mismatch_is_data_input(self):
+        """Same family as INVALID_COLLECTION: a query configuration that
+        doesn't match what the corpus was actually indexed with is the
+        "假 hybrid" case R2 exists to prevent -- degraded mode must not
+        silently fallback past it."""
+        from src.config.settings import settings as _settings
+        from src.mcp_client.fallback import SubSystemHardFailure
+
+        for mode in ("strict", "degraded"):
+            _settings.mcp_strict_mode = mode
+            fb = _build_fallback(rag_side_effect=MCPToolError(
+                "MCP tool error: Error executing tool retrieve: "
+                "INDEX_CONFIG_MISMATCH: requested embedding_provider=openai "
+                "but index was built with provider=none."
+            ))
+            with pytest.raises(SubSystemHardFailure) as exc_info:
+                asyncio.run(fb.retrieve_knowledge("q"))
+            assert exc_info.value.error_class == "data_input", f"failed for mode={mode}"
+
+    def test_rag_retrieval_internal_error_stays_internal_unknown(self):
+        """Unlike INVALID_COLLECTION/INDEX_CONFIG_MISMATCH,
+        RETRIEVAL_INTERNAL_ERROR is a real service-side bug, not a caller
+        mistake -- it must keep the internal_unknown classification
+        (fallback-eligible in degraded, matching "服务内部未知错误")."""
+        from src.config.settings import settings as _settings
+
+        _settings.mcp_strict_mode = "degraded"
+        fb = _build_fallback(rag_side_effect=MCPToolError(
+            "MCP tool error: Error executing tool retrieve_with_metadata: "
+            "RETRIEVAL_INTERNAL_ERROR: unexpected failure in query pipeline."
+        ))
+        chunks, log = asyncio.run(fb.retrieve_knowledge("q"))
+        assert log["mode"] == "fallback"
+        assert log["error_class"] == "internal_unknown"
