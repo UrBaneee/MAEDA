@@ -28,6 +28,10 @@ logs/*.log
 logs/maeda.log
 logs/*.db
 
+# Data Cleaner artifact mirror (M8, MAEDA_ARTIFACT_ROOT default) — cleaner's
+# own run output, mirrored under here per run_id; not source, not committed
+artifacts/
+
 # Large / real user-uploaded data — not synthetic demo data, don't publish
 data/uploads/
 

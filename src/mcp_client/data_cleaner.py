@@ -123,12 +123,14 @@ class DataCleanerClient:
     def __init__(self, transport: MCPClient):
         self._transport = transport
 
-    async def profile_dataset(self, path: str, run_id: str = "") -> DataQualityReport:
+    async def profile_dataset(self, path: str, run_id: str = "", artifact_root: str = "") -> DataQualityReport:
         """Profile a dataset and return a DataQualityReport."""
         logger.debug("profile_dataset | path=%s run_id=%s", path, run_id)
         args: dict = {"dataset_path": path}
         if run_id:
             args["run_id"] = run_id
+        if artifact_root:
+            args["artifact_root"] = artifact_root
         raw = await self._transport.call_tool(
             "profile_dataset", args, timeout=15.0, deadline=30.0,
         )
@@ -153,6 +155,7 @@ class DataCleanerClient:
         planner_mode: str = "rule",
         max_rounds: int = 1,
         run_id: str = "",
+        artifact_root: str = "",
     ) -> CleaningResult:
         """Execute cleaning (optionally with a pre-built plan) and return results."""
         logger.debug(
@@ -162,6 +165,8 @@ class DataCleanerClient:
         args: dict = {"dataset_path": path, "planner_mode": planner_mode, "max_rounds": max_rounds}
         if run_id:
             args["run_id"] = run_id
+        if artifact_root:
+            args["artifact_root"] = artifact_root
         if plan is not None:
             # cleaner's real signature is `plan: str = ""` — a JSON string
             # it json.loads()s itself (mcp_app.py::clean_dataset), not a
@@ -180,12 +185,14 @@ class DataCleanerClient:
         _check_planner_mode_not_silently_degraded(result, planner_mode)
         return result
 
-    async def validate_quality(self, path: str, run_id: str = "") -> QualityValidation:
+    async def validate_quality(self, path: str, run_id: str = "", artifact_root: str = "") -> QualityValidation:
         """Validate final data quality after cleaning."""
         logger.debug("validate_quality | path=%s run_id=%s", path, run_id)
         args: dict = {"dataset_path": path}
         if run_id:
             args["run_id"] = run_id
+        if artifact_root:
+            args["artifact_root"] = artifact_root
         raw = await self._transport.call_tool(
             "validate_quality", args, timeout=15.0, deadline=30.0,
         )

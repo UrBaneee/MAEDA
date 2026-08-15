@@ -193,6 +193,15 @@ class CleaningResult:
     # from changes_summary (results) and executed_steps (outcomes). Live
     # since cleaner's C3 (2026-08-15); empty dict if the server predates it.
     execution_plan: dict = field(default_factory=dict)
+    # M8 / 定案 #16: cleaner now self-computes these (C3) from the same
+    # ingested-CSV source for both input and output, so comparing them
+    # directly is an apples-to-apples check MAEDA doesn't have to redo by
+    # hashing the raw (possibly non-CSV) input itself. None if the server
+    # predates C3 — callers must fall back to self-hashing, not assume "no
+    # diff" from an absent field.
+    input_sha256: Optional[str] = None
+    output_sha256: Optional[str] = None
+    output_bytes: Optional[int] = None
 
     @classmethod
     def from_mcp_response(cls, data: dict) -> "CleaningResult":
@@ -209,6 +218,9 @@ class CleaningResult:
             rows_affected=int(data.get("rows_affected", 0)),
             needs_review=bool(data.get("needs_review", False)),
             execution_plan=data.get("execution_plan") or {},
+            input_sha256=data.get("input_sha256"),
+            output_sha256=data.get("output_sha256"),
+            output_bytes=data.get("output_bytes"),
         )
 
 

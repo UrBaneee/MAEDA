@@ -76,6 +76,19 @@ class MAEDASettings(BaseSettings):
     failure (集成计划: "不得静默接受降级"); in degraded mode it's allowed,
     but must still be logged, not swallowed."""
 
+    maeda_artifact_root: str = Field(
+        default="./artifacts/cleaner_runs", alias="MAEDA_ARTIFACT_ROOT"
+    )
+    """M8 / 定案 #16. Root directory MAEDA asks the cleaner to place run_id
+    subdirectories under. Code that sends this MUST resolve it to an
+    absolute path first (`Path(settings.maeda_artifact_root).resolve()`) —
+    sending the relative string as-is would have each process resolve it
+    against its own CWD, which is exactly the F1 class of bug (cleaner
+    returning a path only its own process could interpret) this whole
+    run_id/artifact_root contract exists to prevent. 定案 #11's same-machine
+    shared filesystem assumption is what makes a single resolved path valid
+    for both sides."""
+
     # ── Data Sources ─────────────────────────────────────────────────────────
     default_data_dir: str = Field(default="./data/sample", alias="MAEDA_DEFAULT_DATA_DIR")
 

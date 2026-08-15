@@ -17,7 +17,9 @@ does no I/O and is left as a plain sync function — LangGraph runs sync and
 async nodes together transparently under ainvoke().
 """
 import hashlib
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 from src.config.settings import settings
@@ -127,12 +129,13 @@ def _file_is_readable(path: str) -> bool:
 
 def _sha256_file(path: str) -> Optional[str]:
     """
-    Self-computed content hash for 附录 B.4 stop condition #2 ("no actual
-    change"). cleaner doesn't return input_sha256/output_sha256 yet (C3 not
-    landed — 附录 E.1); 定案 #11's same-machine shared filesystem assumption
-    means MAEDA can hash the files itself in the meantime. None means "could
-    not read the file", which callers must treat as inconclusive, not as
-    proof of "no diff".
+    Self-computed content hash, used for 附录 B.4 stop condition #2 ("no
+    actual change") as a fallback when the server doesn't supply its own
+    hashes. cleaner has returned input_sha256/output_sha256 since its C3
+    (M8); 定案 #11's same-machine shared filesystem assumption is what makes
+    self-hashing valid at all when an older server doesn't. None means
+    "could not read the file", which callers must treat as inconclusive,
+    not as proof of "no diff".
     """
     try:
         h = hashlib.sha256()
@@ -142,6 +145,63 @@ def _sha256_file(path: str) -> Optional[str]:
         return h.hexdigest()
     except OSError:
         return None
+
+
+# ─── Path/hash protection (M8, 定案 #16) ────────────────────────────────────
+
+def _resolved_artifact_root() -> str:
+    """
+    Always resolved to absolute before being sent anywhere (定案 #16):
+    sending the setting's raw (possibly relative) string across processes
+    would have MAEDA and the cleaner each resolve it against their own
+    CWD, silently landing on two different directories — exactly the F1
+    class of bug this whole run_id/artifact_root contract exists to
+    prevent. 定案 #11's same-machine shared filesystem assumption is what
+    makes one resolved path valid for both sides to agree on.
+    """
+    return str(Path(settings.maeda_artifact_root).resolve())
+
+
+def _validate_cleaned_path(
+    cleaned_path: str, effective_path: str, artifact_root: str, run_id: str,
+) -> Optional[str]:
+    """
+    M8: re-validate clean_dataset's output rather than trusting it blindly
+    — absolute, normalized (no ".." segments survive a round-trip through
+    os.path.normpath), inside *this call's own* run_id directory under
+    artifact_root (not just "somewhere under artifact_root" — a stable
+    per-call boundary is what makes concurrent-trial isolation and "which
+    round produced this" auditability hold), genuinely distinct from the
+    input path, readable, and in a supported format (cleaner's pipeline
+    always emits CSV, regardless of input format — 定案 #16).
+
+    Returns None if all checks pass, else a short human-readable reason.
+    Uses os.path.commonpath rather than a plain string prefix check so a
+    sibling directory that merely shares a prefix (e.g. ".../run_1x" vs
+    ".../run_1") can't be mistaken for "inside" the expected run directory.
+    """
+    if not cleaned_path:
+        return "returned an empty cleaned_path"
+    if not os.path.isabs(cleaned_path):
+        return f"cleaned_path {cleaned_path!r} is not an absolute path"
+    if os.path.normpath(cleaned_path) != cleaned_path:
+        return f"cleaned_path {cleaned_path!r} is not a normalized path"
+
+    expected_root = str(Path(artifact_root) / run_id)
+    try:
+        inside_expected_root = os.path.commonpath([cleaned_path, expected_root]) == expected_root
+    except ValueError:
+        inside_expected_root = False  # e.g. different drives on Windows
+    if not inside_expected_root:
+        return f"cleaned_path {cleaned_path!r} is outside this run's artifact directory ({expected_root!r})"
+
+    if cleaned_path == effective_path:
+        return "cleaned_path is identical to the input path (no distinct output produced)"
+    if not _file_is_readable(cleaned_path):
+        return f"output {cleaned_path!r} doesn't exist or isn't readable"
+    if Path(cleaned_path).suffix.lower() != ".csv":
+        return f"output {cleaned_path!r} is not in a supported format (expected .csv)"
+    return None
 
 
 def _cleaning_signature(validation) -> dict:
@@ -234,6 +294,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # found/grouped by directory-name prefix (附录 E.2 P1).
     pipeline_run_id = state.get("run_id", "")
     round_index = state.get("iteration_count", 0)
+    artifact_root = _resolved_artifact_root()
 
     def _round_run_id(label: str, index: int) -> str:
         return f"{pipeline_run_id}_{label}{index}" if pipeline_run_id else ""
@@ -258,7 +319,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # Step 2: Delegate quality profiling to Data Cleaner MCP
     try:
         report, prof_log = await mcp_client.profile_dataset(
-            effective_path, run_id=_round_run_id("profile", round_index),
+            effective_path, run_id=_round_run_id("profile", round_index), artifact_root=artifact_root,
         )
     except SubSystemHardFailure as exc:
         # 错误处理矩阵 (M1): param/contract/data-input errors must not be
@@ -322,11 +383,13 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         # pinned to 1 (定案 #5) — MAEDA's graph loop is the outer round
         # controller, cleaner's own internal multi-round feedback loop
         # would be a second, uncoordinated one if left at its default.
+        clean_run_id = _round_run_id("clean", round_index + 1)
         result, clean_log = await mcp_client.clean_dataset(
             effective_path,
             planner_mode=settings.data_cleaner_planner_mode,
             max_rounds=1,
-            run_id=_round_run_id("clean", round_index + 1),
+            run_id=clean_run_id,
+            artifact_root=artifact_root,
         )
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), clean_log]
     except SubSystemHardFailure as exc:
@@ -367,24 +430,43 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
                       "clean_dataset returned needs_review")
 
     cleaned_path = result.cleaned_path
-    if not cleaned_path or not _file_is_readable(cleaned_path):
-        # cleaner reported success but the output can't actually be used —
+
+    # M8 / 定案 #16: re-validate the output rather than trusting it blindly
+    # — absolute, normalized, inside *this call's own* run_id directory
+    # under artifact_root, distinct from the input, readable, supported
+    # format. Superset of the old "does it exist and can we read it" check.
+    path_validation_error = _validate_cleaned_path(cleaned_path, effective_path, artifact_root, clean_run_id)
+    _trace(
+        state, "data_connector", "clean_dataset_path_validation",
+        f"cleaned_path={cleaned_path!r}, valid={path_validation_error is None}, "
+        f"reason={path_validation_error!r}, input_sha256={result.input_sha256!r}, "
+        f"output_sha256={result.output_sha256!r}, output_bytes={result.output_bytes!r}",
+    )
+    if path_validation_error:
         # 附录 B's "仅当输出文件存在、可读、被接管时才置 cleaning_applied=true"
-        # means this must not be treated as if cleaning happened.
+        # means a failed validation must not be treated as if cleaning happened.
         state["cleaning_stop_reason"] = "no_diff"
         state["cleaning_caveat"] = (
-            f"Data Cleaner reported success but its output ({cleaned_path!r}) "
-            "doesn't exist or isn't readable; proceeding to analysis on the "
-            "pre-cleaning data."
+            f"Data Cleaner's output failed validation ({path_validation_error}); "
+            "proceeding to analysis on the pre-cleaning data."
         )
         return _trace(state, "data_connector", "connect_and_profile",
-                      f"clean_dataset output not usable: {cleaned_path!r}")
+                      f"clean_dataset output failed path validation: {path_validation_error}")
 
-    post_clean_hash = _sha256_file(cleaned_path)
-    no_diff = (
-        pre_clean_hash is not None and post_clean_hash is not None
-        and pre_clean_hash == post_clean_hash
-    )
+    # M8: prefer the server's own content hashes (live since cleaner's C3)
+    # over self-hashing -- both are computed from the same ingested-CSV
+    # source on the server side, so comparing them directly is more correct
+    # than comparing MAEDA's hash of the raw (possibly non-CSV) input
+    # against a hash of the CSV output. Fall back to self-hashing only if
+    # an older server didn't send them.
+    if result.input_sha256 is not None and result.output_sha256 is not None:
+        no_diff = result.input_sha256 == result.output_sha256
+    else:
+        post_clean_hash = _sha256_file(cleaned_path)
+        no_diff = (
+            pre_clean_hash is not None and post_clean_hash is not None
+            and pre_clean_hash == post_clean_hash
+        )
 
     # Adopt the cleaned file — this is the fix for the confirmed bug: later
     # rounds (and downstream analysis) must read the cleaned data, not the
@@ -417,7 +499,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # rest of the run.
     try:
         report2, prof2_log = await mcp_client.profile_dataset(
-            cleaned_path, run_id=_round_run_id("reprofile", state["iteration_count"]),
+            cleaned_path, run_id=_round_run_id("reprofile", state["iteration_count"]), artifact_root=artifact_root,
         )
     except SubSystemHardFailure as exc:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
@@ -441,7 +523,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # wired up in mcp_client but never called from the graph at all.
     try:
         validation, val_log = await mcp_client.validate_quality(
-            cleaned_path, run_id=_round_run_id("validate", state["iteration_count"]),
+            cleaned_path, run_id=_round_run_id("validate", state["iteration_count"]), artifact_root=artifact_root,
         )
     except SubSystemHardFailure as exc:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]

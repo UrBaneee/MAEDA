@@ -382,9 +382,10 @@ class TestMCPQualityDelegation:
         assert result["data_quality_report"]["has_critical_issues"] is False
         assert len(result["mcp_call_log"]) == 1
 
-    def test_critical_issues_triggers_cleaning(self, csv_file):
+    def test_critical_issues_triggers_cleaning(self, csv_file, tmp_path, monkeypatch):
         """When Data Cleaner reports critical issues, cleaning is invoked."""
         import src.graph.nodes as nodes
+        from src.config.settings import settings as _settings
         from src.mcp_client.fallback import SubSystemWithFallback
         from src.mcp_client.models import (
             CleaningResult,
@@ -393,6 +394,10 @@ class TestMCPQualityDelegation:
         )
         from src.state.graph_state import initial_state
 
+        # M8: clean_dataset's output must resolve inside
+        # settings.maeda_artifact_root/<run_id> to pass path validation.
+        monkeypatch.setattr(_settings, "maeda_artifact_root", str(tmp_path))
+
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(return_value=MagicMock(content="Data summary."))
 
@@ -400,13 +405,22 @@ class TestMCPQualityDelegation:
             row_count=5, columns=[], has_critical_issues=True,
             quality_issues=[QualityIssue(code="dup_pk", severity="critical")],
         )
-        # cleaned_path == csv_file (byte-identical) so this round hits the
-        # no_diff stop condition and returns before re-profile/validate_quality
-        # -- keeps this test focused on "cleaning got invoked at all".
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": csv_file}])
+
+        # Byte-identical to csv_file but at a *distinct* path under this
+        # round's expected artifact directory -- exercises the no_diff stop
+        # condition (content unchanged) separately from path validation
+        # (which a same-as-input path would fail on its own terms).
+        clean_dir = tmp_path / f"{state['run_id']}_clean1"
+        clean_dir.mkdir(parents=True, exist_ok=True)
+        cleaned_path = clean_dir / "sales.csv"
+        cleaned_path.write_text(Path(csv_file).read_text())
+
         # Real shape (agentic-data-cleaner-v2 mcp_app.py clean_dataset) is a
         # dict, not a string — see M3.
         clean_result = CleaningResult(
-            cleaned_path=csv_file,
+            cleaned_path=str(cleaned_path),
             changes_summary={"total_rounds": 1, "plan_steps": 2, "needs_review_count": 0},
             rows_affected=2,
         )
@@ -425,7 +439,6 @@ class TestMCPQualityDelegation:
         nodes._subsystem_client = mock_mcp
 
         try:
-            state = initial_state("q", data_sources=[{"type": "csv", "path": csv_file}])
             result = asyncio.run(nodes.connect_and_profile_node(state))
         finally:
             nodes._data_connector = old_connector
@@ -436,6 +449,74 @@ class TestMCPQualityDelegation:
         assert result["cleaning_stop_reason"] == "no_diff"
         assert len(result["mcp_call_log"]) == 2  # profile + clean
         mock_mcp.get_cleaning_plan.assert_not_called()
+
+
+# ─── M8: _validate_cleaned_path (path/hash protection, 定案 #16) ──────────────
+
+class TestValidateClearedPathHelper:
+    """Direct tests of nodes.py::_validate_cleaned_path, isolated from the
+    full node -- each failure mode gets its own case rather than relying on
+    the end-to-end cleaning loop to exercise all of them indirectly."""
+
+    @staticmethod
+    def _setup(tmp_path):
+        from src.graph.nodes import _validate_cleaned_path
+        run_id = "run123"
+        run_dir = tmp_path / run_id
+        run_dir.mkdir()
+        return _validate_cleaned_path, str(tmp_path), run_id, run_dir
+
+    def test_valid_path_passes(self, tmp_path):
+        validate, artifact_root, run_id, run_dir = self._setup(tmp_path)
+        out = run_dir / "cleaned.csv"
+        out.write_text("a,b\n1,2\n")
+        assert validate(str(out), "/some/other/input.csv", artifact_root, run_id) is None
+
+    def test_relative_path_rejected(self, tmp_path):
+        validate, artifact_root, run_id, run_dir = self._setup(tmp_path)
+        reason = validate("relative/cleaned.csv", "/some/input.csv", artifact_root, run_id)
+        assert reason is not None and "absolute" in reason
+
+    def test_non_normalized_path_rejected(self, tmp_path):
+        validate, artifact_root, run_id, run_dir = self._setup(tmp_path)
+        out = run_dir / "cleaned.csv"
+        out.write_text("a,b\n1,2\n")
+        traversal_path = str(run_dir / ".." / run_id / "cleaned.csv")
+        reason = validate(traversal_path, "/some/input.csv", artifact_root, run_id)
+        assert reason is not None and "normalized" in reason
+
+    def test_outside_artifact_root_rejected(self, tmp_path):
+        validate, artifact_root, run_id, run_dir = self._setup(tmp_path)
+        sibling = tmp_path / f"{run_id}_extra" / "cleaned.csv"  # shares a string prefix, not a real subdir
+        sibling.parent.mkdir(parents=True)
+        sibling.write_text("a,b\n1,2\n")
+        reason = validate(str(sibling), "/some/input.csv", artifact_root, run_id)
+        assert reason is not None and "outside" in reason
+
+    def test_identical_to_input_rejected(self, tmp_path):
+        validate, artifact_root, run_id, run_dir = self._setup(tmp_path)
+        out = run_dir / "cleaned.csv"
+        out.write_text("a,b\n1,2\n")
+        reason = validate(str(out), str(out), artifact_root, run_id)
+        assert reason is not None and "identical" in reason
+
+    def test_unreadable_output_rejected(self, tmp_path):
+        validate, artifact_root, run_id, run_dir = self._setup(tmp_path)
+        missing = run_dir / "does_not_exist.csv"
+        reason = validate(str(missing), "/some/input.csv", artifact_root, run_id)
+        assert reason is not None and "readable" in reason
+
+    def test_unsupported_format_rejected(self, tmp_path):
+        validate, artifact_root, run_id, run_dir = self._setup(tmp_path)
+        out = run_dir / "cleaned.parquet"
+        out.write_text("not really parquet but readable")
+        reason = validate(str(out), "/some/input.csv", artifact_root, run_id)
+        assert reason is not None and "format" in reason
+
+    def test_empty_path_rejected(self, tmp_path):
+        validate, artifact_root, run_id, run_dir = self._setup(tmp_path)
+        reason = validate("", "/some/input.csv", artifact_root, run_id)
+        assert reason is not None and "empty" in reason
 
 
 # ─── M7: cleaning loop (TB0.5 v1, ECOSYSTEM_INTEGRATION_PLAN.md 附录 B) ───────
@@ -476,6 +557,26 @@ class TestCleaningLoop:
             nodes._data_connector = old_connector
             nodes._subsystem_client = old_mcp
 
+    @pytest.fixture(autouse=True)
+    def _artifact_root_in_tmp(self, tmp_path, monkeypatch):
+        """M8: clean_dataset's output must resolve inside
+        settings.maeda_artifact_root/<run_id> to pass path validation --
+        point that root at tmp_path so fixture files built under it validate."""
+        from src.config.settings import settings as _settings
+        monkeypatch.setattr(_settings, "maeda_artifact_root", str(tmp_path))
+
+    @staticmethod
+    def _clean_output(tmp_path, pipeline_run_id, round_num, filename, content):
+        """Builds a cleaned-output file at the path M8 validation expects
+        for round `round_num` of a pipeline run -- mirrors nodes.py's
+        `_round_run_id("clean", round_index + 1)` naming. round_num is
+        1-indexed (the first clean call in a run is round 1)."""
+        d = tmp_path / f"{pipeline_run_id}_clean{round_num}"
+        d.mkdir(parents=True, exist_ok=True)
+        p = d / filename
+        p.write_text(content)
+        return str(p)
+
     def test_cleaned_path_adopted_and_report_refreshed(self, tmp_path):
         """The confirmed M7 bug: cleaned_path used to never be written back
         into data_sources/active_source, and data_quality_report stayed
@@ -489,11 +590,14 @@ class TestCleaningLoop:
 
         dirty = tmp_path / "dirty.csv"
         dirty.write_text("a,b\n1,\n2,\n3,\n4,\n5,1\n")
-        cleaned = tmp_path / "cleaned.csv"
-        cleaned.write_text("a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n")
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
+        cleaned = self._clean_output(
+            tmp_path, state["run_id"], 1, "cleaned.csv", "a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n",
+        )
 
         dirty_report = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=True)
-        clean_result = CleaningResult(cleaned_path=str(cleaned), changes_summary={"total_rounds": 1}, rows_affected=0)
+        clean_result = CleaningResult(cleaned_path=cleaned, changes_summary={"total_rounds": 1}, rows_affected=0)
         clean_report = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=False)
         validation = QualityValidation(passed=True, score=1.0, issues=[], details={})
 
@@ -504,11 +608,10 @@ class TestCleaningLoop:
             validate_quality=[(validation, self._log("validate_quality"))],
         )
 
-        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
         result = self._run(state, mock_mcp)
 
-        assert result["data_sources"][0]["path"] == str(cleaned)
-        assert result["active_source"]["path"] == str(cleaned)
+        assert result["data_sources"][0]["path"] == cleaned
+        assert result["active_source"]["path"] == cleaned
         assert result["data_quality_report"]["has_critical_issues"] is False
         assert result["cleaning_applied"] is True
         assert result["cleaning_stop_reason"] == "passed"
@@ -527,12 +630,16 @@ class TestCleaningLoop:
 
         dirty = tmp_path / "dirty.csv"
         dirty.write_text("a,b\n1,\n2,\n3,\n4,\n5,1\n")
-        cleaned = tmp_path / "cleaned.csv"
-        cleaned.write_text("a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n")
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
+        pipeline_run_id = state["run_id"]
+        cleaned = self._clean_output(
+            tmp_path, pipeline_run_id, 1, "cleaned.csv", "a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n",
+        )
 
         dirty_report = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=True)
         clean_result = CleaningResult(
-            cleaned_path=str(cleaned), changes_summary={}, rows_affected=0,
+            cleaned_path=cleaned, changes_summary={}, rows_affected=0,
             execution_plan={
                 "plan_id": "p1", "planner_mode_requested": "rule",
                 "planner_mode_used": "rule", "planner_fallback_reason": None,
@@ -549,8 +656,6 @@ class TestCleaningLoop:
             validate_quality=[(validation, self._log("validate_quality"))],
         )
 
-        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
-        pipeline_run_id = state["run_id"]
         result = self._run(state, mock_mcp)
 
         profile_run_ids = [c.kwargs.get("run_id") for c in mock_mcp.profile_dataset.call_args_list]
@@ -581,6 +686,36 @@ class TestCleaningLoop:
         assert result["iteration_count"] == 0
         assert result["cleaning_applied"] is False
         assert result.get("cleaning_stop_reason") is None
+
+    def test_prefers_server_provided_hashes_over_self_hashing(self, tmp_path):
+        """M8: when the server sends input_sha256/output_sha256 (live since
+        cleaner's C3), those are authoritative -- even if MAEDA's own
+        self-computed hash of the raw input would say otherwise (e.g. the
+        input was Excel and got converted to CSV server-side first, so
+        self-hashing the raw input isn't even measuring the same thing)."""
+        from src.mcp_client.models import CleaningResult, DataQualityReport
+        from src.state.graph_state import initial_state
+
+        dirty = tmp_path / "dirty.csv"
+        dirty.write_text("a,b\n1,\n2,\n")  # self-hash of this will NOT match cleaned's self-hash
+        dirty_report = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(dirty)}])
+        cleaned = self._clean_output(tmp_path, state["run_id"], 1, "cleaned.csv", "a,b\n1,0\n2,0\n")
+        clean_result = CleaningResult(
+            cleaned_path=cleaned, changes_summary={}, rows_affected=0,
+            input_sha256="same_hash", output_sha256="same_hash",  # server says: no diff
+        )
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(dirty_report, self._log("profile_dataset"))],
+            clean_dataset=[(clean_result, self._log("clean_dataset"))],
+        )
+
+        result = self._run(state, mock_mcp)
+
+        assert result["cleaning_stop_reason"] == "no_diff"
+        mock_mcp.validate_quality.assert_not_awaited()
 
     def test_no_diff_stop_when_output_byte_identical(self, tmp_path):
         """附录 B.4 #2: cleaner "succeeding" but pointing right back at the
@@ -657,10 +792,11 @@ class TestCleaningLoop:
 
         original = tmp_path / "v0.csv"
         original.write_text("a,b\n1,\n2,\n3,\n4,\n5,1\n")
-        v1 = tmp_path / "v1.csv"
-        v1.write_text("a,b\n1,0\n2,\n3,\n4,\n5,1\n")
-        v2 = tmp_path / "v2.csv"
-        v2.write_text("a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n")
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(original)}])
+        pipeline_run_id = state["run_id"]
+        v1 = self._clean_output(tmp_path, pipeline_run_id, 1, "v1.csv", "a,b\n1,0\n2,\n3,\n4,\n5,1\n")
+        v2 = self._clean_output(tmp_path, pipeline_run_id, 2, "v2.csv", "a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n")
 
         still_critical = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=True)
         now_clean = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=False)
@@ -679,9 +815,9 @@ class TestCleaningLoop:
                 (now_clean, self._log("profile_dataset")),        # round 2 re-profile
             ],
             clean_dataset=[
-                (CleaningResult(cleaned_path=str(v1), changes_summary={"round": 1}, rows_affected=0),
+                (CleaningResult(cleaned_path=v1, changes_summary={"round": 1}, rows_affected=0),
                  self._log("clean_dataset")),
-                (CleaningResult(cleaned_path=str(v2), changes_summary={"round": 2}, rows_affected=0),
+                (CleaningResult(cleaned_path=v2, changes_summary={"round": 2}, rows_affected=0),
                  self._log("clean_dataset")),
             ],
             validate_quality=[
@@ -690,17 +826,16 @@ class TestCleaningLoop:
             ],
         )
 
-        state = initial_state("q", data_sources=[{"type": "csv", "path": str(original)}])
         state = self._run(state, mock_mcp)
         assert state.get("cleaning_stop_reason") is None  # not passed, nothing to compare yet -- keep looping
         assert state["iteration_count"] == 1
-        assert state["data_sources"][0]["path"] == str(v1)
+        assert state["data_sources"][0]["path"] == v1
         assert route_after_profiling(state) == "clean"
 
         state = self._run(state, mock_mcp)
         assert state["cleaning_stop_reason"] == "passed"
         assert state["iteration_count"] == 2
-        assert state["data_sources"][0]["path"] == str(v2)
+        assert state["data_sources"][0]["path"] == v2
         assert route_after_profiling(state) == "ready"
 
     def test_no_improvement_stops_when_signature_repeats(self, tmp_path):
@@ -713,8 +848,11 @@ class TestCleaningLoop:
         from src.state.graph_state import initial_state
 
         v0 = tmp_path / "v0.csv"; v0.write_text("a\n1\n2\n")
-        v1 = tmp_path / "v1.csv"; v1.write_text("a\n1\n3\n")
-        v2 = tmp_path / "v2.csv"; v2.write_text("a\n1\n4\n")
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(v0)}])
+        pipeline_run_id = state["run_id"]
+        v1 = self._clean_output(tmp_path, pipeline_run_id, 1, "v1.csv", "a\n1\n3\n")
+        v2 = self._clean_output(tmp_path, pipeline_run_id, 2, "v2.csv", "a\n1\n4\n")
 
         still_critical = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
         same_signature = {"mean_null_ratio": 0.2, "duplicate_row_ratio": 0.0, "schema_score": 1.0}
@@ -722,8 +860,8 @@ class TestCleaningLoop:
         mock_mcp = self._mock_mcp(
             profile_dataset=[(still_critical, self._log("profile_dataset"))] * 4,
             clean_dataset=[
-                (CleaningResult(cleaned_path=str(v1), changes_summary={}, rows_affected=0), self._log("clean_dataset")),
-                (CleaningResult(cleaned_path=str(v2), changes_summary={}, rows_affected=0), self._log("clean_dataset")),
+                (CleaningResult(cleaned_path=v1, changes_summary={}, rows_affected=0), self._log("clean_dataset")),
+                (CleaningResult(cleaned_path=v2, changes_summary={}, rows_affected=0), self._log("clean_dataset")),
             ],
             validate_quality=[
                 (QualityValidation(passed=False, score=0.5, issues=["x"], details=same_signature),
@@ -733,7 +871,6 @@ class TestCleaningLoop:
             ],
         )
 
-        state = initial_state("q", data_sources=[{"type": "csv", "path": str(v0)}])
         state = self._run(state, mock_mcp)
         assert state.get("cleaning_stop_reason") is None
 
@@ -750,16 +887,19 @@ class TestCleaningLoop:
         from src.state.graph_state import initial_state
 
         v0 = tmp_path / "v0.csv"; v0.write_text("a\n1\n2\n")
-        v1 = tmp_path / "v1.csv"; v1.write_text("a\n1\n3\n")
-        v2 = tmp_path / "v2.csv"; v2.write_text("a\n1\n4\n")
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(v0)}])
+        pipeline_run_id = state["run_id"]
+        v1 = self._clean_output(tmp_path, pipeline_run_id, 1, "v1.csv", "a\n1\n3\n")
+        v2 = self._clean_output(tmp_path, pipeline_run_id, 2, "v2.csv", "a\n1\n4\n")
 
         still_critical = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
 
         mock_mcp = self._mock_mcp(
             profile_dataset=[(still_critical, self._log("profile_dataset"))] * 4,
             clean_dataset=[
-                (CleaningResult(cleaned_path=str(v1), changes_summary={}, rows_affected=0), self._log("clean_dataset")),
-                (CleaningResult(cleaned_path=str(v2), changes_summary={}, rows_affected=0), self._log("clean_dataset")),
+                (CleaningResult(cleaned_path=v1, changes_summary={}, rows_affected=0), self._log("clean_dataset")),
+                (CleaningResult(cleaned_path=v2, changes_summary={}, rows_affected=0), self._log("clean_dataset")),
             ],
             validate_quality=[
                 (QualityValidation(passed=False, score=0.6, issues=["x"],
@@ -773,7 +913,6 @@ class TestCleaningLoop:
             ],
         )
 
-        state = initial_state("q", data_sources=[{"type": "csv", "path": str(v0)}])
         state = self._run(state, mock_mcp)
         state = self._run(state, mock_mcp)
 
@@ -790,15 +929,23 @@ class TestCleaningLoop:
         )
         from src.state.graph_state import initial_state
 
-        files = [tmp_path / f"v{i}.csv" for i in range(_MAX_CLEAN_ITERATIONS + 1)]
-        for i, f in enumerate(files):
-            f.write_text(f"a,b\n1,\n2,{i}\n")
+        original = tmp_path / "v0.csv"
+        original.write_text("a,b\n1,\n2,0\n")
+
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(original)}])
+        pipeline_run_id = state["run_id"]
+        # cleaned_files[i] is the output of round i+1 (1-indexed, matching
+        # _round_run_id's "clean{round}" naming).
+        cleaned_files = [
+            self._clean_output(tmp_path, pipeline_run_id, i + 1, f"v{i + 1}.csv", f"a,b\n1,\n2,{i + 1}\n")
+            for i in range(_MAX_CLEAN_ITERATIONS)
+        ]
 
         still_critical = DataQualityReport(row_count=2, columns=[], quality_issues=[], has_critical_issues=True)
         profile_responses = [(still_critical, self._log("profile_dataset"))
                               for _ in range(2 * _MAX_CLEAN_ITERATIONS)]
         clean_responses = [
-            (CleaningResult(cleaned_path=str(files[i + 1]), changes_summary={}, rows_affected=0),
+            (CleaningResult(cleaned_path=cleaned_files[i], changes_summary={}, rows_affected=0),
              self._log("clean_dataset"))
             for i in range(_MAX_CLEAN_ITERATIONS)
         ]
@@ -821,7 +968,6 @@ class TestCleaningLoop:
             validate_quality=validate_responses,
         )
 
-        state = initial_state("q", data_sources=[{"type": "csv", "path": str(files[0])}])
         for _ in range(_MAX_CLEAN_ITERATIONS):
             state = self._run(state, mock_mcp)
 
