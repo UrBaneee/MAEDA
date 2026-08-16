@@ -489,9 +489,16 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         return f"{pipeline_run_id}_{label}{index}" if pipeline_run_id else ""
 
     # Step 1: Connect and extract schema + NL summary
+    # E1: parsed_intent is already in state by this point (parse_intent runs
+    # before this node) and gets forwarded so a multi-table SQL source
+    # without an explicit table_name is matched against what the user
+    # actually asked about, instead of DataConnector always picking
+    # whichever table SQLAlchemy's inspector happens to list first.
     schema = None
     try:
-        schema, nl_summary = await connector.connect_with_summary(source)
+        schema, nl_summary = await connector.connect_with_summary(
+            source, intent=state.get("parsed_intent"),
+        )
         state["active_source"] = schema.to_source_dict()
         state["schema_summary"] = nl_summary
         # Merge schema back into the source descriptor in state
@@ -500,6 +507,11 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
             *sources[1:],
         ]
         effective_path = source_path
+        if schema.source_type == "sql":
+            _trace(
+                state, "data_connector", "table_selection",
+                f"resolved table={schema.table_name!r} for {source_path}",
+            )
     except Exception as exc:
         logger.warning("DataConnector failed for %s: %s", source_path, exc)
         # Schema extraction failed — still run MCP profiling on original path

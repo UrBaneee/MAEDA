@@ -186,14 +186,76 @@ def connect_excel(path: str, sheet_name: Optional[str] = None) -> tuple[pd.DataF
     return df, sheet
 
 
+def _intent_terms(intent: Optional[dict]) -> list[str]:
+    """
+    Column-name-shaped mentions pulled out of a ParsedIntent dict
+    (src/agents/intent_parser.py): target_metrics, dimensions,
+    filters[].column, sort_by. Same four sources `_resolve_intent_columns`
+    in src/graph/nodes.py reads for column reconciliation -- reused here to
+    score which SQL table an intent is actually about.
+    """
+    if not intent:
+        return []
+    terms: list[str] = []
+    for m in intent.get("target_metrics") or []:
+        if m:
+            terms.append(m)
+    for m in intent.get("dimensions") or []:
+        if m:
+            terms.append(m)
+    for f in intent.get("filters") or []:
+        col = (f or {}).get("column")
+        if col:
+            terms.append(col)
+    sort_by = intent.get("sort_by")
+    if sort_by:
+        terms.append(sort_by)
+    return terms
+
+
+def _best_matching_table(
+    inspector, tables: list[str], intent: Optional[dict],
+) -> tuple[Optional[str], dict[str, int]]:
+    """
+    Score each candidate table by how many of the intent's column mentions
+    match one of its real column names (case-insensitive). Returns
+    (winner, scores); winner is None when there's no intent signal, no
+    table scores above zero, or two-plus tables tie for the top score --
+    those cases are genuinely ambiguous and the caller should fall back to
+    a documented default rather than silently guessing between
+    equally-plausible tables.
+    """
+    terms = {t.lower() for t in _intent_terms(intent)}
+    if not terms:
+        return None, {}
+    scores = {
+        t: len(terms & {c["name"].lower() for c in inspector.get_columns(t)})
+        for t in tables
+    }
+    best_score = max(scores.values())
+    if best_score == 0:
+        return None, scores
+    winners = [t for t, s in scores.items() if s == best_score]
+    return (winners[0], scores) if len(winners) == 1 else (None, scores)
+
+
 def connect_sql(
     connection_string: str,
     table_name: Optional[str] = None,
     query: Optional[str] = None,
+    intent: Optional[dict] = None,
 ) -> tuple[pd.DataFrame, str]:
     """
     Load data from a SQL database via SQLAlchemy.
-    Auto-detects the first table if neither table_name nor query is given.
+
+    When neither table_name nor query is given and the database has more
+    than one table, picks the table whose columns best overlap with
+    `intent`'s target_metrics/dimensions/filters/sort_by mentions (see
+    `_best_matching_table`) instead of always taking the first table
+    SQLAlchemy's inspector happens to report. Falls back to that first
+    table -- logged, with every candidate's score -- when there's no
+    intent, no table scores above zero, or a tie, since guessing wrong
+    silently is worse than guessing wrong loudly.
     Returns (df, resolved_table_name).
     """
     from sqlalchemy import create_engine, inspect, text
@@ -210,8 +272,21 @@ def connect_sql(
         tables = inspector.get_table_names()
         if not tables:
             raise ValueError(f"No tables found in database: {connection_string}")
-        table_name = tables[0]
-        logger.info("Auto-selected table: %s", table_name)
+        if len(tables) == 1:
+            table_name = tables[0]
+        else:
+            best, scores = _best_matching_table(inspector, tables, intent)
+            if best:
+                table_name = best
+                logger.info("Auto-selected table by intent match: %s (scores=%s)", table_name, scores)
+            else:
+                table_name = tables[0]
+                logger.warning(
+                    "Multiple tables %s and no unique intent match (scores=%s) -- "
+                    "falling back to first table %r. Pass table_name explicitly "
+                    "to avoid this guess.",
+                    tables, scores, table_name,
+                )
 
     with engine.connect() as conn:
         df = pd.read_sql_table(table_name, conn)
@@ -310,10 +385,17 @@ class DataConnector:
     def __init__(self, llm=None):
         self._llm = llm  # injected for testing
 
-    async def connect(self, source: dict) -> SchemaInfo:
+    async def connect(self, source: dict, intent: Optional[dict] = None) -> SchemaInfo:
         """
         Connect to a source, extract schema, return SchemaInfo.
         Does NOT do quality profiling (that's MCP's job).
+
+        `intent` is the pipeline's parsed_intent dict (target_metrics/
+        dimensions/filters/sort_by), forwarded to `connect_sql` so a
+        multi-table SQL source without an explicit table_name can be
+        matched against what the user actually asked about instead of
+        always taking the first table (see `_best_matching_table`).
+        Irrelevant to every other source type.
         """
         source_type = source.get("type", "").lower()
         path = source.get("path", "")
@@ -334,7 +416,7 @@ class DataConnector:
         elif source_type == "sql":
             table = source.get("table_name")
             query = source.get("query")
-            df, table_name = connect_sql(path, table, query)
+            df, table_name = connect_sql(path, table, query, intent=intent)
             schema = extract_schema(df, "sql", path, table_name=table_name)
 
         else:
@@ -346,8 +428,8 @@ class DataConnector:
         )
         return schema
 
-    async def connect_with_summary(self, source: dict) -> tuple[SchemaInfo, str]:
+    async def connect_with_summary(self, source: dict, intent: Optional[dict] = None) -> tuple[SchemaInfo, str]:
         """Connect and generate NL summary. Returns (schema, nl_summary)."""
-        schema = await self.connect(source)
+        schema = await self.connect(source, intent=intent)
         summary = await generate_nl_summary(schema, self._llm)
         return schema, summary

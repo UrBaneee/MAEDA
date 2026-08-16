@@ -216,6 +216,66 @@ class TestSQLConnector:
         assert isinstance(tables["orders"], list)
         assert all(isinstance(c, str) for c in tables["orders"])
 
+    # ── E1: multi-table auto-selection driven by parsed intent ─────────────
+
+    def test_auto_detect_table_no_intent_falls_back_without_raising(self, multi_table_sqlite_db):
+        """No intent -> no signal to disambiguate -> documented fallback, not an error."""
+        _, conn_str = multi_table_sqlite_db
+        df, table_name = connect_sql(conn_str)
+        assert table_name in {"customers", "orders"}
+        assert len(df) > 0
+
+    def test_auto_detect_table_uses_target_metrics(self, multi_table_sqlite_db):
+        """`revenue` only exists on `orders` -- intent should resolve to it, not tables[0]."""
+        _, conn_str = multi_table_sqlite_db
+        intent = {"target_metrics": ["revenue"], "dimensions": [], "filters": []}
+        df, table_name = connect_sql(conn_str, intent=intent)
+        assert table_name == "orders"
+        assert "revenue" in df.columns
+
+    def test_auto_detect_table_uses_dimensions_and_filters(self, multi_table_sqlite_db):
+        """`name` only exists on `customers` -- via dimensions or filters[].column."""
+        _, conn_str = multi_table_sqlite_db
+        intent = {"target_metrics": [], "dimensions": ["name"], "filters": []}
+        df, table_name = connect_sql(conn_str, intent=intent)
+        assert table_name == "customers"
+
+        intent = {"target_metrics": [], "dimensions": [], "filters": [{"column": "name", "op": "=="}]}
+        df, table_name = connect_sql(conn_str, intent=intent)
+        assert table_name == "customers"
+
+    def test_auto_detect_table_tie_falls_back_without_raising(self, multi_table_sqlite_db):
+        """`customer_id` exists on both tables -- tied score, no unique winner to trust."""
+        _, conn_str = multi_table_sqlite_db
+        intent = {"target_metrics": [], "dimensions": [], "filters": [{"column": "customer_id"}]}
+        df, table_name = connect_sql(conn_str, intent=intent)
+        assert table_name in {"customers", "orders"}
+
+    def test_auto_detect_table_intent_matching_neither_table_falls_back(self, multi_table_sqlite_db):
+        _, conn_str = multi_table_sqlite_db
+        intent = {"target_metrics": ["unrelated_metric"], "dimensions": [], "filters": []}
+        df, table_name = connect_sql(conn_str, intent=intent)
+        assert table_name in {"customers", "orders"}
+
+    def test_explicit_table_name_ignores_intent(self, multi_table_sqlite_db):
+        """An explicit table_name always wins -- intent only matters when the caller didn't pick."""
+        _, conn_str = multi_table_sqlite_db
+        intent = {"target_metrics": ["revenue"], "dimensions": [], "filters": []}
+        df, table_name = connect_sql(conn_str, table_name="customers", intent=intent)
+        assert table_name == "customers"
+
+    def test_data_connector_forwards_intent_for_sql_source(self, multi_table_sqlite_db):
+        """The intent parameter threads through DataConnector.connect(), not just connect_sql()."""
+        _, conn_str = multi_table_sqlite_db
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=MagicMock(content="summary"))
+        connector = DataConnector(llm=mock_llm)
+        intent = {"target_metrics": ["revenue"], "dimensions": [], "filters": []}
+        schema, _ = asyncio.run(connector.connect_with_summary(
+            {"type": "sql", "path": conn_str}, intent=intent,
+        ))
+        assert schema.table_name == "orders"
+
 
 # ─── 4.5 JSON / Excel connectors ─────────────────────────────────────────────
 
