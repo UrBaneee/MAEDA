@@ -17,6 +17,7 @@ conforms to the cleaner's actual schema rather than the other way around).
 from __future__ import annotations
 
 import json
+from typing import Optional
 
 from src.config.settings import settings
 from src.mcp_client.client import MCPClient, MCPContractError, MCPToolError
@@ -123,7 +124,9 @@ class DataCleanerClient:
     def __init__(self, transport: MCPClient):
         self._transport = transport
 
-    async def profile_dataset(self, path: str, run_id: str = "", artifact_root: str = "") -> DataQualityReport:
+    async def profile_dataset(
+        self, path: str, run_id: str = "", artifact_root: str = "", intent: Optional[dict] = None,
+    ) -> DataQualityReport:
         """Profile a dataset and return a DataQualityReport."""
         logger.debug("profile_dataset | path=%s run_id=%s", path, run_id)
         args: dict = {"dataset_path": path}
@@ -131,6 +134,8 @@ class DataCleanerClient:
             args["run_id"] = run_id
         if artifact_root:
             args["artifact_root"] = artifact_root
+        if intent is not None:
+            args["intent"] = intent
         raw = await self._transport.call_tool(
             "profile_dataset", args, timeout=15.0, deadline=30.0,
         )
@@ -156,6 +161,7 @@ class DataCleanerClient:
         max_rounds: int = 1,
         run_id: str = "",
         artifact_root: str = "",
+        intent: Optional[dict] = None,
     ) -> CleaningResult:
         """Execute cleaning (optionally with a pre-built plan) and return results."""
         logger.debug(
@@ -167,6 +173,8 @@ class DataCleanerClient:
             args["run_id"] = run_id
         if artifact_root:
             args["artifact_root"] = artifact_root
+        if intent is not None:
+            args["intent"] = intent
         if plan is not None:
             # cleaner's real signature is `plan: str = ""` — a JSON string
             # it json.loads()s itself (mcp_app.py::clean_dataset), not a
@@ -185,7 +193,9 @@ class DataCleanerClient:
         _check_planner_mode_not_silently_degraded(result, planner_mode)
         return result
 
-    async def validate_quality(self, path: str, run_id: str = "", artifact_root: str = "") -> QualityValidation:
+    async def validate_quality(
+        self, path: str, run_id: str = "", artifact_root: str = "", intent: Optional[dict] = None,
+    ) -> QualityValidation:
         """Validate final data quality after cleaning."""
         logger.debug("validate_quality | path=%s run_id=%s", path, run_id)
         args: dict = {"dataset_path": path}
@@ -193,6 +203,8 @@ class DataCleanerClient:
             args["run_id"] = run_id
         if artifact_root:
             args["artifact_root"] = artifact_root
+        if intent is not None:
+            args["intent"] = intent
         raw = await self._transport.call_tool(
             "validate_quality", args, timeout=15.0, deadline=30.0,
         )

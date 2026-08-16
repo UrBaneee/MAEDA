@@ -44,6 +44,32 @@ class MAEDAState(TypedDict):
     # since the cleaner doesn't expose them as a public verdict directly.
     cleaning_last_signature: Optional[dict]
     cleaning_last_score: Optional[float]
+    # 附录 U.7: the last successful clean_dataset call's execution_plan
+    # (plan_id/planner_mode_*/steps[], each step carrying U.5/U.6's
+    # risk_tier/escalated_by/lossy/reversible/rollback_ref/impact/
+    # confidence lineage). Kept in state, not just decision_trace, so the
+    # Insight Agent can read it at report-generation time to build the
+    # structured caveats U.7's disclosure chain requires -- decision_trace
+    # entries are for human/log readability, not meant to be re-parsed.
+    cleaning_execution_plan: Optional[dict]
+    # 附录 U.2/U.7: the intent payload built for (and reused across) this
+    # round's MCP calls -- kept so the Insight Agent can read
+    # column_scope.columns for U.7's caveat "columns" field without
+    # re-deriving it from parsed_intent a second time.
+    cleaning_intent: Optional[dict]
+    # 附录 R.3: derived trial-recording field -- "full" (cleaning ran and
+    # completed a round) / "blocked_needs_review" (a step's risk tier, or
+    # the server, flagged the round for manual review) / "none" (cleaning
+    # never triggered). Set alongside cleaning_stop_reason at each terminal
+    # branch of the cleaning loop so it's already captured whenever D0's
+    # multi-trial support lands and needs it (R.3: "D0 落地时必须已经在记").
+    cleaning_applied_level: Optional[str]
+    # 附录 R.3: derived trial-recording field -- "full" (cleaning ran and
+    # completed a round) / "blocked_needs_review" (a step's risk tier, or
+    # the server, flagged the round for manual review) / "none" (cleaning
+    # never triggered). Set alongside cleaning_stop_reason at each terminal
+    # branch of the cleaning loop so it's already captured whenever D0's
+    # multi-trial support lands and needs it (R.3: "D0 落地时必须已经在记").
 
     # === Analysis ===
     analysis_plan: list[dict]    # [{step, method, rationale}]
@@ -114,6 +140,9 @@ def initial_state(
         cleaning_caveat=None,
         cleaning_last_signature=None,
         cleaning_last_score=None,
+        cleaning_execution_plan=None,
+        cleaning_intent=None,
+        cleaning_applied_level=None,
         analysis_plan=[],
         analysis_results=[],
         intermediate_data=None,

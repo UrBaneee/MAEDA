@@ -42,6 +42,14 @@ class Insight:
     impact: Literal["high", "medium", "low"]
     recommendation: str
     sources: list[str]
+    # 附录 U.7 (TB4, R.2 upgraded this from "建议纳入" to "必须纳入"): forced
+    # disclosure for lossy cleaning operations and blocked high-risk steps
+    # needs a structured place to land, not just a free-text mention buried
+    # in `evidence` — otherwise "强制披露" only ever reaches a log file, not
+    # the user. Deliberately NOT folded into `confidence` (附录 5.2: doing
+    # that would let cleaning caveats silently depress the very numbers 阶段
+    # 4's A/B evaluation reads).
+    caveats: list[dict] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, d: dict) -> "Insight":
@@ -57,6 +65,7 @@ class Insight:
             impact=_score_to_impact(float(d.get("confidence", 0.7))),
             recommendation=d.get("recommendation", ""),
             sources=d.get("sources", []),
+            caveats=d.get("caveats") or [],
         )
 
     def to_dict(self) -> dict:
@@ -198,6 +207,20 @@ class InsightAgent(BaseAgent):
             logger.warning("Insight generation LLM failed: %s — using rule-based fallback", exc)
             insights = _rule_based_insights(successful, rag_chunks, rag_sources)
 
+        # 附录 U.7: attach this run's cleaning disclosure to every insight.
+        # cleaning_execution_plan/cleaning_intent are run-level facts, not
+        # about any one finding, so broadcasting the same list is the
+        # simplest correct reading of a per-Insight field here — a future
+        # non-cleaning caveat source could instead attach to a specific
+        # insight without changing Insight's shape.
+        cleaning_caveats = _build_cleaning_caveats(
+            state.get("cleaning_execution_plan"),
+            (state.get("cleaning_intent") or {}).get("column_scope", {}).get("columns", []),
+        )
+        if cleaning_caveats:
+            for insight in insights:
+                insight.caveats = [*insight.caveats, *cleaning_caveats]
+
         state["insights"] = [i.to_dict() for i in insights]
 
         # 7.5 Report generation
@@ -232,13 +255,29 @@ class InsightAgent(BaseAgent):
         insights_text = json.dumps([i.to_dict() for i in insights], indent=2)
         charts_info = _format_charts_summary(state.get("charts") or [])
         quality_note = _format_quality_note(state.get("data_quality_report") or {})
+        # 附录 U.7/R.2: pulled into its own prompt section (not left only
+        # nested inside each insight's JSON) so "强制披露" reaches the
+        # "## Data Quality Notes" section the report prompt already asks
+        # for, rather than depending on the LLM to notice a nested field.
+        cleaning_caveats = _build_cleaning_caveats(
+            state.get("cleaning_execution_plan"),
+            (state.get("cleaning_intent") or {}).get("column_scope", {}).get("columns", []),
+        )
+        caveats_text = (
+            json.dumps(cleaning_caveats, indent=2) if cleaning_caveats
+            else "None."
+        )
 
         prompt = (
             f"### Insights\n{insights_text}\n\n"
             f"### Charts Generated\n{charts_info}\n\n"
             f"### Data Quality\n{quality_note}\n\n"
+            f"### Cleaning Caveats\n{caveats_text}\n\n"
             f"### Original Query\n{state.get('user_query', '')}\n\n"
-            "Write the full markdown report."
+            "Write the full markdown report. Any \"Cleaning Caveats\" entry "
+            "must be surfaced in the \"## Data Quality Notes\" section — "
+            "these are forced-disclosure items (data was modified, or a "
+            "risky cleaning step was blocked), not optional detail."
         )
 
         try:
@@ -442,6 +481,74 @@ def _format_charts_summary(charts: list[dict]) -> str:
     ) or "Dashboard only."
 
 
+# 附录 U.7's caveat shape doesn't enumerate `code` values (U.11: adding new
+# codes is a non-breaking addition), so this is a MAEDA-side readability
+# choice, not part of the frozen contract — anything not in this map falls
+# back to its raw mcp_tool name.
+_LOSSY_TOOL_CAVEAT_CODES = {
+    "handle_missing": "imputed_values",
+    "deduplicate": "deduplicated_rows",
+    "remove_duplicates": "deduplicated_rows",
+    "handle_outliers": "outliers_adjusted",
+    "coerce_types": "types_coerced",
+}
+
+
+def _build_cleaning_caveats(execution_plan: Optional[dict], column_scope: list[str]) -> list[dict]:
+    """
+    附录 U.7's disclosure chain: cleaner produces lineage (附录 U.5/U.6 —
+    risk_tier/escalated_by/impact on every execution_plan step) -> this
+    reads it -> the caveats it returns get attached to every Insight this
+    run (see `generate()`) -> they reach the report. Skipping this step
+    would leave R.2's "强制披露" sitting only in decision_trace, which is
+    exactly what U.7 exists to prevent.
+
+    Two disjoint sources, mirroring 附录 R.2's split of disclosure from
+    blocking — a step can land in neither (safe tools, or a lossy tool that
+    ran but happened to touch nothing), one, or both:
+      - any step with lossy=True that actually produced impact: forced
+        disclosure regardless of whether it was also escalated (R.2:
+        "披露与分级正交,对所有有损操作强制") — severity "info"
+      - any step with risk_tier == "high_risk": it did not run at all,
+        the round proceeded without it — severity "warning"
+    """
+    if not execution_plan:
+        return []
+    caveats: list[dict] = []
+    for step in execution_plan.get("steps", []):
+        tool = step.get("mcp_tool", "")
+        escalated_by = step.get("escalated_by") or []
+        impact = step.get("impact") or {}
+        # column_scope is round-level, not per-step — "scope_hit" is the
+        # one signal available for which subset of it this step actually
+        # touched (附录 U.5 rule 1); steps that never hit scope get no
+        # column attribution rather than a misleading guess at all of it.
+        cols = list(column_scope) if "scope_hit" in escalated_by else []
+        has_impact = any((impact.get(k) or 0) > 0 for k in ("rows_removed", "rows_modified", "cells_changed"))
+
+        if step.get("lossy") and has_impact:
+            caveats.append({
+                "code": _LOSSY_TOOL_CAVEAT_CODES.get(tool, tool or "cleaning_step"),
+                "severity": "info",
+                "columns": cols,
+                "detail": f"{tool} modified the data: {impact}",
+                "source": "cleaner",
+                "evidence": {"risk_tier": step.get("risk_tier"), **impact},
+            })
+
+        if step.get("risk_tier") == "high_risk":
+            caveats.append({
+                "code": "cleaning_step_blocked",
+                "severity": "warning",
+                "columns": cols,
+                "detail": f"{tool} was not executed (escalated_by={escalated_by})",
+                "source": "cleaner",
+                "evidence": {"escalated_by": escalated_by, "confidence": step.get("confidence")},
+            })
+
+    return caveats
+
+
 def _format_quality_note(report: dict) -> str:
     if not report:
         return "No data quality information available."
@@ -563,6 +670,16 @@ def _rule_based_report(state: MAEDAState, insights: list[Insight]) -> str:
     quality = state.get("data_quality_report") or {}
     if quality:
         lines += ["", "## Data Quality Notes", _format_quality_note(quality)]
+
+    # 附录 U.7/R.2: forced disclosure must reach the report even on the
+    # non-LLM fallback path, not only when the LLM writer is available.
+    cleaning_caveats = _build_cleaning_caveats(
+        state.get("cleaning_execution_plan"),
+        (state.get("cleaning_intent") or {}).get("column_scope", {}).get("columns", []),
+    )
+    for cv in cleaning_caveats:
+        cols = f" ({', '.join(cv['columns'])})" if cv.get("columns") else ""
+        lines.append(f"- [{cv['severity']}] {cv['code']}{cols}: {cv['detail']}")
 
     if state.get("charts"):
         n = len([c for c in state["charts"] if c.get("chart_type") != "dashboard"])

@@ -56,12 +56,15 @@ class MAEDASettings(BaseSettings):
     param/contract/auth/data-input errors, which fail in both modes."""
 
     data_cleaner_quality_contract_version: str = Field(
-        default="1", alias="DATA_CLEANER_QUALITY_CONTRACT_VERSION"
+        default="2", alias="DATA_CLEANER_QUALITY_CONTRACT_VERSION"
     )
-    """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #4b / 附录 B. Expected
+    """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #4b / 附录 B / 附录 U.0. Expected
     quality_contract_version on profile_dataset/validate_quality responses.
     A mismatch is a contract-version error — fails in both strict and
-    degraded, never treated as a transient/fallback-able error."""
+    degraded, never treated as a transient/fallback-able error. "2" is the
+    TB3+TB4 dual-scope contract (附录 U.4); it is defined to be byte-for-byte
+    equivalent to "1" whenever no intent is supplied (附录 U.4.2), so there
+    is no dual-version transition period to support (附录 U.0)."""
 
     data_cleaner_planner_mode: Literal["rule", "llm"] = Field(
         default="llm", alias="DATA_CLEANER_PLANNER_MODE"

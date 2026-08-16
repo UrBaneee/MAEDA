@@ -69,14 +69,14 @@ class TestDataQualityReport:
             "columns": [],
             "quality_issues": ["schema_inconsistency", "type_inconsistency"],
             "has_critical_issues": True,
-            "quality_contract_version": "1",
+            "quality_contract_version": "2",
         }
         report = DataQualityReport.from_mcp_response(raw)
         assert [i.code for i in report.quality_issues] == [
             "schema_inconsistency", "type_inconsistency",
         ]
         assert all(i.source == "cleaner" for i in report.quality_issues)
-        assert report.quality_contract_version == "1"
+        assert report.quality_contract_version == "2"
 
     def test_to_dict_roundtrip(self):
         raw = {
@@ -304,7 +304,7 @@ class TestDataCleanerClient:
                 "columns": [{"name": "col1", "dtype": "str", "null_pct": 0.0,
                               "unique_count": 50, "sample_values": ["a"]}],
                 "quality_issues": [],
-                "quality_contract_version": "1",
+                "quality_contract_version": "2",
             }
         })
         client = DataCleanerClient(transport)
@@ -339,7 +339,7 @@ class TestDataCleanerClient:
 
     def test_validate_quality(self):
         transport = _mock_dc_transport({
-            "validate_quality": {"passed": True, "score": 0.97, "issues": [], "quality_contract_version": "1"}
+            "validate_quality": {"passed": True, "score": 0.97, "issues": [], "quality_contract_version": "2"}
         })
         client = DataCleanerClient(transport)
         validation = asyncio.run(client.validate_quality("/data/test_clean.csv"))
@@ -466,7 +466,7 @@ def _build_fallback(
 class TestSubSystemWithFallback:
     def test_profile_dataset_success(self):
         fb = _build_fallback(dc_responses={
-            "profile_dataset": {"row_count": 500, "columns": [], "quality_issues": [], "quality_contract_version": "1"}
+            "profile_dataset": {"row_count": 500, "columns": [], "quality_issues": [], "quality_contract_version": "2"}
         })
         report, log = asyncio.run(fb.profile_dataset("/data/test.csv"))
         assert report.row_count == 500
@@ -538,7 +538,7 @@ class TestSubSystemWithFallback:
 class TestMCPCallLogging:
     def test_log_has_required_fields(self):
         fb = _build_fallback(dc_responses={
-            "profile_dataset": {"row_count": 10, "columns": [], "quality_issues": [], "quality_contract_version": "1"}
+            "profile_dataset": {"row_count": 10, "columns": [], "quality_issues": [], "quality_contract_version": "2"}
         })
         _, log = asyncio.run(fb.profile_dataset("/data/x.csv"))
         for field in ["system", "tool", "args", "duration_ms", "mode"]:
@@ -546,7 +546,7 @@ class TestMCPCallLogging:
 
     def test_log_records_timing(self):
         fb = _build_fallback(dc_responses={
-            "profile_dataset": {"row_count": 1, "columns": [], "quality_issues": [], "quality_contract_version": "1"}
+            "profile_dataset": {"row_count": 1, "columns": [], "quality_issues": [], "quality_contract_version": "2"}
         })
         _, log = asyncio.run(fb.profile_dataset("/data/x.csv"))
         assert isinstance(log["duration_ms"], float)
@@ -706,7 +706,7 @@ class TestMCPIntegration:
                      "unique_count": 150, "sample_values": [1000.0]}
                 ],
                 "quality_issues": [],
-                "quality_contract_version": "1",
+                "quality_contract_version": "2",
             }
         }
         rag_responses = {
@@ -790,7 +790,7 @@ class TestErrorEnvelopeDetection:
         transport = _mock_dc_transport({
             "profile_dataset": {
                 "row_count": 5, "columns": [], "quality_issues": [],
-                "quality_contract_version": "1",
+                "quality_contract_version": "2",
             }
         })
         client = DataCleanerClient(transport)
@@ -821,7 +821,7 @@ class TestContractVersionCheck:
         transport = _mock_dc_transport({
             "profile_dataset": {
                 "row_count": 5, "columns": [], "quality_issues": [],
-                "quality_contract_version": "2",  # Settings expects "1"
+                "quality_contract_version": "1",  # Settings expects "2" (附录 U.0)
             }
         })
         client = DataCleanerClient(transport)
@@ -875,7 +875,7 @@ class TestFieldPresenceCheck:
         transport = _mock_dc_transport({
             "profile_dataset": {
                 "row_count": 5, "columns": [], "quality_issues": [],
-                "quality_contract_version": "1",
+                "quality_contract_version": "2",
             }
         })
         client = DataCleanerClient(transport)
@@ -889,7 +889,7 @@ class TestFieldPresenceCheck:
         transport = _mock_dc_transport({
             "profile_dataset": {
                 "row_count": 5, "columns": [], "quality_issues": [],
-                "quality_contract_version": "1",
+                "quality_contract_version": "2",
             }
         })
         client = DataCleanerClient(transport)
@@ -902,7 +902,7 @@ class TestFieldPresenceCheck:
 
         _settings.mcp_strict_mode = "strict"
         transport = _mock_dc_transport({
-            "validate_quality": {"score": 1.0, "issues": [], "quality_contract_version": "1"}
+            "validate_quality": {"score": 1.0, "issues": [], "quality_contract_version": "2"}
         })
         client = DataCleanerClient(transport)
         with pytest.raises(MCPContractError):
@@ -913,7 +913,7 @@ class TestFieldPresenceCheck:
 
         _settings.mcp_strict_mode = "degraded"
         transport = _mock_dc_transport({
-            "validate_quality": {"score": 1.0, "issues": [], "quality_contract_version": "1"}
+            "validate_quality": {"score": 1.0, "issues": [], "quality_contract_version": "2"}
         })
         client = DataCleanerClient(transport)
         validation = asyncio.run(client.validate_quality("x.csv"))

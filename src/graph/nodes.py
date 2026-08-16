@@ -17,6 +17,7 @@ does no I/O and is left as a plain sync function — LangGraph runs sync and
 async nodes together transparently under ainvoke().
 """
 import hashlib
+import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -221,6 +222,194 @@ def _cleaning_signature(validation) -> dict:
     }
 
 
+# ─── TB3 intent payload construction (P.1/P.2, 附录 U.1/U.2/U.3) ──────────────
+
+def _scope_fingerprint(columns: list[str]) -> str:
+    """
+    附录 U.3 frozen algorithm — must byte-for-byte match cleaner's
+    `_scope_fingerprint()` (mcp_app.py): sha256 of the sorted column list,
+    first 16 hex chars. Computed independently here (not read back from any
+    single response) so the check below verifies cleaner's *cross-call*
+    consistency for the round, not just "did this one response echo back
+    whatever intent it happened to receive" — see the module-level note on
+    same-round intent consistency where this is used.
+    """
+    payload = json.dumps(sorted(columns), ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def _resolve_intent_columns(
+    parsed_intent: dict, schema_columns: list,
+) -> tuple[list[dict], list[dict], str]:
+    """
+    P.1 (附录 U.2's solution (d)): deterministic column-name reconciliation
+    between the LLM-parsed intent's free-text mentions and the dataset's
+    real schema. Runs after schema extraction, before intent is sent to
+    cleaner — cleaner treats `resolved_columns` as pre-validated and does
+    no second matching pass of its own (附录 U.2).
+
+    Only two match tiers are implemented: `exact` and `case_insensitive`.
+    `glossary_alias` is reserved in the frozen schema but never produced
+    here — 附录 S.2 confirmed the glossary has no content yet (no file, no
+    loader in this repo), so alias matching would always be a dead branch.
+    It activates automatically once 阶段 3's glossary work lands; nothing
+    here needs to change for that.
+
+    Mentions this function knows how to extract from `ParsedIntent`
+    (src/agents/intent_parser.py): `target_metrics` → role "metric",
+    `dimensions`/`sort_by` → role "dimension", `filters[].column` → role
+    "filter". `role` is a MAEDA-side implementation choice (the frozen
+    contract only fixes the four allowed values, not how MAEDA derives
+    them) — a resolved column gets upgraded to role "time" whenever its own
+    schema dtype says datetime, since ParsedIntent has no separate list of
+    "time" mentions to read from.
+
+    This cannot see the failure mode 附录 P.9.1 describes (a column the LLM
+    never mentioned at all, e.g. `discount_amount` when only `revenue` and
+    `quarter` were asked about) — that happens upstream in parse_intent,
+    before any schema exists to reconcile against. What this function does
+    catch is the other half: a mention that *was* extracted but doesn't
+    match any real column, or only matches after normalizing case.
+    """
+    by_exact = {c.name: c for c in schema_columns}
+    by_lower = {c.name.lower(): c for c in schema_columns}
+
+    def _role_for(col, requested_role: str) -> str:
+        return "time" if getattr(col, "is_datetime", False) else requested_role
+
+    def _resolve_one(mention: str, role: str) -> Optional[dict]:
+        col = by_exact.get(mention)
+        if col is not None:
+            return {"name": col.name, "role": _role_for(col, role), "matched_from": mention, "match": "exact"}
+        col = by_lower.get(mention.lower())
+        if col is not None:
+            return {"name": col.name, "role": _role_for(col, role), "matched_from": mention, "match": "case_insensitive"}
+        return None
+
+    mentions: list[tuple[str, str]] = []
+    for m in parsed_intent.get("target_metrics") or []:
+        if m:
+            mentions.append((m, "metric"))
+    for m in parsed_intent.get("dimensions") or []:
+        if m:
+            mentions.append((m, "dimension"))
+    for f in parsed_intent.get("filters") or []:
+        col_name = (f or {}).get("column")
+        if col_name:
+            mentions.append((col_name, "filter"))
+    sort_by = parsed_intent.get("sort_by")
+    if sort_by:
+        mentions.append((sort_by, "dimension"))
+
+    resolved: list[dict] = []
+    unresolved: list[dict] = []
+    seen_names: set[str] = set()
+    for mention, role in mentions:
+        match = _resolve_one(mention, role)
+        if match is None:
+            unresolved.append({"text": mention, "role": role, "reason": "no_match", "candidates": []})
+        elif match["name"] not in seen_names:
+            # Same column mentioned twice under different roles (e.g. both
+            # a metric and the sort_by column) — one resolved_columns entry
+            # is enough; the first role assigned wins.
+            resolved.append(match)
+            seen_names.add(match["name"])
+
+    # 附录 U.4.2: cleaner's own _resolve_scope() treats an empty
+    # column_scope.columns as "absent" regardless of what resolution_status
+    # says, so "absent" here whenever nothing resolved keeps this field
+    # honest about what will actually happen, not just internally consistent.
+    if not resolved:
+        status = "absent"
+    elif unresolved:
+        status = "partial"
+    else:
+        status = "full"
+
+    return resolved, unresolved, status
+
+
+def _build_intent_payload(
+    dataset_path: str, parsed_intent: dict,
+    resolved_columns: list[dict], unresolved_mentions: list[dict], resolution_status: str,
+) -> dict:
+    """
+    P.2 (附录 U.2 frozen schema). `column_scope.profiling`/`mutation` are
+    frozen literal values (附录 U.2/U.9) — not configurable here: `mutation`
+    stays "advisory" until a column-resolution recall benchmark exists to
+    justify "restrict" (附录 P.9.1's dilution-risk argument), which is not
+    this round's work. `glossary` is always empty — 附录 S.2/U.9: no
+    glossary content or loader exists in this repo yet (阶段 3).
+    """
+    columns = [r["name"] for r in resolved_columns]
+    return {
+        "intent_contract_version": "1",
+        "dataset_path": dataset_path,
+        "detected_issues": [],
+        "analysis": {
+            "query_type": parsed_intent.get("query_type", "exploratory"),
+            "resolution_status": resolution_status,
+            "resolved_columns": resolved_columns,
+            "unresolved_mentions": unresolved_mentions,
+        },
+        "column_scope": {
+            "columns": columns,
+            "profiling": "restrict",
+            "mutation": "advisory",
+        },
+        "glossary": [],
+    }
+
+
+def _check_scope_fingerprint(
+    state: MAEDAState, tool: str, expected: str, actual: Optional[str], call_mode: str,
+) -> Optional[str]:
+    """
+    附录 U.3: every call in one cleaning round (含 re-profile — 附录 T.2's
+    correction to R.1, not just "one call per tool name") must be verified
+    against the same expected fingerprint, computed once from the intent
+    this round actually built (see `_scope_fingerprint` above) — not
+    re-derived from whatever `intent` each individual call happened to
+    receive, which would not catch a call that silently got a different (or
+    no) intent by mistake.
+
+    `call_mode` is the mcp_call_log "mode" for this call ("mcp" |
+    "fallback") — a degraded-mode fallback response never went near cleaner
+    and carries no real scope_fingerprint, so there is nothing to check.
+    Returns an error message on mismatch, None otherwise.
+    """
+    if call_mode != "mcp":
+        return None
+    if actual is None:
+        # Server predates TB3+TB4 (v1-only) — nothing to check against.
+        return None
+    if actual != expected:
+        return (
+            f"{tool} scope_fingerprint mismatch this round: expected {expected!r}, got {actual!r} "
+            "(附录 U.3: every call in a cleaning round must be verified against the same intent)"
+        )
+    return None
+
+
+def _cleaning_applied_level(state: MAEDAState) -> str:
+    """
+    附录 R.3: a derived (not separately stored) trial-recording field —
+    "full" (cleaning ran and completed a round), "blocked_needs_review"
+    (cleaning was triggered but a step's risk tier blocked it, or the
+    server flagged the whole round for manual review), or "none" (cleaning
+    never triggered this run). Kept as a pure function of `cleaning_applied`
+    /`cleaning_stop_reason` rather than a third state field so it can never
+    drift out of sync with the two fields it is entirely determined by —
+    call this wherever the value is actually needed (decision trace now;
+    D0's trial records later, per R.3's calibration: "D0 落地时必须已经在记").
+    """
+    if state.get("cleaning_stop_reason") == "needs_review":
+        return "blocked_needs_review"
+    if state.get("cleaning_applied"):
+        return "full"
+    return "none"
+
+
 def _trace(state: MAEDAState, agent_name: str, action: str, reasoning: str) -> MAEDAState:
     """Append a minimal decision trace record (no LLM, no cost)."""
     record = {
@@ -300,6 +489,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         return f"{pipeline_run_id}_{label}{index}" if pipeline_run_id else ""
 
     # Step 1: Connect and extract schema + NL summary
+    schema = None
     try:
         schema, nl_summary = await connector.connect_with_summary(source)
         state["active_source"] = schema.to_source_dict()
@@ -316,10 +506,35 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         state["schema_summary"] = f"Schema unavailable: {exc}"
         effective_path = source_path
 
+    # TB3 (附录 U.1/U.2/P.1): resolve the parsed intent's free-text column
+    # mentions against the real schema (empty list -> resolution_status
+    # "absent" if schema extraction failed above), and build the one intent
+    # payload every MCP call this round will carry. Built once and reused
+    # as the same object for every call below, so 附录 U.3's "same intent
+    # every call" requirement holds by construction, not just convention —
+    # the fingerprint check further down verifies cleaner's honesty about
+    # that intent, not MAEDA's own internal consistency.
+    resolved_columns, unresolved_mentions, resolution_status = _resolve_intent_columns(
+        state.get("parsed_intent") or {}, schema.columns if schema is not None else [],
+    )
+    intent_payload = _build_intent_payload(
+        effective_path, state.get("parsed_intent") or {},
+        resolved_columns, unresolved_mentions, resolution_status,
+    )
+    state["cleaning_intent"] = intent_payload
+    expected_fingerprint = _scope_fingerprint([r["name"] for r in resolved_columns])
+    _trace(
+        state, "data_connector", "intent_column_resolution",
+        f"resolution_status={resolution_status!r}, "
+        f"resolved={[r['name'] for r in resolved_columns]}, "
+        f"unresolved={[u['text'] for u in unresolved_mentions]}",
+    )
+
     # Step 2: Delegate quality profiling to Data Cleaner MCP
     try:
         report, prof_log = await mcp_client.profile_dataset(
             effective_path, run_id=_round_run_id("profile", round_index), artifact_root=artifact_root,
+            intent=intent_payload,
         )
     except SubSystemHardFailure as exc:
         # 错误处理矩阵 (M1): param/contract/data-input errors must not be
@@ -333,12 +548,28 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     state["mcp_call_log"] = [*state.get("mcp_call_log", []), prof_log]
     state["data_quality_report"] = report.to_dict()
 
+    fingerprint_error = _check_scope_fingerprint(
+        state, "profile_dataset", expected_fingerprint, report.scope_fingerprint,
+        prof_log.get("mode", "mcp"),
+    )
+    if fingerprint_error:
+        state["error"] = fingerprint_error
+        state["current_phase"] = "error"
+        return _trace(state, "data_connector", "connect_and_profile", fingerprint_error)
+    if report.critical_basis:
+        _trace(
+            state, "data_connector", "critical_basis",
+            f"profile_dataset: has_critical_issues={report.has_critical_issues}, "
+            f"critical_basis={report.critical_basis}",
+        )
+
     if report.needs_review:  # 附录 B.3 — no cleaner tool emits this today; forward-compat
         state["cleaning_stop_reason"] = "needs_review"
         state["cleaning_caveat"] = (
             "Data Cleaner flagged this dataset for manual review before any "
             "automatic cleaning; proceeding to analysis on the original data."
         )
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
                       "profile_dataset returned needs_review; skipping auto-clean")
 
@@ -349,6 +580,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         # so a stale stop_reason from an earlier round can't linger.
         if state.get("iteration_count", 0) > 0:
             state["cleaning_stop_reason"] = "passed"
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
                       f"Connected to {source_path}; critical_issues=False")
 
@@ -364,6 +596,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
             "rounds without the data passing quality validation; proceeding "
             "to analysis on the best available (partially cleaned) version."
         )
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
                       "max_rounds already reached; not attempting another clean")
 
@@ -390,6 +623,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
             max_rounds=1,
             run_id=clean_run_id,
             artifact_root=artifact_root,
+            intent=intent_payload,
         )
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), clean_log]
     except SubSystemHardFailure as exc:
@@ -398,6 +632,15 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         state["current_phase"] = "error"
         return _trace(state, "data_connector", "connect_and_profile",
                       f"cleaning hard failure: {exc}")
+
+    fingerprint_error = _check_scope_fingerprint(
+        state, "clean_dataset", expected_fingerprint, result.scope_fingerprint,
+        clean_log.get("mode", "mcp"),
+    )
+    if fingerprint_error:
+        state["error"] = fingerprint_error
+        state["current_phase"] = "error"
+        return _trace(state, "data_connector", "connect_and_profile", fingerprint_error)
 
     # 附录 B.5: counts *completed* clean_dataset calls, incremented right
     # after the call returns successfully — not on every node entry (that
@@ -410,7 +653,13 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # C3) as its own decision-trace entry — separate from the round-summary
     # trace below because this is worth recording even on the branches that
     # return early afterward (needs_review, unusable output, no_diff, ...).
+    # U.7: also kept in state (not just the trace string above) so the
+    # Insight Agent can read U.5's lineage (risk_tier/escalated_by/impact
+    # per step) at report-generation time, long after this node has
+    # returned — the trace string is for human/log readability, this is
+    # the structured source of truth the disclosure chain reads from.
     plan = result.execution_plan
+    state["cleaning_execution_plan"] = plan
     _trace(
         state, "data_connector", "clean_dataset_execution_plan",
         f"planner_mode_requested={plan.get('planner_mode_requested')!r}, "
@@ -426,6 +675,14 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
             "stopping automatic cleaning and proceeding with the "
             "pre-cleaning data."
         )
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
+        blocked = [
+            {"step_id": s.get("step_id"), "mcp_tool": s.get("mcp_tool"),
+             "risk_tier": s.get("risk_tier"), "confidence": s.get("confidence")}
+            for s in plan.get("steps", []) if s.get("risk_tier") == "high_risk"
+        ]
+        if blocked:  # 附录 R.3: which step(s) actually triggered the block, not just that one did
+            _trace(state, "data_connector", "cleaning_blocked_steps", f"blocked_steps={blocked}")
         return _trace(state, "data_connector", "connect_and_profile",
                       "clean_dataset returned needs_review")
 
@@ -450,6 +707,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
             f"Data Cleaner's output failed validation ({path_validation_error}); "
             "proceeding to analysis on the pre-cleaning data."
         )
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
                       f"clean_dataset output failed path validation: {path_validation_error}")
 
@@ -491,6 +749,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
             "Data Cleaner ran but produced byte-identical output; stopping "
             "the cleaning loop rather than repeating a no-op round."
         )
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
                       "clean_dataset produced no actual change (hash match)")
 
@@ -500,6 +759,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     try:
         report2, prof2_log = await mcp_client.profile_dataset(
             cleaned_path, run_id=_round_run_id("reprofile", state["iteration_count"]), artifact_root=artifact_root,
+            intent=intent_payload,
         )
     except SubSystemHardFailure as exc:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
@@ -510,12 +770,32 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     state["mcp_call_log"] = [*state.get("mcp_call_log", []), prof2_log]
     state["data_quality_report"] = report2.to_dict()
 
+    # 附录 T.2's correction to R.1: re-profile is the same tool called a
+    # second time this round, and is exactly the call most likely to be
+    # forgotten when this code is next edited — it must be checked too, not
+    # just the three distinctly-named tools.
+    fingerprint_error = _check_scope_fingerprint(
+        state, "profile_dataset(re-profile)", expected_fingerprint, report2.scope_fingerprint,
+        prof2_log.get("mode", "mcp"),
+    )
+    if fingerprint_error:
+        state["error"] = fingerprint_error
+        state["current_phase"] = "error"
+        return _trace(state, "data_connector", "connect_and_profile", fingerprint_error)
+    if report2.critical_basis:
+        _trace(
+            state, "data_connector", "critical_basis",
+            f"re-profile: has_critical_issues={report2.has_critical_issues}, "
+            f"critical_basis={report2.critical_basis}",
+        )
+
     if report2.needs_review:
         state["cleaning_stop_reason"] = "needs_review"
         state["cleaning_caveat"] = (
             "Data Cleaner flagged the cleaned data for manual review; "
             "stopping automatic cleaning."
         )
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
                       "re-profile returned needs_review")
 
@@ -524,6 +804,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     try:
         validation, val_log = await mcp_client.validate_quality(
             cleaned_path, run_id=_round_run_id("validate", state["iteration_count"]), artifact_root=artifact_root,
+            intent=intent_payload,
         )
     except SubSystemHardFailure as exc:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
@@ -533,17 +814,33 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
                       f"validate_quality hard failure: {exc}")
     state["mcp_call_log"] = [*state.get("mcp_call_log", []), val_log]
 
+    fingerprint_error = _check_scope_fingerprint(
+        state, "validate_quality", expected_fingerprint, validation.scope_fingerprint,
+        val_log.get("mode", "mcp"),
+    )
+    if fingerprint_error:
+        state["error"] = fingerprint_error
+        state["current_phase"] = "error"
+        return _trace(state, "data_connector", "connect_and_profile", fingerprint_error)
+    if validation.critical_basis:
+        _trace(
+            state, "data_connector", "critical_basis",
+            f"validate_quality: passed={validation.passed}, critical_basis={validation.critical_basis}",
+        )
+
     if validation.needs_review:
         state["cleaning_stop_reason"] = "needs_review"
         state["cleaning_caveat"] = (
             "Data Cleaner flagged the cleaned data for manual review during "
             "validation; stopping automatic cleaning."
         )
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
                       "validate_quality returned needs_review")
 
     if validation.passed:
         state["cleaning_stop_reason"] = "passed"
+        state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
                       f"validate_quality passed after {state['iteration_count']} round(s)")
 
@@ -581,6 +878,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
 
     state["cleaning_last_signature"] = signature
     state["cleaning_last_score"] = validation.score
+    state["cleaning_applied_level"] = _cleaning_applied_level(state)
 
     return _trace(
         state, "data_connector", "connect_and_profile",

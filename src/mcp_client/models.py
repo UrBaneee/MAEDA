@@ -101,6 +101,13 @@ class DataQualityReport:
     # mcp_app.py) -- forward-compat plumbing so M7's cleaning loop already
     # honors it the moment C4/TB4 adds it, rather than needing another pass.
     needs_review: bool = False
+    # 附录 U.4.3/U.3 (quality_contract_version "2"): which scope(s)/
+    # dimension(s) fired, and a hash of the intent's column_scope.columns
+    # this response was computed against. None when the server predates
+    # TB3+TB4 (v1-only) or when no intent was supplied for this call --
+    # both cases mean "nothing to compare/disclose", not an error.
+    critical_basis: Optional[dict] = None
+    scope_fingerprint: Optional[str] = None
 
     @classmethod
     def from_mcp_response(cls, data: dict) -> "DataQualityReport":
@@ -117,6 +124,8 @@ class DataQualityReport:
             has_critical_issues=bool(data.get("has_critical_issues", False)),
             quality_contract_version=data.get("quality_contract_version"),
             needs_review=bool(data.get("needs_review", False)),
+            critical_basis=data.get("critical_basis"),
+            scope_fingerprint=data.get("scope_fingerprint"),
         )
 
     def to_dict(self) -> dict:
@@ -136,6 +145,8 @@ class DataQualityReport:
             "has_critical_issues": self.has_critical_issues,
             "quality_contract_version": self.quality_contract_version,
             "needs_review": self.needs_review,
+            "critical_basis": self.critical_basis,
+            "scope_fingerprint": self.scope_fingerprint,
         }
 
 
@@ -202,6 +213,11 @@ class CleaningResult:
     input_sha256: Optional[str] = None
     output_sha256: Optional[str] = None
     output_bytes: Optional[int] = None
+    # 附录 U.3: hash of the intent's column_scope.columns this clean_dataset
+    # call was run against — must match the fingerprint from this round's
+    # profile_dataset/validate_quality calls (including re-profile). None
+    # when the server predates TB3+TB4 or no intent was supplied.
+    scope_fingerprint: Optional[str] = None
 
     @classmethod
     def from_mcp_response(cls, data: dict) -> "CleaningResult":
@@ -221,6 +237,7 @@ class CleaningResult:
             input_sha256=data.get("input_sha256"),
             output_sha256=data.get("output_sha256"),
             output_bytes=data.get("output_bytes"),
+            scope_fingerprint=data.get("scope_fingerprint"),
         )
 
 
@@ -240,6 +257,12 @@ class QualityValidation:
     # combined passed/score booleans alone can't make that distinction.
     details: dict = field(default_factory=dict)
     needs_review: bool = False  # 附录 B.3 — not emitted today, see DataQualityReport.needs_review
+    # 附录 U.4.3/U.3 — same shape/meaning as DataQualityReport's fields;
+    # `passed` is the dual-scope complement of `has_critical_issues` on the
+    # current file (附录 U.4.1), critical_basis explains which scope(s)/
+    # dimension(s) still fire.
+    critical_basis: Optional[dict] = None
+    scope_fingerprint: Optional[str] = None
 
     @classmethod
     def from_mcp_response(cls, data: dict) -> "QualityValidation":
@@ -253,6 +276,8 @@ class QualityValidation:
             quality_contract_version=data.get("quality_contract_version"),
             details=data.get("details") or {},
             needs_review=bool(data.get("needs_review", False)),
+            critical_basis=data.get("critical_basis"),
+            scope_fingerprint=data.get("scope_fingerprint"),
         )
 
 
