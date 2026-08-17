@@ -35,16 +35,39 @@ CREATE TABLE IF NOT EXISTS runs (
     decision_trace_json TEXT NOT NULL DEFAULT '[]',
     mcp_call_log_json   TEXT NOT NULL DEFAULT '[]',
     eval_scores_json    TEXT,
+    cleaning_applied_level TEXT,
+    cleaning_stop_reason   TEXT,
     created_at          TEXT NOT NULL DEFAULT (datetime('now'))
 );
 """
 
+# 附录 R.3 / 附录 AO.1 / 附录 AP.2: these two columns didn't exist when this
+# table was first created, and this store is written to a real, already
+# populated `logs/runs.db` in this environment -- `CREATE TABLE IF NOT
+# EXISTS` above is a no-op against an existing table, so it alone would
+# never add them to a pre-existing database. `_migrate_schema` below adds
+# any missing column via `ALTER TABLE ADD COLUMN` (additive only: existing
+# rows get NULL for the new columns, nothing is dropped, rewritten, or
+# recreated). This runs unconditionally on every `init_schema` call, so a
+# brand-new database (already created with these columns by `_SCHEMA`
+# above) just finds nothing missing and no-ops.
+_NEW_COLUMNS = ("cleaning_applied_level", "cleaning_stop_reason")
+
+
+def _migrate_schema(conn: sqlite3.Connection) -> None:
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(runs)").fetchall()}
+    for col in _NEW_COLUMNS:
+        if col not in existing:
+            conn.execute(f"ALTER TABLE runs ADD COLUMN {col} TEXT")
+
 
 def init_schema(db_path: str) -> None:
-    """Create the runs table if it doesn't already exist."""
+    """Create the runs table if it doesn't already exist, and migrate an
+    existing table forward to the current column set (additive only)."""
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db_path) as conn:
         conn.executescript(_SCHEMA)
+        _migrate_schema(conn)
 
 
 class RunStore:
@@ -74,8 +97,8 @@ class RunStore:
                 INSERT OR REPLACE INTO runs
                     (run_id, user_query, current_phase, guardrail_passed,
                      error, error_type, decision_trace_json, mcp_call_log_json,
-                     eval_scores_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     eval_scores_json, cleaning_applied_level, cleaning_stop_reason)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     run_id,
@@ -88,6 +111,14 @@ class RunStore:
                     json.dumps(state.get("mcp_call_log") or [], default=str),
                     json.dumps(state.get("eval_scores"), default=str)
                     if state.get("eval_scores") is not None else None,
+                    # 附录 R.3: diagnostic fields, not derived at read time --
+                    # see nodes.py's _cleaning_applied_level docstring for why
+                    # this value must be captured here rather than recomputed
+                    # from cleaning_stop_reason after the fact (the "full" vs
+                    # "none" distinction also depends on cleaning_applied,
+                    # which isn't persisted separately).
+                    state.get("cleaning_applied_level"),
+                    state.get("cleaning_stop_reason"),
                 ),
             )
         return run_id

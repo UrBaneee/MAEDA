@@ -73,6 +73,24 @@ class EvalResult:
     aggregate_score: float
     timestamp: float = field(default_factory=time.time)
     test_case_id: Optional[str] = None
+    # 附录 R.3 / 附录 AO.1 / 附录 AP.2: diagnostic-only fields carried over
+    # from MAEDAState so a persisted EvalResult can tell whether cleaning
+    # ran, was blocked (needs_review), or never triggered for this run --
+    # without them, that judgment can only be recovered by string-matching
+    # decision_trace, which is exactly the fragile path R.3 was meant to
+    # avoid. Optional and appended at the end (not inserted between
+    # existing fields) so every existing positional-arg call site in this
+    # repo keeps working unchanged, and so that constructing an EvalResult
+    # from an older report dict that lacks these keys (via explicit
+    # keyword args, as scripts/run_eval.py's _print_regressions does) still
+    # works -- they simply default to None. Deliberately NOT folded into
+    # _aggregate_score's weighting (see that function's weights dict): like
+    # safe_refusal, a run being blocked_needs_review is neither good nor
+    # bad on the quality axis this score measures, it just means the run
+    # isn't a like-for-like comparison and D0 needs to know that before
+    # counting it toward pass@k.
+    cleaning_applied_level: Optional[str] = None
+    cleaning_stop_reason: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -82,6 +100,8 @@ class EvalResult:
             "aggregate_score": self.aggregate_score,
             "timestamp": self.timestamp,
             "test_case_id": self.test_case_id,
+            "cleaning_applied_level": self.cleaning_applied_level,
+            "cleaning_stop_reason": self.cleaning_stop_reason,
         }
 
     def score_by_metric(self, metric: str) -> Optional[float]:
@@ -175,6 +195,8 @@ class EvalRunner:
             scores=scores,
             aggregate_score=aggregate,
             test_case_id=test_case.id if test_case else None,
+            cleaning_applied_level=state.get("cleaning_applied_level"),
+            cleaning_stop_reason=state.get("cleaning_stop_reason"),
         )
 
         logger.info(

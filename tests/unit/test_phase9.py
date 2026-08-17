@@ -856,6 +856,37 @@ def test_eval_runner_scores_state():
     assert any(s.metric == "error_rate" for s in result.scores)
 
 
+def test_eval_runner_carries_cleaning_fields_from_state():
+    """附录 R.3 / 附录 AO.1: EvalRunner.score() must read
+    cleaning_applied_level/cleaning_stop_reason off the scored state, not
+    just leave them at their EvalResult default -- otherwise the RunStore
+    persistence added alongside this test has nothing real to persist."""
+    mock_llm = _routing_mock_llm(
+        _mock_relevance_response(0.88, "Good"),
+        _mock_groundedness_response([{"claim": "North=500K", "supported": True, "evidence": "findings"}]),
+    )
+
+    from src.eval.runner import EvalRunner
+    runner = EvalRunner(llm=mock_llm)
+    state = initial_state("Show revenue by region")
+    state["report"] = "# Report\n\n## Findings\nNorth: 500K.\n\n## Rec\n- Keep going."
+    state["analysis_results"] = [
+        {"method": "groupby", "result_summary": "North=500K", "failed": False}
+    ]
+    state["parsed_intent"] = {
+        "query_type": "descriptive", "confidence": 0.9,
+        "target_metrics": ["revenue"], "dimensions": ["region"],
+    }
+    state["rag_context"] = []
+    state["charts"] = []
+    state["cleaning_applied_level"] = "blocked_needs_review"
+    state["cleaning_stop_reason"] = "needs_review"
+
+    result = asyncio.run(runner.score(state))
+    assert result.cleaning_applied_level == "blocked_needs_review"
+    assert result.cleaning_stop_reason == "needs_review"
+
+
 def test_eval_runner_with_test_case():
     mock_llm = _routing_mock_llm(
         _mock_relevance_response(0.9, "Perfect"),
@@ -941,6 +972,76 @@ def test_eval_result_to_dict():
     assert d["run_id"] == "r1"
     assert d["aggregate_score"] == 0.9
     assert len(d["scores"]) == 1
+
+
+# ─── 附录 R.3 / 附录 AO.1 / 附录 AP.2: EvalResult cleaning diagnostics ──────────
+
+def test_eval_result_cleaning_fields_default_to_none():
+    """Constructed the same way every existing call site in this repo
+    constructs an EvalResult (positional run_id/query/scores/aggregate_score,
+    no cleaning kwargs) -- must not break, and the new fields must default
+    to None rather than requiring every caller to be updated."""
+    from src.eval.runner import EvalResult
+    from src.eval.metrics import MetricScore
+    result = EvalResult("r1", "q", [MetricScore("error_rate", 1.0, "pass")], 0.9)
+    assert result.cleaning_applied_level is None
+    assert result.cleaning_stop_reason is None
+    d = result.to_dict()
+    assert d["cleaning_applied_level"] is None
+    assert d["cleaning_stop_reason"] is None
+
+
+def test_eval_result_to_dict_carries_cleaning_fields_when_set():
+    from src.eval.runner import EvalResult
+    from src.eval.metrics import MetricScore
+    result = EvalResult(
+        run_id="r1", query="q",
+        scores=[MetricScore("error_rate", 1.0, "pass")],
+        aggregate_score=0.9,
+        cleaning_applied_level="blocked_needs_review",
+        cleaning_stop_reason="needs_review",
+    )
+    d = result.to_dict()
+    assert d["cleaning_applied_level"] == "blocked_needs_review"
+    assert d["cleaning_stop_reason"] == "needs_review"
+
+
+def test_reconstructing_eval_result_from_a_historical_report_dict_does_not_crash():
+    """Regression test for 附录 AP.2's "reading historical logs/eval_runs/
+    eval_*.json that lack these keys must not crash" requirement.
+
+    Models the exact shape scripts/run_eval.py's `_print_regressions`
+    reconstructs from an on-disk baseline report -- confirmed against a
+    real pre-existing file in this repo (logs/eval_runs/eval_1783351112.json)
+    predating this change: its `cases[].eval_result` dicts have keys
+    run_id/query/scores/aggregate_score/timestamp/test_case_id only, no
+    cleaning_applied_level/cleaning_stop_reason. This dict is inlined
+    (not read from disk) so the test doesn't depend on that file continuing
+    to exist."""
+    from src.eval.runner import EvalResult
+    from src.eval.metrics import MetricScore
+
+    historical_eval_result_dict = {
+        "run_id": "D01", "query": "Show revenue by region",
+        "scores": [{"metric": "error_rate", "score": 1.0, "label": "pass",
+                     "reasoning": "No errors"}],
+        "aggregate_score": 0.9, "timestamp": 1783351112.0, "test_case_id": "D01",
+        # deliberately no cleaning_applied_level / cleaning_stop_reason keys
+    }
+    assert "cleaning_applied_level" not in historical_eval_result_dict
+
+    # This is _print_regressions's own reconstruction pattern (explicit
+    # keyword args, not **dict) -- exercised here directly so this test
+    # fails if that pattern is ever changed to something that would choke
+    # on the missing keys.
+    reconstructed = EvalResult(
+        run_id=historical_eval_result_dict["run_id"],
+        query=historical_eval_result_dict["query"],
+        scores=[MetricScore(**s) for s in historical_eval_result_dict["scores"]],
+        aggregate_score=historical_eval_result_dict["aggregate_score"],
+    )
+    assert reconstructed.cleaning_applied_level is None
+    assert reconstructed.cleaning_stop_reason is None
 
 
 def test_safe_refusal_excluded_from_aggregate_score():

@@ -121,6 +121,98 @@ def test_list_runs_summary_omits_large_json_fields(tmp_path):
     assert "mcp_call_log" not in summary
 
 
+# ─── 附录 R.3 / 附录 AO.1 / 附录 AP.2: cleaning_applied_level / cleaning_stop_reason ──
+
+def test_save_run_persists_cleaning_fields_when_present(tmp_path):
+    from src.persistence.run_store import RunStore
+    store = RunStore(str(tmp_path / "runs.db"))
+    state = _state_with_trace()
+    state["cleaning_applied_level"] = "blocked_needs_review"
+    state["cleaning_stop_reason"] = "needs_review"
+
+    store.save_run(state)
+    fetched = store.get_run(state["run_id"])
+    assert fetched["cleaning_applied_level"] == "blocked_needs_review"
+    assert fetched["cleaning_stop_reason"] == "needs_review"
+
+
+def test_save_run_cleaning_fields_default_to_none_when_absent(tmp_path):
+    """A run that never touched the cleaning loop (e.g. no data source, or
+    guardrail-blocked before connect_and_profile) never sets these past
+    initial_state()'s None default -- must persist as NULL, not crash and
+    not silently coerce to a string like "None"."""
+    from src.persistence.run_store import RunStore
+    store = RunStore(str(tmp_path / "runs.db"))
+    state = _state_with_trace()
+    assert state["cleaning_applied_level"] is None
+    assert state["cleaning_stop_reason"] is None
+
+    store.save_run(state)
+    fetched = store.get_run(state["run_id"])
+    assert fetched["cleaning_applied_level"] is None
+    assert fetched["cleaning_stop_reason"] is None
+
+
+def test_existing_database_without_cleaning_columns_is_migrated_in_place(tmp_path):
+    """Regression test for the migration path (附录 AP.2's "handle the
+    migration path deliberately" requirement): a pre-existing `runs` table
+    created with the OLD schema (no cleaning_* columns -- exactly the shape
+    of a real already-populated logs/runs.db in this environment) must gain
+    the new columns via ALTER TABLE, without losing its existing row, when
+    RunStore is next constructed against it."""
+    import sqlite3
+    db_path = str(tmp_path / "old_runs.db")
+
+    # Build a table in the OLD shape by hand (predates this change) and
+    # insert one pre-existing row, simulating a real production database
+    # that was never touched by the new code.
+    old_schema = """
+    CREATE TABLE runs (
+        run_id              TEXT PRIMARY KEY,
+        user_query          TEXT NOT NULL,
+        current_phase       TEXT,
+        guardrail_passed    INTEGER,
+        error               TEXT,
+        error_type          TEXT,
+        decision_trace_json TEXT NOT NULL DEFAULT '[]',
+        mcp_call_log_json   TEXT NOT NULL DEFAULT '[]',
+        eval_scores_json    TEXT,
+        created_at          TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    """
+    with sqlite3.connect(db_path) as conn:
+        conn.executescript(old_schema)
+        conn.execute(
+            "INSERT INTO runs (run_id, user_query, current_phase, guardrail_passed) "
+            "VALUES ('pre-existing-run', 'old query', 'complete', 1)"
+        )
+
+    from src.persistence.run_store import RunStore
+    store = RunStore(db_path)  # __init__ calls init_schema -> migration runs here
+
+    # The pre-existing row must have survived, untouched except for the new
+    # columns defaulting to NULL.
+    pre_existing = store.get_run("pre-existing-run")
+    assert pre_existing is not None
+    assert pre_existing["user_query"] == "old query"
+    assert pre_existing["cleaning_applied_level"] is None
+    assert pre_existing["cleaning_stop_reason"] is None
+
+    # And the store is now fully usable for new writes that DO set them.
+    state = _state_with_trace("new query after migration")
+    state["cleaning_applied_level"] = "full"
+    state["cleaning_stop_reason"] = "passed"
+    store.save_run(state)
+    fetched = store.get_run(state["run_id"])
+    assert fetched["cleaning_applied_level"] == "full"
+    assert fetched["cleaning_stop_reason"] == "passed"
+
+    # Running init_schema again (e.g. a second RunStore() against the same
+    # already-migrated file) must be a no-op, not an error ("duplicate
+    # column name").
+    RunStore(db_path)
+
+
 def test_run_store_uses_settings_default_path(tmp_path, monkeypatch):
     from src.config.settings import settings
     monkeypatch.setattr(settings, "runs_db_path", str(tmp_path / "settings_default.db"))
