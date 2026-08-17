@@ -11,12 +11,17 @@ Run: python scripts/generate_demo_data.py
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import random
 import sqlite3
+import subprocess
+from datetime import date as _date
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import yaml
 
 SEED = 42
 rng = random.Random(SEED)
@@ -26,9 +31,148 @@ OUT = Path("data/demo")
 OUT.mkdir(parents=True, exist_ok=True)
 
 
+# ─── TB5 event script loading (ECOSYSTEM_INTEGRATION_PLAN.md 附录 X/AG/AI) ────
+#
+# 定案 #10: MAEDA fixes the rag-framework commit/tag rather than trusting
+# whatever's currently checked out there, and recomputes the sha256 against
+# the sidecar manifest before using the content -- a `git show` against the
+# frozen tag, not a plain file read, so a later unrelated commit on that
+# repo's `main` can't silently change what gets rendered here.
+
+_RAG_FRAMEWORK_REPO = Path.home() / "rag-framework"
+_EVENT_SCRIPT_TAG = "event-script-v1"
+_EVENT_SCRIPT_YAML_PATH = "eval/fixtures/event_script/event_script.yaml"
+_EVENT_SCRIPT_MANIFEST_PATH = "eval/fixtures/event_script/event_script.manifest.json"
+
+
+def _git_show(path: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(_RAG_FRAMEWORK_REPO), "show", f"{_EVENT_SCRIPT_TAG}:{path}"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Could not read {path!r} at tag {_EVENT_SCRIPT_TAG!r} from "
+            f"{_RAG_FRAMEWORK_REPO} (定案 #11: same-machine shared filesystem "
+            "assumption) -- is the repo cloned there and has the tag been "
+            f"pushed? git stderr: {result.stderr.strip()}"
+        )
+    return result.stdout
+
+
+def load_frozen_events() -> list[dict]:
+    """Load the 12 TB5 events, pinned to the frozen tag and hash-verified
+    against event_script.manifest.json (附录 X.5 canonicalization, 附录
+    AI.2's recorded sha256) before anything here trusts its content."""
+    yaml_text = _git_show(_EVENT_SCRIPT_YAML_PATH)
+    manifest = json.loads(_git_show(_EVENT_SCRIPT_MANIFEST_PATH))
+    data = yaml.safe_load(yaml_text)
+    canonical = json.dumps(data, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    actual_sha = hashlib.sha256(canonical).hexdigest()
+    if actual_sha != manifest["sha256"]:
+        raise RuntimeError(
+            f"event_script.yaml at tag {_EVENT_SCRIPT_TAG!r} does not match "
+            f"its manifest sha256 (manifest={manifest['sha256']}, "
+            f"recomputed={actual_sha}) -- refusing to render off a script "
+            "whose integrity can't be confirmed."
+        )
+    return data["events"]
+
+
+# 附录 AF.1/AG.2: shape -> time-weight function over the event's window,
+# where frac is the row's position in [valid_from, valid_to] as [0, 1].
+# `ramp`/`spike` both average to 0.5 across the window by construction,
+# matching verify.py's `_SHAPE_MEAN_WEIGHT` exactly -- the detectability gate
+# and this generator must agree on that mean or a render that looks fine
+# here could still fail `verify.py --data-path`.
+_SHAPE_WEIGHT = {
+    "step": lambda frac: 1.0,
+    "ramp": lambda frac: frac,                    # linear 0 -> 1, mean 0.5
+    "spike": lambda frac: 1.0 - abs(2 * frac - 1),  # triangular peak at midpoint, mean 0.5
+}
+
+# AD.2 (non-blocking reminder, resolved here): three events had their
+# `segment` widened to region-only (附录 AC.5/AF) even though
+# `business_description` still names one specific product. Applying the
+# same uplift to every product in the region would read as "the corpus
+# says single-product promo, the data shows the whole region moving in
+# lockstep" -- AD.2's flagged inconsistency. Weighting the named product
+# higher and the rest lower keeps the REGION-LEVEL AVERAGE unchanged
+# (lead*3.0 + other*4*0.5, divided by 5, == 1.0 exactly), so
+# `verify.py --data-path`'s region-level detectability check -- which
+# doesn't know about this per-product split -- sees the same aggregate
+# signal AC.5 verified; only the per-product breakdown differs.
+_LEAD_PRODUCT = {
+    "EVT-2022-11-NORTH-PROMO": "Widget A",
+    "EVT-2022-06-WEST-WIDGETB-LAUNCH": "Widget B",
+    "EVT-2024-05-NORTH-GADGETPRO-EOL": "Gadget Pro",
+}
+_LEAD_PRODUCT_MULT = 3.0
+_OTHER_PRODUCT_MULT = 0.5
+
+
+def _segment_matches(segment: dict, region: str, product: str, channel: str) -> bool:
+    if segment.get("region") not in (None, region):
+        return False
+    if segment.get("product") not in (None, product):
+        return False
+    if segment.get("channel") not in (None, channel):
+        return False
+    return True
+
+
+def _event_multiplier(event: dict, d: _date, region: str, product: str, channel: str) -> float:
+    """Multiplicative effect (1.0 = no effect) this event applies to its
+    `data_signal.metric` on this row, given shape/magnitude/direction and
+    (for the three AD.2 events) whether `product` is the named lead."""
+    signal = event.get("data_signal")
+    if not signal:
+        return 1.0  # distractor / not this row's metric -- caller filters by metric first
+    segment = signal.get("segment") or {}
+    if not _segment_matches(segment, region, product, channel):
+        return 1.0
+    vf = _date.fromisoformat(event["valid_from"])
+    vt = _date.fromisoformat(event["valid_to"])
+    if not (vf <= d <= vt):
+        return 1.0
+    span_days = (vt - vf).days
+    frac = (d - vf).days / span_days if span_days > 0 else 1.0
+    weight = _SHAPE_WEIGHT[signal["shape"]](frac)
+
+    lead_product = _LEAD_PRODUCT.get(event["event_id"])
+    if lead_product is not None:
+        weight *= _LEAD_PRODUCT_MULT if product == lead_product else _OTHER_PRODUCT_MULT
+
+    sign = 1.0 if signal["direction"] == "up" else -1.0
+    return 1.0 + sign * signal["magnitude"] * weight
+
+
 # ─── 12.1 Sales data ──────────────────────────────────────────────────────────
 
-def generate_sales(n: int = 12_000) -> pd.DataFrame:
+# 附录 AC.5's noise coefficient (0.12, down from the original 0.20) holds --
+# but its row count (24,000) turned out too low once actually rendered and
+# checked against verify.py's real gate. AC.5's z-values were computed as if
+# every event applied full-strength across its whole window; verify.py's
+# `_SHAPE_MEAN_WEIGHT` (附录 AG.2/AH) correctly discounts `ramp`/`spike`
+# events to a mean weight of 0.5, which AC.5 never re-applied to the two
+# events that stayed `spike` (EVT-2022-11-NORTH-PROMO,
+# EVT-2022-06-WEST-WIDGETB-LAUNCH) or to the `ramp` events -- three of them
+# came up short (z 2.3-2.8, need >=3.0) against a real render at n=24,000.
+# 48,000 clears all nine with real margin across multiple seeds; see the
+# render/check script this was validated with (not committed -- ad hoc).
+_NOISE_COEFF = 0.12
+
+# AC.4: a fixed per-product implied unit price (± small row-level jitter)
+# replaces the old fully-independent `rng.uniform(20, 80)` divisor, which
+# added noise unrelated to any business signal and made `units`-metric
+# events structurally harder to detect than `revenue`-metric ones.
+_PRODUCT_PRICE = {
+    "Widget A": 45.0, "Widget B": 38.0, "Gadget Pro": 62.0,
+    "Gadget Lite": 30.0, "Service Pack": 55.0,
+}
+
+
+def generate_sales(n: int = 48_000) -> pd.DataFrame:
     regions = ["North", "South", "East", "West", "Central"]
     products = ["Widget A", "Widget B", "Gadget Pro", "Gadget Lite", "Service Pack"]
     channels = ["Direct", "Partner", "Online", "Retail"]
@@ -36,19 +180,47 @@ def generate_sales(n: int = 12_000) -> pd.DataFrame:
     dates = pd.date_range("2022-01-01", "2024-12-31", periods=n)
     region_base = {"North": 500, "South": 380, "East": 420, "West": 460, "Central": 310}
 
+    events = load_frozen_events()
+    # X-V3/AC.3: business signal and quality noise are two independent
+    # paths. Every event here is applied on top of the base
+    # region/seasonal/noise model; the 3%/2%/1% quality-noise injection
+    # below is unrelated and untouched by this loop.
+    revenue_events = [e for e in events if (e.get("data_signal") or {}).get("metric") == "revenue"]
+    units_events = [e for e in events if (e.get("data_signal") or {}).get("metric") == "units"]
+
     rows = []
     for d in dates:
         region = rng.choice(regions)
         product = rng.choice(products)
         channel = rng.choice(channels)
+        d_date = d.date()
         base = region_base[region]
-        # Q4 seasonality boost
-        seasonal = 1.3 if d.month in (10, 11, 12) else 1.0
-        # Q3 2023 dip (for diagnostic demo)
-        if d.year == 2023 and d.month in (7, 8, 9):
-            seasonal *= 0.7
-        revenue = round(max(0, np.random.normal(base * seasonal, base * 0.2)), 2)
-        units = max(1, int(revenue / rng.uniform(20, 80)))
+        # Q4 seasonality boost. 1.15, down from the original 1.3 -- not a
+        # TB5 event, but its old strength stacked with EVT-2022-11-NORTH-
+        # PROMO (North, November, +28% on top of an already-boosted Q4
+        # baseline) to push that event's window mean past the whole-table
+        # IQR ceiling that handle_outliers would clip at (附录 AA.2/AE.1's
+        # predicted noise-coefficient/IQR tension, confirmed on a real
+        # render). Lowering the row-noise coefficient further to compensate
+        # would have tightened that same ceiling instead of loosening it
+        # (AE.1); this lever doesn't, since it's independent of both.
+        seasonal = 1.15 if d.month in (10, 11, 12) else 1.0
+        # X-V1: the old hardcoded "Q3 2023 dip" is gone. It's now
+        # EVT-2023-Q3-GLOBAL-UNEXPLAINED-DIP in the frozen event script
+        # (segment={}, direction=down, magnitude=0.30, shape=step, same
+        # window and magnitude as the multiplier this replaces) and is
+        # applied below through the same machinery as every other event.
+        revenue = max(0.0, np.random.normal(base * seasonal, base * _NOISE_COEFF))
+        for event in revenue_events:
+            revenue *= _event_multiplier(event, d_date, region, product, channel)
+        revenue = round(revenue, 2)
+
+        implied_price = _PRODUCT_PRICE[product] * rng.uniform(0.9, 1.1)
+        units_f = revenue / implied_price
+        for event in units_events:
+            units_f *= _event_multiplier(event, d_date, region, product, channel)
+        units = max(1, round(units_f))
+
         rows.append({
             "date": d.strftime("%Y-%m-%d"),
             "region": region,
@@ -61,7 +233,8 @@ def generate_sales(n: int = 12_000) -> pd.DataFrame:
 
     df = pd.DataFrame(rows)
 
-    # Intentional quality issues for Data Cleaner demo
+    # Intentional quality issues for Data Cleaner demo -- unchanged path,
+    # independent of the business-signal path above (X-V3/AC.3).
     n_rows = len(df)
     # 3% missing revenue
     df.loc[df.sample(frac=0.03, random_state=1).index, "revenue"] = np.nan
