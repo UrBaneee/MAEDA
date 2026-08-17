@@ -30,6 +30,21 @@ very first render and had been sitting in the "matches" bucket the whole
 time -- see the note on `_numbers_match` below for why the *comparison*
 tolerance used by an earlier ad-hoc recompute pass (not this script) let
 that slide.
+
+`--case` narrows WHICH cases get checked/written, not which VALUES do --
+if two cases derive the same quantity from the same data with the same
+formula (e.g. DG09 and C09 both compute CTR via
+`d.mkt.groupby("channel")["ctr"].mean()`), running `--write` on only one
+of them can leave the suite internally inconsistent: the same number
+correct in one case's ground_truth, stale in the other's (附录 BL.4/BM.4,
+2026-08-17 -- this happened for real between `b255b9d` and `9dba0a2`).
+There's no cross-case consistency check for this (would need a maintained
+list of which field names are genuinely the same quantity vs. just share
+a name across unrelated datasets, e.g. `n_rows` means something different
+in every E-series case) -- the mitigation is procedural: prefer a full
+run over `--write` with `--case` when doing real fixture maintenance, and
+if you do use `--case`, check whether any other case shares the same
+underlying derivation before treating the suite as consistent again.
 """
 from __future__ import annotations
 
