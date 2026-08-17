@@ -196,7 +196,7 @@
       "month"
     ],
     "ground_truth": {
-      "march_2024_churned": 104,
+      "march_2024_churned": 103,
       "march_2024_total": 262,
       "march_2024_churn_rate_pct": 39.31
     },
@@ -317,7 +317,7 @@
       "channel"
     ],
     "ground_truth": {
-      "search_conversion_rate_pct": 6.64,
+      "search_conversion_rate_pct": 6.6,
       "display_conversion_rate_pct": 1.2
     },
     "expected_tools": [
@@ -577,7 +577,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "spend_revenue_correlation": 0.3367
+      "spend_revenue_correlation": 0.3408
     },
     "expected_tools": [
       "statistical_test"
@@ -639,7 +639,7 @@
     ],
     "ground_truth": {
       "email_spend": 2030297.0,
-      "email_revenue": 61702592.53,
+      "email_revenue": 61225222.99,
       "search_revenue": 83031585.16
     },
     "tags": [
@@ -670,7 +670,7 @@
     ],
     "ground_truth": {
       "churned_avg_tenure_months": 28.13,
-      "retained_avg_tenure_months": 31.07
+      "retained_avg_tenure_months": 31.1
     },
     "tags": [
       "descriptive"
@@ -699,8 +699,8 @@
       "country"
     ],
     "ground_truth": {
-      "top_order_revenue": 4992.2,
-      "top_order_customer_country": "UK"
+      "top_order_revenue": 4952.1,
+      "top_order_customer_country": "Australia"
     },
     "tags": [
       "descriptive",
@@ -729,8 +729,8 @@
       "login_days_last_30d"
     ],
     "ground_truth": {
-      "churn_rate_0_login_days": 0.23,
-      "churn_rate_10plus_login_days": 0.1527
+      "churn_rate_0_login_days": 0.2266,
+      "churn_rate_10plus_login_days": 0.153
     },
     "tags": [
       "diagnostic"
@@ -856,8 +856,8 @@
       "login_days_last_30d"
     ],
     "ground_truth": {
-      "churn_rate_0_days": 0.23,
-      "churn_rate_10plus_days": 0.1527
+      "churn_rate_0_days": 0.2266,
+      "churn_rate_10plus_days": 0.153
     },
     "tags": [
       "comparative"
@@ -1294,8 +1294,8 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "avg_discount": 0.1003,
-      "orders_with_discount": 8040,
+      "avg_discount": 0.0998,
+      "orders_with_discount": 7981,
       "total_orders": 10000
     },
     "tags": [
@@ -1357,7 +1357,7 @@
       "plan"
     ],
     "ground_truth": {
-      "premium_avg_monthly_charge": 99.1,
+      "premium_avg_monthly_charge": 98.87,
       "basic_avg_monthly_charge": 29.04
     },
     "tags": [
@@ -1445,8 +1445,8 @@
       "channel"
     ],
     "ground_truth": {
-      "search_ctr": 0.0278,
-      "social_ctr": 0.0272
+      "search_ctr": 0.0274,
+      "social_ctr": 0.027
     },
     "tags": [
       "comparative"
@@ -1476,7 +1476,7 @@
     ],
     "ground_truth": {
       "basic_avg_monthly_charge": 29.04,
-      "premium_avg_monthly_charge": 99.1
+      "premium_avg_monthly_charge": 98.87
     },
     "tags": [
       "comparative"
@@ -1535,8 +1535,8 @@
       "joined_date"
     ],
     "ground_truth": {
-      "joined_before_2022": 488,
-      "joined_2022_or_later": 512
+      "joined_before_2022": 487,
+      "joined_2022_or_later": 513
     },
     "tags": [
       "comparative",
@@ -1651,7 +1651,7 @@
       "segment"
     ],
     "ground_truth": {
-      "consumer_pct": 33.6,
+      "consumer_pct": 33.3,
       "corporate_pct": 33.4,
       "home_office_pct": 33.3
     },
@@ -1711,7 +1711,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "spend_clicks_correlation": 0.5227
+      "spend_clicks_correlation": 0.5201
     },
     "tags": [
       "exploratory",
@@ -1816,8 +1816,8 @@
       "channel"
     ],
     "ground_truth": {
-      "email_campaign_count": 429,
-      "search_campaign_count": 371
+      "email_campaign_count": 396,
+      "search_campaign_count": 377
     },
     "tags": [
       "descriptive"
@@ -1845,8 +1845,8 @@
       "product"
     ],
     "ground_truth": {
-      "top_product_by_avg_order_revenue": "Product 11",
-      "top_product_avg_order_revenue": 3010.64
+      "top_product_by_avg_order_revenue": "Product 44",
+      "top_product_avg_order_revenue": 2746.33
     },
     "tags": [
       "descriptive",
@@ -1879,7 +1879,7 @@
     "ground_truth": {
       "premium_plan_customers": 1628,
       "basic_plan_customers": 1680,
-      "standard_plan_customers": 1698
+      "standard_plan_customers": 1692
     },
     "tags": [
       "descriptive"
@@ -1945,7 +1945,7 @@
     ],
     "ground_truth": {
       "churn_rate_0_1_calls": 0.1129,
-      "churn_rate_4plus_calls": 0.3268
+      "churn_rate_4plus_calls": 0.3258
     },
     "tags": [
       "diagnostic"
@@ -2069,8 +2069,8 @@
       "channel"
     ],
     "ground_truth": {
-      "email_campaign_count": 429,
-      "search_campaign_count": 371
+      "email_campaign_count": 396,
+      "search_campaign_count": 377
     },
     "tags": [
       "comparative"
@@ -2274,7 +2274,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "unit_price_margin_correlation": 0.923
+      "unit_price_margin_correlation": 0.9234
     },
     "tags": [
       "exploratory",
@@ -2439,7 +2439,7 @@
       "category"
     ],
     "ground_truth": {
-      "books_avg_discount": 0.1014,
+      "books_avg_discount": 0.1011,
       "furniture_avg_discount": 0.0996
     },
     "tags": [
@@ -2499,9 +2499,9 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "monthly_charges_churn_correlation": -0.085,
+      "monthly_charges_churn_correlation": -0.0851,
       "churned_avg_monthly_charge": 56.36,
-      "retained_avg_monthly_charge": 63.58
+      "retained_avg_monthly_charge": 63.04
     },
     "tags": [
       "diagnostic"
@@ -2685,8 +2685,8 @@
       "category"
     ],
     "ground_truth": {
-      "electronics_avg_discount": 0.1,
-      "clothing_avg_discount": 0.0996
+      "electronics_avg_discount": 0.0987,
+      "clothing_avg_discount": 0.1004
     },
     "tags": [
       "comparative",
@@ -2718,7 +2718,7 @@
     ],
     "ground_truth": {
       "churned_avg_monthly_charge": 56.36,
-      "retained_avg_monthly_charge": 63.58
+      "retained_avg_monthly_charge": 63.04
     },
     "tags": [
       "comparative"

@@ -379,18 +379,41 @@ def _d08(d: _Data) -> dict:
 
 @register("D09")
 def _d09(d: _Data) -> dict:
-    # There is a genuine 2-way tie for max revenue (order_id 6553 and 5810,
-    # both $4992.20, both from UK customers) -- which row idxmax() returns
-    # depends on merge/row order, not a real answer. top_order_id was
-    # dropped from ground_truth for exactly this reason (found via
-    # scripts/compute_ground_truth.py's --check on 2026-08-01); revenue and
-    # country are both stable regardless of which tied row is picked.
+    # There is a genuine tie for max single-order revenue -- which row
+    # idxmax() returns depends on merge/row order, not a real answer.
+    # top_order_id was dropped from ground_truth for exactly this reason
+    # (found via scripts/compute_ground_truth.py's --check on 2026-08-01).
+    # revenue is stable regardless of which tied row is picked; country
+    # isn't, whenever the tied rows span more than one country. Against
+    # the current data/demo/* (unchanged since 附录 BJ's b247b22 -- this
+    # tie was just never surfaced until BM ran the fixture recompute all
+    # the way through), that's exactly the case: Germany x2, Australia x1,
+    # all at $4952.10 -- the earlier UK-only tie this comment used to
+    # describe no longer exists.
+    #
+    # Tie-break rule below is a USER DECISION (附录 BM, 2026-08-17), not an
+    # owner or lead judgment call: when the tied orders span more than one
+    # country, the winner is whichever of those countries has the higher
+    # TOTAL order revenue across the *entire* dataset (not just the tied
+    # rows) -- i.e. "which country's customers spend the most overall",
+    # not an arbitrary pick among equal single-order amounts. This keeps
+    # the fixture a single deterministic answer and won't throw again if a
+    # future re-render produces a different multi-country tie; the only
+    # way this can still raise is a tie in that total-revenue tiebreak
+    # itself, in which case alphabetical order is the last-resort,
+    # deterministic (not user-specified) fallback, so this never blocks a
+    # `--write` run on data that produces yet another shape of tie.
     oc = d.orders_x_customers
     top_revenue = oc["revenue"].max()
     top_rows = oc[oc["revenue"] == top_revenue]
     countries = set(top_rows["country"])
-    assert len(countries) == 1, f"tied top orders disagree on country: {countries}"
-    return {"top_order_revenue": round(float(top_revenue), 2), "top_order_customer_country": countries.pop()}
+    if len(countries) == 1:
+        winner = countries.pop()
+    else:
+        totals = oc[oc["country"].isin(countries)].groupby("country")["revenue"].sum()
+        max_total = totals.max()
+        winner = sorted(totals[totals == max_total].index)[0]  # alphabetical, only if totals also tie
+    return {"top_order_revenue": round(float(top_revenue), 2), "top_order_customer_country": winner}
 
 
 def _login_bucket_churn(d: _Data) -> pd.Series:
