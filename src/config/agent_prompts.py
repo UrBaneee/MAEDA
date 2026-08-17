@@ -430,6 +430,15 @@ in the same findings.
 If the report makes no checkable claims at all (e.g. it only restates the
 question, or gives no specifics), return an empty claims list.
 
+Keep every "claim" and "evidence" string terse — a short phrase or the
+specific number/entity being checked, not a full sentence restating the
+report. Extract EVERY checkable claim regardless of how many that is; do
+not skip claims to save space. This response must fit in a fixed token
+budget, and a report with many claims routinely gets cut off mid-JSON
+when claim/evidence strings run long — losing coverage of a claim you
+decided not to extract is worse than a slightly less readable evidence
+string for one you did.
+
 Return JSON only:
 {
   "claims": [

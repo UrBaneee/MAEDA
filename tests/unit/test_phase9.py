@@ -710,6 +710,38 @@ def test_groundedness_prompt_requires_checking_superlative_claims_against_other_
     assert "other" in prompt_lower  # must reference checking OTHER values, not just the cited one
 
 
+def test_groundedness_prompt_asks_for_terse_claims_not_fewer_claims():
+    """附录 AZ/BB Fix 2: the response-length lever pulled here is "cost per
+    claim", not "how many claims to bother extracting" -- cutting claim
+    coverage to fit a token budget would make the groundedness check less
+    thorough, which is a worse trade than a less narratively-worded
+    evidence field. Content regression guard (same rationale as the
+    superlative-check test above) -- makes sure this instruction can't be
+    silently reverted or replaced with a claim-count cap instead."""
+    from src.config.agent_prompts import EVAL_GROUNDEDNESS_SYSTEM
+    prompt_lower = EVAL_GROUNDEDNESS_SYSTEM.lower()
+    assert "terse" in prompt_lower
+    assert "every checkable claim" in prompt_lower or "do not skip claims" in prompt_lower
+
+
+def test_score_groundedness_requests_2048_max_tokens():
+    """附录 AZ/BB: 1024 (eval v2 Step 2c's original fix for this exact
+    truncation) still wasn't enough against real reports in 附录 AZ's real
+    D0 run (9/9 groundedness calls failed to parse). Locks in the raised
+    ceiling as a real, checkable behavior instead of only living in a
+    comment -- this is the one piece of Fix 2 provable without a real
+    judge call."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=MagicMock(
+        content=json.dumps({"claims": [], "reasoning": "no claims"}),
+    ))
+
+    from src.eval.metrics import score_groundedness
+    with patch("src.eval.metrics._build_eval_llm", return_value=mock_llm) as mock_build:
+        asyncio.run(score_groundedness("q", "report", [], []))  # no llm= -- forces _build_eval_llm
+    mock_build.assert_called_once_with(max_tokens=2048)
+
+
 def test_score_groundedness_fallback_on_llm_error():
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("LLM down"))
@@ -1309,3 +1341,61 @@ def test_parse_json_raises_on_garbage():
     from src.eval.metrics import _parse_json
     with pytest.raises(ValueError):
         _parse_json("not json at all")
+
+
+# ─── 附录 AZ/BB: _parse_json's improved parse-failure diagnostic ───────────────
+#
+# 附录 AZ.3 diagnosed a real 9/9 groundedness failure from a persisted
+# report, but explicitly flagged that the old error message (`text[:200]`)
+# didn't preserve enough to be certain it was max_tokens truncation and not
+# some other malformed-JSON cause. These tests lock in what the improved
+# message must actually contain to close that gap next time, not just that
+# *some* longer string gets raised.
+
+def test_parse_json_truncated_error_preserves_the_tail():
+    """The tail is the single most diagnostic slice of a truncated
+    response (mid-string, mid-key, no closing braces) -- a head-only
+    excerpt, however long, can never show it. Build a response long enough
+    that the old 200-char head-only excerpt would have cut it off well
+    before this distinctive tail."""
+    from src.eval.metrics import _parse_json
+    filler = ", ".join(f'"claim_{i}": "padding text here"' for i in range(30))
+    truncated = '{"claims": [{' + filler + ', "evidence": "cut off mid-eviden'
+    assert len(truncated) > 200  # otherwise this test doesn't prove anything
+    with pytest.raises(ValueError) as exc_info:
+        _parse_json(truncated)
+    msg = str(exc_info.value)
+    assert "cut off mid-eviden" in msg, (
+        "the distinctive tail must survive into the error message -- "
+        "this is exactly what a 200-char head-only excerpt would have lost"
+    )
+
+
+def test_parse_json_error_reports_total_length():
+    """So a genuine max_tokens truncation (response length suspiciously
+    close to the configured ceiling, every time) can be told apart from a
+    short response that failed for some other reason -- 附录 AZ.3's
+    explicitly-flagged open question."""
+    from src.eval.metrics import _parse_json
+    text = "no braces here at all, just prose"
+    with pytest.raises(ValueError) as exc_info:
+        _parse_json(text)
+    assert str(len(text)) in str(exc_info.value)
+
+
+def test_parse_json_distinguishes_no_braces_from_invalid_json_inside_braces():
+    """Two different failure shapes must not collapse into one
+    indistinguishable message: no {...} found at all (e.g. the model
+    ignored the "JSON only" instruction) vs. {...} found but its contents
+    don't parse (e.g. truncation, or a stray comma) -- the second case
+    should surface the underlying json.loads error, the first should not
+    (there's no parse error to report, there's no object to try
+    parsing)."""
+    from src.eval.metrics import _parse_json
+    with pytest.raises(ValueError) as no_braces:
+        _parse_json("plain prose, no braces")
+    with pytest.raises(ValueError) as invalid_inside:
+        _parse_json('{"a": 1, "b":}')  # braces present, contents malformed
+    assert str(no_braces.value) != str(invalid_inside.value)
+    assert "json.loads failed" in str(invalid_inside.value)
+    assert "json.loads failed" not in str(no_braces.value)

@@ -123,6 +123,22 @@ def _build_eval_llm(max_tokens: int = 256):
     _parse_json's bracket-matching fallback would then occasionally parse
     the truncated `"claims": [...]` fragment as a bare list, crashing with
     "'list' object has no attribute 'get'" instead of a clean parse error.
+
+    附录 AZ/BB: 1024 (score_groundedness's setting since the eval v2 Step 2c
+    fix above) still wasn't enough -- 附录 AZ's real cross-process D0 run
+    (real reports, not the synthetic ones Step 2c was measured against) hit
+    the SAME truncated-JSON failure mode on all 9/9 real runs. Bumped to
+    2048 here, and EVAL_GROUNDEDNESS_SYSTEM (agent_prompts.py) now also
+    asks the judge to keep claim/evidence strings terse rather than
+    extracting fewer claims to fit -- a fixed max_tokens ceiling loses to a
+    long enough report eventually regardless of its value, so the other
+    lever (cost per claim, not claim count) is worth pulling too; cutting
+    which claims get checked would reduce groundedness coverage itself,
+    which is a worse trade than a less narratively-worded evidence field.
+    NOT independently confirmed end to end against a real judge call after
+    this change (that needs a paid LLM call, not authorized this round --
+    see 附录 BB for what remains unproven and what a minimal confirmation
+    run would cost).
     """
     if settings.resolved_eval_provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
@@ -354,10 +370,12 @@ async def score_groundedness(
     (score_answer_relevance scores that). Score is computed in code as
     supported_count/total_claims from a judge-extracted claim list, not
     asked from the model as a bare 0-1 number (eval v2 Step 2c)."""
-    # 1024, not the 256-token default -- a claim list for a report making
-    # several claims routinely needs more room than a bare float ever did;
-    # found live via truncated/unparseable responses (see _build_eval_llm).
-    _llm = llm or _build_eval_llm(max_tokens=1024)
+    # 2048, not the 256-token default -- a claim list for a report making
+    # several claims routinely needs more room than a bare float ever did.
+    # Started at 1024 (eval v2 Step 2c), still not enough against real
+    # (not synthetic) reports -- see _build_eval_llm's docstring for the
+    # 附录 AZ/BB history of this exact truncation failing repeatedly.
+    _llm = llm or _build_eval_llm(max_tokens=2048)
     n = max(1, n_samples if n_samples is not None else settings.eval_judge_samples)
     prompt = _build_judge_prompt(query, report, analysis_results, rag_context, data_quality_report)
 
@@ -692,13 +710,32 @@ def _parse_json(text: str) -> dict:
     claims fragment as a bare list -- which crashed callers with
     "'list' object has no attribute 'get'" instead of a clean, catchable
     parse error. Only ever matching `{...}` means any malformed/truncated
-    response fails the same clear way."""
+    response fails the same clear way.
+
+    附录 AZ/BB: the error message used to keep only `text[:200]` -- enough
+    to see *that* something went wrong, not enough to tell a genuine
+    max_tokens truncation (see _build_eval_llm) apart from some other
+    malformed-JSON cause after the fact, which is exactly the gap 附录
+    AZ.3 ran into diagnosing 9/9 real groundedness failures from a
+    persisted report alone. Now keeps: the total length (a truncation
+    caused by hitting the token ceiling should look suspiciously close to
+    that ceiling every time; a short response failing for some other
+    reason won't), a longer head, AND the tail specifically -- for a
+    truncated response the tail is the single most diagnostic slice
+    (mid-string, mid-key, no closing braces), which a head-only excerpt
+    can never show."""
     if "```" in text:
         text = "\n".join(l for l in text.split("\n") if not l.strip().startswith("```"))
     start, end = text.find("{"), text.rfind("}")
     if start != -1 and end != -1:
         try:
             return json.loads(text[start:end + 1])
-        except Exception:
-            pass
-    raise ValueError(f"No JSON object in: {text[:200]!r}")
+        except Exception as exc:
+            raise ValueError(
+                f"Found {{...}} but json.loads failed ({exc}) -- "
+                f"total_len={len(text)}, head={text[:400]!r}, tail={text[-200:]!r}"
+            ) from exc
+    raise ValueError(
+        f"No JSON object ({{...}}) found at all -- "
+        f"total_len={len(text)}, head={text[:400]!r}, tail={text[-200:]!r}"
+    )
