@@ -240,6 +240,38 @@ def test_persist_run_node_saves_and_returns_state(tmp_path, monkeypatch):
     nodes._run_store = None
 
 
+def test_persist_run_node_uses_the_autouse_redirected_path_not_the_real_default():
+    """附录 AR.2 / 附录 AS: companion to
+    test_persist_run_node_saves_and_returns_state (which manually
+    monkeypatches settings + resets nodes._run_store to prove the happy
+    path works against an explicit tmp path). This one deliberately does
+    NOT patch anything itself, to prove tests/conftest.py's autouse
+    `_isolate_runs_db` fixture alone is sufficient: persist_run_node(),
+    called with zero test-local setup, must never reach the real
+    logs/runs.db -- that fixture is the entire safety net now, not an
+    opt-in convenience, and this is the test that would fail if it were
+    ever made conditional, scoped away, or accidentally removed."""
+    import src.graph.nodes as nodes
+    from src.config.settings import settings
+
+    state = _state_with_trace("autouse isolation check")
+    result = nodes.persist_run_node(state)
+    assert result is state
+
+    # It really did persist somewhere -- not silently no-op'd against a
+    # broken path.
+    from src.persistence.run_store import RunStore
+    store = RunStore(settings.runs_db_path)
+    assert store.get_run(state["run_id"]) is not None
+
+    # And "somewhere" is provably not the real production default -- this
+    # is the exact fallback path (nodes.py's _get_run_store -> RunStore()
+    # with no args -> settings.runs_db_path) that caused 附录 AR.2's
+    # pollution before the autouse fixture existed.
+    assert settings.runs_db_path != "logs/runs.db"
+    assert nodes._get_run_store()._db_path == settings.runs_db_path
+
+
 def test_persist_run_node_never_raises_on_storage_failure(monkeypatch):
     """A persistence failure must not break the pipeline the user is
     waiting on -- caught and logged, not propagated."""
