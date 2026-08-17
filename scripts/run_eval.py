@@ -78,8 +78,58 @@ async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tu
         "error_type": result_state.get("error_type"),
         "mcp_modes": sorted({c.get("mode", "mcp") for c in (result_state.get("mcp_call_log") or [])}),
         "data_mismatch": "data_mismatch" in tc.tags,
+        # D0 (阶段 3 / 附录 AQ/AS): eval_runner.score() is called with
+        # run_id=tc.id above (the golden case id, e.g. "D01" -- same
+        # across every trial of the same case), which is NOT the actual
+        # per-invocation graph run_id RunStore persists under
+        # (src/state/graph_state.py's initial_state() uuid4). Without
+        # this, nothing in the eval report lets a user cross-reference a
+        # specific trial's row back to its RunStore-persisted
+        # decision_trace/cleaning_applied_level -- the block-0 work
+        # (附录 AQ.1) becomes unreachable from the eval harness's own
+        # output. eval_result already carries cleaning_applied_level/
+        # cleaning_stop_reason directly (no RunStore lookup needed for
+        # D0's own pass@k accounting -- see src/eval/trials.py), but the
+        # real run_id is still worth surfacing here for manual debugging.
+        "run_id": result_state.get("run_id"),
     }
     return eval_result, meta
+
+
+async def run_trials(
+    suite: list[GoldenTestCase], graph, eval_runner: EvalRunner,
+    trials: int, concurrency: int,
+) -> list[list[dict]]:
+    """
+    D0 (阶段 3 / 附录 AW block 2): run `suite` `trials` times, every
+    (trial, case) pair gated through ONE shared `asyncio.Semaphore
+    (concurrency)` -- this is scripts/measure_noise.py's own
+    `run_full_mode` concurrency pattern reused verbatim (per 附录 AV's
+    instruction to reuse it rather than invent a second one), not a new
+    scheduling scheme.
+
+    Returns each trial's rows kept SEPARATE (`list[trial][case] -> dict`,
+    never merged or averaged) -- this function does no statistics of any
+    kind. pass@k / pass^k / variance across trials live in
+    src/eval/trials.py (block 3), a deliberately separate module so this
+    one stays a pure runner.
+    """
+    sem = asyncio.Semaphore(concurrency)
+
+    async def _one(trial_idx: int, tc: GoldenTestCase):
+        async with sem:
+            eval_result, meta = await run_one_case(tc, graph, eval_runner)
+            return trial_idx, tc.id, eval_result, meta
+
+    tasks = [_one(t, tc) for t in range(trials) for tc in suite]
+    results = await asyncio.gather(*tasks)
+
+    per_trial: list[list[dict]] = [[] for _ in range(trials)]
+    for trial_idx, cid, eval_result, meta in results:
+        per_trial[trial_idx].append(
+            {"test_case_id": cid, "eval_result": eval_result.to_dict(), "meta": meta}
+        )
+    return per_trial
 
 
 async def main():
@@ -89,14 +139,58 @@ async def main():
     parser.add_argument("--split", choices=["dev", "test"], default="dev",
                         help="Eval v2 Step 4: which split to run. Defaults to dev -- the holdout "
                              "'test' split must be requested explicitly so it can't be peeked at "
-                             "by accident. See data/eval_split_manifest.json.")
-    parser.add_argument("--compare", type=str, default=None, help="Path to a prior report JSON to regress against")
+                             "by accident. See data/eval_split_manifest.json. NOTE (D0, 阶段 3): "
+                             "the plan's shorthand '--trials/--suite/--concurrency' triad maps onto "
+                             "this script as --trials/--concurrency (new, below) PLUS this existing "
+                             "--split/--case/--limit trio for case selection -- see 附录 AW block 2 "
+                             "for why a separate --suite flag duplicating --split was rejected "
+                             "(exactly the flag-overloads-two-dimensions problem 附录 AO.3 flagged, "
+                             "just inverted: a second flag with the same job, not one flag with two "
+                             "jobs).")
+    parser.add_argument("--trials", type=int, default=1,
+                        help="D0 (阶段 3): repeat the selected suite this many times. Default 1 -- "
+                             "every existing invocation of this script keeps its exact prior "
+                             "behavior, output report shape, and API cost unless this is raised "
+                             "explicitly (附录 AP.3's rule: multi-trial is an opt-in, never a "
+                             "surprise 8x bill). Each trial's rows are kept separate in the output "
+                             "report, never averaged -- use src/eval/trials.py to compute "
+                             "pass@k/pass^k/variance across them.")
+    parser.add_argument("--concurrency", type=int, default=1,
+                        help="Max concurrent (trial, case) runs in flight, via one shared "
+                             "asyncio.Semaphore across every trial x case pair (same pattern as "
+                             "scripts/measure_noise.py). Default 1 (fully serial, and takes the "
+                             "exact pre-D0 sequential code path with live per-case progress "
+                             "output). RAISE THIS WITH CAUTION: the Data Cleaner MCP server applies "
+                             "NO internal rate limiting, backoff coordination, or concurrency "
+                             "throttle to its own LLM calls (附录 AU.9, verified against "
+                             "agent/llm_provider.py) -- every concurrent trial's planner call goes "
+                             "straight to the same account, unmediated. Raising --concurrency "
+                             "alongside multiple planner_mode=llm trials can trip that account's "
+                             "rate limit purely from D0's own request volume, with no other task "
+                             "involved, and rate-limit-induced retry delays manufacture score "
+                             "differences that are statistically indistinguishable from a real "
+                             "on/off effect -- this is not hypothetical: docs/noise_floor.md "
+                             "documents this exact mechanism (two concurrent API-heavy jobs sharing "
+                             "one rate limit) producing 9 of 28 paired comparisons falsely flagged "
+                             "'significant' with zero real difference between the runs being "
+                             "compared. Only raise this once you've accounted for that risk for "
+                             "this particular run (附录 AV.3/AU.9).")
+    parser.add_argument("--compare", type=str, default=None,
+                        help="Path to a prior report JSON to regress against. Only supported for "
+                             "single-trial (--trials 1) reports.")
     parser.add_argument("--out", type=str, default=None, help="Output report path (default: timestamped)")
     args = parser.parse_args()
 
     if args.split == "test":
         print("*** Running against the HOLDOUT TEST SPLIT. ***")
         print("*** This result should be recorded as an official reveal, not used to iterate. ***\n")
+
+    if args.trials < 1:
+        print("--trials must be >= 1", file=sys.stderr)
+        sys.exit(2)
+    if args.concurrency < 1:
+        print("--concurrency must be >= 1", file=sys.stderr)
+        sys.exit(2)
 
     suite = [tc for tc in load_golden_suite() if tc.split == args.split]
     if args.case:
@@ -105,48 +199,103 @@ async def main():
     if args.limit:
         suite = suite[: args.limit]
 
-    print(f"Running eval harness on {len(suite)} golden case(s) [split={args.split}]...\n")
+    trial_word = "trial" if args.trials == 1 else "trials"
+    print(f"Running eval harness on {len(suite)} golden case(s) [split={args.split}], "
+          f"{args.trials} {trial_word}, concurrency={args.concurrency}...\n")
 
     graph = build_graph()
     eval_runner = EvalRunner()
 
-    rows = []
-    for tc in suite:
-        print(f"  [{tc.id}] {tc.query!r} ...", end=" ", flush=True)
-        eval_result, meta = await run_one_case(tc, graph, eval_runner)
-        tags = []
-        if meta["data_mismatch"]:
-            tags.append("DATA MISMATCH")
-        if meta["error_type"] == "safe_refusal":
-            tags.append(f"SAFE REFUSAL: {meta['error']}")
-        elif meta["error"]:
-            tags.append(f"ERROR: {meta['error']}")
-        if any(m == "fallback" for m in meta["mcp_modes"]):
-            tags.append("fallback")
-        suffix = f" [{', '.join(tags)}]" if tags else ""
-        print(f"aggregate={eval_result.aggregate_score:.2f}{suffix}")
-        rows.append({"test_case_id": tc.id, "eval_result": eval_result.to_dict(), "meta": meta})
-
-    aggregate_scores = [r["eval_result"]["aggregate_score"] for r in rows]
-    overall = sum(aggregate_scores) / len(aggregate_scores) if aggregate_scores else 0.0
-
-    report = {
-        "timestamp": time.time(),
-        "n_cases": len(rows),
-        "overall_aggregate": overall,
-        "split": args.split,
-        "cases": rows,
-    }
+    if args.trials == 1 and args.concurrency == 1:
+        # Unchanged sequential path -- byte-for-byte the same code as
+        # before D0 existed, including live per-case progress printed as
+        # each ~60-125s pipeline run completes (src/eval/replay_cache.py's
+        # docstring gives that per-case latency). Every pre-D0 invocation
+        # of this script, and every default invocation post-D0, takes
+        # this path. run_trials()/asyncio.gather() below only defers
+        # printing until each full trial completes (measure_noise.py's
+        # own run_full_mode has the same property), which is an
+        # acceptable UX change for an explicitly-opted-into feature but
+        # not for the default path.
+        rows = []
+        for tc in suite:
+            print(f"  [{tc.id}] {tc.query!r} ...", end=" ", flush=True)
+            eval_result, meta = await run_one_case(tc, graph, eval_runner)
+            tags = []
+            if meta["data_mismatch"]:
+                tags.append("DATA MISMATCH")
+            if meta["error_type"] == "safe_refusal":
+                tags.append(f"SAFE REFUSAL: {meta['error']}")
+            elif meta["error"]:
+                tags.append(f"ERROR: {meta['error']}")
+            if any(m == "fallback" for m in meta["mcp_modes"]):
+                tags.append("fallback")
+            suffix = f" [{', '.join(tags)}]" if tags else ""
+            print(f"aggregate={eval_result.aggregate_score:.2f}{suffix}")
+            rows.append({"test_case_id": tc.id, "eval_result": eval_result.to_dict(), "meta": meta})
+        per_trial = [rows]
+    else:
+        print("(concurrency > 1 and/or trials > 1: no live per-case progress -- results print in "
+              "a per-trial summary table once each trial finishes)\n")
+        per_trial = await run_trials(suite, graph, eval_runner, args.trials, args.concurrency)
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = Path(args.out) if args.out else REPORT_DIR / f"eval_{int(report['timestamp'])}.json"
-    out_path.write_text(json.dumps(report, indent=2, default=str))
+    timestamp = time.time()
 
-    _print_summary(rows, overall)
-    print(f"\nReport saved to {out_path}")
-
-    if args.compare:
-        _print_regressions(Path(args.compare), rows, overall)
+    if args.trials == 1:
+        # Unchanged report shape -- byte-for-byte the same top-level keys
+        # as every report this script produced before D0 existed, so
+        # every existing consumer (this script's own --compare, any
+        # external tooling reading logs/eval_runs/*.json) keeps working
+        # unmodified for the default invocation.
+        rows = per_trial[0]
+        aggregate_scores = [r["eval_result"]["aggregate_score"] for r in rows]
+        overall = sum(aggregate_scores) / len(aggregate_scores) if aggregate_scores else 0.0
+        report = {
+            "timestamp": timestamp, "n_cases": len(rows),
+            "overall_aggregate": overall, "split": args.split, "cases": rows,
+        }
+        out_path = Path(args.out) if args.out else REPORT_DIR / f"eval_{int(timestamp)}.json"
+        out_path.write_text(json.dumps(report, indent=2, default=str))
+        _print_summary(rows, overall)
+        print(f"\nReport saved to {out_path}")
+        if args.compare:
+            _print_regressions(Path(args.compare), rows, overall)
+        crashed = [r["test_case_id"] for r in rows if r["meta"]["error_type"] == "pipeline_error"]
+    else:
+        trial_reports = []
+        crashed = []
+        for trial_idx, rows in enumerate(per_trial):
+            aggregate_scores = [r["eval_result"]["aggregate_score"] for r in rows]
+            overall = sum(aggregate_scores) / len(aggregate_scores) if aggregate_scores else 0.0
+            trial_reports.append({
+                "trial_index": trial_idx, "n_cases": len(rows),
+                "overall_aggregate": overall, "cases": rows,
+            })
+            print(f"\n### trial {trial_idx} ###")
+            _print_summary(rows, overall)
+            crashed.extend(
+                f"trial{trial_idx}:{r['test_case_id']}"
+                for r in rows if r["meta"]["error_type"] == "pipeline_error"
+            )
+        report = {
+            "timestamp": timestamp, "n_cases": len(suite), "split": args.split,
+            "trials": args.trials, "concurrency": args.concurrency,
+            "per_trial": trial_reports,
+        }
+        out_path = (
+            Path(args.out) if args.out
+            else REPORT_DIR / f"eval_trials{args.trials}_{int(timestamp)}.json"
+        )
+        out_path.write_text(json.dumps(report, indent=2, default=str))
+        print(f"\nReport saved to {out_path}")
+        print(f"(multi-trial report -- pass it to src/eval/trials.py for pass@k/pass^k/variance "
+              f"across the {args.trials} trials)")
+        if args.compare:
+            print("\n[compare] --compare only supports single-trial (--trials 1) reports -- "
+                  "skipped for this multi-trial run. Use src/eval/trials.py's own pass^k/variance "
+                  "output to characterize change across the trials of THIS report instead of a "
+                  "two-report diff.")
 
     # A safe_refusal (guardrail correctly blocking a bad output) is a normal,
     # expected outcome for a golden suite run — it must not fail the script.
@@ -155,7 +304,6 @@ async def main():
     # running it could go green even when every case actually crashed (as
     # happened when the eval smoke case ran without a configured API key —
     # it printed "401 AuthenticationError" and still exited success).
-    crashed = [r["test_case_id"] for r in rows if r["meta"]["error_type"] == "pipeline_error"]
     if crashed:
         print(f"\n{len(crashed)} case(s) hit a genuine pipeline error (not a safe refusal): {crashed}")
         sys.exit(1)
