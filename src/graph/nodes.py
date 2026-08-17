@@ -163,6 +163,60 @@ def _resolved_artifact_root() -> str:
     return str(Path(settings.maeda_artifact_root).resolve())
 
 
+# Matches DataConnector.connect's own type dispatch (data_connector.py:
+# `source_type in {"csv", "tsv", ""}` / `"json"` / `"excel"` / `"sql"`) --
+# every source type whose "path" is actually a filesystem path, as opposed
+# to "sql"'s SQLAlchemy connection string.
+_FILE_BACKED_SOURCE_TYPES = {"csv", "tsv", "excel", "json", ""}
+
+
+def _resolved_dataset_path(path: str, source_type: str) -> str:
+    """
+    定案 #16: every cross-process file path must be a normalized absolute
+    path, for exactly the reason _resolved_artifact_root() above exists --
+    MAEDA and the cleaner are separate processes with separate CWDs, and a
+    relative path resolves against whichever process happens to read it.
+    This is the SAME class of bug the plan's own history already
+    documents being caught and fixed once for `artifact_root`/
+    `cleaned_path` (附录 D's F1, 附录 F.4's G1, 附录 H.4) -- what slipped
+    through all three of those rounds is the dataset path itself: `state
+    ["data_sources"][0]["path"]` (e.g. "data/demo/sales_data.csv", the
+    literal value scripts/run_eval.py's GoldenTestCase.data_source
+    entries and CLI/eval callers use) was sent to `profile_dataset`/
+    `clean_dataset`/`validate_quality` and embedded in `intent_payload
+    ["dataset_path"]` completely unresolved. TB0's smoke test
+    (scripts/check_ecosystem.py) never caught this because IT resolves
+    its own test path before calling the cleaner
+    (`str(Path(test_csv).resolve())`) -- passing was never evidence the
+    production graph honored #16 here, only that the smoke script did on
+    the graph's behalf. Unit tests couldn't catch it either: the cleaner
+    is mocked in every one of them, so nothing ever actually resolved a
+    relative path against a different CWD. It took a real cross-process
+    run to surface it.
+
+    Only resolves file-backed source types (see _FILE_BACKED_SOURCE_TYPES,
+    mirroring data_connector.py's own dispatch) -- a "sql" source's
+    "path" is a SQLAlchemy connection string (e.g. "sqlite:///data/demo/
+    ecommerce_orders.db"), not a filesystem path. Running it through
+    Path(...).resolve() would silently produce garbage (the "sqlite://"
+    scheme mangled into a bogus path segment) instead of a real path, not
+    raise anything -- worse than doing nothing. Left byte-for-byte
+    unchanged for those; whether/how a SQL connection string should cross
+    this same boundary is a separate, pre-existing design question this
+    fix does not take on.
+    """
+    if source_type not in _FILE_BACKED_SOURCE_TYPES or not path:
+        return path
+    try:
+        return str(Path(path).resolve())
+    except (OSError, ValueError):
+        # A malformed path shouldn't crash the graph here -- let the
+        # cleaner's own error handling surface it downstream with a
+        # legible MCP error instead of MAEDA failing earlier with a raw
+        # pathlib traceback.
+        return path
+
+
 def _validate_cleaned_path(
     cleaned_path: str, effective_path: str, artifact_root: str, run_id: str,
 ) -> Optional[str]:
@@ -506,7 +560,11 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
             {**source, "schema": schema.to_dict(), "preview": schema.preview},
             *sources[1:],
         ]
-        effective_path = source_path
+        # 定案 #16 (see _resolved_dataset_path's docstring): resolve BEFORE
+        # this crosses to the cleaner, not after -- source_path itself
+        # (e.g. "data/demo/sales_data.csv") is relative to MAEDA's own
+        # CWD, and the cleaner is a separate process with its own.
+        effective_path = _resolved_dataset_path(source_path, schema.source_type)
         if schema.source_type == "sql":
             _trace(
                 state, "data_connector", "table_selection",
@@ -514,9 +572,13 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
             )
     except Exception as exc:
         logger.warning("DataConnector failed for %s: %s", source_path, exc)
-        # Schema extraction failed — still run MCP profiling on original path
+        # Schema extraction failed — still run MCP profiling on original
+        # path. source.get("type") is the same fallback convention
+        # viz_agent.py's _load_df uses (defaults to "csv", the most
+        # common case) since there's no successfully-extracted schema to
+        # read source_type off of here.
         state["schema_summary"] = f"Schema unavailable: {exc}"
-        effective_path = source_path
+        effective_path = _resolved_dataset_path(source_path, source.get("type", "csv"))
 
     # TB3 (附录 U.1/U.2/P.1): resolve the parsed intent's free-text column
     # mentions against the real schema (empty list -> resolution_status

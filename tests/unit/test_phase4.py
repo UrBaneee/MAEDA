@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sqlite3
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
@@ -579,6 +580,70 @@ class TestValidateClearedPathHelper:
         assert reason is not None and "empty" in reason
 
 
+# ─── 附录 AZ: _resolved_dataset_path (定案 #16, the real-run defect) ──────────
+#
+# The bug scripts/check_ecosystem.py's own TB0 smoke test never caught: it
+# resolves ITS OWN test path (`test_csv = str(Path(test_csv).resolve())`,
+# check_ecosystem.py) before calling the cleaner, on the graph's behalf --
+# TB0 passing was never evidence the production graph honored 定案 #16
+# here. Nothing in the unit suite caught it either, because the cleaner is
+# mocked everywhere -- a mock returns whatever it's told to regardless of
+# whether the path it received would resolve on a different process's
+# CWD. It took a real cross-process run (硬约束 4's first authorized
+# multi-trial, D01) to surface it: MAEDA sent the literal, unresolved
+# "data/demo/sales_data.csv" and the cleaner (a separate process, its own
+# CWD) reported FileNotFoundError.
+
+class TestResolvedDatasetPathHelper:
+    """Direct tests of nodes.py::_resolved_dataset_path, isolated from the
+    full node -- same pattern as TestValidateClearedPathHelper above."""
+
+    def test_relative_csv_path_is_resolved_to_absolute(self, tmp_path, monkeypatch):
+        from src.graph.nodes import _resolved_dataset_path
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "data" / "demo").mkdir(parents=True)
+        (tmp_path / "data" / "demo" / "sales_data.csv").write_text("a,b\n1,2\n")
+
+        result = _resolved_dataset_path("data/demo/sales_data.csv", "csv")
+        assert os.path.isabs(result)
+        assert result == str((tmp_path / "data" / "demo" / "sales_data.csv").resolve())
+
+    def test_already_absolute_path_is_unchanged_in_value(self, tmp_path):
+        from src.graph.nodes import _resolved_dataset_path
+        abs_path = str(tmp_path / "x.csv")
+        assert _resolved_dataset_path(abs_path, "csv") == str(Path(abs_path).resolve())
+
+    def test_every_file_backed_source_type_is_resolved(self, tmp_path, monkeypatch):
+        from src.graph.nodes import _resolved_dataset_path
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "f.csv").write_text("x")
+        for source_type in ("csv", "tsv", "excel", "json", ""):
+            result = _resolved_dataset_path("f.csv", source_type)
+            assert os.path.isabs(result), f"source_type={source_type!r} was not resolved"
+
+    def test_sql_connection_string_is_left_untouched(self):
+        """A SQL source's "path" is a SQLAlchemy connection string, not a
+        filesystem path -- resolving it through pathlib would silently
+        produce garbage (the "sqlite://" scheme mangled into the path)
+        rather than a real path or an error. Must be a byte-for-byte
+        no-op, not "also somehow made absolute"."""
+        from src.graph.nodes import _resolved_dataset_path
+        conn_str = "sqlite:///data/demo/ecommerce_orders.db"
+        assert _resolved_dataset_path(conn_str, "sql") == conn_str
+
+    def test_empty_path_is_left_untouched(self):
+        from src.graph.nodes import _resolved_dataset_path
+        assert _resolved_dataset_path("", "csv") == ""
+
+    def test_unknown_source_type_is_left_untouched(self):
+        """Anything not in the known file-backed set is treated the same
+        as "sql" -- conservative default (don't touch what isn't
+        recognized) rather than assuming every unknown type is a
+        filesystem path."""
+        from src.graph.nodes import _resolved_dataset_path
+        assert _resolved_dataset_path("relative/thing", "some_future_type") == "relative/thing"
+
+
 # ─── M7: cleaning loop (TB0.5 v1, ECOSYSTEM_INTEGRATION_PLAN.md 附录 B) ───────
 #
 # connect_and_profile_node's cleaning loop, rewritten in M7. Each test
@@ -676,6 +741,65 @@ class TestCleaningLoop:
         assert result["cleaning_applied"] is True
         assert result["cleaning_stop_reason"] == "passed"
         assert result["iteration_count"] == 1
+
+    def test_dataset_path_sent_to_cleaner_is_absolute_even_when_source_is_relative(
+        self, tmp_path, monkeypatch,
+    ):
+        """附录 AZ: reproduces 硬约束 4's first real authorized multi-trial
+        run's actual failure (D01, dataset_path="data/demo/sales_data.csv")
+        end to end, at the graph-node level, with no live cleaner needed --
+        chdir into tmp_path and use a genuinely relative source path (every
+        OTHER test in this class, including the two directly above, passes
+        str(tmp_path / "...") -- an ALREADY absolute path -- which is
+        exactly why none of them caught this: a relative path resolves
+        just fine against MAEDA's own CWD, the bug only appears once a
+        DIFFERENT process with a different CWD (the cleaner) tries to open
+        the same string).
+
+        Asserts on the literal value MAEDA sends across the process
+        boundary -- both the direct dataset_path argument to
+        profile_dataset AND the (separately constructed, previously
+        separately unresolved) copy embedded in intent_payload
+        ["dataset_path"] -- rather than on a live cleaner's response,
+        which is exactly what makes this catchable without a real server.
+        """
+        from src.mcp_client.models import DataQualityReport
+        from src.state.graph_state import initial_state
+
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "data" / "demo").mkdir(parents=True)
+        (tmp_path / "data" / "demo" / "sales_data.csv").write_text(
+            "region,revenue\nNorth,100\nSouth,200\n"
+        )
+
+        state = initial_state(
+            "q", data_sources=[{"type": "csv", "path": "data/demo/sales_data.csv"}],
+        )
+        state["parsed_intent"] = {"target_metrics": ["revenue"]}
+
+        report = DataQualityReport(
+            row_count=2, columns=[], quality_issues=[], has_critical_issues=False,
+        )
+        mock_mcp = self._mock_mcp(profile_dataset=[(report, self._log("profile_dataset"))])
+
+        result = self._run(state, mock_mcp)
+        assert result.get("error") is None
+
+        sent_path = mock_mcp.profile_dataset.call_args.args[0]
+        assert os.path.isabs(sent_path), (
+            f"dataset_path sent to profile_dataset must be absolute (定案 #16), "
+            f"got {sent_path!r} -- this is the exact defect 硬约束 4's first "
+            f"real run hit"
+        )
+        expected = str((tmp_path / "data" / "demo" / "sales_data.csv").resolve())
+        assert sent_path == expected
+
+        intent_sent = mock_mcp.profile_dataset.call_args.kwargs["intent"]
+        assert os.path.isabs(intent_sent["dataset_path"]), (
+            "intent_payload['dataset_path'] is built from the SAME effective_path "
+            "and must also be absolute -- both copies cross the process boundary"
+        )
+        assert intent_sent["dataset_path"] == expected
 
     def test_run_ids_distinct_and_execution_plan_traced(self, tmp_path):
         """M4: each MCP call in the round gets its own run_id (reusing one
