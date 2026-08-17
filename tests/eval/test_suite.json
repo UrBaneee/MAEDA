@@ -791,9 +791,9 @@
     ],
     "ground_truth": {
       "product_8_unit_price": 404.28,
-      "product_8_cost": 119.6,
+      "product_8_cost": 119.58,
       "product_8_margin": 284.7,
-      "_note": "Product 8 actually has a healthy positive margin ($284.70 = $404.28 unit price - $119.60 cost), not a negative one -- there is no loss to explain"
+      "_note": "Product 8 actually has a healthy positive margin ($284.70 = $404.28 unit price - $119.58 cost), not a negative one -- there is no loss to explain"
     },
     "tags": [
       "diagnostic",
@@ -1323,12 +1323,12 @@
       "channel"
     ],
     "ground_truth": {
-      "display_ctr": 0.027,
-      "email_ctr": 0.0279,
-      "search_ctr": 0.0278,
-      "social_ctr": 0.0272,
-      "affiliate_ctr": 0.027,
-      "_note": "Display's CTR (2.70%) is essentially identical to every other channel (2.70%-2.79%) -- there is no meaningful underperformance to explain"
+      "display_ctr": 0.0278,
+      "email_ctr": 0.0282,
+      "search_ctr": 0.0274,
+      "social_ctr": 0.027,
+      "affiliate_ctr": 0.028,
+      "_note": "Display's CTR (2.78%) is NOT the lowest -- Social is (2.70%), and the full spread across channels (2.70%-2.82%) shows no meaningful channel-level underperformance for Display specifically to explain"
     },
     "tags": [
       "diagnostic",
@@ -2562,7 +2562,7 @@
     "expected_dimensions": [],
     "ground_truth": {
       "discount_quantity_correlation": 0.0033,
-      "_note": "The correlation between order quantity and discount is essentially zero (0.0083) -- there is no real relationship to explain here"
+      "_note": "The correlation between order quantity and discount is essentially zero (0.0033) -- there is no real relationship to explain here"
     },
     "tags": [
       "diagnostic",

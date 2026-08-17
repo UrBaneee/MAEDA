@@ -4,6 +4,7 @@ Run with: pytest tests/unit/test_phase9.py -v
 """
 import asyncio
 import json
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -1192,6 +1193,55 @@ def test_golden_suite_ground_truth_backfilled_from_json():
         else:
             numeric_values = {k: v for k, v in tc.ground_truth.items() if isinstance(v, (int, float))}
             assert numeric_values, f"{tc.id} should have at least one numeric ground_truth fact"
+
+
+# The recompute in scripts/compute_ground_truth.py isn't a package (no
+# tests/ import precedent for scripts/), so load it by path.
+def _load_compute_ground_truth():
+    import importlib.util
+
+    path = Path(__file__).resolve().parents[2] / "scripts" / "compute_ground_truth.py"
+    spec = importlib.util.spec_from_file_location("compute_ground_truth", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# 附录 BI.2/BJ: a prior recompute (52fd014) updated numeric ground_truth in
+# place but left the `_note` prose next to it untouched, silently making
+# DG08/DG13/DG19's notes self-contradictory. This guards the checker that
+# was added to catch that -- not the whole suite (some notes cite domain
+# bounds like column min/max caps, or digits that are actually part of a
+# label like "Product 8", which _audit_note deliberately can't resolve;
+# see its docstring) -- just the specific cases that broke, so a future
+# recompute pass can't silently reintroduce the same regression in them.
+def test_note_audit_catches_the_cases_it_was_written_for():
+    cgt = _load_compute_ground_truth()
+    from src.eval.runner import load_golden_suite
+
+    suite = {tc.id: tc for tc in load_golden_suite()}
+    for cid in ("DG08", "DG09", "DG13", "DG19"):
+        gt = suite[cid].ground_truth
+        note = gt["_note"]
+        # The case's own stored numeric fields stand in for "fresh" here --
+        # a note that's consistent with its own case's numbers should audit
+        # clean regardless of whether those numbers are also up to date
+        # with data/demo/* (that's a separate, data-dependent check that
+        # compute_ground_truth.py's main() runs against live data).
+        unverified = cgt._audit_note(note, gt)
+        assert unverified == [], f"{cid}'s _note no longer agrees with its own ground_truth: {unverified}"
+
+
+def test_note_audit_extracts_percent_ranges_without_a_spurious_negative():
+    # Regression for a real bug found while fixing DG09: "2.70%-2.82%" was
+    # being parsed as 2.70 followed by -2.82 (reading the range's hyphen as
+    # a minus sign), so a citation that was actually fine kept getting
+    # flagged as unverified.
+    cgt = _load_compute_ground_truth()
+    nums = cgt._extract_note_numbers("channels range from 2.70%-2.82%")
+    flat = [n for alts in nums for n in alts]
+    assert -2.82 not in flat
+    assert any(abs(n - 2.82) < 1e-9 for n in flat)
 
 
 def test_golden_test_case_round_trip():
