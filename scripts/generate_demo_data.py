@@ -24,8 +24,35 @@ import pandas as pd
 import yaml
 
 SEED = 42
-rng = random.Random(SEED)
-np.random.seed(SEED)
+
+# 附录 BC.1/BF: previously a single module-level `rng`/`np.random.seed(SEED)`
+# pair shared across all four generate_*() calls, consumed sequentially in
+# __main__'s fixed order (sales -> churn -> marketing -> ecommerce). Any
+# change to an EARLIER generator's random-draw COUNT silently shifted every
+# LATER generator's output, even with its own code and parameters completely
+# unchanged -- this is exactly what happened when TB5 changed generate_sales()
+# (阶段 3, 附录 AZ/BB/BC): churn/marketing/ecommerce data changed too, purely
+# from stream-position drift, invalidating downstream eval fixtures with no
+# visible cause (row counts and file sizes looked untouched -- see 附录 BC.1's
+# "ecommerce_orders.db" evidence for why that made it hard to spot).
+#
+# Each generate_*() function now builds its OWN local RNG state (see
+# `_seeded_rngs()` below) instead of reading this module-level pair --
+# independent of what any other generator call did or didn't consume.
+#
+# 附录 BF: `np.random.RandomState(seed)` here, deliberately NOT
+# `np.random.default_rng(seed)` (numpy's modern recommendation for new code).
+# The two use DIFFERENT underlying algorithms (RandomState: legacy MT19937,
+# the same one `np.random.seed()`'s old global state used; default_rng:
+# PCG64) -- same seed integer, different number sequence. Using RandomState
+# is what lets `generate_sales()` specifically reproduce the exact same
+# output as before this change (see that function's own docstring for why),
+# and using the same RNG class in all four generators (rather than the
+# "legacy" one only where it happens to matter) keeps the isolation pattern
+# uniform and auditable instead of mixing two different numpy RNG APIs
+# across this one file.
+def _seeded_rngs(seed: int) -> tuple[random.Random, np.random.RandomState]:
+    return random.Random(seed), np.random.RandomState(seed)
 
 OUT = Path("data/demo")
 OUT.mkdir(parents=True, exist_ok=True)
@@ -172,7 +199,22 @@ _PRODUCT_PRICE = {
 }
 
 
-def generate_sales(n: int = 48_000) -> pd.DataFrame:
+def generate_sales(n: int = 48_000, seed: int = SEED) -> pd.DataFrame:
+    """
+    附录 BF: `generate_sales()` runs first in `__main__` (nothing precedes
+    it), so under the OLD shared-stream design it was already, in effect,
+    drawing from a virgin seed=SEED state -- no other generator's calls came
+    before it to shift its position. Isolating it (own `random.Random(seed)`
+    + own `np.random.RandomState(seed)`, both algorithm-compatible with what
+    the old global state used -- see the module-level comment above) is
+    therefore output-PRESERVING for this one function specifically:
+    `generate_sales(seed=SEED)` under this isolated version reproduces
+    `data/demo/sales_data.csv` byte-for-byte (verified -- see 附录 BF).
+    churn/marketing/ecommerce are NOT preserved by the same argument (each
+    used to start mid-stream, at a position only the old coupled call order
+    could reproduce) -- isolating them necessarily changes their output.
+    """
+    rng, np_state = _seeded_rngs(seed)
     regions = ["North", "South", "East", "West", "Central"]
     products = ["Widget A", "Widget B", "Gadget Pro", "Gadget Lite", "Service Pack"]
     channels = ["Direct", "Partner", "Online", "Retail"]
@@ -210,7 +252,7 @@ def generate_sales(n: int = 48_000) -> pd.DataFrame:
         # (segment={}, direction=down, magnitude=0.30, shape=step, same
         # window and magnitude as the multiplier this replaces) and is
         # applied below through the same machinery as every other event.
-        revenue = max(0.0, np.random.normal(base * seasonal, base * _NOISE_COEFF))
+        revenue = max(0.0, np_state.normal(base * seasonal, base * _NOISE_COEFF))
         for event in revenue_events:
             revenue *= _event_multiplier(event, d_date, region, product, channel)
         revenue = round(revenue, 2)
@@ -252,15 +294,16 @@ def generate_sales(n: int = 48_000) -> pd.DataFrame:
 
 # ─── 12.2 Churn data ──────────────────────────────────────────────────────────
 
-def generate_churn(n: int = 5_000) -> pd.DataFrame:
+def generate_churn(n: int = 5_000, seed: int = SEED) -> pd.DataFrame:
+    rng, np_state = _seeded_rngs(seed)
     rows = []
     for i in range(n):
         tenure = rng.randint(1, 60)
         plan = rng.choice(["Basic", "Standard", "Premium"])
         monthly_charges = {"Basic": 29, "Standard": 59, "Premium": 99}[plan]
-        monthly_charges += np.random.normal(0, 5)
-        support_calls = max(0, int(np.random.poisson(1.5)))
-        login_days = max(0, int(np.random.normal(15, 8)))
+        monthly_charges += np_state.normal(0, 5)
+        support_calls = max(0, int(np_state.poisson(1.5)))
+        login_days = max(0, int(np_state.normal(15, 8)))
         # March 2024 spike: new competitor launched
         cohort_month = rng.choice(pd.date_range("2023-01-01", "2024-06-01", freq="MS"))
         is_march_2024 = cohort_month.year == 2024 and cohort_month.month == 3
@@ -293,18 +336,19 @@ def generate_churn(n: int = 5_000) -> pd.DataFrame:
 
 # ─── 12.3 Marketing campaigns ─────────────────────────────────────────────────
 
-def generate_marketing(n: int = 2_000) -> pd.DataFrame:
+def generate_marketing(n: int = 2_000, seed: int = SEED) -> pd.DataFrame:
+    rng, np_state = _seeded_rngs(seed)
     channels = ["Email", "Social", "Search", "Display", "Affiliate"]
     rows = []
     for i in range(n):
         channel = rng.choice(channels)
-        spend = round(abs(np.random.normal(5000, 2000)), 2)
+        spend = round(abs(np_state.normal(5000, 2000)), 2)
         # Channel-specific efficiency
         cvr = {"Email": 0.045, "Social": 0.022, "Search": 0.065,
                "Display": 0.012, "Affiliate": 0.038}[channel]
         impressions = max(100, int(spend * rng.uniform(50, 200)))
         clicks = max(1, int(impressions * rng.uniform(0.005, 0.05)))
-        conversions = max(0, int(clicks * (cvr + np.random.normal(0, cvr * 0.3))))
+        conversions = max(0, int(clicks * (cvr + np_state.normal(0, cvr * 0.3))))
         revenue = round(conversions * rng.uniform(80, 300), 2)
         date = pd.Timestamp("2024-01-01") + pd.Timedelta(days=rng.randint(0, 364))
 
@@ -328,7 +372,8 @@ def generate_marketing(n: int = 2_000) -> pd.DataFrame:
 
 # ─── 12.4 eCommerce SQLite DB ─────────────────────────────────────────────────
 
-def generate_ecommerce_db() -> None:
+def generate_ecommerce_db(seed: int = SEED) -> None:
+    rng, _np_state = _seeded_rngs(seed)  # this generator doesn't use np.random.* itself
     db_path = OUT / "ecommerce_orders.db"
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
