@@ -1,0 +1,1128 @@
+{
+  "timestamp": 1786945152.2094269,
+  "n_cases": 3,
+  "split": "dev",
+  "trials": 3,
+  "concurrency": 1,
+  "per_trial": [
+    {
+      "trial_index": 0,
+      "n_cases": 3,
+      "overall_aggregate": 0.8562500000000001,
+      "cases": [
+        {
+          "test_case_id": "D01",
+          "eval_result": {
+            "run_id": "D01",
+            "query": "Show total sales by region",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly answers the query by presenting total sales (revenue) broken down by all 5 regions, explicitly stating each region's total and noting the South region's figure is missing from the explicit list but still mentioned as 'additional regions.' It also includes a visualization and highlights, fully addressing the request to show total sales by region.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"North region generates the highest revenue at $5,222,201.56\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show North=5222201.56, which is higher than Cen'",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 0.0,
+                "label": "fail",
+                "reasoning": "Ground truth overlap: 0%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.8,
+                "label": "pass",
+                "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/1 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.98457,
+                "label": "pass",
+                "reasoning": "$0.0154",
+                "raw_value": 0.01543,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "No errors",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 0.0,
+                "label": "info",
+                "reasoning": "No refusal",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "29.4s",
+                "raw_value": 29.444918870925903,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.7125,
+            "timestamp": 1786944843.456945,
+            "test_case_id": "D01",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 29.44,
+            "guardrail_passed": true,
+            "current_phase": "complete",
+            "error": null,
+            "error_type": null,
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "f308dc18252042f3913b678824c0144d"
+          }
+        },
+        {
+          "test_case_id": "C02",
+          "eval_result": {
+            "run_id": "C02",
+            "query": "How does conversion rate differ by marketing channel?",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly and thoroughly answers the question of how conversion rate differs by marketing channel. It provides specific per-channel conversion rate figures (Search 6.39%, Email 4.49%, Affiliate 3.81%, Social/Display 1.19%), ranks channels from highest to lowest, discusses the magnitude of variation, and ties this into actionable recommendations. All key aspects of the question are covered with specific, relevant details.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Search channel has the highest conversion rate at approximately 6.39%\",\\n      \"supported\": true,\\n      \"evidence\": \"groupby_aggregate_conversion_rate shows Search'",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 0.5,
+                "label": "warn",
+                "reasoning": "Ground truth overlap: 50%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.95,
+                "label": "pass",
+                "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['pandas_transform'], expected one of ['comparison', 'pandas_transform']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/2 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['bar', 'dashboard', 'horizontal_bar'], expected one of ['bar']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.97981,
+                "label": "pass",
+                "reasoning": "$0.0202",
+                "raw_value": 0.02019,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "No errors",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 0.0,
+                "label": "info",
+                "reasoning": "No refusal",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 0.7,
+                "label": "pass",
+                "reasoning": "45.5s",
+                "raw_value": 45.47835397720337,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.865625,
+            "timestamp": 1786944888.935703,
+            "test_case_id": "C02",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 45.48,
+            "guardrail_passed": true,
+            "current_phase": "complete",
+            "error": null,
+            "error_type": null,
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "b13468a57984497cb6e012a6c78dd6b8"
+          }
+        },
+        {
+          "test_case_id": "P01",
+          "eval_result": {
+            "run_id": "P01",
+            "query": "What will revenue look like next quarter based on current trends?",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly addresses the user's question about next quarter's revenue trend by providing a specific forecast (~451.1 for the next three periods), describing the trend direction (decreasing), and contextualizing the forecast's reliability. It also gives actionable recommendations related to the forecasted decline, fully engaging with the query's intent.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Revenue is showing a decreasing trend, with a sl'",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "1/1 numbers overlap",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.95,
+                "label": "pass",
+                "reasoning": "query_type correct: predictive; metrics overlap: 100%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['time_series'], expected one of ['time_series']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/1 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['line'], expected one of ['line']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.971943,
+                "label": "pass",
+                "reasoning": "$0.0281",
+                "raw_value": 0.028057000000000002,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report claims a decreasing trend with a slope of -0.000124, but the R-squared value is 0.0 and the p-value is 0.351518, indicating the trend is not statistically significant. The report should clarify that the trend is not statistically supported.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 1.0,
+                "label": "info",
+                "reasoning": "The report claims a decreasing trend with a slope of -0.000124, but the R-squared value is 0.0 and the p-value is 0.351518, indicating the trend is not statistically significant. The report should clarify that the trend is not statistically supported.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 0.7,
+                "label": "pass",
+                "reasoning": "38.9s",
+                "raw_value": 38.855369091033936,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.990625,
+            "timestamp": 1786944927.791349,
+            "test_case_id": "P01",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 27.58,
+            "guardrail_passed": false,
+            "current_phase": "error",
+            "error": "The report claims a decreasing trend with a slope of -0.000124, but the R-squared value is 0.0 and the p-value is 0.351518, indicating the trend is not statistically significant. The report should clarify that the trend is not statistically supported.",
+            "error_type": "safe_refusal",
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "e67230f138ca43eb9f1d0371450261fe"
+          }
+        }
+      ]
+    },
+    {
+      "trial_index": 1,
+      "n_cases": 3,
+      "overall_aggregate": 0.8562500000000001,
+      "cases": [
+        {
+          "test_case_id": "D01",
+          "eval_result": {
+            "run_id": "D01",
+            "query": "Show total sales by region",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly answers the query by presenting total sales (revenue) broken down by all five regions, with specific numeric values for each, ranked from highest to lowest. It fully addresses the request with clear, specific details and even supplements with a visualization mention, though the extra recommendations/context go beyond the ask but do not detract from relevance.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"North region has the highest revenue at over $5.2 million\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show North=5222201.56, which is the highest of al'",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 0.0,
+                "label": "fail",
+                "reasoning": "Ground truth overlap: 0%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.8,
+                "label": "pass",
+                "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/1 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.985579,
+                "label": "pass",
+                "reasoning": "$0.0144",
+                "raw_value": 0.014421,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "No errors",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 0.0,
+                "label": "info",
+                "reasoning": "No refusal",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "25.7s",
+                "raw_value": 25.747621059417725,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.7125,
+            "timestamp": 1786944953.5393012,
+            "test_case_id": "D01",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 25.75,
+            "guardrail_passed": true,
+            "current_phase": "complete",
+            "error": null,
+            "error_type": null,
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "8af6e37cd2ed475999b1c8c907e38f3e"
+          }
+        },
+        {
+          "test_case_id": "C02",
+          "eval_result": {
+            "run_id": "C02",
+            "query": "How does conversion rate differ by marketing channel?",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly and thoroughly answers the question of how conversion rate differs by marketing channel, providing specific conversion rate values for all five channels (Search 6.39%, Email 4.49%, Affiliate 3.81%, Social not explicitly listed in summary but implied, Display 1.19%), ranks them, discusses the disconnect between engagement and conversion, and offers channel-specific recommendations. It fully addresses the query with specific, relevant details.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: ''",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 0.5,
+                "label": "warn",
+                "reasoning": "Ground truth overlap: 50%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.95,
+                "label": "pass",
+                "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['pandas_transform'], expected one of ['comparison', 'pandas_transform']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/2 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['bar', 'dashboard', 'horizontal_bar'], expected one of ['bar']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.980383,
+                "label": "pass",
+                "reasoning": "$0.0196",
+                "raw_value": 0.019617,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "No errors",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 0.0,
+                "label": "info",
+                "reasoning": "No refusal",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 0.7,
+                "label": "pass",
+                "reasoning": "36.4s",
+                "raw_value": 36.36498212814331,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.865625,
+            "timestamp": 1786944989.904489,
+            "test_case_id": "C02",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 36.36,
+            "guardrail_passed": true,
+            "current_phase": "complete",
+            "error": null,
+            "error_type": null,
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "564991068ec149feaec398c209a48389"
+          }
+        },
+        {
+          "test_case_id": "P01",
+          "eval_result": {
+            "run_id": "P01",
+            "query": "What will revenue look like next quarter based on current trends?",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly answers the user's question about next quarter's revenue based on current trends: it identifies a decreasing trend, provides specific naive forecast values (~451.1) for the next three periods, explains the basis for the forecast, and gives caveats about forecast reliability. It fully addresses the query's intent with specific, relevant details.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: ''",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "1/1 numbers overlap",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.95,
+                "label": "pass",
+                "reasoning": "query_type correct: predictive; metrics overlap: 100%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['time_series'], expected one of ['time_series']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/1 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['line'], expected one of ['line']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.971076,
+                "label": "pass",
+                "reasoning": "$0.0289",
+                "raw_value": 0.028924,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "No errors",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 0.0,
+                "label": "info",
+                "reasoning": "No refusal",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 0.7,
+                "label": "pass",
+                "reasoning": "40.5s",
+                "raw_value": 40.45604610443115,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.990625,
+            "timestamp": 1786945030.360654,
+            "test_case_id": "P01",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 40.46,
+            "guardrail_passed": true,
+            "current_phase": "complete",
+            "error": null,
+            "error_type": null,
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "f5f5121de72c41d59438eec4c88cd408"
+          }
+        }
+      ]
+    },
+    {
+      "trial_index": 2,
+      "n_cases": 3,
+      "overall_aggregate": 0.8562500000000001,
+      "cases": [
+        {
+          "test_case_id": "D01",
+          "eval_result": {
+            "run_id": "D01",
+            "query": "Show total sales by region",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly and fully answers the query by presenting total sales (revenue) broken down by all five regions, clearly listing each region's total, ranking them, and even visualizing the comparison. It goes beyond the minimal ask with additional context and recommendations, but the core question is thoroughly addressed with specific figures for every region.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"North region has the highest revenue at $5,222,201.56\",\\n      \"supported\": true,\\n      \"evidence\": \"Findings show North=5,222,201.56, which is indeed the largest '",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 0.0,
+                "label": "fail",
+                "reasoning": "Ground truth overlap: 0%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.8,
+                "label": "pass",
+                "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/1 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.98494,
+                "label": "pass",
+                "reasoning": "$0.0151",
+                "raw_value": 0.01506,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "No errors",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 0.0,
+                "label": "info",
+                "reasoning": "No refusal",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "27.2s",
+                "raw_value": 27.20591902732849,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.7125,
+            "timestamp": 1786945057.5668852,
+            "test_case_id": "D01",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 27.21,
+            "guardrail_passed": true,
+            "current_phase": "complete",
+            "error": null,
+            "error_type": null,
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "be460abaf0f94b4eb14abdc8257b03a5"
+          }
+        },
+        {
+          "test_case_id": "C02",
+          "eval_result": {
+            "run_id": "C02",
+            "query": "How does conversion rate differ by marketing channel?",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly and thoroughly answers the question of how conversion rate differs by marketing channel, providing specific percentages for all five channels (Search 6.39%, Email 4.49%, Affiliate 3.81%, Social not explicitly listed in findings but Display 1.19%), ranks them from highest to lowest, and includes actionable recommendations tied to these differences. It covers all key aspects of the query with specific, relevant details.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: '{\\n  \"claims\": [\\n    {\\n      \"claim\": \"Search channel has the highest conversion rate at approximately 6.39%\",\\n      \"supported\": true,\\n      \"evidence\": \"groupby_aggregate_conversion_rate shows Search'",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 0.5,
+                "label": "warn",
+                "reasoning": "Ground truth overlap: 50%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.95,
+                "label": "pass",
+                "reasoning": "query_type correct: comparative; metrics overlap: 100%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['pandas_transform'], expected one of ['comparison', 'pandas_transform']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/2 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['bar', 'dashboard', 'horizontal_bar'], expected one of ['bar']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.968341,
+                "label": "pass",
+                "reasoning": "$0.0317",
+                "raw_value": 0.031659,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "No errors",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 0.0,
+                "label": "info",
+                "reasoning": "No refusal",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 0.3,
+                "label": "fail",
+                "reasoning": "64.1s",
+                "raw_value": 64.13090801239014,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.865625,
+            "timestamp": 1786945121.69789,
+            "test_case_id": "C02",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 64.13,
+            "guardrail_passed": true,
+            "current_phase": "complete",
+            "error": null,
+            "error_type": null,
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "3cc515f318214f00bb91bc8bf5262d93"
+          }
+        },
+        {
+          "test_case_id": "P01",
+          "eval_result": {
+            "run_id": "P01",
+            "query": "What will revenue look like next quarter based on current trends?",
+            "scores": [
+              {
+                "metric": "answer_relevance",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "The report directly answers the question by providing a specific forecast for next quarter's revenue (~451.1 for the next three periods), explains the underlying trend (decreasing, slope -0.000124), and contextualizes the forecast method (naive linear extrapolation). It also adds relevant caveats about forecast reliability and recommendations tied to the trend, all of which are directly relevant to 'what will revenue look like next quarter.' The response is specific and on-topic throughout.",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "groundedness",
+                "score": 0.5,
+                "label": "error",
+                "reasoning": "LLM unavailable: No JSON object in: ''",
+                "raw_value": null,
+                "valid": false
+              },
+              {
+                "metric": "factual_accuracy",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "1/1 numbers overlap",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "intent_accuracy",
+                "score": 0.95,
+                "label": "pass",
+                "reasoning": "query_type correct: predictive; metrics overlap: 100%",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "tool_selection",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['time_series'], expected one of ['time_series']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "step_success_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0/1 steps failed",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "chart_appropriateness",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "used ['line'], expected one of ['line']",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "token_cost",
+                "score": 0.982647,
+                "label": "pass",
+                "reasoning": "$0.0174",
+                "raw_value": 0.017353,
+                "valid": true
+              },
+              {
+                "metric": "retry_count",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "0 retries",
+                "raw_value": 0,
+                "valid": true
+              },
+              {
+                "metric": "error_rate",
+                "score": 1.0,
+                "label": "pass",
+                "reasoning": "No errors",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "safe_refusal",
+                "score": 0.0,
+                "label": "info",
+                "reasoning": "No refusal",
+                "raw_value": null,
+                "valid": true
+              },
+              {
+                "metric": "total_latency",
+                "score": 0.7,
+                "label": "pass",
+                "reasoning": "30.5s",
+                "raw_value": 30.508692979812622,
+                "valid": true
+              }
+            ],
+            "aggregate_score": 0.990625,
+            "timestamp": 1786945152.2067761,
+            "test_case_id": "P01",
+            "cleaning_applied_level": "none",
+            "cleaning_stop_reason": null
+          },
+          "meta": {
+            "elapsed_s": 30.51,
+            "guardrail_passed": true,
+            "current_phase": "complete",
+            "error": null,
+            "error_type": null,
+            "mcp_modes": [
+              "mcp"
+            ],
+            "data_mismatch": false,
+            "run_id": "836335a9c43a4ee882a43cc662982fc7"
+          }
+        }
+      ]
+    }
+  ]
+}
