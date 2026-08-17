@@ -204,19 +204,47 @@ def _is_numeric_col(rows: list[dict], col: str) -> bool:
 
 # ─── 6.2 Static chart generators (matplotlib/seaborn) ────────────────────────
 
+def _scoped_output_dir(output_dir: str, run_id: Optional[str]) -> Path:
+    """
+    附录 E4 / 附录 AO.2 / 附录 AP.5: every chart-writing entry point in this
+    module used to share one global `output_dir` with a filename derived
+    only from chart type + title (or, for generate_dashboard, the literal
+    constant "dashboard.png") -- two concurrent D0 trials rendering the
+    same golden case would race to `savefig()` the exact same path and
+    silently overwrite each other's PNG. Not a hypothetical: reproducible
+    today under `measure_noise.py full --concurrency 2+`.
+
+    Nesting a `run_id` subdirectory under the shared root makes the
+    collision structurally impossible between any two different run_ids,
+    regardless of what chart type/title/filename two trials happen to
+    generate -- rather than trying to make filenames "more unique" (which
+    only lowers the odds, doesn't eliminate them). `run_id` is optional and
+    defaults to no-op (flat `output_dir`, old behaviour unchanged) so
+    ad-hoc callers that don't have a run_id in scope (this module's own
+    tests included) keep working exactly as before.
+    """
+    base = Path(output_dir)
+    return (base / run_id) if run_id else base
+
+
 def generate_static_chart(
     spec: ChartSpec,
     df: Optional[pd.DataFrame] = None,
     output_dir: str = "./data/charts",
     filename: Optional[str] = None,
+    run_id: Optional[str] = None,
 ) -> str:
     """
     Generate a static PNG chart and return the file path.
+
+    `run_id`, when given, scopes the output into a `output_dir/run_id/`
+    subdirectory (附录 E4 trial isolation -- see `_scoped_output_dir`).
     """
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    target_dir = _scoped_output_dir(output_dir, run_id)
+    target_dir.mkdir(parents=True, exist_ok=True)
     safe_title = "".join(c if c.isalnum() or c in "-_ " else "_" for c in spec.title)[:50]
     fname = filename or f"{spec.chart_type}_{safe_title.replace(' ', '_')}.png"
-    out_path = str(Path(output_dir) / fname)
+    out_path = str(target_dir / fname)
 
     fig, ax = plt.subplots(figsize=(9, 5))
 
@@ -466,10 +494,18 @@ def generate_dashboard(
     dfs: Optional[list[Optional[pd.DataFrame]]] = None,
     output_dir: str = "./data/charts",
     filename: str = "dashboard.png",
+    run_id: Optional[str] = None,
 ) -> str:
     """
     Render multiple charts as a matplotlib subplot grid.
     Returns the path to the saved PNG.
+
+    `run_id`, when given, scopes the output into a `output_dir/run_id/`
+    subdirectory (附录 E4 trial isolation -- see `_scoped_output_dir`).
+    `filename` here is a literal constant by default ("dashboard.png"),
+    which without `run_id` scoping is the single worst instance of this
+    module's collision problem: every run without an explicit filename
+    override writes to the exact same path.
     """
     n = len(specs)
     if n == 0:
@@ -516,8 +552,9 @@ def generate_dashboard(
 
     fig.suptitle("MAEDA Analysis Dashboard", fontsize=14, fontweight="bold")
     fig.tight_layout(rect=[0, 0, 1, 0.96])
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
-    out_path = str(Path(output_dir) / filename)
+    target_dir = _scoped_output_dir(output_dir, run_id)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    out_path = str(target_dir / filename)
     fig.savefig(out_path, bbox_inches="tight", dpi=100)
     plt.close(fig)
     return out_path

@@ -77,6 +77,12 @@ class VizAgent(BaseAgent):
     async def process(self, state: MAEDAState) -> MAEDAState:
         results = state.get("analysis_results") or []
         intent_type = (state.get("parsed_intent") or {}).get("query_type", "descriptive")
+        # 附录 E4 / 附录 AO.2 / 附录 AP.5: scope every chart this run writes
+        # under a run_id subdirectory so two concurrent D0 trials (or two
+        # concurrent runs of any kind) never savefig() over the same path
+        # -- see chart_tool.py's _scoped_output_dir for why filename
+        # uniqueness alone doesn't fix this.
+        run_id = state.get("run_id")
 
         # Load the working DataFrame once
         df = _load_df(state)
@@ -100,7 +106,9 @@ class VizAgent(BaseAgent):
 
             # 6.2 Static chart
             try:
-                image_path = generate_static_chart(spec, df=chart_df, output_dir=self._charts_dir)
+                image_path = generate_static_chart(
+                    spec, df=chart_df, output_dir=self._charts_dir, run_id=run_id,
+                )
             except Exception as exc:
                 logger.warning("Static chart generation failed: %s", exc)
                 image_path = ""
@@ -130,7 +138,7 @@ class VizAgent(BaseAgent):
         if len(specs_for_dashboard) >= 2:
             try:
                 dashboard_path = generate_dashboard(
-                    specs_for_dashboard, output_dir=self._charts_dir
+                    specs_for_dashboard, output_dir=self._charts_dir, run_id=run_id,
                 )
                 charts.append({
                     "chart_type": "dashboard",

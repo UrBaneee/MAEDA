@@ -202,6 +202,90 @@ def test_generate_static_chart_creates_dir():
         assert os.path.exists(path)
 
 
+# ─── 附录 E4 / 附录 AO.2 / 附录 AP.5: run_id chart isolation ───────────────────
+#
+# The bug: without run_id scoping, out_path is fully determined by
+# chart_type + title (or, for the dashboard, the literal constant
+# "dashboard.png") -- two concurrent trials of the same golden case
+# produce the exact same path and savefig() races to overwrite it. These
+# tests assert the *structural* guarantee (different run_id -> disjoint
+# paths, verified by writing both and confirming both files survive with
+# their own distinct content), not just "no exception was raised" --
+# distinct paths alone don't prove non-collision if both happened to
+# resolve to the same file by coincidence.
+
+def _same_spec(title: str = "Sales by Region"):
+    from src.tools.chart_tool import ChartSpec
+    return ChartSpec(
+        chart_type="bar", title=title, x_axis="region", y_axis="sales",
+        data=[{"region": "North", "sales": 100}, {"region": "South", "sales": 200}],
+    )
+
+
+def test_generate_static_chart_without_run_id_reproduces_the_collision():
+    """Documents the pre-fix behaviour this whole section guards against:
+    two calls with the same spec and no run_id really do collide on the
+    same path. If this ever stops being true, the "fixed" tests below are
+    no longer testing what they claim to."""
+    from src.tools.chart_tool import generate_static_chart
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path_a = generate_static_chart(_same_spec(), output_dir=tmpdir)
+        path_b = generate_static_chart(_same_spec(), output_dir=tmpdir)
+        assert path_a == path_b
+
+
+def test_generate_static_chart_different_run_ids_never_collide():
+    from src.tools.chart_tool import generate_static_chart
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path_a = generate_static_chart(_same_spec(), output_dir=tmpdir, run_id="trial-a")
+        path_b = generate_static_chart(_same_spec(), output_dir=tmpdir, run_id="trial-b")
+        assert path_a != path_b
+        # Both files must actually exist independently -- not one
+        # overwritten in-place under a path that merely looks distinct.
+        assert os.path.exists(path_a)
+        assert os.path.exists(path_b)
+        assert Path(path_a) != Path(path_b)
+
+
+def test_generate_static_chart_same_run_id_is_deterministic_within_a_run():
+    """run_id scoping must not turn intra-run determinism (same trial,
+    same spec twice -- e.g. a retried node) into a new source of
+    collisions with a DIFFERENT run's chart; it only needs to guarantee
+    cross-run_id disjointness, which this pairs with the collision test
+    above to confirm."""
+    from src.tools.chart_tool import generate_static_chart
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path_1 = generate_static_chart(_same_spec(), output_dir=tmpdir, run_id="trial-a")
+        path_2 = generate_static_chart(_same_spec(), output_dir=tmpdir, run_id="trial-a")
+        assert path_1 == path_2  # unchanged pre-existing behaviour within one run_id
+        assert f"{os.sep}trial-a{os.sep}" in path_1
+
+
+def test_generate_dashboard_different_run_ids_never_collide():
+    """generate_dashboard's filename is a literal constant ("dashboard.png")
+    -- the single worst instance of this bug, since even different chart
+    *content* collides without run_id scoping."""
+    from src.tools.chart_tool import generate_dashboard
+    specs_a = [_same_spec("A"), _same_spec("B")]
+    specs_b = [_same_spec("C"), _same_spec("D")]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path_a = generate_dashboard(specs_a, output_dir=tmpdir, run_id="trial-a")
+        path_b = generate_dashboard(specs_b, output_dir=tmpdir, run_id="trial-b")
+        assert path_a != path_b
+        assert os.path.exists(path_a)
+        assert os.path.exists(path_b)
+
+
+def test_generate_static_chart_no_run_id_falls_back_to_flat_output_dir():
+    """Backward compatibility: omitting run_id (as this module's own other
+    tests, and any ad-hoc/offline caller, do) must behave exactly like
+    before this change -- flat output_dir, no subdirectory."""
+    from src.tools.chart_tool import generate_static_chart
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = generate_static_chart(_same_spec(), output_dir=tmpdir)
+        assert Path(path).parent == Path(tmpdir)
+
+
 # ─── 6.3 Interactive chart generation (Plotly) ────────────────────────────────
 
 def test_generate_interactive_bar_returns_json():
@@ -472,6 +556,50 @@ def test_viz_agent_no_results():
 
     result = asyncio.run(agent.process(state))
     assert result["charts"] == []
+
+
+def test_viz_agent_two_concurrent_runs_never_overwrite_each_others_charts():
+    """附录 E4 end-to-end: two states sharing the SAME charts_dir (as every
+    real invocation does -- viz_agent.py:33's _CHARTS_DIR is a module-level
+    constant) but with different run_id (as initial_state() guarantees for
+    any two real pipeline invocations, incl. two concurrent D0 trials of
+    the identical golden case) must produce charts at disjoint paths, and
+    both sets of files must survive on disk."""
+    from src.agents.viz_agent import VizAgent
+    from src.state.graph_state import initial_state
+
+    shared_dir = tempfile.mkdtemp()
+
+    def _mock_llm():
+        llm = MagicMock()
+        resp = MagicMock()
+        resp.content = "Caption."
+        resp.usage_metadata = {"input_tokens": 1, "output_tokens": 1}
+        llm.ainvoke = AsyncMock(return_value=resp)
+        return llm
+
+    same_results = [{
+        "step": 1, "method": "groupby", "tool": "pandas_transform",
+        "result": [{"region": "North", "sales": 100}, {"region": "South", "sales": 200}],
+        "result_summary": "North had most sales", "confidence": 1.0,
+        "warnings": [], "failed": False,
+    }]
+
+    agent = VizAgent(llm=_mock_llm(), charts_dir=shared_dir)
+    state_a = initial_state("Show sales by region")
+    state_a["analysis_results"] = same_results
+    state_b = initial_state("Show sales by region")  # identical query -> identical spec
+    state_b["analysis_results"] = same_results
+    assert state_a["run_id"] != state_b["run_id"]  # initial_state()'s uuid4 guarantee
+
+    result_a = asyncio.run(agent.process(state_a))
+    result_b = asyncio.run(agent.process(state_b))
+
+    path_a = result_a["charts"][0]["image_path"]
+    path_b = result_b["charts"][0]["image_path"]
+    assert path_a != path_b
+    assert os.path.exists(path_a)
+    assert os.path.exists(path_b)
 
 
 # ─── 6.5 Rule-based caption ───────────────────────────────────────────────────
