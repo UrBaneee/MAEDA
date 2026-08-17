@@ -792,10 +792,12 @@
     "ground_truth": {
       "product_8_unit_price": 404.28,
       "product_8_cost": 119.6,
-      "product_8_margin": 284.7
+      "product_8_margin": 284.7,
+      "_note": "Product 8 actually has a healthy positive margin ($284.70 = $404.28 unit price - $119.60 cost), not a negative one -- there is no loss to explain"
     },
     "tags": [
-      "diagnostic"
+      "diagnostic",
+      "false_premise"
     ],
     "data_source": {
       "type": "sql",
@@ -823,7 +825,7 @@
     "ground_truth": {
       "consumer_total_revenue": 3831241.6,
       "corporate_total_revenue": 4047382.46,
-      "_note": "Corporate and Consumer segment revenue are nearly identical (within 0.4%) -- there is no significant gap to explain"
+      "_note": "Corporate segment revenue ($4,047,382.46) is actually slightly HIGHER than Consumer ($3,831,241.60, about 5.6% more), not lower -- there is no revenue shortfall to explain"
     },
     "tags": [
       "diagnostic",
@@ -1911,7 +1913,7 @@
       "books_revenue": 2050816.57,
       "books_avg_margin": 141.16,
       "furniture_avg_margin": 148.4,
-      "_note": "Books actually generates slightly MORE total revenue than Furniture ($3,112,756 vs $3,071,246) as well as a higher margin -- there is no revenue-vs-margin tradeoff to explain here"
+      "_note": "Furniture does generate more revenue than Books ($2,988,763.83 vs $2,050,816.57), consistent with the first half of the question -- but Furniture average margin ($148.40) is also higher than Books ($141.16), not lower as the second half assumes. There is no revenue-vs-margin tradeoff: Furniture leads on both metrics"
     },
     "tags": [
       "diagnostic",
@@ -1975,10 +1977,12 @@
     "ground_truth": {
       "product_1_unit_price": 404.83,
       "product_1_cost": 183.37,
-      "product_1_margin": 221.46
+      "product_1_margin": 221.46,
+      "_note": "Product 1 actually has a healthy positive margin ($221.46 = $404.83 unit price - $183.37 cost), not a loss -- there is no heavy loss to explain"
     },
     "tags": [
-      "diagnostic"
+      "diagnostic",
+      "false_premise"
     ],
     "data_source": {
       "type": "sql",
