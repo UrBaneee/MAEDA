@@ -10,20 +10,23 @@ fixtures with no visible symptom: row counts, column counts, and file
 sizes all stayed the same (see 附录 BC.1's ecommerce_orders.db evidence).
 Nothing short of a real cross-process eval run surfaced it, months later.
 
-This test pins the CURRENT (post-52fd014-fixture-correction) content of
-all four demo files. If it ever fails, that means data/demo/* changed --
-whoever re-ran scripts/generate_demo_data.py (deliberately or by
-running it as a side effect of something else) must, before updating
-the hash below:
+This test pins the CURRENT content of all four demo files (as of 附录
+BH's isolated-RNG re-render + matching fixture update). If it ever
+fails again, that means data/demo/* changed -- whoever re-ran
+scripts/generate_demo_data.py (deliberately or by running it as a side
+effect of something else, e.g. 附录 BG.1) must, before updating the
+hash below:
   1. Recompute tests/eval/test_suite.json's ground_truth fixtures
-     against the new files (see 52fd014's derivation approach --
+     against the new files (see 52fd014/附录 BH's derivation approach --
      pandas/sqlite3 directly over the data, never from a model report).
   2. Re-run rag-framework/eval/fixtures/event_script/verify.py
      --data-path against the new sales_data.csv (the TB5 9/9
      detectability gate) if sales_data.csv specifically changed.
-  3. Re-check the 6 known false-premise cases (DG07/DG08/DG11/DG13/
-     DG15/DG18 -- 附录 BB.1/BC.4) against the new ecommerce_orders.db,
-     since all six are ecommerce-derived.
+  3. Re-check the 4 remaining deliberately-designed false-premise cases
+     (DG07/DG08/DG13/DG15 -- converted from accidental to intentional
+     in 附录 BH, same pattern as DG03) still say what they claim against
+     the new ecommerce_orders.db -- all four are ecommerce-derived, and
+     a further data change could flip their premises again.
 
 The three CSVs are hashed as raw file bytes (deterministic byte-for-byte
 across identical-content renders -- confirmed live, 附录 BF). The
@@ -44,17 +47,29 @@ import pytest
 
 _DEMO_DIR = Path(__file__).resolve().parents[2] / "data" / "demo"
 
-# 附录 BF: captured 2026-08-17 against the current data/demo/* (matching
-# 52fd014's corrected fixtures). Update ONLY after completing the three
-# steps in this file's own docstring above -- not just to make this test
-# pass.
+# 附录 BF/BH: this is the ONE sanctioned reason to update these hashes --
+# a deliberate, user-authorized re-render (附录 BH), immediately followed
+# by recomputing every affected tests/eval/test_suite.json fixture from
+# the new files (never from a model report) and updating the 6 known
+# false-premise cases to match. If you're updating this hash for any
+# OTHER reason -- to make a failing test pass without having done those
+# two things first -- stop; that's exactly the silent-drift failure mode
+# this guard exists to prevent (see 附录 BC.1/BG.1).
+#
+# Captured 2026-08-17 (附录 BH) against data/demo/* re-rendered with the
+# isolated RNGs (5ea032e) + tests/eval/test_suite.json's matching fixture
+# update (same commit as this hash change). sales_data.csv's hash is
+# UNCHANGED from the previous (52fd014-era) value -- verified, not
+# assumed, both here and via `git diff --stat data/` showing no change
+# to that file across the re-render (附录 BF.2's prediction, confirmed
+# live against the real re-render, not just a scratch one).
 _EXPECTED_CSV_SHA256 = {
     "sales_data.csv": "a0da755ec4c046de058280e4642f950697963baa8ec2f8b27d36f90021815ed2",
-    "churn_data.csv": "230efca61993bc7ab2cec21d8b641b6336448c025bf096bc88145070b2231801",
-    "marketing_campaigns.csv": "1cabbb4593b92f62f9171e88e6394c92509cb17f1b5313477286eb62fa169617",
+    "churn_data.csv": "dfc7b528f144dc1ff6025b693a6847daff6b9cc053c0866aa84966786cd1c9f3",
+    "marketing_campaigns.csv": "e6f0c8e523f15406e81c7eb93726529953639ed07019379d76479aa0fd9db460",
 }
 _EXPECTED_ECOMMERCE_DB_CANONICAL_SHA256 = (
-    "d10c11879913a5a02b7a9b8dc6615fb16363eb72d686280bc6acf39283bae7ac"
+    "10a552e24278879fe01c0bcda00f6a7b21e0ffd5386779547e8e34239ddc4df8"
 )
 
 

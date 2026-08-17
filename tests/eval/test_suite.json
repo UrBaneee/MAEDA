@@ -40,8 +40,8 @@
       "category"
     ],
     "ground_truth": {
-      "books_avg_order_value": 1091.49,
-      "office_supplies_avg_order_value": 1398.02
+      "books_avg_order_value": 1146.35,
+      "office_supplies_avg_order_value": 875.97
     },
     "expected_tools": [
       "sql_query"
@@ -70,8 +70,8 @@
       "country"
     ],
     "ground_truth": {
-      "canada_customers": 172,
-      "france_customers": 162,
+      "canada_customers": 188,
+      "france_customers": 176,
       "total_customers": 1000
     },
     "expected_tools": [
@@ -133,8 +133,8 @@
       "month"
     ],
     "ground_truth": {
-      "dec_2024_orders": 263,
-      "jan_2024_orders": 266
+      "dec_2024_orders": 271,
+      "jan_2024_orders": 288
     },
     "expected_tools": [
       "time_series",
@@ -197,8 +197,8 @@
     ],
     "ground_truth": {
       "march_2024_churned": 104,
-      "march_2024_total": 278,
-      "march_2024_churn_rate_pct": 37.41
+      "march_2024_total": 262,
+      "march_2024_churn_rate_pct": 39.31
     },
     "expected_tools": [
       "pandas_transform",
@@ -317,7 +317,7 @@
       "channel"
     ],
     "ground_truth": {
-      "search_conversion_rate_pct": 6.49,
+      "search_conversion_rate_pct": 6.64,
       "display_conversion_rate_pct": 1.2
     },
     "expected_tools": [
@@ -378,8 +378,8 @@
       "category"
     ],
     "ground_truth": {
-      "books_avg_margin": 115.15,
-      "office_supplies_avg_margin": 151.45
+      "books_avg_margin": 141.16,
+      "office_supplies_avg_margin": 60.76
     },
     "expected_tools": [
       "sql_query",
@@ -606,7 +606,7 @@
       "country"
     ],
     "ground_truth": {
-      "usa_order_count": 1540,
+      "usa_order_count": 1676,
       "total_orders": 10000
     },
     "tags": [
@@ -638,9 +638,9 @@
       "channel"
     ],
     "ground_truth": {
-      "email_spend": 1997884.4,
+      "email_spend": 2030297.0,
       "email_revenue": 61702592.53,
-      "search_revenue": 87869122.79
+      "search_revenue": 83031585.16
     },
     "tags": [
       "descriptive"
@@ -669,7 +669,7 @@
       "churned"
     ],
     "ground_truth": {
-      "churned_avg_tenure_months": 27.69,
+      "churned_avg_tenure_months": 28.13,
       "retained_avg_tenure_months": 31.07
     },
     "tags": [
@@ -729,7 +729,7 @@
       "login_days_last_30d"
     ],
     "ground_truth": {
-      "churn_rate_0_login_days": 0.25,
+      "churn_rate_0_login_days": 0.23,
       "churn_rate_10plus_login_days": 0.1527
     },
     "tags": [
@@ -760,8 +760,8 @@
       "channel"
     ],
     "ground_truth": {
-      "email_avg_roi": 2969.73,
-      "display_avg_roi": 642.0
+      "email_avg_roi": 2878.51,
+      "display_avg_roi": 728.2
     },
     "tags": [
       "diagnostic"
@@ -790,9 +790,9 @@
       "product"
     ],
     "ground_truth": {
-      "product_8_unit_price": 292.48,
-      "product_8_cost": 99.6,
-      "product_8_margin": 192.92
+      "product_8_unit_price": 404.28,
+      "product_8_cost": 119.6,
+      "product_8_margin": 284.7
     },
     "tags": [
       "diagnostic"
@@ -821,8 +821,8 @@
       "segment"
     ],
     "ground_truth": {
-      "consumer_total_revenue": 4181965.25,
-      "corporate_total_revenue": 4524212.31,
+      "consumer_total_revenue": 3831241.6,
+      "corporate_total_revenue": 4047382.46,
       "_note": "Corporate and Consumer segment revenue are nearly identical (within 0.4%) -- there is no significant gap to explain"
     },
     "tags": [
@@ -854,7 +854,7 @@
       "login_days_last_30d"
     ],
     "ground_truth": {
-      "churn_rate_0_days": 0.25,
+      "churn_rate_0_days": 0.23,
       "churn_rate_10plus_days": 0.1527
     },
     "tags": [
@@ -884,9 +884,9 @@
       "segment"
     ],
     "ground_truth": {
-      "consumer_avg_order_revenue": 1280.85,
-      "corporate_avg_order_revenue": 1282.37,
-      "home_office_avg_order_revenue": 1274.65
+      "consumer_avg_order_revenue": 1184.31,
+      "corporate_avg_order_revenue": 1214.34,
+      "home_office_avg_order_revenue": 1251.11
     },
     "tags": [
       "comparative",
@@ -952,8 +952,8 @@
       "quarter"
     ],
     "ground_truth": {
-      "q1_2024_orders": 822,
-      "q4_2024_orders": 859
+      "q1_2024_orders": 883,
+      "q4_2024_orders": 805
     },
     "tags": [
       "comparative",
@@ -1142,8 +1142,8 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "roi_outliers_iqr": 111,
-      "spend_outliers_iqr": 7
+      "roi_outliers_iqr": 118,
+      "spend_outliers_iqr": 6
     },
     "tags": [
       "exploratory",
@@ -1173,7 +1173,7 @@
       "churned"
     ],
     "ground_truth": {
-      "support_calls_churn_correlation": 0.1677
+      "support_calls_churn_correlation": 0.1873
     },
     "tags": [
       "exploratory",
@@ -1261,8 +1261,8 @@
       "joined_date"
     ],
     "ground_truth": {
-      "customers_joined_2023": 245,
-      "customers_joined_2020": 282
+      "customers_joined_2023": 263,
+      "customers_joined_2020": 242
     },
     "tags": [
       "descriptive",
@@ -1384,8 +1384,8 @@
       "category"
     ],
     "ground_truth": {
-      "office_supplies_avg_margin": 151.45,
-      "books_avg_margin": 115.15
+      "office_supplies_avg_margin": 60.76,
+      "books_avg_margin": 141.16
     },
     "tags": [
       "diagnostic"
@@ -1650,8 +1650,8 @@
     ],
     "ground_truth": {
       "consumer_pct": 33.6,
-      "corporate_pct": 34.6,
-      "home_office_pct": 32.1
+      "corporate_pct": 33.4,
+      "home_office_pct": 33.3
     },
     "tags": [
       "exploratory"
@@ -1783,8 +1783,8 @@
       "category"
     ],
     "ground_truth": {
-      "furniture_quantity": 10402,
-      "books_quantity": 10590
+      "furniture_quantity": 13349,
+      "books_quantity": 9795
     },
     "tags": [
       "descriptive",
@@ -1844,7 +1844,7 @@
     ],
     "ground_truth": {
       "top_product_by_avg_order_revenue": "Product 11",
-      "top_product_avg_order_revenue": 2763.63
+      "top_product_avg_order_revenue": 3010.64
     },
     "tags": [
       "descriptive",
@@ -1875,8 +1875,8 @@
       "plan"
     ],
     "ground_truth": {
-      "premium_plan_customers": 1656,
-      "basic_plan_customers": 1646,
+      "premium_plan_customers": 1628,
+      "basic_plan_customers": 1680,
       "standard_plan_customers": 1698
     },
     "tags": [
@@ -1907,10 +1907,10 @@
       "category"
     ],
     "ground_truth": {
-      "furniture_revenue": 2567745.19,
-      "books_revenue": 2097846.27,
-      "books_avg_margin": 115.15,
-      "furniture_avg_margin": 155.5,
+      "furniture_revenue": 2988763.83,
+      "books_revenue": 2050816.57,
+      "books_avg_margin": 141.16,
+      "furniture_avg_margin": 148.4,
       "_note": "Books actually generates slightly MORE total revenue than Furniture ($3,112,756 vs $3,071,246) as well as a higher margin -- there is no revenue-vs-margin tradeoff to explain here"
     },
     "tags": [
@@ -1942,7 +1942,7 @@
       "support_calls_last_90d"
     ],
     "ground_truth": {
-      "churn_rate_0_1_calls": 0.1257,
+      "churn_rate_0_1_calls": 0.1129,
       "churn_rate_4plus_calls": 0.3268
     },
     "tags": [
@@ -1973,9 +1973,9 @@
       "product"
     ],
     "ground_truth": {
-      "product_1_unit_price": 117.18,
-      "product_1_cost": 46.75,
-      "product_1_margin": 70.43
+      "product_1_unit_price": 404.83,
+      "product_1_cost": 183.37,
+      "product_1_margin": 221.46
     },
     "tags": [
       "diagnostic"
@@ -2033,8 +2033,8 @@
       "category"
     ],
     "ground_truth": {
-      "furniture_quantity": 10402,
-      "books_quantity": 10590
+      "furniture_quantity": 13349,
+      "books_quantity": 9795
     },
     "tags": [
       "comparative",
@@ -2095,8 +2095,8 @@
       "plan"
     ],
     "ground_truth": {
-      "basic_churn_rate": 0.2321,
-      "premium_churn_rate": 0.1171
+      "basic_churn_rate": 0.2214,
+      "premium_churn_rate": 0.137
     },
     "tags": [
       "comparative"
@@ -2270,7 +2270,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "unit_price_margin_correlation": 0.905
+      "unit_price_margin_correlation": 0.923
     },
     "tags": [
       "exploratory",
@@ -2299,7 +2299,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "tenure_monthly_charges_correlation": 0.0067
+      "tenure_monthly_charges_correlation": 0.0281
     },
     "tags": [
       "exploratory",
@@ -2326,7 +2326,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "impressions_outliers_iqr": 32
+      "impressions_outliers_iqr": 24
     },
     "tags": [
       "exploratory",
@@ -2376,7 +2376,7 @@
       "country"
     ],
     "ground_truth": {
-      "germany_revenue": 2024788.59
+      "germany_revenue": 1861277.14
     },
     "tags": [
       "descriptive",
@@ -2404,8 +2404,8 @@
       "category"
     ],
     "ground_truth": {
-      "furniture_order_count": 1881,
-      "books_order_count": 1922
+      "furniture_order_count": 2376,
+      "books_order_count": 1789
     },
     "tags": [
       "descriptive",
@@ -2466,8 +2466,8 @@
       "churned"
     ],
     "ground_truth": {
-      "churned_monthly_charges_mean": 54.59,
-      "churned_monthly_charges_median": 51.23
+      "churned_monthly_charges_mean": 56.36,
+      "churned_monthly_charges_median": 53.8
     },
     "tags": [
       "descriptive"
@@ -2495,8 +2495,8 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "monthly_charges_churn_correlation": -0.118,
-      "churned_avg_monthly_charge": 54.59,
+      "monthly_charges_churn_correlation": -0.085,
+      "churned_avg_monthly_charge": 56.36,
       "retained_avg_monthly_charge": 63.58
     },
     "tags": [
@@ -2527,8 +2527,8 @@
       "category"
     ],
     "ground_truth": {
-      "books_order_count": 1922,
-      "furniture_order_count": 1881
+      "books_order_count": 1789,
+      "furniture_order_count": 2376
     },
     "tags": [
       "diagnostic",
@@ -2557,7 +2557,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "discount_quantity_correlation": -0.0157,
+      "discount_quantity_correlation": 0.0033,
       "_note": "The correlation between order quantity and discount is essentially zero (0.0083) -- there is no real relationship to explain here"
     },
     "tags": [
@@ -2617,8 +2617,8 @@
       "country"
     ],
     "ground_truth": {
-      "germany_revenue": 2024788.59,
-      "uk_revenue": 2291190.1
+      "germany_revenue": 1861277.14,
+      "uk_revenue": 1803700.4
     },
     "tags": [
       "comparative",
@@ -2649,8 +2649,8 @@
       "category"
     ],
     "ground_truth": {
-      "books_order_count": 1922,
-      "electronics_order_count": 2146
+      "books_order_count": 1789,
+      "electronics_order_count": 1976
     },
     "tags": [
       "comparative",
@@ -2713,7 +2713,7 @@
       "churned"
     ],
     "ground_truth": {
-      "churned_avg_monthly_charge": 54.59,
+      "churned_avg_monthly_charge": 56.36,
       "retained_avg_monthly_charge": 63.58
     },
     "tags": [
@@ -2827,7 +2827,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "conversions_outliers_iqr": 118
+      "conversions_outliers_iqr": 132
     },
     "tags": [
       "exploratory",
@@ -2856,7 +2856,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "discount_quantity_correlation": -0.0157
+      "discount_quantity_correlation": 0.0033
     },
     "tags": [
       "exploratory",
@@ -2938,7 +2938,7 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "order_revenue_outliers_iqr": 212
+      "order_revenue_outliers_iqr": 119
     },
     "tags": [
       "exploratory",
