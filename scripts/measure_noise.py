@@ -32,8 +32,16 @@ Two noise sources, measured separately:
 Usage:
     poetry run python scripts/measure_noise.py judge --repeats 15
     poetry run python scripts/measure_noise.py judge --cases D01 DG01 C02 --repeats 20
-    poetry run python scripts/measure_noise.py full --repeats 8
+    poetry run python scripts/measure_noise.py full --repeats 8              # dev split (default)
     poetry run python scripts/measure_noise.py full --repeats 5 --cases D01 D02 DG01 DG03 C01 C02 E02 E04 --concurrency 4
+    poetry run python scripts/measure_noise.py full --repeats 8 --split all # explicit, warns -- touches test split (附录 CC.1)
+
+Note (附录 CC.1/CB.2.5, 阶段 3 收尾执行计划轮次 1): `full` defaults to
+`--split dev`. Before this default existed, a bare `full` invocation
+silently ran the whole suite -- including the 41 test-split cases -- 8
+times, spending 硬约束 1's one-time test-split reveal without anyone
+noticing. Reach for `--split test`/`--split all` only when that reveal is
+actually intended; both print an unmissable warning before running.
 """
 from __future__ import annotations
 
@@ -327,6 +335,69 @@ def _print_full_report(report: dict):
     print("=" * 78)
 
 
+# ─── full mode: split-aware case selection (附录 CC.1/CB.2.5) ─────────────────
+
+def select_full_mode_cases(
+    suite: list, cases, split: str,
+) -> list:
+    """
+    `full` mode's case selection, factored out of main() so the default --
+    and the exact danger 附录 CC.1 found in not having one -- can be locked
+    by a test that never touches the real pipeline.
+
+    Before this function existed, `full`'s only selection knob was
+    `--cases` (default None = the WHOLE golden suite, dev and test split
+    mixed, no way to filter by split at all). A bare
+    `measure_noise.py full` therefore silently ran all 41 test-split cases
+    8 times alongside the 59 dev-split ones -- spending 硬约束 1's one-time
+    test-split reveal in a routine noise-floor-remeasurement invocation,
+    with nothing warning that this had happened.
+
+    - `--cases` given: unchanged pre-existing behavior, an explicit
+      id-by-id allowlist. `--split` is ignored in this branch -- an
+      explicit case list is already a deliberate, informed choice, unlike
+      the *default* path CC.1 found dangerous.
+    - `--cases` absent: filtered to `tc.split == split`. `"dev"` is the
+      new default (see --split's argparse help below) -- this is the
+      actual fix: the single most common invocation (no flags at all) now
+      can't touch the test split. `"all"` is the explicit escape hatch
+      back to the old (dangerous-by-default) behavior; it is never the
+      default and must be typed out on purpose.
+    """
+    if cases:
+        wanted = set(cases)
+        return [tc for tc in suite if tc.id in wanted]
+    if split == "all":
+        return list(suite)
+    return [tc for tc in suite if tc.split == split]
+
+
+def warn_if_test_split_involved(selected: list) -> None:
+    """
+    附录 CC.1: an unmissable, readable warning whenever a `full` run is
+    about to touch ANY test-split case, for whatever reason (`--split
+    test`, `--split all`, or an explicit `--cases` list that happens to
+    include test ids -- an explicit list is already a deliberate choice,
+    but a copy-pasted or typo'd id is still worth flagging cheaply).
+    Printed to stdout, not just logged -- 硬约束 1: the test split gets
+    exactly ONE official reveal, and this is the last point before a real
+    `full` run actually executes where a human is still watching the
+    terminal it was launched from.
+    """
+    test_ids = sorted(tc.id for tc in selected if tc.split == "test")
+    if not test_ids:
+        return
+    print("\n" + "!" * 78)
+    print("!! WARNING: this `full` run includes TEST-SPLIT cases.")
+    print("!! 硬约束 1: test split gets exactly ONE official reveal --")
+    print("!! if this is that reveal, make sure it's the real predetermined")
+    print("!! run, not routine noise-floor/infra maintenance.")
+    print(f"!! {len(test_ids)} test case(s): {test_ids}")
+    print("!! Routine noise-floor remeasurement should use --split dev")
+    print("!! (the default) or an explicit dev-only --cases list instead.")
+    print("!" * 78 + "\n")
+
+
 # ─── CLI ────────────────────────────────────────────────────────────────────
 
 async def main():
@@ -348,7 +419,17 @@ async def main():
     p_judge.add_argument("--concurrency", type=int, default=3)
 
     p_full = sub.add_parser("full", help="Measure full-pipeline noise by rerunning the suite N times")
-    p_full.add_argument("--cases", nargs="+", default=None, help="Subset of case ids; default = whole suite")
+    p_full.add_argument("--cases", nargs="+", default=None,
+                        help="Subset of case ids; default = filtered by --split instead of "
+                             "the whole suite. See --split.")
+    p_full.add_argument("--split", choices=["dev", "test", "all"], default="dev",
+                        help="附录 CC.1/CB.2.5: which split(s) to draw cases from when --cases "
+                             "is not given. Defaults to 'dev' -- before this flag existed, a "
+                             "bare `measure_noise.py full` silently ran the WHOLE 100-case "
+                             "suite (41 of them test-split) 8 times, spending 硬约束 1's "
+                             "one-time test-split reveal without anyone noticing (附录 CC.1). "
+                             "'test'/'all' must be requested explicitly and print an unmissable "
+                             "warning banner before running. Ignored when --cases is given.")
     p_full.add_argument("--repeats", type=int, default=8)
     p_full.add_argument("--concurrency", type=int, default=2)
 
@@ -362,10 +443,9 @@ async def main():
         out = REPORT_DIR / f"judge_noise_{ts}.json"
     else:
         suite = load_golden_suite()
-        if args.cases:
-            wanted = set(args.cases)
-            suite = [tc for tc in suite if tc.id in wanted]
-        report = await run_full_mode(suite, args.repeats, args.concurrency)
+        selected = select_full_mode_cases(suite, args.cases, args.split)
+        warn_if_test_split_involved(selected)
+        report = await run_full_mode(selected, args.repeats, args.concurrency)
         _print_full_report(report)
         out = REPORT_DIR / f"full_noise_{ts}.json"
 
