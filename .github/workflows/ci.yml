@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Lets a human trigger integration-tests on demand from the Actions tab
+  # (see the gate comment on that job below for why it needs this).
+  workflow_dispatch:
 
 jobs:
   unit-tests:
@@ -37,6 +40,15 @@ jobs:
     name: Integration tests (real LLM calls)
     runs-on: ubuntu-latest
     needs: unit-tests
+    # Gate: this job spends real money (OPENAI_API_KEY/ANTHROPIC_API_KEY
+    # secrets, 4 judge calls + one full run_eval.py pipeline run per
+    # invocation) and this project requires explicit per-run spend
+    # authorization before any real LLM call (see
+    # ECOSYSTEM_INTEGRATION_PLAN.md appendix BV.4). Running it on every
+    # push to main bypassed that authorization step entirely, so it is
+    # workflow_dispatch-only: trigger it manually from the Actions tab
+    # only after getting that authorization, not automatically on push.
+    if: github.event_name == 'workflow_dispatch'
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
