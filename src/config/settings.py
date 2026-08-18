@@ -82,6 +82,27 @@ class MAEDASettings(BaseSettings):
     failure (集成计划: "不得静默接受降级"); in degraded mode it's allowed,
     but must still be logged, not swallowed."""
 
+    intent_refine_trigger: Literal["always", "if_unresolved"] = Field(
+        default="if_unresolved", alias="MAEDA_INTENT_REFINE_TRIGGER"
+    )
+    """ECOSYSTEM_INTEGRATION_PLAN.md E2 附录 BQ. When the schema-aware
+    `refine_intent` node (src/graph/nodes.py) actually calls the LLM a
+    second time, now that connect_schema has a real schema to inject:
+    "always" (every run, whether or not the first parse's mentions already
+    matched the schema) or "if_unresolved" (only when a deterministic
+    pre-check — the same `_resolve_intent_columns` reconciliation
+    `profile_and_clean` runs for real afterward — finds at least one
+    mention that doesn't match any column). Defaults to "if_unresolved":
+    refine only costs ~$0.0003/run (~1.4% of a full pipeline run), so this
+    isn't about the dollar amount, it's about not spending an extra LLM
+    round-trip's *latency* on the common case where the first parse
+    already got every column name right. Eval runs should force "always"
+    (set this env var, or monkeypatch settings.intent_refine_trigger)
+    instead of relying on the default: an eval comparing on/off arms needs
+    every case to go through the same code path, not have some cases
+    silently skip refine because their first parse happened to already be
+    schema-compatible while others didn't."""
+
     maeda_artifact_root: str = Field(
         default="./artifacts/cleaner_runs", alias="MAEDA_ARTIFACT_ROOT"
     )

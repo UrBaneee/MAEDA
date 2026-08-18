@@ -21,6 +21,7 @@ NODE_LABELS: dict[str, str] = {
     "parse_intent": "🔍 Parsing intent...",
     "ask_clarification": "❓ Clarification needed...",
     "connect_schema": "🔗 Connecting to data source...",
+    "refine_intent": "🎯 Refining intent with schema...",
     "profile_and_clean": "📊 Profiling data...",
     "plan_analysis": "🧠 Planning analysis...",
     "execute_analysis": "🧮 Running analysis...",

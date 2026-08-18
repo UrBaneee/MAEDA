@@ -17,6 +17,7 @@ from src.graph.nodes import (
     persist_run_node,
     plan_analysis_node,
     profile_and_clean,
+    refine_intent_node,
     retrieve_knowledge_node,
     run_eval_node,
     run_guardrails_node,
@@ -25,6 +26,7 @@ from src.graph.router import (
     route_after_guardrails,
     route_after_intent,
     route_after_profiling,
+    route_after_schema,
 )
 from src.state.graph_state import MAEDAState
 
@@ -47,18 +49,14 @@ def build_graph() -> StateGraph:
     g.add_node("persist_run", persist_run_node)
 
     # Delegated sub-system nodes (call Data Cleaner + RAG via MCP)
-    # E2 BO.1 split (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, submission 1):
-    # what used to be one "connect_and_profile_data" node is now two —
-    # connect_schema (schema extraction + E1 table selection) followed by
-    # profile_and_clean (intent reconciliation + the MCP
-    # profile/clean/validate round). Submission 1 wires the self-loop back
-    # to connect_schema, reproducing the pre-split node's exact per-round
-    # behavior (schema is re-extracted every clean round, same as before)
-    # — see nodes.py's connect_and_profile_node docstring and 附录 BQ for
-    # why. Submission 2 (E2's refine_intent node) is the one that moves the
-    # self-loop target to profile_and_clean, once there's an
-    # intent_refine_done gate to actually protect.
+    # E2 BO.1 split (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ): what used to
+    # be one "connect_and_profile_data" node is now three —
+    # connect_schema (schema extraction + E1 table selection), an
+    # optional refine_intent (schema-aware second-pass intent parse, only
+    # on route_after_schema's "refine" edge), and profile_and_clean
+    # (intent reconciliation + the MCP profile/clean/validate round).
     g.add_node("connect_schema", connect_schema)
+    g.add_node("refine_intent", refine_intent_node)
     g.add_node("profile_and_clean", profile_and_clean)
     g.add_node("retrieve_domain_knowledge", retrieve_knowledge_node)
 
@@ -76,17 +74,33 @@ def build_graph() -> StateGraph:
     # Clarification loops back to re-parse
     g.add_edge("ask_clarification", "parse_intent")
 
-    # connect_schema always falls through to profile_and_clean (unconditional
-    # -- profile_and_clean's own top-of-function guard on
-    # current_phase == "error" is what makes connect_schema's "no data
-    # source" exit a no-op here, not a graph-level branch).
-    g.add_edge("connect_schema", "profile_and_clean")
+    # connect_schema may or may not refine before profiling (E2, 附录 BQ) --
+    # route_after_schema's "profile" key skips refine_intent entirely
+    # (profile_and_clean's own top-of-function guard on
+    # current_phase == "error" is still what makes connect_schema's "no
+    # data source" exit a no-op, same as before E2 existed).
+    g.add_conditional_edges(
+        "connect_schema",
+        route_after_schema,
+        {"refine": "refine_intent", "profile": "profile_and_clean"},
+    )
+    g.add_edge("refine_intent", "profile_and_clean")
 
-    # Data profiling (may loop for cleaning then re-profile)
+    # Data profiling (may loop for cleaning then re-profile). The self-loop
+    # targets profile_and_clean directly, NOT connect_schema -- 附录 BQ:
+    # this is what makes intent_refine_done's gate on route_after_schema
+    # actually matter (without it, every clean round would re-trigger
+    # refine_intent, one extra LLM call per round for no benefit, since
+    # the intent doesn't change between rounds of the SAME run). Bypassing
+    # connect_schema on later rounds also means profile_and_clean itself
+    # must keep effective_dataset_path/schema_columns current across
+    # rounds now (see its "Adopt the cleaned file" section) -- connect_schema
+    # is no longer there to re-derive them every round the way it did when
+    # the self-loop pointed back to it (E2 submission 1).
     g.add_conditional_edges(
         "profile_and_clean",
         route_after_profiling,
-        {"clean": "connect_schema", "ready": "plan_analysis", "error": "handle_error"},
+        {"clean": "profile_and_clean", "ready": "plan_analysis", "error": "handle_error"},
     )
 
     # Linear analysis pipeline

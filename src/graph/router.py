@@ -2,6 +2,7 @@
 Conditional edge logic for the MAEDA LangGraph state graph.
 Each function receives the current state and returns a routing key string.
 """
+from src.config.settings import settings
 from src.state.graph_state import MAEDAState
 
 # Maximum re-profile iterations before giving up on cleaning
@@ -17,6 +18,60 @@ def route_after_intent(state: MAEDAState) -> str:
     if state.get("clarification_needed") and state.get("clarification_count", 0) < 1:
         return "clarify"
     return "proceed"
+
+
+def route_after_schema(state: MAEDAState) -> str:
+    """
+    After connect_schema (E2, ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ):
+      - "profile" → straight to profile_and_clean, no refine this round
+      - "refine"  → through refine_intent first
+
+    Never refines (falls straight to "profile") when:
+      - connect_schema's "no data source" exit already set current_phase
+        to "error" — profile_and_clean's own top-of-function guard is what
+        actually stops the round; this check just avoids wasting an LLM
+        call on a state that's headed to handle_error regardless.
+      - schema extraction itself failed this round (`schema_columns` is
+        None) — there is no real schema to inject, so refine_intent would
+        just re-run `_parse()` against the same "Schema unavailable: ..."
+        placeholder text connect_schema already put in schema_summary, no
+        better informed than the first parse.
+      - `intent_refine_done` is already True — defensive gate against
+        re-triggering refine within one round. Structurally unreachable
+        today (the clean self-loop targets profile_and_clean directly,
+        bypassing this edge entirely — src/graph/builder.py), kept so
+        that stays true even if the topology changes later, rather than
+        relying on the self-loop's target alone.
+
+    Otherwise defers to settings.intent_refine_trigger:
+      - "always" refines unconditionally.
+      - "if_unresolved" (the default) only refines when a deterministic
+        pre-check finds at least one intent mention that doesn't match
+        any real column — reusing `_resolve_intent_columns`, the exact
+        function profile_and_clean runs for real afterward, purely to
+        decide this routing key. Its result here is discarded, never
+        written to state, so it can never drift from what
+        profile_and_clean computes for the actual intent payload — that
+        happens again, independently, once profile_and_clean runs
+        (against whatever `parsed_intent` refine leaves behind).
+      - any other/misconfigured value fails safe to the "if_unresolved"
+        pre-check rather than silently always-refining.
+    """
+    if state.get("current_phase") == "error":
+        return "profile"
+    if state.get("schema_columns") is None:
+        return "profile"
+    if state.get("intent_refine_done"):
+        return "profile"
+
+    if settings.intent_refine_trigger == "always":
+        return "refine"
+
+    from src.graph.nodes import _resolve_intent_columns  # local: avoid a module-level nodes<->router cycle
+    _, unresolved, _ = _resolve_intent_columns(
+        state.get("parsed_intent") or {}, state.get("schema_columns") or [],
+    )
+    return "refine" if unresolved else "profile"
 
 
 def route_after_profiling(state: MAEDAState) -> str:

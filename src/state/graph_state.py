@@ -35,6 +35,22 @@ class MAEDAState(TypedDict):
     # None case).
     effective_dataset_path: Optional[str]
     schema_columns: Optional[list]
+    # E2 (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, submission 2): schema-aware
+    # intent refinement -- a second `_parse()` call once connect_schema has
+    # populated schema_summary, so the schema-injection branch that path
+    # was always capable of (src/agents/intent_parser.py's `_parse`) can
+    # actually fire. intent_refine_done is the conditional edge's gate
+    # (route_after_schema, src/graph/router.py) -- set True the moment
+    # refine_intent finishes (whether or not it actually called the LLM),
+    # so it can never re-trigger within one round even if a future graph
+    # change reintroduces a path back to connect_schema/refine_intent that
+    # doesn't exist today. intent_refined is the D0-facing derived flag
+    # (src/eval/runner.py's EvalResult, same three-step pattern as
+    # cleaning_applied_level) -- None until refine_intent runs, then True
+    # if the second parse succeeded or False if it raised and the
+    # pre-refine intent was kept.
+    intent_refine_done: bool
+    intent_refined: Optional[bool]
 
     # === Data Quality (DELEGATED to Data Cleaner via MCP) ===
     data_quality_report: Optional[dict]   # From Data Cleaner MCP
@@ -147,6 +163,8 @@ def initial_state(
         schema_summary="",
         effective_dataset_path=None,
         schema_columns=None,
+        intent_refine_done=False,
+        intent_refined=None,
         data_quality_report=None,
         cleaning_applied=False,
         cleaning_summary=None,

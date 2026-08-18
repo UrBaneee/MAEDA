@@ -1161,6 +1161,239 @@ class TestCleaningLoop:
         assert route_after_profiling(state) == "ready"
 
 
+# ─── E2 refine + the clean self-loop (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ) ──
+#
+# Unlike TestCleaningLoop above (which drives connect_and_profile_node
+# directly, threading state through by hand), these tests drive the REAL
+# compiled graph (src.graph.builder.build_graph().ainvoke()) -- this is the
+# only way to actually exercise route_after_schema and the self-loop's
+# real target (profile_and_clean, not connect_schema -- 附录 BQ), which a
+# direct-node-call test can't touch since it never goes through
+# src/graph/builder.py's conditional edges at all.
+
+class TestE2RefineSelfLoop:
+    @staticmethod
+    def _mock_mcp(**method_side_effects):
+        from src.mcp_client.fallback import SubSystemWithFallback
+        mock = MagicMock(spec=SubSystemWithFallback)
+        for name, effect in method_side_effects.items():
+            setattr(mock, name, AsyncMock(side_effect=effect))
+        mock.retrieve_knowledge = AsyncMock(
+            return_value=([], {"system": "rag_server", "tool": "retrieve_with_metadata",
+                                "mode": "fallback", "args": {}, "duration_ms": 1.0, "error": None})
+        )
+        return mock
+
+    @staticmethod
+    def _log(tool):
+        return {"system": "data_cleaner", "tool": tool,
+                "mode": "mcp", "args": {}, "duration_ms": 1.0}
+
+    @staticmethod
+    def _clean_output(tmp_path, pipeline_run_id, round_num, filename, content):
+        d = tmp_path / f"{pipeline_run_id}_clean{round_num}"
+        d.mkdir(parents=True, exist_ok=True)
+        p = d / filename
+        p.write_text(content)
+        return str(p)
+
+    @pytest.fixture(autouse=True)
+    def _artifact_root_in_tmp(self, tmp_path, monkeypatch):
+        from src.config.settings import settings as _settings
+        monkeypatch.setattr(_settings, "maeda_artifact_root", str(tmp_path))
+        # 附录 BQ default -- pinned explicitly (not relying on the settings
+        # default) so this test keeps meaning what it says even if the
+        # default ever changes.
+        monkeypatch.setattr(_settings, "intent_refine_trigger", "if_unresolved")
+
+    @staticmethod
+    def _run_graph(state, mock_mcp, mock_intent_llm, mock_analysis_llm):
+        import src.graph.nodes as nodes
+        from src.agents.intent_parser import IntentParserAgent
+        from src.graph.builder import build_graph
+        from unittest.mock import patch
+
+        mock_connector_llm = MagicMock()
+        mock_connector_llm.ainvoke = AsyncMock(return_value=MagicMock(content="Summary."))
+
+        old = {
+            "_data_connector": nodes._data_connector, "_subsystem_client": nodes._subsystem_client,
+            "_intent_parser": nodes._intent_parser, "_analysis_agent": nodes._analysis_agent,
+            "_viz_agent": nodes._viz_agent, "_insight_agent": nodes._insight_agent,
+            "_guardrail_agent": nodes._guardrail_agent, "_eval_runner": nodes._eval_runner,
+        }
+        nodes._data_connector = DataConnector(llm=mock_connector_llm)
+        nodes._subsystem_client = mock_mcp
+        nodes._intent_parser = IntentParserAgent(llm=mock_intent_llm)
+        nodes._analysis_agent = None
+        nodes._viz_agent = None
+        nodes._insight_agent = None
+        nodes._guardrail_agent = None
+        nodes._eval_runner = None
+        try:
+            with patch("src.agents.analysis_agent._build_llm", return_value=mock_analysis_llm), \
+                 patch("src.agents.viz_agent._build_llm", return_value=mock_analysis_llm), \
+                 patch("src.agents.insight_agent._build_llm", return_value=mock_analysis_llm), \
+                 patch("src.agents.guardrail_agent._build_llm", return_value=mock_analysis_llm), \
+                 patch("src.eval.metrics._build_eval_llm", return_value=mock_analysis_llm):
+                g = build_graph()
+                return asyncio.run(g.ainvoke(state))
+        finally:
+            for k, v in old.items():
+                setattr(nodes, k, v)
+
+    @staticmethod
+    def _mock_intent_llm(target_metrics):
+        """A reusable-response mock (return_value, not a consumed
+        side_effect queue) -- both the first parse and any refine call hit
+        this same canned response, since these tests care about call
+        COUNT and routing, not about the LLM actually correcting anything."""
+        resp = MagicMock()
+        resp.content = json.dumps({
+            "query_type": "diagnostic", "target_metrics": target_metrics, "dimensions": [],
+            "filters": [], "time_range": None, "aggregation": "sum", "sort_by": None,
+            "limit": None, "confidence": 0.95, "ambiguities": [],
+        })
+        resp.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=resp)
+        return mock_llm
+
+    @staticmethod
+    def _mock_analysis_llm():
+        resp = MagicMock()
+        resp.content = "[]"
+        resp.usage_metadata = {"input_tokens": 5, "output_tokens": 5}
+        mock_llm = MagicMock()
+        mock_llm.ainvoke = AsyncMock(return_value=resp)
+        return mock_llm
+
+    def test_refine_runs_once_not_once_per_clean_round(self, tmp_path):
+        """The whole point of intent_refine_done + moving the self-loop to
+        profile_and_clean (附录 BQ): a 2-round clean loop must call the
+        intent parser's LLM exactly twice total (first parse + one
+        refine), not 3 times (first parse + refine on round 1 + a second
+        wasted refine on round 2)."""
+        from src.mcp_client.models import CleaningResult, DataQualityReport, QualityValidation
+        from src.state.graph_state import initial_state
+
+        original = tmp_path / "v0.csv"
+        original.write_text("a,b\n1,\n2,\n3,\n4,\n5,1\n")
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(original)}])
+        pipeline_run_id = state["run_id"]
+        v1 = self._clean_output(tmp_path, pipeline_run_id, 1, "v1.csv", "a,b\n1,0\n2,\n3,\n4,\n5,1\n")
+        v2 = self._clean_output(tmp_path, pipeline_run_id, 2, "v2.csv", "a,b\n1,0\n2,0\n3,0\n4,0\n5,1\n")
+
+        still_critical = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=True)
+        now_clean = DataQualityReport(row_count=5, columns=[], quality_issues=[], has_critical_issues=False)
+        validation1 = QualityValidation(
+            passed=False, score=0.5, issues=["Missing values"],
+            details={"mean_null_ratio": 0.2, "duplicate_row_ratio": 0.0, "schema_score": 1.0},
+        )
+        validation2 = QualityValidation(passed=True, score=1.0, issues=[], details={})
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[
+                (still_critical, self._log("profile_dataset")),   # round 1 entry
+                (still_critical, self._log("profile_dataset")),   # round 1 re-profile
+                (still_critical, self._log("profile_dataset")),   # round 2 entry -- must read v1, not v0
+                (now_clean, self._log("profile_dataset")),         # round 2 re-profile
+            ],
+            clean_dataset=[
+                (CleaningResult(cleaned_path=v1, changes_summary={"round": 1}, rows_affected=0),
+                 self._log("clean_dataset")),
+                (CleaningResult(cleaned_path=v2, changes_summary={"round": 2}, rows_affected=0),
+                 self._log("clean_dataset")),
+            ],
+            validate_quality=[
+                (validation1, self._log("validate_quality")),
+                (validation2, self._log("validate_quality")),
+            ],
+        )
+
+        # "nonexistent" never matches a real column ("a"/"b") -- guarantees
+        # the if_unresolved default actually triggers refine once, on the
+        # first (and only) pass through connect_schema/route_after_schema.
+        mock_intent_llm = self._mock_intent_llm(["nonexistent"])
+
+        result = self._run_graph(state, mock_mcp, mock_intent_llm, self._mock_analysis_llm())
+
+        assert result.get("error") is None, result.get("error")
+        assert result["iteration_count"] == 2
+        assert result["cleaning_stop_reason"] == "passed"
+        # 附录 BQ's whole reason for existing: proves effective_dataset_path
+        # is kept current across a round the self-loop skips connect_schema
+        # for -- round 2's entry profile_dataset call above only gets
+        # satisfied by its scripted "still_critical" response (as opposed
+        # to erroring on an unconfigured/duplicate call, or silently
+        # re-reading v0) if it actually reads v1 (round 1's cleaned
+        # output), not the stale original.
+        assert result["data_sources"][0]["path"] == v2
+
+        # The real assertion this test exists for: refine ran exactly once.
+        assert mock_intent_llm.ainvoke.await_count == 2  # 1 first-parse + 1 refine
+        refine_records = [r for r in result["decision_trace"] if r["action"] == "refine_intent"]
+        assert len(refine_records) == 1
+        assert result["intent_refine_done"] is True
+        assert result["intent_refined"] is True
+
+    def test_always_trigger_forces_refine_even_when_everything_already_resolves(self, tmp_path, monkeypatch):
+        """The eval-forcing knob (附录 BQ, lead's requirement): setting
+        settings.intent_refine_trigger = "always" must refine even when
+        the deterministic pre-check would have said "profile" (every
+        mention already matches a real column) -- otherwise an eval run
+        couldn't force every case through the same code path."""
+        from src.config.settings import settings as _settings
+        from src.mcp_client.models import DataQualityReport
+        from src.state.graph_state import initial_state
+
+        monkeypatch.setattr(_settings, "intent_refine_trigger", "always")
+
+        clean_csv = tmp_path / "clean.csv"
+        clean_csv.write_text("a,b\n1,1\n2,2\n")
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(clean_csv)}])
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(DataQualityReport(row_count=2, columns=[], quality_issues=[],
+                                                 has_critical_issues=False),
+                               self._log("profile_dataset"))],
+        )
+        # "a" is a real column -- if_unresolved would have skipped refine
+        # for this exact intent (see the sibling test below); "always"
+        # must refine anyway.
+        mock_intent_llm = self._mock_intent_llm(["a"])
+
+        result = self._run_graph(state, mock_mcp, mock_intent_llm, self._mock_analysis_llm())
+
+        assert result.get("error") is None, result.get("error")
+        assert result["intent_refined"] is True
+        assert mock_intent_llm.ainvoke.await_count == 2  # 1 first-parse + 1 refine
+
+    def test_if_unresolved_default_skips_refine_when_everything_already_resolves(self, tmp_path):
+        """Sibling of the "always" test above, same fixture shape, default
+        trigger -- refine must NOT run when there's nothing to fix."""
+        from src.mcp_client.models import DataQualityReport
+        from src.state.graph_state import initial_state
+
+        clean_csv = tmp_path / "clean.csv"
+        clean_csv.write_text("a,b\n1,1\n2,2\n")
+        state = initial_state("q", data_sources=[{"type": "csv", "path": str(clean_csv)}])
+
+        mock_mcp = self._mock_mcp(
+            profile_dataset=[(DataQualityReport(row_count=2, columns=[], quality_issues=[],
+                                                 has_critical_issues=False),
+                               self._log("profile_dataset"))],
+        )
+        mock_intent_llm = self._mock_intent_llm(["a"])  # matches a real column -- nothing unresolved
+
+        result = self._run_graph(state, mock_mcp, mock_intent_llm, self._mock_analysis_llm())
+
+        assert result.get("error") is None, result.get("error")
+        assert result["intent_refined"] is None  # refine_intent never ran
+        assert result["intent_refine_done"] is False
+        assert mock_intent_llm.ainvoke.await_count == 1  # first parse only
+
+
 # ─── 4.6 Source Registry ─────────────────────────────────────────────────────
 
 class TestSourceRegistry:

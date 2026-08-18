@@ -91,6 +91,16 @@ class EvalResult:
     # counting it toward pass@k.
     cleaning_applied_level: Optional[str] = None
     cleaning_stop_reason: Optional[str] = None
+    # E2 (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, 附录 BO.5): same
+    # three-step pattern as cleaning_applied_level above -- a top-level
+    # scalar, not something D0's trial-variance analysis (src/eval/trials.py)
+    # would have to recover by parsing decision_trace's free-text
+    # "refine_intent" records. None = refine_intent never ran this round
+    # (route_after_schema chose "profile"); True = it ran and the second
+    # parse succeeded (state["parsed_intent"] is the refined version);
+    # False = it ran but the LLM call raised and the pre-refine intent was
+    # kept (src/agents/intent_parser.py's IntentParserAgent.refine).
+    intent_refined: Optional[bool] = None
 
     def to_dict(self) -> dict:
         return {
@@ -102,6 +112,7 @@ class EvalResult:
             "test_case_id": self.test_case_id,
             "cleaning_applied_level": self.cleaning_applied_level,
             "cleaning_stop_reason": self.cleaning_stop_reason,
+            "intent_refined": self.intent_refined,
         }
 
     def score_by_metric(self, metric: str) -> Optional[float]:
@@ -197,6 +208,7 @@ class EvalRunner:
             test_case_id=test_case.id if test_case else None,
             cleaning_applied_level=state.get("cleaning_applied_level"),
             cleaning_stop_reason=state.get("cleaning_stop_reason"),
+            intent_refined=state.get("intent_refined"),
         )
 
         logger.info(

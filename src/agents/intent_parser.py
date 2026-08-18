@@ -180,6 +180,92 @@ class IntentParserAgent(BaseAgent):
         )
         return state
 
+    async def refine(self, state: MAEDAState) -> MAEDAState:
+        """
+        Node handler for refine_intent (E2, ECOSYSTEM_INTEGRATION_PLAN.md
+        附录 BQ). Only reached via route_after_schema's "refine" edge
+        (src/graph/router.py), i.e. after connect_schema has populated
+        state["schema_summary"] with a real schema — this re-runs `_parse()`
+        so its existing schema-injection branch (`:194` below;
+        tests/unit/test_phase2.py's test_schema_injected_into_prompt) fires
+        for the first time this run: it never does on the FIRST parse,
+        since parse_intent always runs before any data source is connected
+        (附录 BP.2). Deliberately reuses `_parse()` as-is — same model
+        (settings.llm_model, 附录 BO.6: refine is not a harder task than
+        the first parse, there's no reason to tier it up), same prompt, no
+        new agent.
+
+        Excludes the just-appended current-turn entry from
+        conversation_history before calling `_parse()` — `process()`
+        appends {"role": "user", "content": query} to
+        state["conversation_history"] right after the first parse, so by
+        the time refine runs later in the same graph execution, that
+        entry is already the history's last item; passing it through
+        unfiltered would put the same query in the prompt twice (once via
+        `_format_history`, once as the actual HumanMessage).
+
+        Deliberately does NOT touch clarification_needed /
+        clarification_question or call _generate_clarification —
+        route_after_schema already decided this round should refine;
+        refine's job is to silently correct/improve the intent already in
+        state["parsed_intent"], not open a second clarification round on
+        top of the one route_after_intent already owns (附录 BO.7's
+        explicit scope declaration). See
+        tests/unit/test_phase*.py::test_refine_does_not_touch_clarification*
+        for the lock-in test.
+
+        Overwrites state["parsed_intent"] in place with the refined
+        version — this is a deliberate, documented semantic change to
+        score_intent_accuracy (src/eval/metrics.py, via
+        src/eval/runner.py's EvalRunner.score): before this method could
+        ever run, that metric always scored the FIRST parse; now, on any
+        run where refine actually executes, it scores the REFINED parse
+        instead (confidence included — src/eval/metrics.py's
+        score_intent_accuracy weights parsed_intent["confidence"] at 50%).
+        That's the intended direction (阶段 4 cares about the intent that
+        actually reached analysis, not a discarded first guess) but it
+        means intent_accuracy is NOT directly comparable pre-/post-E2 on
+        historical eval data — don't diff those numbers and read the
+        result as "the model got better/worse" (附录 BO.5/BP.4).
+        """
+        query = state.get("user_query", "").strip()
+        pre_refine = state.get("parsed_intent") or {}
+        history = state.get("conversation_history") or []
+        history_for_refine = history[:-1] if history else []
+
+        try:
+            refined = await self._parse(
+                state, query, state.get("schema_summary", ""), history_for_refine,
+            )
+        except Exception as exc:
+            logger.warning("Intent refine failed, keeping the pre-refine parse: %s", exc)
+            state["intent_refine_done"] = True
+            state["intent_refined"] = False
+            return self.log_decision(
+                state,
+                action="refine_intent",
+                reasoning=f"Schema-aware refine call failed, kept the pre-refine intent: {exc}",
+                inputs={"raw_intent": pre_refine},
+                outputs=None,
+                confidence=0.0,
+            )
+
+        state["parsed_intent"] = refined.to_dict()
+        state["intent_refine_done"] = True
+        state["intent_refined"] = True
+
+        return self.log_decision(
+            state,
+            action="refine_intent",
+            reasoning=(
+                f"Schema-aware refine: query_type={refined.query_type}, "
+                f"confidence {pre_refine.get('confidence')!r} -> {refined.confidence:.2f}"
+            ),
+            inputs={"raw_intent": pre_refine},
+            outputs=refined.to_dict(),
+            confidence=refined.confidence,
+        )
+
     # ── Internal helpers ──────────────────────────────────────────────────────
 
     async def _parse(

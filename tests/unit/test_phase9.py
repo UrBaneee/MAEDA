@@ -1077,6 +1077,82 @@ def test_reconstructing_eval_result_from_a_historical_report_dict_does_not_crash
     assert reconstructed.cleaning_stop_reason is None
 
 
+# ─── E2 (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ): EvalResult.intent_refined ────
+
+def test_eval_result_intent_refined_defaults_to_none():
+    """Same positional-construction guarantee as
+    test_eval_result_cleaning_fields_default_to_none -- intent_refined must
+    default to None too, not require every existing call site to be updated."""
+    from src.eval.runner import EvalResult
+    from src.eval.metrics import MetricScore
+    result = EvalResult("r1", "q", [MetricScore("error_rate", 1.0, "pass")], 0.9)
+    assert result.intent_refined is None
+    assert result.to_dict()["intent_refined"] is None
+
+
+def test_eval_runner_carries_intent_refined_from_state():
+    """Same three-step pattern as
+    test_eval_runner_carries_cleaning_fields_from_state (附录 BO.5): score()
+    must read state["intent_refined"] rather than leave EvalResult's
+    default -- otherwise D0's trial-variance analysis (src/eval/trials.py,
+    which reads EvalResult's top-level scalars, not decision_trace) has
+    nothing real to key off."""
+    mock_llm = _routing_mock_llm(
+        _mock_relevance_response(0.88, "Good"),
+        _mock_groundedness_response([{"claim": "North=500K", "supported": True, "evidence": "findings"}]),
+    )
+
+    from src.eval.runner import EvalRunner
+    runner = EvalRunner(llm=mock_llm)
+    state = initial_state("Show revenue by region")
+    state["report"] = "# Report\n\n## Findings\nNorth: 500K.\n\n## Rec\n- Keep going."
+    state["analysis_results"] = [
+        {"method": "groupby", "result_summary": "North=500K", "failed": False}
+    ]
+    state["parsed_intent"] = {
+        "query_type": "descriptive", "confidence": 0.9,
+        "target_metrics": ["revenue"], "dimensions": ["region"],
+    }
+    state["rag_context"] = []
+    state["charts"] = []
+    state["intent_refined"] = True
+
+    result = asyncio.run(runner.score(state))
+    assert result.intent_refined is True
+    assert result.to_dict()["intent_refined"] is True
+
+
+def test_eval_runner_carries_intent_refined_false_and_none():
+    """False (refine ran but the LLM call failed) and None (refine never
+    ran this round) must both survive score() distinctly -- neither should
+    collapse into the other or into a truthiness check."""
+    mock_llm = _routing_mock_llm(
+        _mock_relevance_response(0.5, "ok"),
+        _mock_groundedness_response([]),
+    )
+    from src.eval.runner import EvalRunner
+    runner = EvalRunner(llm=mock_llm)
+
+    base_state = {
+        "report": "# Report\n\n## Findings\nx.\n\n## Rec\n- y",
+        "analysis_results": [{"method": "groupby", "result_summary": "x", "failed": False}],
+        "parsed_intent": {"query_type": "descriptive", "confidence": 0.5},
+        "rag_context": [], "charts": [],
+    }
+
+    state_false = initial_state("q")
+    state_false.update(base_state)
+    state_false["intent_refined"] = False
+    result_false = asyncio.run(runner.score(state_false))
+    assert result_false.intent_refined is False
+
+    state_none = initial_state("q")
+    state_none.update(base_state)
+    # intent_refined left at initial_state's default (None)
+    result_none = asyncio.run(runner.score(state_none))
+    assert result_none.intent_refined is None
+
+
 def test_safe_refusal_excluded_from_aggregate_score():
     """safe_refusal is informational — it must not move the aggregate score."""
     from src.eval.runner import _aggregate_score

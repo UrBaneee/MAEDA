@@ -582,3 +582,174 @@ def test_llm_failure_sets_error():
     result = asyncio.run(agent.process(state))
     assert result["current_phase"] == "error"
     assert "LLM unreachable" in result["error"]
+
+
+# ─── E2: schema-aware intent refinement (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ) ──
+
+def _state_with_pre_refine_intent(query="Show revnue by regoin"):
+    """A state shaped like it would be right after connect_schema runs --
+    parsed_intent already set (by the earlier parse_intent node),
+    schema_summary populated (connect_schema just extracted it), and the
+    current turn already appended to conversation_history (process()'s own
+    last step) -- i.e. exactly what refine_intent_node hands to
+    IntentParserAgent.refine()."""
+    state = initial_state(query)
+    state["parsed_intent"] = {
+        "query_type": "descriptive", "target_metrics": ["revnue"], "dimensions": ["regoin"],
+        "filters": [], "time_range": None, "aggregation": "sum", "sort_by": None,
+        "limit": None, "confidence": 0.6, "ambiguities": [], "raw_query": query,
+    }
+    state["schema_summary"] = "Table: sales | Columns: revenue (float), region (str)"
+    state["conversation_history"] = [{"role": "user", "content": query}]
+    return state
+
+
+def test_refine_overwrites_parsed_intent_and_sets_flags():
+    agent = IntentParserAgent(llm=MagicMock())
+    agent._llm.ainvoke = AsyncMock(return_value=_make_llm_response({
+        "query_type": "descriptive", "target_metrics": ["revenue"], "dimensions": ["region"],
+        "filters": [], "time_range": None, "aggregation": "sum", "sort_by": None,
+        "limit": None, "confidence": 0.95, "ambiguities": [],
+    }))
+    state = _state_with_pre_refine_intent()
+
+    result = asyncio.run(agent.refine(state))
+
+    assert result["parsed_intent"]["target_metrics"] == ["revenue"]  # typo corrected, schema-aware
+    assert result["parsed_intent"]["dimensions"] == ["region"]
+    assert result["parsed_intent"]["confidence"] == 0.95
+    assert result["intent_refine_done"] is True
+    assert result["intent_refined"] is True
+
+
+def test_refine_logs_decision_trace_with_both_versions():
+    """BO.5: one trace record carries pre-refine (inputs) and post-refine
+    (outputs) as structured dicts, via BaseAgent.log_decision -- not two
+    separate records, not a free-text-only summary."""
+    agent = IntentParserAgent(llm=MagicMock())
+    agent._llm.ainvoke = AsyncMock(return_value=_make_llm_response({
+        "query_type": "descriptive", "target_metrics": ["revenue"], "dimensions": ["region"],
+        "filters": [], "time_range": None, "aggregation": "sum", "sort_by": None,
+        "limit": None, "confidence": 0.95, "ambiguities": [],
+    }))
+    state = _state_with_pre_refine_intent()
+    pre_refine = dict(state["parsed_intent"])
+
+    result = asyncio.run(agent.refine(state))
+
+    record = result["decision_trace"][-1]
+    assert record["agent_name"] == "intent_parser"
+    assert record["action"] == "refine_intent"
+    assert record["inputs"]["raw_intent"] == pre_refine
+    assert record["outputs"]["target_metrics"] == ["revenue"]
+    assert record["confidence"] == 0.95
+
+
+def test_refine_does_not_touch_clarification_fields():
+    """附录 BO.7: refine must never open a second clarification round --
+    route_after_schema already made the "should this run" decision;
+    refine's job is to silently correct the intent, not re-derive
+    clarification_needed/clarification_question the way process() does
+    for the first parse."""
+    agent = IntentParserAgent(llm=MagicMock())
+    # A low-confidence, ambiguity-laden response -- if refine() reused
+    # process()'s clarification-detection logic, THIS would trip it.
+    agent._llm.ainvoke = AsyncMock(return_value=_make_llm_response({
+        "query_type": "descriptive", "target_metrics": ["revenue"], "dimensions": ["region"],
+        "filters": [], "time_range": None, "aggregation": "sum", "sort_by": None,
+        "limit": None, "confidence": 0.1, "ambiguities": ["which revenue metric?"],
+    }))
+    state = _state_with_pre_refine_intent()
+    state["clarification_needed"] = False
+    state["clarification_question"] = None
+    state["clarification_count"] = 1  # already used up the one allowed round
+
+    result = asyncio.run(agent.refine(state))
+
+    assert result["clarification_needed"] is False
+    assert result["clarification_question"] is None
+    assert result["clarification_count"] == 1
+    assert not any(r["action"] == "ask_clarification" for r in result["decision_trace"])
+
+
+def test_refine_excludes_current_turn_from_conversation_history_sent_to_llm():
+    """process() appends {"role": "user", "content": query} to
+    conversation_history right after the first parse -- by the time refine
+    runs later in the same graph execution, that's already the history's
+    last entry. Passing it through unfiltered would put the current query
+    in the prompt twice (once via the history section, once as the actual
+    HumanMessage)."""
+    captured_messages = []
+
+    async def capturing_invoke(messages):
+        captured_messages.extend(messages)
+        return _make_llm_response({
+            "query_type": "descriptive", "target_metrics": ["revenue"], "dimensions": ["region"],
+            "filters": [], "time_range": None, "aggregation": "sum", "sort_by": None,
+            "limit": None, "confidence": 0.95, "ambiguities": [],
+        })
+
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(side_effect=capturing_invoke)
+    agent = IntentParserAgent(llm=mock_llm)
+
+    query = "Now break that down by quarter"
+    state = _state_with_pre_refine_intent(query)
+    # Two prior turns, then the CURRENT turn already appended last --
+    # mirrors process()'s own conversation_history.append ordering.
+    state["conversation_history"] = [
+        {"role": "user", "content": "Show revenue by region"},
+        {"role": "assistant", "content": "Here's the breakdown..."},
+        {"role": "user", "content": query},
+    ]
+
+    asyncio.run(agent.refine(state))
+
+    system_content = captured_messages[0].content
+    human_content = captured_messages[1].content
+    assert human_content == query
+    # The prior (non-current-turn) history must still be there...
+    assert "Show revenue by region" in system_content
+    # ...but the current query must appear in the history section AT MOST
+    # zero times (it was excluded), even though it's the HumanMessage.
+    history_section = system_content.split("### Conversation History")[-1]
+    assert query not in history_section
+
+
+def test_refine_llm_failure_keeps_pre_refine_intent():
+    agent = IntentParserAgent(llm=MagicMock())
+    agent._llm.ainvoke = AsyncMock(side_effect=RuntimeError("LLM unreachable"))
+    state = _state_with_pre_refine_intent()
+    pre_refine = dict(state["parsed_intent"])
+
+    result = asyncio.run(agent.refine(state))
+
+    assert result["parsed_intent"] == pre_refine  # kept, not clobbered by a partial/failed refine
+    assert result["intent_refine_done"] is True
+    assert result["intent_refined"] is False
+    record = result["decision_trace"][-1]
+    assert record["action"] == "refine_intent"
+    assert record["outputs"] is None
+
+
+def test_refine_reuses_settings_llm_model_no_override():
+    """附录 BO.6: refine must not tier up to a stronger model -- it reuses
+    self._llm (built once via settings.llm_model in __init__), the exact
+    same instance the first parse used, not a second, differently
+    configured client."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=_make_llm_response({
+        "query_type": "descriptive", "target_metrics": ["revenue"], "dimensions": ["region"],
+        "filters": [], "time_range": None, "aggregation": "sum", "sort_by": None,
+        "limit": None, "confidence": 0.95, "ambiguities": [],
+    }))
+    agent = IntentParserAgent(llm=mock_llm)
+    state = _state_with_pre_refine_intent()
+
+    result = asyncio.run(agent.refine(state))
+
+    mock_llm.ainvoke.assert_awaited_once()
+    assert agent._llm is mock_llm  # no second client constructed for refine
+    # track_cost recorded the refine call under the same agent/model as any
+    # other IntentParserAgent call -- no separate cost bucket for refine.
+    assert result["token_usage"]["intent_parser"]["calls"] == 1

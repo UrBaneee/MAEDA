@@ -858,13 +858,29 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
         {**state["data_sources"][0], "path": cleaned_path},
         *state["data_sources"][1:],
     ]
+    # E2 submission 2 (附录 BQ): the clean self-loop now targets
+    # profile_and_clean directly, bypassing connect_schema (see
+    # builder.py) — so unlike before the refine_intent node existed,
+    # nothing else re-derives effective_dataset_path from
+    # data_sources[0]["path"] on the next round if this round keeps
+    # looping. Updating it here, in the one place a round's cleaned file
+    # is decided, is what keeps round 2+'s own top-of-function
+    # profile_dataset call reading the just-cleaned file instead of
+    # silently falling back to stale round-1 input — the exact M7 bug
+    # this function's docstring describes, reintroduced one level up if
+    # this line were missing. schema_columns is refreshed alongside it
+    # (from the re-extraction below) for the same reason: round 2+'s
+    # _resolve_intent_columns call at the top of this function needs
+    # ColumnInfo objects for the file it's about to actually operate on.
+    state["effective_dataset_path"] = cleaned_path
     try:
         cleaned_source = {**source, "path": cleaned_path}
         schema2, nl2 = await connector.connect_with_summary(cleaned_source)
         state["active_source"] = schema2.to_source_dict()
         state["schema_summary"] = nl2
+        state["schema_columns"] = schema2.columns
     except Exception:
-        pass  # Keep prior schema if re-extraction fails
+        pass  # Keep prior schema (+ its columns) if re-extraction fails
 
     if no_diff:
         state["cleaning_stop_reason"] = "no_diff"
@@ -1008,6 +1024,18 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
         f"round {state['iteration_count']} complete; validate_quality.passed=False, "
         f"score={validation.score}, stop_reason={state.get('cleaning_stop_reason')}",
     )
+
+
+async def refine_intent_node(state: MAEDAState) -> MAEDAState:
+    """
+    E2 (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, submission 2): schema-aware
+    second-pass intent parse. Only reachable via route_after_schema's
+    "refine" edge (src/graph/router.py) — see
+    IntentParserAgent.refine's docstring for what it does and deliberately
+    does not do (no clarification, no new model tier).
+    """
+    logger.info("Node: refine_intent")
+    return await _get_intent_parser().refine(state)
 
 
 async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:

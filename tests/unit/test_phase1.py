@@ -74,10 +74,11 @@ def test_graph_has_expected_nodes():
     g = build_graph()
     node_names = set(g.nodes.keys())
     expected = {
-        # E2 BO.1 split (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, submission 1):
-        # "connect_and_profile_data" is now two nodes, connect_schema and
-        # profile_and_clean -- see src/graph/builder.py.
-        "parse_intent", "ask_clarification", "connect_schema", "profile_and_clean",
+        # E2 (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ): "connect_and_profile_data"
+        # is now three nodes -- connect_schema, refine_intent, profile_and_clean
+        # -- see src/graph/builder.py.
+        "parse_intent", "ask_clarification", "connect_schema", "refine_intent",
+        "profile_and_clean",
         "plan_analysis", "execute_analysis", "generate_viz",
         "retrieve_domain_knowledge", "generate_insights",
         "run_guardrails", "run_eval", "handle_error", "persist_run",
@@ -205,6 +206,111 @@ def test_router_guardrails_passed():
     state = initial_state("q")
     state["guardrail_checks"] = [{"overall_verdict": "approved", "passed": True}]
     assert route_after_guardrails(state) == "passed"
+
+
+# ─── route_after_schema (E2, ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ) ───────────
+
+def _schema_col(name, is_datetime=False):
+    from src.tools.data_connector import ColumnInfo
+    return ColumnInfo(name=name, dtype="object", null_pct=0.0, unique_count=1,
+                       sample_values=[], is_numeric=False, is_datetime=is_datetime)
+
+
+def _post_connect_schema_state(parsed_intent, schema_columns, **overrides):
+    from src.state.graph_state import initial_state
+    state = initial_state("q")
+    state["parsed_intent"] = parsed_intent
+    state["schema_columns"] = schema_columns
+    state.update(overrides)
+    return state
+
+
+def test_router_schema_error_skips_refine():
+    """connect_schema's 'no data source' exit sets current_phase='error' --
+    route_after_schema must not waste an LLM call on a state headed to
+    handle_error regardless."""
+    from src.graph.router import route_after_schema
+    state = _post_connect_schema_state({}, None, current_phase="error")
+    assert route_after_schema(state) == "profile"
+
+
+def test_router_schema_extraction_failed_skips_refine():
+    """schema_columns is None (connect_schema's except branch) -- no real
+    schema to inject, so refine would gain nothing over the first parse."""
+    from src.graph.router import route_after_schema
+    from src.config.settings import settings
+    state = _post_connect_schema_state(
+        {"target_metrics": ["revenue"]}, None,
+    )
+    settings.intent_refine_trigger = "always"
+    try:
+        assert route_after_schema(state) == "profile"
+    finally:
+        settings.intent_refine_trigger = "if_unresolved"
+
+
+def test_router_schema_already_done_skips_refine():
+    """intent_refine_done gate -- defensive against re-triggering within
+    one round even under settings.intent_refine_trigger == 'always'."""
+    from src.graph.router import route_after_schema
+    from src.config.settings import settings
+    state = _post_connect_schema_state(
+        {"target_metrics": ["revenue"]}, [_schema_col("revenue")],
+        intent_refine_done=True,
+    )
+    settings.intent_refine_trigger = "always"
+    try:
+        assert route_after_schema(state) == "profile"
+    finally:
+        settings.intent_refine_trigger = "if_unresolved"
+
+
+def test_router_schema_always_strategy_refines_even_when_everything_resolves():
+    from src.graph.router import route_after_schema
+    from src.config.settings import settings
+    state = _post_connect_schema_state(
+        {"target_metrics": ["revenue"]}, [_schema_col("revenue")],
+    )
+    settings.intent_refine_trigger = "always"
+    try:
+        assert route_after_schema(state) == "refine"
+    finally:
+        settings.intent_refine_trigger = "if_unresolved"
+
+
+def test_router_schema_if_unresolved_strategy_skips_refine_when_everything_resolves():
+    from src.graph.router import route_after_schema
+    from src.config.settings import settings
+    state = _post_connect_schema_state(
+        {"target_metrics": ["revenue"]}, [_schema_col("revenue")],
+    )
+    assert settings.intent_refine_trigger == "if_unresolved"  # the documented default
+    assert route_after_schema(state) == "profile"
+
+
+def test_router_schema_if_unresolved_strategy_refines_when_a_mention_does_not_match():
+    from src.graph.router import route_after_schema
+    state = _post_connect_schema_state(
+        {"target_metrics": ["net_income"]}, [_schema_col("revenue")],  # no match
+    )
+    assert route_after_schema(state) == "refine"
+
+
+def test_router_schema_if_unresolved_pre_check_does_not_mutate_state():
+    """The pre-check's own resolved/unresolved result must never be
+    written to state -- profile_and_clean runs the real
+    _resolve_intent_columns pass afterward, against whatever parsed_intent
+    refine leaves behind; this router only borrows the function to decide
+    a routing key."""
+    from src.graph.router import route_after_schema
+    state = _post_connect_schema_state(
+        {"target_metrics": ["net_income"]}, [_schema_col("revenue")],
+    )
+    before = dict(state)
+    route_after_schema(state)
+    assert state.get("cleaning_intent") == before.get("cleaning_intent")
+    assert "resolved_columns" not in state
+    assert "unresolved_mentions" not in state
 
 
 def test_router_guardrails_retry():
