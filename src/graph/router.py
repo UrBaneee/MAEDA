@@ -9,6 +9,36 @@ from src.state.graph_state import MAEDAState
 _MAX_CLEAN_ITERATIONS = 3
 
 
+def cleaner_should_attempt_clean(has_critical_issues: bool) -> bool:
+    """
+    定案 #15 / 附录 CC.2/CC.3: the ONE place that resolves whether a round
+    should attempt clean_dataset, reused both by profile_and_clean
+    (src/graph/nodes.py -- decides whether THIS round's actual call
+    happens, and is also where a "force_off" terminal cleaning_stop_reason
+    + `mode="skipped"` log entry get recorded, since that's node-level
+    side-effecting work this pure function must not do) and by
+    route_after_profiling below (decides whether to loop back for another
+    round when the loop hasn't already hit a B.4 terminal stop condition).
+    Kept as a single function specifically so force_on's "bypass
+    has_critical_issues itself, not just whatever was blocking it" (CC.2)
+    can't drift out of sync between the two call sites -- two
+    independently-edited copies of the same gate is exactly the kind of
+    thing that silently regresses to "force_on == auto" on data where
+    has_critical_issues never fires (CC.2's real-world finding).
+
+      "auto"       -- unchanged: `has_critical_issues` as computed by
+                       profile_dataset/re-profile, same as before 定案 #15.
+      "force_on"   -- always True, regardless of `has_critical_issues`.
+      "force_off"  -- always False, regardless of `has_critical_issues`.
+    """
+    mode = settings.maeda_cleaner_mode
+    if mode == "force_off":
+        return False
+    if mode == "force_on":
+        return True
+    return has_critical_issues
+
+
 def route_after_intent(state: MAEDAState) -> str:
     """
     After parse_intent:
@@ -83,8 +113,11 @@ def route_after_profiling(state: MAEDAState) -> str:
                    (param/contract/data-input error — 附录 B.3's "工具错误"
                    row; the node already turned this into state["error"],
                    never a fake "empty dataset" that looks like "ready")
-      - "clean"  → still has_critical_issues and the cleaning loop hasn't
-                   hit a terminal stop condition yet (附录 B.4)
+      - "clean"  → the cleaning loop hasn't hit a terminal stop condition
+                   yet (附录 B.4) AND `cleaner_should_attempt_clean` (定案
+                   #15, above) says so -- "auto" reads that straight off
+                   has_critical_issues same as always; "force_on"/
+                   "force_off" override it unconditionally
       - "ready"  → data is ready for analysis, OR the loop already reached
                    a terminal stop condition. The node is what tells the
                    two apart: it writes `cleaning_stop_reason` (+
@@ -113,7 +146,15 @@ def route_after_profiling(state: MAEDAState) -> str:
     has_critical = report.get("has_critical_issues", False)
     iterations = state.get("iteration_count", 0)
 
-    if has_critical and iterations < _MAX_CLEAN_ITERATIONS:
+    # 定案 #15: force_off never loops back here in practice (profile_and_clean
+    # sets a terminal cleaning_stop_reason on round 1, caught by the early
+    # return above) -- routed through the same shared gate anyway as a
+    # defensive backstop against that invariant ever drifting. force_on DOES
+    # need this: a later round can find has_critical_issues has turned False
+    # (post-clean re-profile) while validate_quality still hasn't passed and
+    # no B.4 stop condition has fired -- without this, force_on would
+    # silently fall back to auto-like early termination mid-loop.
+    if cleaner_should_attempt_clean(has_critical) and iterations < _MAX_CLEAN_ITERATIONS:
         return "clean"
     return "ready"
 

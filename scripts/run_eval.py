@@ -23,12 +23,32 @@ import sys
 import time
 from pathlib import Path
 
+from src.config.settings import settings
 from src.eval.metrics import MetricScore
 from src.eval.runner import EvalResult, EvalRunner, GoldenTestCase, detect_regressions, load_golden_suite
 from src.graph.builder import build_graph
 from src.state.graph_state import initial_state
 
 REPORT_DIR = Path("logs/eval_runs")
+
+
+def _current_arm() -> dict:
+    """
+    定案 #15 / 附录 CB.3.4: the authoritative, once-per-report record of
+    which three-state configuration produced this report -- written into
+    `report["arm"]` at both report-construction sites below (single-trial
+    and multi-trial). One run of this script has exactly one value for
+    each of these (settings are read once at process start, never per-case
+    or per-trial), unlike per-row `meta["cleaner_mode"]`/`meta["rag_mode"]`
+    (added to run_one_case's meta dict above), which exist for
+    self-description after reports get merged/renamed, not because the
+    value could vary within one report.
+    """
+    return {
+        "cleaner_mode": settings.maeda_cleaner_mode,
+        "rag_mode": settings.maeda_rag_mode,
+        "mcp_strict_mode": settings.mcp_strict_mode,
+    }
 
 # Eval v2 Step 4: data source and data-mismatch status used to live here as
 # two separate hardcoded dicts (CASE_DATA_SOURCES, KNOWN_DATA_MISMATCH),
@@ -77,6 +97,14 @@ async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tu
         "error": run_error,
         "error_type": result_state.get("error_type"),
         "mcp_modes": sorted({c.get("mode", "mcp") for c in (result_state.get("mcp_call_log") or [])}),
+        # 定案 #15 / 附录 CB.3.4: mirrored into every row (not just the
+        # report-level `report["arm"]` written once in main() below) so a
+        # row is self-describing even if reports get merged/renamed/
+        # mismatched later -- 附录 BF/BG already documented that exact
+        # failure mode once for a different field ("file name is the only
+        # authority" is fragile).
+        "cleaner_mode": result_state.get("cleaner_mode"),
+        "rag_mode": result_state.get("rag_mode"),
         "data_mismatch": "data_mismatch" in tc.tags,
         # D0 (阶段 3 / 附录 AQ/AS): eval_runner.score() is called with
         # run_id=tc.id above (the golden case id, e.g. "D01" -- same
@@ -254,6 +282,7 @@ async def main():
         report = {
             "timestamp": timestamp, "n_cases": len(rows),
             "overall_aggregate": overall, "split": args.split, "cases": rows,
+            "arm": _current_arm(),
         }
         out_path = Path(args.out) if args.out else REPORT_DIR / f"eval_{int(timestamp)}.json"
         out_path.write_text(json.dumps(report, indent=2, default=str))
@@ -282,6 +311,7 @@ async def main():
             "timestamp": timestamp, "n_cases": len(suite), "split": args.split,
             "trials": args.trials, "concurrency": args.concurrency,
             "per_trial": trial_reports,
+            "arm": _current_arm(),
         }
         out_path = (
             Path(args.out) if args.out

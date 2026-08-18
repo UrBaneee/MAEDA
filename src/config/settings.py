@@ -82,6 +82,70 @@ class MAEDASettings(BaseSettings):
     failure (集成计划: "不得静默接受降级"); in degraded mode it's allowed,
     but must still be logged, not swallowed."""
 
+    maeda_cleaner_mode: Literal["auto", "force_on", "force_off"] = Field(
+        default="auto", alias="MAEDA_CLEANER_MODE"
+    )
+    """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #15 / 阶段 3 收尾执行计划轮次 1 /
+    附录 CB/CC. Whether the Data Cleaner subsystem's clean_dataset action is
+    attempted at all, independent of quality-driven routing:
+    "auto" (default) -- unchanged from pre-定案-#15 behavior:
+        route_after_profiling/profile_and_clean gate clean_dataset purely
+        on profile_dataset's `has_critical_issues` verdict (附录 B.1), same
+        as before this setting existed.
+    "force_on" -- 附录 CC.2: bypasses the has_critical_issues judgement
+        ITSELF, not merely "don't let anything block the call". 附录 CC.2
+        found (full `logs/runs.db` scan) that has_critical_issues has never
+        once fired on real demo data (12/13 non-synthetic rows are "none");
+        a force_on that only removed a gate nothing was ever tripping would
+        be behaviorally identical to "auto", and Experiment 1's cleaner arm
+        (阶段 4) would measure nothing. profile_dataset is still called
+        unconditionally in every mode (it always was) -- only the decision
+        to invoke clean_dataset is forced.
+    "force_off" -- 附录 CC.3: clean_dataset is never invoked this run,
+        REGARDLESS of has_critical_issues -- not "call it and discard the
+        result" (that alternative was explicitly rejected: it would double
+        real API call volume across a 4-arm x k-trial run, run straight
+        into AP.4's rate-limit incident, and report a total_latency number
+        no real deployment would ever have). profile_dataset still runs
+        (diagnostic, not "cleaning"); route_after_profiling/profile_and_clean
+        record an explicit `mode="skipped"` mcp_call_log entry and a
+        `cleaning_stop_reason="force_off"` the moment this is decided, so
+        "deliberately turned off" is distinguishable in the eval report
+        from an ordinary auto-mode round where has_critical_issues just
+        happened to be false (附录 CB.1.3 -- an empty mcp_call_log for this
+        tool is otherwise ambiguous between the two).
+    Experiment 1's cleaner arm (阶段 4) is therefore "force_on 强制清洗 vs
+    force_off 不清洗" (附录 CC.2) -- whether has_critical_issues judges
+    *correctly* is a separate question, answered by Experiment 2 (routing
+    accuracy) using the "auto" mode instead."""
+
+    maeda_rag_mode: Literal["auto", "force_on", "force_off"] = Field(
+        default="auto", alias="MAEDA_RAG_MODE"
+    )
+    """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #15 / 阶段 3 收尾执行计划轮次 1 /
+    附录 CB.3.1/CC.7. Whether retrieve_knowledge_node calls the RAG server
+    at all:
+    "auto" -- 附录 CB.3.1/CC.7: DEGRADES to "always retrieve" today, i.e.
+        byte-identical to pre-定案-#15 behavior. `src/graph/builder.py`'s
+        "generate_viz" -> "retrieve_domain_knowledge" edge is still a plain
+        unconditional `add_edge`, not `add_conditional_edges` -- a real
+        `auto` (skip retrieval for purely-computational query_types) needs
+        that edge rebuilt as a conditional route, which is its own,
+        separate item in 阶段 3's execution plan (轮次 3), deliberately NOT
+        done by this switch. This degeneration is intentional and scoped:
+        Experiment 1 (阶段 4) only needs force_on/force_off, so the switch
+        does not block on 轮次 3. Do not read "auto exists" as "auto's
+        routing judgement exists" -- it doesn't yet.
+    "force_on" -- calls retrieve_knowledge unconditionally, same as "auto"
+        today (there is no conditional gate yet for force_on to actually
+        bypass) -- kept as its own value now so Experiment 1 code and
+        阶段 4 predates it doesn't need to change again once 轮次 3 gives
+        "auto" real routing semantics; only "auto"'s behavior would change
+        then, not force_on's.
+    "force_off" -- retrieve_knowledge is never called; records an explicit
+        `mode="skipped"` mcp_call_log entry (see maeda_cleaner_mode's
+        docstring for why "skipped" must be distinct from an empty log)."""
+
     intent_refine_trigger: Literal["always", "if_unresolved"] = Field(
         default="if_unresolved", alias="MAEDA_INTENT_REFINE_TRIGGER"
     )

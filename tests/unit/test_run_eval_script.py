@@ -201,7 +201,12 @@ def test_single_trial_report_shape_is_unchanged(monkeypatch, tmp_path):
     reports = list(tmp_path.glob("eval_*.json"))
     assert len(reports) == 1
     report = json.loads(reports[0].read_text())
-    assert set(report.keys()) == {"timestamp", "n_cases", "overall_aggregate", "split", "cases"}
+    # 定案 #15 (阶段 3 收尾执行计划轮次 1, 附录 CD): "arm" is the one
+    # intentional addition to this otherwise-frozen shape -- run-level
+    # three-state-switch config, not a new per-case dimension, so it earns
+    # updating this lock rather than a --suite-flag-style rejection.
+    assert set(report.keys()) == {"timestamp", "n_cases", "overall_aggregate", "split", "cases", "arm"}
+    assert report["arm"] == {"cleaner_mode": "auto", "rag_mode": "auto", "mcp_strict_mode": "degraded"}
     assert report["n_cases"] == 2
     assert len(report["cases"]) == 2
 
@@ -226,6 +231,7 @@ def test_multi_trial_report_shape_has_per_trial(monkeypatch, tmp_path):
     # single-trial shape and must not silently also appear here.
     assert "cases" not in report
     assert "overall_aggregate" not in report
+    assert report["arm"] == {"cleaner_mode": "auto", "rag_mode": "auto", "mcp_strict_mode": "degraded"}
 
 
 def test_zero_trials_is_rejected(monkeypatch, tmp_path):
@@ -275,3 +281,38 @@ def test_pipeline_error_still_exits_nonzero_in_multi_trial_mode():
             with pytest.raises(SystemExit) as exc_info:
                 asyncio.run(run_eval.main())
             assert exc_info.value.code == 1
+
+
+# ─── 定案 #15 / 阶段 3 收尾执行计划轮次 1 / 附录 CB.3.4: arm reporting ─────────
+
+def test_run_one_case_meta_carries_the_arm(monkeypatch):
+    """meta["cleaner_mode"]/meta["rag_mode"] mirror state["cleaner_mode"]/
+    state["rag_mode"] (src/state/graph_state.py's initial_state() snapshot
+    of settings.maeda_cleaner_mode/maeda_rag_mode) -- the per-row half of
+    CB.3.4's double-write, independent of report["arm"]."""
+    import run_eval
+    from src.config.settings import settings as _settings
+    from src.state.graph_state import initial_state
+
+    monkeypatch.setattr(_settings, "maeda_cleaner_mode", "force_on")
+    monkeypatch.setattr(_settings, "maeda_rag_mode", "force_off")
+
+    tc = _make_case("A")
+    graph = _FakeGraph()
+    eval_result, meta = asyncio.run(run_eval.run_one_case(tc, graph, _FakeEvalRunner()))
+    assert meta["cleaner_mode"] == "force_on"
+    assert meta["rag_mode"] == "force_off"
+    # sanity: initial_state() really is what produced these, not a stray default
+    assert initial_state("q")["cleaner_mode"] == "force_on"
+
+
+def test_current_arm_reflects_settings(monkeypatch):
+    import run_eval
+    from src.config.settings import settings as _settings
+
+    monkeypatch.setattr(_settings, "maeda_cleaner_mode", "force_off")
+    monkeypatch.setattr(_settings, "maeda_rag_mode", "force_on")
+    monkeypatch.setattr(_settings, "mcp_strict_mode", "strict")
+    assert run_eval._current_arm() == {
+        "cleaner_mode": "force_off", "rag_mode": "force_on", "mcp_strict_mode": "strict",
+    }

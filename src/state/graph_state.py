@@ -5,10 +5,27 @@ All agents read from and write to this TypedDict; no unstructured message passin
 import uuid
 from typing import TypedDict, Optional, Literal
 
+from src.config.settings import settings
+
 
 class MAEDAState(TypedDict):
     # === Identity ===
     run_id: str    # unique per pipeline invocation; see src/persistence/run_store.py
+    # 定案 #15 / 阶段 3 收尾执行计划轮次 1: the MAEDA_CLEANER_MODE/
+    # MAEDA_RAG_MODE in effect for this run, snapshotted at initial_state()
+    # construction time rather than read fresh from `settings` wherever
+    # needed later. 附录 CB.3.4: unlike intent_refined (a per-run *result*,
+    # only known once refine_intent has actually run), the three-state
+    # switch is a run-level *configuration* fixed before the graph even
+    # starts -- every case and every trial of one script invocation shares
+    # the same value. Snapshotting it here means it's visible even on
+    # error paths that never reach profile_and_clean/retrieve_knowledge_node
+    # (e.g. "no data source"), and src/eval/runner.py's EvalResult can read
+    # it straight from state like every other diagnostic field, instead of
+    # re-importing settings.
+
+    cleaner_mode: str   # settings.maeda_cleaner_mode snapshot ("auto"/"force_on"/"force_off")
+    rag_mode: str       # settings.maeda_rag_mode snapshot ("auto"/"force_on"/"force_off")
 
     # === User Input ===
     user_query: str
@@ -153,6 +170,8 @@ def initial_state(
     """
     return MAEDAState(
         run_id=uuid.uuid4().hex,
+        cleaner_mode=settings.maeda_cleaner_mode,
+        rag_mode=settings.maeda_rag_mode,
         user_query=user_query,
         conversation_history=conversation_history or [],
         parsed_intent={},

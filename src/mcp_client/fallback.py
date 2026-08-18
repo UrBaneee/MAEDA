@@ -146,7 +146,7 @@ def _make_call_record(
     result: Any,
     duration_ms: float,
     error: Optional[str] = None,
-    mode: str = "mcp",  # "mcp" | "fallback"
+    mode: str = "mcp",  # "mcp" | "fallback" | "skipped"
     error_class: Optional[str] = None,
     recoverable: Optional[bool] = None,
     service_reachable: Optional[bool] = None,
@@ -163,6 +163,33 @@ def _make_call_record(
         "recoverable": recoverable,
         "service_reachable": service_reachable,
     }
+
+
+def make_skipped_call_record(system: str, tool: str, args: dict, reason: str) -> dict:
+    """
+    定案 #15 / 附录 CB.1.3: a THIRD `mode` value alongside "mcp"/"fallback"
+    (see _make_call_record above) for a deliberate MAEDA_CLEANER_MODE=
+    force_off / MAEDA_RAG_MODE=force_off decision NOT to call `tool` at
+    all this round.
+
+    Distinct from two things that would otherwise look the same:
+      - An ordinary "auto" round where the tool simply wasn't triggered
+        (e.g. has_critical_issues was false) -- that case appends NO log
+        entry for this tool, same as before this switch existed, and must
+        keep not doing so; only a *config-level* force_off gets this
+        explicit record.
+      - "fallback" -- that means the call WAS attempted and degraded after
+        a real failure; "skipped" means it was never attempted at all.
+
+    Without this, an empty `meta.mcp_modes` for a tool is ambiguous
+    between "this arm was auto and the data-driven condition didn't fire"
+    and "this arm was force_off" -- exactly the collapse 附录 CB.1.3 found
+    would make Experiment 1's off-arm indistinguishable from a no-op auto
+    run in the eval report. `duration_ms=0.0` (nothing ran); `reason` goes
+    into `result_summary` (via `result=`), not `error`, since nothing
+    failed.
+    """
+    return _make_call_record(system, tool, args, result=reason, duration_ms=0.0, mode="skipped")
 
 
 async def _call_with_matrix(

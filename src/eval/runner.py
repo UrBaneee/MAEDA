@@ -101,6 +101,24 @@ class EvalResult:
     # False = it ran but the LLM call raised and the pre-refine intent was
     # kept (src/agents/intent_parser.py's IntentParserAgent.refine).
     intent_refined: Optional[bool] = None
+    # 定案 #15 / 阶段 3 收尾执行计划轮次 1 / 附录 CB.3.4: same top-level-scalar,
+    # structurally-can't-reach-_aggregate_score pattern as intent_refined
+    # above (_aggregate_score only ever consumes `scores: list[MetricScore]`
+    # -- these two fields aren't in it, so there's nothing to guard). Unlike
+    # intent_refined, these are run-level CONFIGURATION, not a per-run
+    # result -- every case/trial of one script invocation carries the same
+    # value, sourced from state["cleaner_mode"]/state["rag_mode"]
+    # (src/state/graph_state.py, snapshotted from settings at
+    # initial_state() time). Kept here in ADDITION to (not instead of)
+    # scripts/run_eval.py's report-level `report["arm"]` + per-row
+    # `meta["cleaner_mode"]`/`meta["rag_mode"]` -- CB.3.4's original
+    # proposal argued for those two locations only and against also
+    # duplicating the value into EvalResult (arm is config, not a pipeline
+    # *outcome*, and folding it in blurs that distinction); this instance
+    # was implemented per the lead's explicit instruction to do both. See
+    # 附录 CD for that discrepancy note.
+    cleaner_mode: Optional[str] = None
+    rag_mode: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -113,6 +131,8 @@ class EvalResult:
             "cleaning_applied_level": self.cleaning_applied_level,
             "cleaning_stop_reason": self.cleaning_stop_reason,
             "intent_refined": self.intent_refined,
+            "cleaner_mode": self.cleaner_mode,
+            "rag_mode": self.rag_mode,
         }
 
     def score_by_metric(self, metric: str) -> Optional[float]:
@@ -209,6 +229,8 @@ class EvalRunner:
             cleaning_applied_level=state.get("cleaning_applied_level"),
             cleaning_stop_reason=state.get("cleaning_stop_reason"),
             intent_refined=state.get("intent_refined"),
+            cleaner_mode=state.get("cleaner_mode"),
+            rag_mode=state.get("rag_mode"),
         )
 
         logger.info(

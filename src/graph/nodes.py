@@ -24,8 +24,8 @@ from pathlib import Path
 from typing import Optional
 
 from src.config.settings import settings
-from src.graph.router import _MAX_CLEAN_ITERATIONS
-from src.mcp_client.fallback import SubSystemHardFailure
+from src.graph.router import _MAX_CLEAN_ITERATIONS, cleaner_should_attempt_clean
+from src.mcp_client.fallback import SubSystemHardFailure, make_skipped_call_record
 from src.state.graph_state import MAEDAState
 from src.utils.logger import get_logger
 
@@ -696,18 +696,48 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
         return _trace(state, "data_connector", "connect_and_profile",
                       "profile_dataset returned needs_review; skipping auto-clean")
 
-    if not report.has_critical_issues:
-        # Nothing (more) to clean this round. If we already completed at
-        # least one clean round earlier in this run, this is genuine
-        # convergence, not "never needed cleaning" — record it either way
-        # so a stale stop_reason from an earlier round can't linger.
-        if state.get("iteration_count", 0) > 0:
+    # 定案 #15 (附录 CC.2/CC.3): cleaner_should_attempt_clean resolves
+    # has_critical_issues down to whether THIS round actually attempts
+    # clean_dataset -- "auto" reads it as-is, "force_on" bypasses it (True
+    # unconditionally), "force_off" bypasses it the other way (False
+    # unconditionally). See router.cleaner_should_attempt_clean's docstring
+    # for why this single function backs both this call site and
+    # route_after_profiling's.
+    should_clean = cleaner_should_attempt_clean(report.has_critical_issues)
+    if not should_clean:
+        # Nothing (more) to clean this round -- either "auto" genuinely
+        # found nothing critical, or MAEDA_CLEANER_MODE=force_off
+        # deliberately turned cleaning off regardless of what
+        # has_critical_issues says. If we already completed at least one
+        # clean round earlier in this run, this is genuine convergence,
+        # not "never needed cleaning" — record it either way so a stale
+        # stop_reason from an earlier round can't linger.
+        if settings.maeda_cleaner_mode == "force_off":
+            # 附录 CB.1.3: an explicit mode="skipped" mcp_call_log entry,
+            # not just an absent one -- make_skipped_call_record's
+            # docstring explains why "no log entry" (auto's not-triggered)
+            # and "skipped" (a deliberate config decision) must stay
+            # distinguishable in meta.mcp_modes for Experiment 1.
+            state["mcp_call_log"] = [*state.get("mcp_call_log", []), make_skipped_call_record(
+                "data_cleaner", "clean_dataset",
+                {"dataset_path": effective_path, "intent": intent_payload},
+                "MAEDA_CLEANER_MODE=force_off",
+            )]
+            state["cleaning_stop_reason"] = "force_off"
+            state["cleaning_caveat"] = (
+                "MAEDA_CLEANER_MODE=force_off: cleaning was deliberately "
+                "skipped for this ablation run; proceeding to analysis on "
+                "the original data."
+            )
+        elif state.get("iteration_count", 0) > 0:
             state["cleaning_stop_reason"] = "passed"
         state["cleaning_applied_level"] = _cleaning_applied_level(state)
         return _trace(state, "data_connector", "connect_and_profile",
-                      f"Connected to {source_path}; critical_issues=False")
+                      f"Connected to {source_path}; has_critical_issues={report.has_critical_issues}, "
+                      f"cleaner_mode={settings.maeda_cleaner_mode!r}, should_clean=False")
 
-    # has_critical_issues=True from here on — run one clean+validate+re-profile round.
+    # should_clean=True from here on (auto: has_critical_issues was true;
+    # force_on: unconditionally) — run one clean+validate+re-profile round.
     if state.get("iteration_count", 0) >= _MAX_CLEAN_ITERATIONS:
         # route_after_profiling should have stopped looping before this
         # node ran again; this is a defensive backstop, not the primary
@@ -1083,8 +1113,31 @@ async def generate_viz_node(state: MAEDAState) -> MAEDAState:
 
 
 async def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
-    """Phase 7: build focused retrieval query, delegate to RAG-MCP-Server."""
+    """
+    Phase 7: build focused retrieval query, delegate to RAG-MCP-Server.
+
+    定案 #15 / 附录 CB.3.1/CC.7: MAEDA_RAG_MODE="force_off" is the only
+    value that changes behavior here today. "auto" and "force_on" both
+    call retrieve_knowledge unconditionally -- src/graph/builder.py's
+    "generate_viz" -> "retrieve_domain_knowledge" edge is still a plain
+    `add_edge`, not a conditional route, so "auto"'s real judgement (skip
+    retrieval for purely-computational queries, per 阶段 3's own
+    requirement) does not exist yet; that is 阶段 3 收尾执行计划's 轮次 3,
+    a separate, independent piece of work this switch deliberately does
+    not block on (Experiment 1 only needs force_on/force_off). Do not read
+    this branch as "auto routing is implemented" -- it's the documented
+    degeneration to today's unconditional behavior, not a new feature.
+    """
     logger.info("Node: retrieve_domain_knowledge")
+
+    if settings.maeda_rag_mode == "force_off":
+        state["mcp_call_log"] = [*state.get("mcp_call_log", []), make_skipped_call_record(
+            "rag_server", "retrieve_with_metadata", {}, "MAEDA_RAG_MODE=force_off",
+        )]
+        state["rag_context"] = []
+        state["rag_sources"] = []
+        return _trace(state, "insight_agent", "retrieve_knowledge",
+                      "MAEDA_RAG_MODE=force_off; skipping retrieval")
 
     client = _get_subsystem_client()
     insight_agent = _get_insight_agent()
