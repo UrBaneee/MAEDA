@@ -8,7 +8,7 @@ from langgraph.graph import END, StateGraph
 
 from src.graph.nodes import (
     ask_clarification_node,
-    connect_and_profile_node,
+    connect_schema,
     execute_analysis_node,
     generate_insights_node,
     generate_viz_node,
@@ -16,6 +16,7 @@ from src.graph.nodes import (
     parse_intent_node,
     persist_run_node,
     plan_analysis_node,
+    profile_and_clean,
     retrieve_knowledge_node,
     run_eval_node,
     run_guardrails_node,
@@ -46,7 +47,19 @@ def build_graph() -> StateGraph:
     g.add_node("persist_run", persist_run_node)
 
     # Delegated sub-system nodes (call Data Cleaner + RAG via MCP)
-    g.add_node("connect_and_profile_data", connect_and_profile_node)
+    # E2 BO.1 split (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, submission 1):
+    # what used to be one "connect_and_profile_data" node is now two —
+    # connect_schema (schema extraction + E1 table selection) followed by
+    # profile_and_clean (intent reconciliation + the MCP
+    # profile/clean/validate round). Submission 1 wires the self-loop back
+    # to connect_schema, reproducing the pre-split node's exact per-round
+    # behavior (schema is re-extracted every clean round, same as before)
+    # — see nodes.py's connect_and_profile_node docstring and 附录 BQ for
+    # why. Submission 2 (E2's refine_intent node) is the one that moves the
+    # self-loop target to profile_and_clean, once there's an
+    # intent_refine_done gate to actually protect.
+    g.add_node("connect_schema", connect_schema)
+    g.add_node("profile_and_clean", profile_and_clean)
     g.add_node("retrieve_domain_knowledge", retrieve_knowledge_node)
 
     # ── Entry point ─────────────────────────────────────────────────────────
@@ -58,16 +71,22 @@ def build_graph() -> StateGraph:
     g.add_conditional_edges(
         "parse_intent",
         route_after_intent,
-        {"proceed": "connect_and_profile_data", "clarify": "ask_clarification"},
+        {"proceed": "connect_schema", "clarify": "ask_clarification"},
     )
     # Clarification loops back to re-parse
     g.add_edge("ask_clarification", "parse_intent")
 
+    # connect_schema always falls through to profile_and_clean (unconditional
+    # -- profile_and_clean's own top-of-function guard on
+    # current_phase == "error" is what makes connect_schema's "no data
+    # source" exit a no-op here, not a graph-level branch).
+    g.add_edge("connect_schema", "profile_and_clean")
+
     # Data profiling (may loop for cleaning then re-profile)
     g.add_conditional_edges(
-        "connect_and_profile_data",
+        "profile_and_clean",
         route_after_profiling,
-        {"clean": "connect_and_profile_data", "ready": "plan_analysis", "error": "handle_error"},
+        {"clean": "connect_schema", "ready": "plan_analysis", "error": "handle_error"},
     )
 
     # Linear analysis pipeline

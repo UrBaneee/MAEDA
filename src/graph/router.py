@@ -21,8 +21,9 @@ def route_after_intent(state: MAEDAState) -> str:
 
 def route_after_profiling(state: MAEDAState) -> str:
     """
-    After connect_and_profile_data (TB0.5 v1, ECOSYSTEM_INTEGRATION_PLAN.md
-    附录 B.3/B.4/B.5):
+    After profile_and_clean (TB0.5 v1, ECOSYSTEM_INTEGRATION_PLAN.md
+    附录 B.3/B.4/B.5; the node was "connect_and_profile_data" before the
+    E2 BO.1 split, 附录 BQ):
       - "error"  → no data source provided, or an unrecoverable MCP failure
                    (param/contract/data-input error — 附录 B.3's "工具错误"
                    row; the node already turned this into state["error"],

@@ -23,6 +23,18 @@ class MAEDAState(TypedDict):
     data_sources: list[dict]   # [{type, path/uri, schema, preview}]
     active_source: Optional[dict]
     schema_summary: str
+    # E2 BO.1 split (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, submission 1):
+    # node-to-node handoff between `connect_schema` and `profile_and_clean`
+    # (src/graph/nodes.py) — not meant to be read anywhere else. Recomputed
+    # fresh by connect_schema on every entry; effective_dataset_path is
+    # 定案 #16's already-resolved path, schema_columns is the raw
+    # ColumnInfo objects _resolve_intent_columns needs (the dict form
+    # already stored in data_sources[0]['schema']['columns'] doesn't
+    # support the attribute access that function does). None means schema
+    # extraction failed this round (mirrors the pre-split `schema` local's
+    # None case).
+    effective_dataset_path: Optional[str]
+    schema_columns: Optional[list]
 
     # === Data Quality (DELEGATED to Data Cleaner via MCP) ===
     data_quality_report: Optional[dict]   # From Data Cleaner MCP
@@ -133,6 +145,8 @@ def initial_state(
         data_sources=data_sources or [],
         active_source=None,
         schema_summary="",
+        effective_dataset_path=None,
+        schema_columns=None,
         data_quality_report=None,
         cleaning_applied=False,
         cleaning_summary=None,

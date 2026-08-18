@@ -74,7 +74,10 @@ def test_graph_has_expected_nodes():
     g = build_graph()
     node_names = set(g.nodes.keys())
     expected = {
-        "parse_intent", "ask_clarification", "connect_and_profile_data",
+        # E2 BO.1 split (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, submission 1):
+        # "connect_and_profile_data" is now two nodes, connect_schema and
+        # profile_and_clean -- see src/graph/builder.py.
+        "parse_intent", "ask_clarification", "connect_schema", "profile_and_clean",
         "plan_analysis", "execute_analysis", "generate_viz",
         "retrieve_domain_knowledge", "generate_insights",
         "run_guardrails", "run_eval", "handle_error", "persist_run",

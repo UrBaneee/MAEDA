@@ -20,7 +20,8 @@ from src.state.graph_state import MAEDAState, initial_state
 NODE_LABELS: dict[str, str] = {
     "parse_intent": "🔍 Parsing intent...",
     "ask_clarification": "❓ Clarification needed...",
-    "connect_and_profile_data": "📊 Profiling data...",
+    "connect_schema": "🔗 Connecting to data source...",
+    "profile_and_clean": "📊 Profiling data...",
     "plan_analysis": "🧠 Planning analysis...",
     "execute_analysis": "🧮 Running analysis...",
     "generate_viz": "🎨 Generating visualizations...",

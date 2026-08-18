@@ -495,25 +495,28 @@ async def ask_clarification_node(state: MAEDAState) -> MAEDAState:
     return await _get_intent_parser().generate_clarification_question(state)
 
 
-async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
+async def connect_schema(state: MAEDAState) -> MAEDAState:
     """
-    Phase 4: connect to data source, extract schema + NL summary, delegate
-    QC to MCP, and run at most one clean+validate+re-profile round if the
-    data has critical issues (TB0.5 v1, ECOSYSTEM_INTEGRATION_PLAN.md 附录
-    B). route_after_profiling decides whether another LangGraph tick
-    through this node is needed — this function's job each tick is to do
-    exactly one round and leave state honest about what happened.
+    Phase 4 step 1 (E2 BO.1 split, submission 1 — ECOSYSTEM_INTEGRATION_PLAN.md
+    附录 BQ): connect to the data source and extract schema + NL summary,
+    including E1's intent-aware table selection for multi-table SQL
+    sources. First half of what used to be one 460+-line
+    `connect_and_profile_node` — split into two real LangGraph nodes so a
+    later `refine_intent` node (E2 submission 2) can sit between "schema
+    known" and "cleaner invoked" on its own conditional edge, instead of
+    being a branch buried inside a monolithic function.
 
-    Fixes a confirmed real bug (M7): the cleaned file used to never get
-    consumed by later rounds or by analysis — `data_sources[0].path` was
-    never updated, so every loop iteration re-profiled and re-cleaned the
-    *original* dirty file, and `data_quality_report` stayed frozen at the
-    pre-clean state forever. This version writes `cleaned_path` back into
-    `data_sources[0]`/`active_source`, re-profiles the cleaned file so the
-    router sees fresh `has_critical_issues`, and calls `validate_quality`
-    as the actual exit check (previously wired up but never invoked).
+    Hands off to `profile_and_clean` through two state fields, not local
+    variables — LangGraph nodes only communicate via state, they don't
+    share a Python call stack. `effective_dataset_path` carries 定案 #16's
+    already-resolved path; `schema_columns` carries the real `ColumnInfo`
+    objects `_resolve_intent_columns` needs (`data_sources[0]['schema']
+    ['columns']`'s dict form doesn't support the attribute access that
+    function does). Both are recomputed fresh on every entry to this node
+    and are not meant to be read by anything outside this connect_schema /
+    profile_and_clean pair.
     """
-    logger.info("Node: connect_and_profile_data")
+    logger.info("Node: connect_schema")
     state["current_phase"] = "plan"
 
     sources = state.get("data_sources", [])
@@ -525,22 +528,6 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     source = sources[0]
     source_path = source.get("path", "")
     connector = _get_data_connector()
-    mcp_client = _get_subsystem_client()
-
-    # M4 / 定案 #16: per-call run_id derived from the pipeline's own run_id,
-    # now that cleaner's C3 actually honors it (附录 E P4 is resolved).
-    # Each call gets a DISTINCT id, not one shared id for the whole pipeline
-    # run: run_two_stage's stage1/stage2 directories are fixed names under
-    # run_root, so reusing the same run_id across two separate clean_dataset
-    # calls would silently overwrite round 1's artifacts with round 2's.
-    # The shared prefix still lets every artifact from this pipeline run be
-    # found/grouped by directory-name prefix (附录 E.2 P1).
-    pipeline_run_id = state.get("run_id", "")
-    round_index = state.get("iteration_count", 0)
-    artifact_root = _resolved_artifact_root()
-
-    def _round_run_id(label: str, index: int) -> str:
-        return f"{pipeline_run_id}_{label}{index}" if pipeline_run_id else ""
 
     # Step 1: Connect and extract schema + NL summary
     # E1: parsed_intent is already in state by this point (parse_intent runs
@@ -580,6 +567,68 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         state["schema_summary"] = f"Schema unavailable: {exc}"
         effective_path = _resolved_dataset_path(source_path, source.get("type", "csv"))
 
+    state["effective_dataset_path"] = effective_path
+    state["schema_columns"] = schema.columns if schema is not None else None
+    return state
+
+
+async def profile_and_clean(state: MAEDAState) -> MAEDAState:
+    """
+    Phase 4 step 2 (E2 BO.1 split, submission 1 — ECOSYSTEM_INTEGRATION_PLAN.md
+    附录 BQ): reconcile the parsed intent against the schema `connect_schema`
+    just extracted, delegate quality profiling to Data Cleaner MCP, and run
+    at most one clean+validate+re-profile round if the data has critical
+    issues (TB0.5 v1, 附录 B). route_after_profiling decides whether another
+    LangGraph tick through this node is needed — this function's job each
+    tick is to do exactly one round and leave state honest about what
+    happened. Second half of the pre-split `connect_and_profile_node` (see
+    `connect_schema`'s docstring for why the function was split).
+
+    Guards on `current_phase == "error"` at the top so connect_schema's
+    "no data source" exit — the only error connect_schema can raise before
+    `data_sources` is ever touched — propagates through unchanged instead
+    of this function dereferencing a `data_sources[0]` that was never
+    populated. This is plain early-return plumbing to preserve identical
+    behavior across the split, not a new routing decision: the actual
+    "error" -> handle_error edge is still owned entirely by
+    route_after_profiling downstream, unchanged from before the split.
+
+    Fixes a confirmed real bug (M7): the cleaned file used to never get
+    consumed by later rounds or by analysis — `data_sources[0].path` was
+    never updated, so every loop iteration re-profiled and re-cleaned the
+    *original* dirty file, and `data_quality_report` stayed frozen at the
+    pre-clean state forever. This version writes `cleaned_path` back into
+    `data_sources[0]`/`active_source`, re-profiles the cleaned file so the
+    router sees fresh `has_critical_issues`, and calls `validate_quality`
+    as the actual exit check (previously wired up but never invoked).
+    """
+    logger.info("Node: profile_and_clean")
+    if state.get("current_phase") == "error":
+        return state
+
+    mcp_client = _get_subsystem_client()
+    connector = _get_data_connector()
+
+    source = state.get("data_sources", [{}])[0]
+    source_path = source.get("path", "")
+    effective_path = state.get("effective_dataset_path")
+    schema_columns = state.get("schema_columns")
+
+    # M4 / 定案 #16: per-call run_id derived from the pipeline's own run_id,
+    # now that cleaner's C3 actually honors it (附录 E P4 is resolved).
+    # Each call gets a DISTINCT id, not one shared id for the whole pipeline
+    # run: run_two_stage's stage1/stage2 directories are fixed names under
+    # run_root, so reusing the same run_id across two separate clean_dataset
+    # calls would silently overwrite round 1's artifacts with round 2's.
+    # The shared prefix still lets every artifact from this pipeline run be
+    # found/grouped by directory-name prefix (附录 E.2 P1).
+    pipeline_run_id = state.get("run_id", "")
+    round_index = state.get("iteration_count", 0)
+    artifact_root = _resolved_artifact_root()
+
+    def _round_run_id(label: str, index: int) -> str:
+        return f"{pipeline_run_id}_{label}{index}" if pipeline_run_id else ""
+
     # TB3 (附录 U.1/U.2/P.1): resolve the parsed intent's free-text column
     # mentions against the real schema (empty list -> resolution_status
     # "absent" if schema extraction failed above), and build the one intent
@@ -589,7 +638,7 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
     # the fingerprint check further down verifies cleaner's honesty about
     # that intent, not MAEDA's own internal consistency.
     resolved_columns, unresolved_mentions, resolution_status = _resolve_intent_columns(
-        state.get("parsed_intent") or {}, schema.columns if schema is not None else [],
+        state.get("parsed_intent") or {}, schema_columns if schema_columns is not None else [],
     )
     intent_payload = _build_intent_payload(
         effective_path, state.get("parsed_intent") or {},
@@ -959,6 +1008,29 @@ async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
         f"round {state['iteration_count']} complete; validate_quality.passed=False, "
         f"score={validation.score}, stop_reason={state.get('cleaning_stop_reason')}",
     )
+
+
+async def connect_and_profile_node(state: MAEDAState) -> MAEDAState:
+    """
+    Back-compat single-call entry point (E2 BO.1 split, submission 1 —
+    ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ): runs `connect_schema` then
+    `profile_and_clean` in sequence, reproducing the pre-split monolithic
+    node's exact behavior for callers that drive one full round (schema
+    extraction through profile/clean/validate) with a single call —
+    notably the existing direct-node unit tests
+    (tests/unit/test_tb3_tb4.py, tests/unit/test_phase4.py's
+    TestCleaningLoop) that thread `state` through repeated calls to
+    simulate the graph's multi-round self-loop by hand, and never went
+    through `src.graph.builder`'s actual node wiring in the first place.
+
+    The compiled graph itself (src/graph/builder.py) does NOT use this
+    function — it registers `connect_schema` and `profile_and_clean` as
+    two separate nodes joined by a plain edge, so a `refine_intent` node
+    (E2 submission 2) can be inserted as a real conditional edge between
+    them without another rewrite of this wrapper.
+    """
+    state = await connect_schema(state)
+    return await profile_and_clean(state)
 
 
 async def plan_analysis_node(state: MAEDAState) -> MAEDAState:
