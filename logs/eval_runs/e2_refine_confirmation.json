@@ -1,0 +1,131 @@
+{
+  "timestamp": 1787019743.3430789,
+  "n_cases": 1,
+  "overall_aggregate": 0.9424242424242425,
+  "split": "dev",
+  "cases": [
+    {
+      "test_case_id": "D01",
+      "eval_result": {
+        "run_id": "D01",
+        "query": "Show total sales by region",
+        "scores": [
+          {
+            "metric": "answer_relevance",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "The report directly and completely answers the query by presenting total sales (revenue) by region for all 5 regions, clearly listing each region's value, ranking them, and providing a visualization reference. It fully addresses the specific request with detailed figures.",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "groundedness",
+            "score": 0.8888888888888888,
+            "label": "pass",
+            "reasoning": "8/9 claims supported. \u2713 North region revenue $5,222,201.56, highest among regions (evidence: Matches findings; also highest vs Central 3.28M, East 4.33M, South 3.94M, West 4.78M) | \u2713 Central region revenue $3,283,966.65, lowest among regions (evidence: Matches findings; lowest vs all other regions) | \u2713 East region revenue $4,330,701.42 (evidence: Matches findings) | \u2713 West region revenue $4,782,541.30 (evidence: Matches findings) | \u2713 South region revenue $3,940,985.20 (evidence: Matches findings) | \u2713 South revenue higher than Central but lower than East, West, North (evidence: South 3.94M > Central 3.28M; South < East 4.33M, West 4.78M, North 5.22M) | \u2713 North significantly outperforms Central in revenue (evidence: North 5.22M vs Central 3.28M, largest gap among regions) | \u2713 942 fully duplicated rows, 1.9% of dataset (evidence: Matches Data Quality section) | \u2717 No cleaning caveats were noted, data modified appropriately without risky steps (no evidence found)",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "factual_accuracy",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "Ground truth overlap: 100%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "intent_accuracy",
+            "score": 0.8,
+            "label": "pass",
+            "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "tool_selection",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "step_success_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0/1 steps failed",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "chart_appropriateness",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "token_cost",
+            "score": 0.989095,
+            "label": "pass",
+            "reasoning": "$0.0109",
+            "raw_value": 0.010905,
+            "valid": true
+          },
+          {
+            "metric": "retry_count",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "0 retries",
+            "raw_value": 0,
+            "valid": true
+          },
+          {
+            "metric": "error_rate",
+            "score": 1.0,
+            "label": "pass",
+            "reasoning": "No errors",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "safe_refusal",
+            "score": 0.0,
+            "label": "info",
+            "reasoning": "No refusal",
+            "raw_value": null,
+            "valid": true
+          },
+          {
+            "metric": "total_latency",
+            "score": 0.7,
+            "label": "pass",
+            "reasoning": "42.6s",
+            "raw_value": 42.64007782936096,
+            "valid": true
+          }
+        ],
+        "aggregate_score": 0.9424242424242425,
+        "timestamp": 1787019743.3427572,
+        "test_case_id": "D01",
+        "cleaning_applied_level": "none",
+        "cleaning_stop_reason": null,
+        "intent_refined": true
+      },
+      "meta": {
+        "elapsed_s": 42.64,
+        "guardrail_passed": true,
+        "current_phase": "complete",
+        "error": null,
+        "error_type": null,
+        "mcp_modes": [
+          "fallback"
+        ],
+        "data_mismatch": false,
+        "run_id": "7c64929ee1204e7a92f8ac0382a114c5"
+      }
+    }
+  ]
+}
