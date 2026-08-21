@@ -26,6 +26,38 @@ We could have imported the Data Cleaner and RAG Server directly. We didn't, beca
 - **`iteration_count`** — guardrail retry counter; prevents infinite loops
 - **`token_usage`** — each agent updates this dict; the eval module reads it for cost scoring
 
+## Business glossary (口径词表), and why `absent` is stated out loud
+
+Curated column definitions live in `config/glossary.yaml`
+(`MAEDA_GLOSSARY_PATH`) and are deterministic curation-layer content — they
+are never retrieved through RAG. `src/tools/glossary.py::resolve_glossary`
+is the single gate: `connect_schema` calls it once per round, the moment a
+schema exists, and it reconciles the file against the *live* schema before
+anything is injected. A definition for a column the data doesn't have is
+dropped rather than handed to an LLM as fact.
+
+Its three-state result (`full` / `partial` / `absent`) plus the filtered
+entries are written to state (`glossary_coverage`, `glossary_entries`,
+`glossary_uncovered_columns`) and every consumer reads that stored result —
+one judgment site, several projections:
+
+- **injection [2]** — the TB3 intent payload's `glossary` (附录 U.2's frozen
+  entry keys; `aliases` are MAEDA-internal and projected out) plus the
+  additive `glossary_coverage` key
+- **injection [3]** — the `plan_analysis` prompt's "Column Glossary" block
+- the 附录 U.2 `glossary_alias` match tier in `_resolve_intent_columns`,
+  which is what lets a mention like "营收" or "sales" resolve to `revenue`;
+  a real column name always outranks an alias, and an alias claimed by two
+  columns yields `reason="ambiguous"` rather than an arbitrary pick
+
+`absent` is always **stated**, never expressed by leaving the glossary out:
+it reaches state, the decision trace, the cleaner payload and the planner
+prompt, the last as an explicit instruction not to invent meanings, units,
+currencies or value encodings for uncurated columns. Omission and "we
+checked, and nobody has written a definition" are indistinguishable
+downstream, and the difference is exactly what stops a planner from
+confidently making semantics up for an unknown data source.
+
 ## RAG routing and the force_on arm
 
 Retrieval used to be an unconditional edge: `generate_viz` always fell

@@ -32,6 +32,7 @@ from src.graph.router import (
 from src.mcp_client.fallback import SubSystemHardFailure, make_skipped_call_record
 from src.mcp_client.models import RetrievalTier
 from src.state.graph_state import MAEDAState
+from src.tools import glossary
 from src.utils.logger import get_logger
 
 logger = get_logger("maeda.nodes")
@@ -298,7 +299,7 @@ def _scope_fingerprint(columns: list[str]) -> str:
 
 
 def _resolve_intent_columns(
-    parsed_intent: dict, schema_columns: list,
+    parsed_intent: dict, schema_columns: list, alias_index: Optional[dict] = None,
 ) -> tuple[list[dict], list[dict], str]:
     """
     P.1 (附录 U.2's solution (d)): deterministic column-name reconciliation
@@ -307,12 +308,24 @@ def _resolve_intent_columns(
     cleaner — cleaner treats `resolved_columns` as pre-validated and does
     no second matching pass of its own (附录 U.2).
 
-    Only two match tiers are implemented: `exact` and `case_insensitive`.
-    `glossary_alias` is reserved in the frozen schema but never produced
-    here — 附录 S.2 confirmed the glossary has no content yet (no file, no
-    loader in this repo), so alias matching would always be a dead branch.
-    It activates automatically once 阶段 3's glossary work lands; nothing
-    here needs to change for that.
+    All three frozen match tiers are implemented, in order: `exact`,
+    `case_insensitive`, then `glossary_alias` — the last one only when
+    `alias_index` is supplied (阶段 3 轮次 4, 附录 CQ). 附录 S.2 froze that
+    tier as a dead path because the repo had no glossary content or loader,
+    and predicted it would "activate automatically" once 阶段 3's glossary
+    landed; that turned out to need code here after all — there was no
+    branch that could ever emit `glossary_alias` (附录 CQ.2). The index maps
+    a lower-cased alias to the schema column(s) it names and is built by
+    src/tools/glossary.py from entries that already passed the schema
+    filter, so this tier can never resolve a mention to a column the data
+    doesn't have. Tier order matters: a real column name always wins over
+    an alias, so a glossary can add reach but cannot redirect a mention
+    that already matches the schema.
+
+    An alias claimed by two columns yields `reason="ambiguous"` with both
+    names in `candidates` rather than an arbitrary pick — 附录 U.2 froze
+    that reason value and `candidates` list, and until now neither was
+    reachable (`no_match` with an empty list was the only outcome).
 
     Mentions this function knows how to extract from `ParsedIntent`
     (src/agents/intent_parser.py): `target_metrics` → role "metric",
@@ -336,14 +349,27 @@ def _resolve_intent_columns(
     def _role_for(col, requested_role: str) -> str:
         return "time" if getattr(col, "is_datetime", False) else requested_role
 
-    def _resolve_one(mention: str, role: str) -> Optional[dict]:
+    def _resolve_one(mention: str, role: str) -> tuple[Optional[dict], list[str]]:
+        """Returns (match, ambiguous_candidates) — a non-empty candidate list
+        with no match means the mention hit an alias claimed by several
+        columns."""
         col = by_exact.get(mention)
         if col is not None:
-            return {"name": col.name, "role": _role_for(col, role), "matched_from": mention, "match": "exact"}
+            return {"name": col.name, "role": _role_for(col, role), "matched_from": mention, "match": "exact"}, []
         col = by_lower.get(mention.lower())
         if col is not None:
-            return {"name": col.name, "role": _role_for(col, role), "matched_from": mention, "match": "case_insensitive"}
-        return None
+            return {"name": col.name, "role": _role_for(col, role), "matched_from": mention, "match": "case_insensitive"}, []
+        aliased = (alias_index or {}).get(mention.strip().lower()) or []
+        if len(aliased) == 1:
+            col = by_exact.get(aliased[0])
+            if col is not None:
+                return {
+                    "name": col.name, "role": _role_for(col, role),
+                    "matched_from": mention, "match": "glossary_alias",
+                }, []
+        elif len(aliased) > 1:
+            return None, sorted(aliased)
+        return None, []
 
     mentions: list[tuple[str, str]] = []
     for m in parsed_intent.get("target_metrics") or []:
@@ -364,9 +390,13 @@ def _resolve_intent_columns(
     unresolved: list[dict] = []
     seen_names: set[str] = set()
     for mention, role in mentions:
-        match = _resolve_one(mention, role)
+        match, candidates = _resolve_one(mention, role)
         if match is None:
-            unresolved.append({"text": mention, "role": role, "reason": "no_match", "candidates": []})
+            unresolved.append({
+                "text": mention, "role": role,
+                "reason": "ambiguous" if candidates else "no_match",
+                "candidates": candidates,
+            })
         elif match["name"] not in seen_names:
             # Same column mentioned twice under different roles (e.g. both
             # a metric and the sort_by column) — one resolved_columns entry
@@ -391,14 +421,33 @@ def _resolve_intent_columns(
 def _build_intent_payload(
     dataset_path: str, parsed_intent: dict,
     resolved_columns: list[dict], unresolved_mentions: list[dict], resolution_status: str,
+    glossary_entries: Optional[list[dict]] = None, glossary_coverage: Optional[str] = None,
 ) -> dict:
     """
     P.2 (附录 U.2 frozen schema). `column_scope.profiling`/`mutation` are
     frozen literal values (附录 U.2/U.9) — not configurable here: `mutation`
     stays "advisory" until a column-resolution recall benchmark exists to
     justify "restrict" (附录 P.9.1's dilution-risk argument), which is not
-    this round's work. `glossary` is always empty — 附录 S.2/U.9: no
-    glossary content or loader exists in this repo yet (阶段 3).
+    this round's work.
+
+    Injection point [2] (阶段 3 轮次 4, 附录 CQ): `glossary` now carries real
+    content — the entries `resolve_glossary` (src/tools/glossary.py) kept
+    after reconciling the glossary against this round's schema, projected
+    onto U.2's frozen entry keys. Entries whose column doesn't exist in the
+    data were already dropped by that gate, so nothing here can hand the
+    cleaner a definition for a column it will not find.
+
+    `glossary_coverage` is an ADDITIVE top-level key (附录 U.11: additive
+    changes don't move `intent_contract_version`; cleaner reads only
+    `analysis`/`column_scope` and passes the rest through — verified in
+    agent/planner.py::_intent_payload). It exists because an empty
+    `glossary` array cannot distinguish "no curated definition exists for
+    this data source" from "the glossary just wasn't attached", and the
+    cleaner's LLM planner dumps this whole payload into its prompt
+    (agent/llm_planner.py:351) — so `absent` reaching it as a stated fact is
+    what stops that planner inventing column semantics too. Defaults to
+    "absent" rather than None: unknown coverage IS absent coverage, and the
+    key is never omitted.
     """
     columns = [r["name"] for r in resolved_columns]
     return {
@@ -416,7 +465,8 @@ def _build_intent_payload(
             "profiling": "restrict",
             "mutation": "advisory",
         },
-        "glossary": [],
+        "glossary": glossary.payload_entries(glossary_entries),
+        "glossary_coverage": glossary_coverage or glossary.COVERAGE_ABSENT,
     }
 
 
@@ -574,6 +624,33 @@ async def connect_schema(state: MAEDAState) -> MAEDAState:
 
     state["effective_dataset_path"] = effective_path
     state["schema_columns"] = schema.columns if schema is not None else None
+
+    # 阶段 3 轮次 4 (附录 CQ), injection-point timing per
+    # docs/handoff_maeda_to_subsystems.md:185: filter the glossary as soon as
+    # the schema exists — here, not at plan_analysis — because injection [2]
+    # (the cleaner intent payload, built in profile_and_clean) needs the same
+    # filtered result and runs first. One gate call per round; every consumer
+    # reads the stored result rather than re-deriving coverage.
+    #
+    # Runs on the schema-failure path too (schema is None -> no columns ->
+    # coverage "absent"): a round that could not read a schema has, by
+    # definition, no verified column definitions, and that must be stated
+    # downstream, not left as an unset field that reads like "not applicable".
+    match = glossary.resolve_glossary(
+        effective_path,
+        schema.columns if schema is not None else None,
+        table_name=(schema.table_name if schema is not None else None),
+    )
+    state["glossary_coverage"] = match.coverage
+    state["glossary_entries"] = match.entries
+    state["glossary_uncovered_columns"] = match.uncovered_columns
+    _trace(
+        state, "data_connector", "glossary_coverage",
+        f"coverage={match.coverage!r}, source={match.dataset_key!r}, "
+        f"covered={match.covered_columns}, uncovered={match.uncovered_columns}, "
+        f"dropped_stale_entries={match.dropped_columns}"
+        + (f", reason={match.reason}" if match.reason else ""),
+    )
     return state
 
 
@@ -642,12 +719,19 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
     # every call" requirement holds by construction, not just convention —
     # the fingerprint check further down verifies cleaner's honesty about
     # that intent, not MAEDA's own internal consistency.
+    # 阶段 3 轮次 4 (附录 CQ): both the alias tier and injection point [2] read
+    # the glossary connect_schema already reconciled against this schema — this
+    # node never re-filters or re-judges coverage.
+    glossary_entries = state.get("glossary_entries") or []
     resolved_columns, unresolved_mentions, resolution_status = _resolve_intent_columns(
         state.get("parsed_intent") or {}, schema_columns if schema_columns is not None else [],
+        alias_index=glossary.alias_index(glossary_entries),
     )
     intent_payload = _build_intent_payload(
         effective_path, state.get("parsed_intent") or {},
         resolved_columns, unresolved_mentions, resolution_status,
+        glossary_entries=glossary_entries,
+        glossary_coverage=state.get("glossary_coverage"),
     )
     state["cleaning_intent"] = intent_payload
     expected_fingerprint = _scope_fingerprint([r["name"] for r in resolved_columns])

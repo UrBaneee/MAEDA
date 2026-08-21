@@ -1,0 +1,359 @@
+# MAEDA business glossary (口径词表) — ECOSYSTEM_INTEGRATION_PLAN.md 阶段 3,
+# 执行顺序表轮次 4 (附录 CQ). Curation-layer content: deterministic, injected
+# after being reconciled against the live schema, never retrieved through RAG.
+#
+# Loaded by src/tools/glossary.py, which is the single gate that filters these
+# entries against the real schema and decides the full/partial/absent coverage
+# state. Two injection points consume the filtered result (无 second gate):
+#   [2] the TB3 intent payload sent to Data Cleaner  (src/graph/nodes.py)
+#   [3] the plan_analysis prompt                     (src/agents/analysis_agent.py)
+#
+# PROVENANCE — every statement below is derived from one of:
+#   (a) scripts/generate_demo_data.py, which *is* the definition of these
+#       synthetic datasets (cited per dataset below), or
+#   (b) a direct measurement of the committed file in data/demo/ (pandas /
+#       sqlite3), quoted as "current render" where the value could change if
+#       the data is ever re-generated.
+# Nothing here is inferred from a model output, a report, or a business
+# assumption. If you cannot cite (a) or (b), do not add the entry —
+# an `absent` coverage state is the designed outcome for uncurated data and
+# is strictly better than a plausible-sounding invented definition.
+#
+# ENTRY SCHEMA — `column`/`meaning`/`unit`/`value_semantics`/`notes` are the
+# 附录 U.2 frozen keys and are the ONLY ones that cross to the cleaner.
+# `aliases` is MAEDA-internal (used for the 附录 U.2 `glossary_alias` match
+# tier in _resolve_intent_columns) and is projected OUT before injection [2] —
+# cleaner has no use for it (附录 P.2: only fields cleaner can act on).
+#
+# DATASET MATCHING is by file basename, plus `table` for SQL sources. A file
+# with the same basename at a different path WILL match; a renamed copy will
+# NOT (it reports `absent`, which is the safe direction).
+
+glossary_version: "1"
+
+datasets:
+
+  # ── data/demo/sales_data.csv ────────────────────────────────────────────
+  # (a) scripts/generate_demo_data.py::generate_sales (:202-292)
+  # (b) 48,960 rows, measured 2026-08-21
+  - dataset: sales_data.csv
+    description: >-
+      Synthetic transaction-line sales ledger, one row per sale, daily grain,
+      2022-01-01 to 2024-12-31.
+    columns:
+      - column: date
+        aliases: ["日期", "sale_date", "transaction_date", "order_date"]
+        meaning: >-
+          Date the transaction line was booked. Daily grain, ISO 8601
+          (YYYY-MM-DD), covering 2022-01-01 through 2024-12-31 inclusive.
+        notes: >-
+          Stored as text, not a date type. Multiple rows share the same date;
+          it is not a key.
+
+      - column: region
+        aliases: ["地区", "区域", "territory", "sales_region"]
+        meaning: >-
+          Sales region the transaction is attributed to. Exactly five values:
+          North, South, East, West, Central.
+        notes: >-
+          A closed value set — a region outside those five is a data error,
+          not a new market.
+
+      - column: product
+        aliases: ["产品", "product_name", "sku"]
+        meaning: >-
+          Product line sold on this line. Exactly five values: Widget A,
+          Widget B, Gadget Pro, Gadget Lite, Service Pack.
+        notes: >-
+          "Service Pack" is a service line, not a physical good; unit
+          economics differ from the Widget/Gadget lines.
+
+      - column: channel
+        aliases: ["渠道", "sales_channel"]
+        meaning: >-
+          Route to market for this transaction. Exactly four values: Direct,
+          Partner, Online, Retail.
+        notes: >-
+          NOT the same value set as `channel` in marketing_campaigns.csv
+          (Email/Social/Search/Display/Affiliate). The two columns share a
+          name and nothing else; never join or compare them on channel.
+
+      - column: revenue
+        aliases: ["营收", "收入", "销售额", "sales", "turnover"]
+        meaning: >-
+          Revenue booked on this single transaction line. Additive: summing
+          across rows, dates, regions, products or channels is valid.
+        unit: >-
+          currency units, currency unspecified
+        notes: >-
+          No currency is declared anywhere in the dataset or its generator —
+          report figures as bare numbers, never with a currency symbol.
+
+      - column: units
+        aliases: ["数量", "销量", "quantity", "qty", "volume"]
+        meaning: >-
+          Quantity sold on this transaction line.
+        unit: items
+        notes: >-
+          Integer, always >= 1 (floored by the generator, :264) — a
+          zero-unit row does not exist, so a zero here would be a data error
+          rather than "nothing was sold". Observed range 1-28 in the current
+          render.
+
+      - column: rep_id
+        aliases: ["销售代表", "业务员", "rep", "sales_rep", "representative"]
+        meaning: >-
+          Identifier of the sales representative credited with the line.
+          Integers 1001-1050, 50 distinct reps.
+        notes: >-
+          An identifier, not a measure: sums and averages of rep_id are
+          meaningless, and an extreme value is not an outlier. Use it only
+          for grouping or counting distinct reps.
+
+  # ── data/demo/churn_data.csv ────────────────────────────────────────────
+  # (a) scripts/generate_demo_data.py::generate_churn (:297-334)
+  # (b) 5,000 rows, no nulls, churn rate 16.18%, measured 2026-08-21
+  - dataset: churn_data.csv
+    description: >-
+      Synthetic subscription customer table, one row per customer, with a
+      binary churn outcome.
+    columns:
+      - column: customer_id
+        aliases: ["客户ID", "cust_id"]
+        meaning: >-
+          Customer identifier of the form C00001. One row per customer.
+        notes: Identifier, not a measure. Unique across the table.
+
+      - column: cohort_month
+        aliases: ["cohort", "加入月份", "signup_month", "join_month"]
+        meaning: >-
+          Month the customer joined, as YYYY-MM (a month key, not a full
+          date). Range 2023-01 through 2024-06.
+        notes: >-
+          Parse as a month, not as a day — appending "-01" to make it a date
+          invents a day-of-month that the data does not contain.
+
+      - column: tenure_months
+        aliases: ["tenure", "在网月数", "account_age", "tenure_month"]
+        meaning: Whole months the customer has been active. Range 1-60.
+        unit: months
+        notes: >-
+          Independent of cohort_month in this synthetic data — do not derive
+          one from the other.
+
+      - column: plan
+        aliases: ["套餐", "subscription", "tier", "plan_type"]
+        meaning: >-
+          Subscription tier. Exactly three values: Basic, Standard, Premium.
+
+      - column: monthly_charges
+        aliases: ["月费", "monthly_fee", "charges", "monthly_charge"]
+        meaning: >-
+          Amount charged to this customer per month. Centred on the tier list
+          price (Basic 29 / Standard 59 / Premium 99) with noise, so it
+          varies within a tier and the tiers' ranges can overlap.
+        unit: currency units per month, currency unspecified
+        notes: >-
+          Observed range 12.73-113.90 in the current render. It is a rate per
+          month, not a lifetime total — multiplying by tenure_months is an
+          estimate, not a recorded fact.
+
+      - column: support_calls_last_90d
+        aliases: ["support_calls", "客服来电", "support_call_count"]
+        meaning: >-
+          Number of support calls the customer made in the trailing 90 days.
+        unit: calls
+        value_semantics:
+          - value: 0
+            means: >-
+              No support calls in the window. A real, common observation, not
+              a missing value.
+            action: keep
+
+      - column: login_days_last_30d
+        aliases: ["login_days", "活跃天数", "active_days"]
+        meaning: >-
+          Engagement score derived from login activity. Despite the column
+          name it is NOT bounded by 30: the current render ranges 0-50, with
+          106 of 5,000 rows above 30.
+        notes: >-
+          Treat it as a relative engagement score, not as a count of days
+          within a 30-day window; "days out of 30" statements and any
+          percentage computed against 30 will be wrong for those rows.
+        value_semantics:
+          - value: 0
+            means: >-
+              No login activity recorded. A real observation (an inactive
+              customer), not a missing value.
+            action: keep
+
+      - column: churned
+        aliases: ["churn", "流失", "is_churned", "churn_flag"]
+        meaning: >-
+          Binary churn outcome. The mean of this column is the churn rate
+          (0.1618 in the current render).
+        value_semantics:
+          - value: 1
+            means: The customer churned.
+            action: keep
+          - value: 0
+            means: >-
+              The customer was retained. A real observation, not a missing
+              value.
+            action: keep
+
+  # ── data/demo/marketing_campaigns.csv ───────────────────────────────────
+  # (a) scripts/generate_demo_data.py::generate_marketing (:339-369)
+  # (b) 2,000 rows, no nulls, measured 2026-08-21
+  - dataset: marketing_campaigns.csv
+    description: >-
+      Synthetic per-campaign marketing performance table, all rows inside
+      calendar year 2024.
+    columns:
+      - column: campaign_id
+        aliases: ["活动ID", "campaign_code"]
+        meaning: Campaign identifier of the form CAM0001. One row per campaign.
+        notes: Identifier, not a measure.
+
+      - column: date
+        aliases: ["日期", "campaign_date"]
+        meaning: >-
+          Campaign date, ISO 8601 (YYYY-MM-DD). All rows fall in 2024
+          (2024-01-01 to 2024-12-30 in the current render).
+
+      - column: channel
+        aliases: ["渠道", "marketing_channel", "media_channel"]
+        meaning: >-
+          Marketing channel. Exactly five values: Email, Social, Search,
+          Display, Affiliate.
+        notes: >-
+          NOT the same value set as `channel` in sales_data.csv
+          (Direct/Partner/Online/Retail). Never join or compare the two on
+          channel.
+
+      - column: spend
+        aliases: ["花费", "支出", "cost", "ad_spend"]
+        meaning: Amount spent on this campaign.
+        unit: currency units, currency unspecified
+        notes: >-
+          Always > 0 in the current render (min 1.19), so ROI is defined for
+          every row.
+
+      - column: impressions
+        aliases: ["曝光", "展示量", "imps"]
+        meaning: Ad impressions delivered by the campaign.
+        unit: impressions
+
+      - column: clicks
+        aliases: ["点击", "点击量"]
+        meaning: Clicks the campaign received.
+        unit: clicks
+        notes: >-
+          Always >= 1 (floored by the generator, :348); a zero-click campaign
+          does not exist in this data.
+
+      - column: conversions
+        aliases: ["转化", "转化数", "conv"]
+        meaning: Conversions attributed to the campaign.
+        unit: conversions
+        value_semantics:
+          - value: 0
+            means: >-
+              The campaign converted nobody. A real observation (1 row in the
+              current render), not a missing value.
+            action: keep
+
+      - column: revenue
+        aliases: ["营收", "收入", "attributed_revenue"]
+        meaning: >-
+          Revenue attributed to this campaign, computed as conversions times
+          a per-conversion value.
+        unit: currency units, currency unspecified
+        notes: >-
+          Different grain and construction from sales_data.csv's `revenue`
+          (campaign vs transaction line). Do not add them together or compare
+          their levels.
+
+      - column: roi
+        aliases: ["投资回报率", "roi_pct", "return_on_investment"]
+        meaning: >-
+          Return on investment, ALREADY expressed as a percentage:
+          (revenue - spend) / spend * 100.
+        unit: percent
+        notes: >-
+          Do not multiply by 100 again. Observed range -100.0 to 20467.7 in
+          the current render; 25 of 2,000 campaigns are negative.
+        value_semantics:
+          - value: -100.0
+            means: >-
+              The campaign produced zero revenue, so the entire spend was
+              lost. A real observation, not a sentinel or an error code.
+            action: keep
+
+  # ── data/demo/ecommerce_orders.db, table `orders` ───────────────────────
+  # (a) scripts/generate_demo_data.py::generate_ecommerce_db (:376-449)
+  # (b) 10,000 rows, no null revenue, measured 2026-08-21
+  #
+  # The `customers` and `products` tables in the same database are
+  # deliberately NOT curated here. A run against either reports coverage
+  # `absent` and gets the anti-fabrication instruction — that is the intended
+  # behaviour, not an oversight: no one has written their 口径 yet.
+  - dataset: ecommerce_orders.db
+    table: orders
+    description: >-
+      Synthetic order line table. One row per order line, 2022-01-01 to
+      2024-12-31, with foreign keys into customers and products.
+    columns:
+      - column: order_id
+        aliases: ["订单号", "order_no"]
+        meaning: Order line identifier, unique across the table.
+        notes: Identifier, not a measure.
+
+      - column: customer_id
+        aliases: ["客户ID", "cust_id"]
+        meaning: >-
+          Foreign key to customers.customer_id (1-1000). Identifier, not a
+          measure.
+
+      - column: product_id
+        aliases: ["产品ID", "sku_id"]
+        meaning: >-
+          Foreign key to products.product_id (1-100). Identifier, not a
+          measure.
+
+      - column: order_date
+        aliases: ["日期", "date", "订单日期"]
+        meaning: >-
+          Date the order line was placed, ISO 8601 (YYYY-MM-DD), 2022-01-01
+          through 2024-12-31. Stored as text, not a date type.
+
+      - column: quantity
+        aliases: ["数量", "qty", "units"]
+        meaning: Units ordered on this line. Integer, range 1-10.
+        unit: items
+
+      - column: discount
+        aliases: ["折扣", "discount_rate", "折扣率"]
+        meaning: >-
+          Discount applied to this line as a FRACTION (not a percentage).
+          Exactly five values: 0, 0.05, 0.10, 0.15, 0.20.
+        unit: fraction of list price
+        notes: >-
+          Multiply by 100 before presenting it as a percentage. Already
+          reflected in `revenue`.
+        value_semantics:
+          - value: 0
+            means: >-
+              No discount applied. A real observation, not a missing value.
+            action: keep
+
+      - column: revenue
+        aliases: ["营收", "收入", "line_revenue", "sales"]
+        meaning: >-
+          Revenue for this order line AFTER discount:
+          unit_price * quantity * (1 - discount).
+        unit: currency units, currency unspecified
+        notes: >-
+          Already net of the discount — subtracting the discount again
+          double-counts it. Gross (pre-discount) revenue is not stored; it
+          must be reconstructed as revenue / (1 - discount).

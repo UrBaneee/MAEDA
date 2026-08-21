@@ -30,6 +30,7 @@ from src.config.agent_prompts import (
 )
 from src.config.settings import settings
 from src.state.graph_state import MAEDAState
+from src.tools.glossary import prompt_block as glossary_prompt_block
 from src.tools.sql_tool import sql_tool
 from src.tools.stats_tool import (
     anomaly_tool,
@@ -163,6 +164,20 @@ class AnalysisAgent(BaseAgent):
         columns = _column_manifest(active_source)
         related_tables = _related_tables_manifest(active_source)
 
+        # Injection point [3] (阶段 3 轮次 4, ECOSYSTEM_INTEGRATION_PLAN.md
+        # 附录 CQ): the glossary connect_schema already filtered against this
+        # run's real schema — read from state, never re-filtered here, so [2]
+        # and [3] cannot disagree about what is curated. Always appended, in
+        # all three coverage states: under "absent" the block carries the
+        # anti-fabrication instruction, which is precisely the case where
+        # dropping the section would leave the planner free to invent
+        # definitions with nothing saying it shouldn't.
+        glossary_block = glossary_prompt_block(
+            state.get("glossary_coverage"),
+            state.get("glossary_entries"),
+            state.get("glossary_uncovered_columns"),
+            source_label=(active_source or {}).get("path"),
+        )
         prompt = (
             f"### Parsed Intent\n{json.dumps(intent, indent=2)}\n\n"
             f"### Data Schema\n{schema}\n\n"
@@ -170,6 +185,7 @@ class AnalysisAgent(BaseAgent):
         )
         if related_tables:
             prompt += f"### Related Tables\n{related_tables}\n\n"
+        prompt += f"{glossary_block}\n"
         prompt += "Generate a step-by-step analysis plan."
         messages = [
             SystemMessage(content=ANALYSIS_PLANNER_SYSTEM),

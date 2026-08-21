@@ -52,6 +52,24 @@ class MAEDAState(TypedDict):
     # None case).
     effective_dataset_path: Optional[str]
     schema_columns: Optional[list]
+    # 阶段 3 轮次 4 (ECOSYSTEM_INTEGRATION_PLAN.md 附录 CQ): the business
+    # glossary (口径词表), already reconciled against this round's real schema
+    # by the single gate `resolve_glossary` (src/tools/glossary.py) that
+    # connect_schema runs the moment a schema exists. Written once per round
+    # and read by every consumer — the two injection points ([2] the cleaner
+    # intent payload, [3] the plan_analysis prompt) and the U.2 glossary_alias
+    # match tier — so none of them can re-judge coverage and drift apart.
+    #
+    # glossary_coverage is the three-state field: "full" (every schema column
+    # has a curated definition) / "partial" / "absent" (nothing curated covers
+    # this data source — unknown data, no definitions). None only before
+    # connect_schema has run. It is deliberately carried all the way onto the
+    # wire and into the prompt: "absent" must be *stated*, because omitting the
+    # glossary and having confirmed there is no definition look identical to
+    # everything downstream (附录 CH.2/CI.2/CK.3/CO are all that same shape).
+    glossary_coverage: Optional[str]
+    glossary_entries: list[dict]           # schema-filtered, curation-layer form (carries `aliases`)
+    glossary_uncovered_columns: list[str]  # real schema columns with no curated definition
     # E2 (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ, submission 2): schema-aware
     # intent refinement -- a second `_parse()` call once connect_schema has
     # populated schema_summary, so the schema-injection branch that path
@@ -193,6 +211,9 @@ def initial_state(
         schema_summary="",
         effective_dataset_path=None,
         schema_columns=None,
+        glossary_coverage=None,
+        glossary_entries=[],
+        glossary_uncovered_columns=[],
         intent_refine_done=False,
         intent_refined=None,
         data_quality_report=None,

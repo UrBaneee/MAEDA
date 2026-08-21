@@ -179,8 +179,15 @@ def route_after_schema(state: MAEDAState) -> str:
         return "refine"
 
     from src.graph.nodes import _resolve_intent_columns  # local: avoid a module-level nodes<->router cycle
+    from src.tools import glossary
     _, unresolved, _ = _resolve_intent_columns(
         state.get("parsed_intent") or {}, state.get("schema_columns") or [],
+        # 阶段 3 轮次 4 (附录 CQ): the same alias index profile_and_clean will
+        # use, off the same connect_schema-produced state. Omitting it here
+        # would make this pre-check stricter than the real reconciliation and
+        # send runs to refine_intent over mentions the glossary already
+        # resolves — the drift this pre-check was explicitly built to avoid.
+        alias_index=glossary.alias_index(state.get("glossary_entries") or []),
     )
     return "refine" if unresolved else "profile"
 

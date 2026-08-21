@@ -234,6 +234,15 @@ class MAEDASettings(BaseSettings):
     # auditable after the fact.
     runs_db_path: str = Field(default="logs/runs.db", alias="MAEDA_RUNS_DB_PATH")
 
+    # ── Business glossary (口径词表) ──────────────────────────────────────────
+    glossary_path: str = Field(default="config/glossary.yaml", alias="MAEDA_GLOSSARY_PATH")
+    """ECOSYSTEM_INTEGRATION_PLAN.md 阶段 3 轮次 4 (附录 CQ). Curated column
+    definitions, filtered against the live schema by src/tools/glossary.py and
+    injected at two points: the TB3 intent payload sent to the cleaner (附录
+    U.2's `glossary`) and the plan_analysis prompt. A missing or unreadable
+    file is NOT an error — it degrades to coverage "absent", which is stated
+    explicitly at both injection points rather than silently omitted."""
+
     # ── Streamlit UI ─────────────────────────────────────────────────────────
     streamlit_port: int = Field(default=8501, alias="STREAMLIT_PORT")
 

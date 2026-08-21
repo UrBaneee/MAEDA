@@ -142,7 +142,30 @@ class TestBuildIntentPayload:
                 "mutation": "advisory",
             },
             "glossary": [],
+            # 阶段 3 轮次 4 (附录 CQ): additive top-level key, permitted by
+            # 附录 U.11 without moving intent_contract_version. Defaults to
+            # "absent" and is NEVER omitted -- an empty `glossary` alone can't
+            # tell "no curated definition exists" apart from "the glossary
+            # wasn't attached", and the second reading is what lets a planner
+            # invent column semantics unchallenged.
+            "glossary_coverage": "absent",
         }
+
+    def test_frozen_u2_keys_are_untouched_by_the_glossary_round(self):
+        """附录 U.11 allows additive changes only. Whatever 轮次 4 added, every
+        key 附录 U.2 froze must still be present and unchanged in meaning --
+        this pins the frozen surface separately from the exact dict above, so
+        a future additive change can't quietly drop one of them."""
+        from src.graph.nodes import _build_intent_payload
+        payload = _build_intent_payload("/data/x.csv", {}, [], [], "absent")
+        for key in ("intent_contract_version", "dataset_path", "detected_issues",
+                    "analysis", "column_scope", "glossary"):
+            assert key in payload
+        assert payload["intent_contract_version"] == "1"   # unchanged: additive only
+        assert set(payload["analysis"]) == {
+            "query_type", "resolution_status", "resolved_columns", "unresolved_mentions",
+        }
+        assert set(payload["column_scope"]) == {"columns", "profiling", "mutation"}
 
     def test_query_type_defaults_to_exploratory(self):
         from src.graph.nodes import _build_intent_payload
