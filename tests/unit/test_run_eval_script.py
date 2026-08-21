@@ -306,6 +306,24 @@ def test_run_one_case_meta_carries_the_arm(monkeypatch):
     assert initial_state("q")["cleaner_mode"] == "force_on"
 
 
+def test_run_one_case_meta_carries_the_rag_arm_invalidation(monkeypatch):
+    """附录 CK.3: a force_on trial whose retrieval degraded is dropped from
+    aggregation by src/eval/trials.py reading `eval_result`; this mirrors
+    the reason into `meta` too, so a reader scanning the report can see
+    WHY a row vanished from the denominator instead of only that it did."""
+    import run_eval
+
+    class _InvalidatingGraph(_FakeGraph):
+        async def ainvoke(self, state):
+            state = await super().ainvoke(state)
+            state["rag_arm_invalid_reason"] = "retrieval_mode='bm25_only'"
+            return state
+
+    tc = _make_case("A")
+    _, meta = asyncio.run(run_eval.run_one_case(tc, _InvalidatingGraph(), _FakeEvalRunner()))
+    assert meta["rag_arm_invalid_reason"] == "retrieval_mode='bm25_only'"
+
+
 def test_current_arm_reflects_settings(monkeypatch):
     import run_eval
     from src.config.settings import settings as _settings

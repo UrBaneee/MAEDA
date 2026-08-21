@@ -125,26 +125,66 @@ class MAEDASettings(BaseSettings):
     """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #15 / 阶段 3 收尾执行计划轮次 1 /
     附录 CB.3.1/CC.7. Whether retrieve_knowledge_node calls the RAG server
     at all:
-    "auto" -- 附录 CB.3.1/CC.7: DEGRADES to "always retrieve" today, i.e.
-        byte-identical to pre-定案-#15 behavior. `src/graph/builder.py`'s
-        "generate_viz" -> "retrieve_domain_knowledge" edge is still a plain
-        unconditional `add_edge`, not `add_conditional_edges` -- a real
-        `auto` (skip retrieval for purely-computational query_types) needs
-        that edge rebuilt as a conditional route, which is its own,
-        separate item in 阶段 3's execution plan (轮次 3), deliberately NOT
-        done by this switch. This degeneration is intentional and scoped:
-        Experiment 1 (阶段 4) only needs force_on/force_off, so the switch
-        does not block on 轮次 3. Do not read "auto exists" as "auto's
-        routing judgement exists" -- it doesn't yet.
-    "force_on" -- calls retrieve_knowledge unconditionally, same as "auto"
-        today (there is no conditional gate yet for force_on to actually
-        bypass) -- kept as its own value now so Experiment 1 code and
-        阶段 4 predates it doesn't need to change again once 轮次 3 gives
-        "auto" real routing semantics; only "auto"'s behavior would change
-        then, not force_on's.
+    "auto" -- 附录 CB.3.1/CC.7 裁定 4: STILL DEGRADES to "always retrieve",
+        i.e. byte-identical to pre-定案-#15 behavior. 轮次 3 has since
+        replaced `src/graph/builder.py`'s unconditional
+        "generate_viz" -> "retrieve_domain_knowledge" `add_edge` with a
+        real conditional route (route_after_viz, src/graph/router.py), so
+        the *edge* now exists and both destinations are reachable and
+        tested -- but the judgement that would make `auto` choose to skip
+        (purely-computational query_types) is deliberately NOT
+        implemented, per 裁定 4. Today only force_off takes the skip
+        branch. This degeneration is adjudicated and temporary, not an
+        oversight: do not read "auto exists" or "the conditional edge
+        exists" as "auto's routing judgement exists" -- it doesn't yet.
+        `rag_retrieval_decision`'s "auto" branch is the single place that
+        changes when it does.
+    "force_on" -- always retrieves; identical routing to "auto" today for
+        the reason just given. Additionally the ONLY mode under which a
+        retrieval that didn't run at settings.
+        maeda_rag_expected_retrieval_mode (or degraded to fallback, or
+        hard-failed) invalidates the trial for aggregation -- 附录 CK.3,
+        implemented in src/graph/nodes.py::retrieve_knowledge_node and
+        enforced in src/eval/trials.py::is_applicable.
     "force_off" -- retrieve_knowledge is never called; records an explicit
         `mode="skipped"` mcp_call_log entry (see maeda_cleaner_mode's
         docstring for why "skipped" must be distinct from an empty log)."""
+
+    maeda_rag_expected_retrieval_mode: Literal["hybrid", "bm25_only"] = Field(
+        default="hybrid", alias="MAEDA_RAG_EXPECTED_RETRIEVAL_MODE"
+    )
+    """ECOSYSTEM_INTEGRATION_PLAN.md 附录 CH.2/CI.3/**CK.3**. Which
+    retrieval tier a `MAEDA_RAG_MODE=force_on` arm is asserting it ran at.
+
+    rag-framework resolves its embedding/reranker providers from its OWN
+    environment (rag/app/mcp_server/retrieval_config.py) — nothing MAEDA
+    sends selects a tier — and it echoes what it actually used back on
+    every retrieve response. 附录 AL.3 measured the gap that echo covers:
+    dev Recall@5 **0.7083 BM25-only vs 0.9444 hybrid**, with 2 of 12
+    queries returning nothing at all under BM25. So an on-arm that
+    silently landed on BM25-only produces a perfectly plausible,
+    merely-lower RAG number — indistinguishable from "RAG genuinely
+    isn't worth it", which is precisely the one conclusion 阶段 4's TB6
+    is pre-committed to accepting (附录 CI.2).
+
+    "hybrid" (default) — the vector index must actually have been used
+        (rag `retrieval_mode` ∈ {hybrid, hybrid_rerank}) and rag must not
+        have set `degraded_reason`. Anything else invalidates the trial
+        under force_on (src/graph/nodes.py::retrieve_knowledge_node),
+        rather than scoring it as a normal on-arm run.
+    "bm25_only" — a deliberately declared BM25-only deployment. Chosen so
+        that a legitimate no-embedding-key environment can still run a
+        coherent on-arm without every trial being thrown away; the guard
+        it removes is only the *tier* check, `degraded_reason`, an
+        unreachable server and a response with no echo fields at all
+        still invalidate. The point of the guard was never "hybrid or
+        bust" — it was that the tier must be **declared, not discovered
+        after the fact**. Setting this to bm25_only is a pre-registration
+        statement and must be reported alongside the results.
+
+    Only consulted when maeda_rag_mode == "force_on"; "auto"/"force_off"
+    runs record the tier in mcp_call_log but never invalidate on it,
+    because they aren't making a claim about RAG's contribution."""
 
     intent_refine_trigger: Literal["always", "if_unresolved"] = Field(
         default="if_unresolved", alias="MAEDA_INTENT_REFINE_TRIGGER"

@@ -119,6 +119,19 @@ class EvalResult:
     # 附录 CD for that discrepancy note.
     cleaner_mode: Optional[str] = None
     rag_mode: Optional[str] = None
+    # 附录 CK.3: the reason this trial must not be aggregated as an
+    # on-arm result (None = it may be). Sourced from
+    # state["rag_arm_invalid_reason"], written only by
+    # src/graph/nodes.py::retrieve_knowledge_node and only under
+    # MAEDA_RAG_MODE=force_on. Same "top-level scalar, structurally
+    # cannot reach _aggregate_score" pattern as the fields above -- and
+    # for a stronger reason than they have: this row's scores are not
+    # merely uninteresting, they describe a run whose on-arm premise
+    # didn't hold, so the exclusion happens in
+    # src/eval/trials.py::is_applicable rather than by reweighting
+    # anything here. The score itself is still computed and still
+    # reported; what changes is that trials.py refuses to average it in.
+    rag_arm_invalid_reason: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -133,6 +146,7 @@ class EvalResult:
             "intent_refined": self.intent_refined,
             "cleaner_mode": self.cleaner_mode,
             "rag_mode": self.rag_mode,
+            "rag_arm_invalid_reason": self.rag_arm_invalid_reason,
         }
 
     def score_by_metric(self, metric: str) -> Optional[float]:
@@ -231,6 +245,7 @@ class EvalRunner:
             intent_refined=state.get("intent_refined"),
             cleaner_mode=state.get("cleaner_mode"),
             rag_mode=state.get("rag_mode"),
+            rag_arm_invalid_reason=state.get("rag_arm_invalid_reason"),
         )
 
         logger.info(

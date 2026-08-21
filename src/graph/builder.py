@@ -21,12 +21,14 @@ from src.graph.nodes import (
     retrieve_knowledge_node,
     run_eval_node,
     run_guardrails_node,
+    skip_retrieval_node,
 )
 from src.graph.router import (
     route_after_guardrails,
     route_after_intent,
     route_after_profiling,
     route_after_schema,
+    route_after_viz,
 )
 from src.state.graph_state import MAEDAState
 
@@ -59,6 +61,11 @@ def build_graph() -> StateGraph:
     g.add_node("refine_intent", refine_intent_node)
     g.add_node("profile_and_clean", profile_and_clean)
     g.add_node("retrieve_domain_knowledge", retrieve_knowledge_node)
+    # 阶段 3 收尾执行计划轮次 3: the "don't retrieve this run" branch. A node,
+    # not a bare edge to generate_insights, because the skip has to leave a
+    # `mode="skipped"` mcp_call_log record and a decision-trace entry behind
+    # (附录 CB.1.3) and routers never mutate state.
+    g.add_node("skip_retrieval", skip_retrieval_node)
 
     # ── Entry point ─────────────────────────────────────────────────────────
     g.set_entry_point("parse_intent")
@@ -107,9 +114,25 @@ def build_graph() -> StateGraph:
     g.add_edge("plan_analysis", "execute_analysis")
     g.add_edge("execute_analysis", "generate_viz")
 
-    # RAG enrichment then insight generation
-    g.add_edge("generate_viz", "retrieve_domain_knowledge")
+    # RAG enrichment then insight generation. 阶段 3 收尾执行计划轮次 3 /
+    # 附录 CC.7 裁定 4: this was an unconditional `add_edge` until now,
+    # which is why 阶段 4's "purely-computational queries shouldn't be
+    # forced through retrieval" could not be tested at all -- no route
+    # existed that didn't retrieve. It is now a real conditional route
+    # with two reachable destinations.
+    #
+    # Read the route honestly: `auto` still always returns "retrieve"
+    # (route_after_viz → rag_retrieval_decision). 裁定 4 froze that
+    # degeneration on purpose; the edge is what 轮次 3 owed, the
+    # query-type judgement behind `auto` is separate work that has NOT
+    # been done. Only MAEDA_RAG_MODE=force_off takes the "skip" key today.
+    g.add_conditional_edges(
+        "generate_viz",
+        route_after_viz,
+        {"retrieve": "retrieve_domain_knowledge", "skip": "skip_retrieval"},
+    )
     g.add_edge("retrieve_domain_knowledge", "generate_insights")
+    g.add_edge("skip_retrieval", "generate_insights")
 
     # Guardrails with feedback loop
     g.add_edge("generate_insights", "run_guardrails")

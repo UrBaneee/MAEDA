@@ -46,6 +46,7 @@ from src.mcp_client.models import (
     QualityIssue,
     QualityValidation,
     RAGChunk,
+    RetrievalTier,
     SubSystemHealth,
 )
 from src.mcp_client.rag_server import RAGServerClient
@@ -331,13 +332,36 @@ class SubSystemWithFallback:
     async def retrieve_knowledge(
         self, query: str, top_k: int = 5, collection: Optional[str] = None
     ) -> tuple[list[RAGChunk], dict]:
-        """Retrieve domain knowledge; return empty list if RAG is unavailable."""
-        return await _call_with_matrix(
+        """
+        Retrieve domain knowledge; return empty list if RAG is unavailable.
+
+        附录 CI.3/CK.3: the returned log entry now carries a
+        `retrieval_tier` dict (RetrievalTier.to_dict()) recording the tier
+        rag says it actually ran at. It rides on the log rather than
+        widening this method's return tuple so every existing caller and
+        every mocked `retrieve_knowledge` keeps working unchanged, and so
+        the tier lands in state["mcp_call_log"] — i.e. it is persisted
+        (src/persistence/run_store.py) and auditable after the fact, not
+        just inspected in-flight and discarded.
+
+        On the fallback path the tier is explicitly `unavailable`, NOT
+        absent: an empty context produced by a degraded call must not be
+        indistinguishable from an empty context produced by a healthy
+        server that legitimately matched nothing — that ambiguity is the
+        whole of 附录 CH.2's assessment, one layer down.
+        """
+        (chunks, tier), log = await _call_with_matrix(
             "rag_server", "retrieve_with_metadata",
             {"query": query, "top_k": top_k, "collection": collection},
-            call=lambda: self._rag.retrieve_with_metadata(query, top_k, collection=collection),
-            fallback_factory=lambda: [],
+            call=lambda: self._rag.retrieve_with_metadata_tiered(query, top_k, collection=collection),
+            fallback_factory=lambda: (
+                [],
+                RetrievalTier.unavailable("rag_server unreachable; fallback empty context"),
+            ),
         )
+        log["retrieval_tier"] = tier.to_dict()
+        log["result_summary"] = f"{len(chunks)} chunks" if chunks else None
+        return chunks, log
 
     async def list_collections(self) -> tuple[list[Collection], dict]:
         """List RAG collections; return empty list on failure."""

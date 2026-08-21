@@ -41,8 +41,15 @@ def _print_summary(summary: dict) -> None:
     print("=" * 92)
 
     for cid, case in sorted(summary["per_case"].items()):
+        # 附录 CK.3: there are two exclusion conditions now
+        # (blocked_needs_review and a force_on arm whose RAG retrieval
+        # degraded), so print the actual reasons rather than the one
+        # hard-coded label this line used to assume.
+        reasons = case.get("not_applicable_reasons") or {}
         excluded_note = (
-            f" ({case['n_not_applicable']} excluded: blocked_needs_review)"
+            f" ({case['n_not_applicable']} excluded: "
+            + "; ".join(f"{r} x{n}" for r, n in sorted(reasons.items()))
+            + ")"
             if case["n_not_applicable"] else ""
         )
         print(f"\n[{cid}] n_trials={case['n_trials']} n_applicable={case['n_applicable']}{excluded_note}")

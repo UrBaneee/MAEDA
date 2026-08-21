@@ -12,7 +12,9 @@ Covers, per CC's frozen decisions:
     bypasses has_critical_issues=False and calls clean_dataset anyway
     (CC.2 -- bypasses the JUDGEMENT ITSELF)
   - retrieve_knowledge_node: force_off makes NO RAG call; auto/force_on both
-    call unconditionally (documented RAG "auto" degeneration, CC.7)
+    call unconditionally (documented RAG "auto" degeneration, CC.7 裁定 4 --
+    the conditional edge added by 轮次 3 does not change this, see
+    tests/unit/test_rag_tier_and_routing.py)
   - `mode="skipped"` is recorded (not just an absent log entry) and is
     distinguishable from both "mcp" and "fallback" (附录 CB.1.3)
   - arm reporting: EvalResult top-level fields + state snapshot (per-report/
@@ -361,12 +363,13 @@ class TestRetrieveKnowledgeNodeModes:
 
     @pytest.mark.parametrize("mode", ["auto", "force_on"])
     def test_auto_and_force_on_both_call_retrieve_unconditionally(self, mode, monkeypatch):
-        """附录 CC.7: "auto" degenerates to today's unconditional retrieval
-        (no conditional edge exists yet -- that's 阶段 3 收尾执行计划轮次
-        3, deliberately out of scope here). force_on has nothing new to
-        bypass yet, so it's identical to auto today -- this test locks
-        that degeneration so it isn't silently "fixed" into a no-op
-        without also updating the settings docstring that documents it."""
+        """附录 CC.7 裁定 4: "auto" degenerates to unconditional retrieval.
+        Since 轮次 3 the conditional edge itself DOES exist
+        (route_after_viz, tests/unit/test_rag_tier_and_routing.py), but
+        裁定 4 kept `auto`'s own skip judgement out of scope, so auto and
+        force_on still both retrieve. This test locks that degeneration at
+        the node level so it isn't silently "fixed" without also updating
+        the settings docstring that documents it."""
         import src.graph.nodes as nodes
         from src.config.settings import settings as _settings
         from src.mcp_client.fallback import SubSystemWithFallback

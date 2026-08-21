@@ -27,6 +27,11 @@ NODE_LABELS: dict[str, str] = {
     "execute_analysis": "🧮 Running analysis...",
     "generate_viz": "🎨 Generating visualizations...",
     "retrieve_domain_knowledge": "📚 Retrieving domain knowledge...",
+    # 阶段 3 收尾执行计划轮次 3: route_after_viz's "skip" destination.
+    # Surfaced to the user rather than passed over in silence -- a run
+    # that skipped retrieval should say so, not just show nothing between
+    # charts and insights.
+    "skip_retrieval": "⏭️ Skipping domain retrieval...",
     "generate_insights": "💡 Generating insights...",
     "run_guardrails": "🛡️ Running guardrails...",
     "run_eval": "🎯 Evaluating output...",

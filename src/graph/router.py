@@ -39,6 +39,87 @@ def cleaner_should_attempt_clean(has_critical_issues: bool) -> bool:
     return has_critical_issues
 
 
+# 阶段 3 收尾执行计划轮次 3 / 附录 CC.7 裁定 4. Reason strings for the RAG
+# retrieval routing decision, kept as constants so the decision trace, the
+# `mode="skipped"` mcp_call_log record and the tests all quote the same
+# text instead of three drifting copies.
+RAG_SKIP_FORCE_OFF = "MAEDA_RAG_MODE=force_off"
+RAG_RETRIEVE_FORCE_ON = "MAEDA_RAG_MODE=force_on"
+RAG_RETRIEVE_AUTO_DEGENERATE = (
+    "MAEDA_RAG_MODE=auto; 附录 CC.7 裁定 4: auto's own judgement "
+    "(skip retrieval for purely-computational queries) is NOT implemented — "
+    "auto deliberately degenerates to always-retrieve"
+)
+
+
+def rag_retrieval_decision(state: MAEDAState) -> tuple[bool, str]:
+    """
+    定案 #15 / 附录 CC.7 裁定 4 / 阶段 3 收尾执行计划轮次 3: the ONE place
+    that decides whether a run retrieves domain knowledge, and why.
+    Returns (should_retrieve, reason).
+
+    Same single-shared-gate construction as cleaner_should_attempt_clean
+    above, for the same reason (CC.2): this criterion is consumed in three
+    places — the conditional edge out of `generate_viz`
+    (route_after_viz → src/graph/builder.py), the skip node that records
+    the `mode="skipped"` call log entry, and retrieve_knowledge_node's own
+    defensive backstop for direct invocation. Three independently-edited
+    copies of one criterion is exactly how "force_off" quietly becomes
+    "force_off everywhere except the one path nobody re-read".
+
+    The `reason` half is not decoration: 阶段 3's 轮次 3 requires the
+    **routing decision itself** to land in the decision trace, not just
+    its consequence. A trace that shows "no retrieval happened" cannot
+    distinguish force_off from an auto-judged skip from a crash; a trace
+    that shows *which rule fired* can.
+
+      "force_off" — never retrieve. The call is not made at all, not made
+                    and discarded (附录 CC.3 裁定 1).
+      "force_on"  — always retrieve.
+      "auto"      — **also always retrieves today.** 附录 CC.7 裁定 4
+                    explicitly froze this degeneration: the conditional
+                    edge is real (that is what 轮次 3 delivers, and what
+                    makes the skip path testable at all), but the
+                    query-type judgement that would let `auto` return
+                    False is a separate piece of work and is NOT done.
+                    This is a known, adjudicated, temporary degeneration
+                    — not an oversight, and not "auto routing exists".
+                    When it is implemented, this branch is the only place
+                    that changes; force_on/force_off keep their meaning.
+    """
+    mode = settings.maeda_rag_mode
+    if mode == "force_off":
+        return False, RAG_SKIP_FORCE_OFF
+    if mode == "force_on":
+        return True, RAG_RETRIEVE_FORCE_ON
+    return True, RAG_RETRIEVE_AUTO_DEGENERATE
+
+
+def route_after_viz(state: MAEDAState) -> str:
+    """
+    After generate_viz (阶段 3 收尾执行计划轮次 3):
+      - "retrieve" → retrieve_domain_knowledge, the real MCP call
+      - "skip"     → skip_retrieval, which records the deliberate
+                     `mode="skipped"` call-log entry + empty rag context
+                     and falls through to generate_insights
+
+    Replaces the unconditional `add_edge("generate_viz",
+    "retrieve_domain_knowledge")` this graph had until now — the edge 附录
+    CC.7 and docs/handoff_maeda_to_subsystems.md both flagged as the
+    reason 阶段 4's "don't force retrieval on purely-computational
+    queries" claim was untestable: there was no route that could ever not
+    retrieve.
+
+    Routes to a NODE rather than straight to generate_insights precisely
+    so the skip stays observable — routers in this module never mutate
+    state, and a skip that left no mcp_call_log entry would be
+    indistinguishable from an ordinary auto run where retrieval simply
+    wasn't triggered (附录 CB.1.3).
+    """
+    should_retrieve, _ = rag_retrieval_decision(state)
+    return "retrieve" if should_retrieve else "skip"
+
+
 def route_after_intent(state: MAEDAState) -> str:
     """
     After parse_intent:

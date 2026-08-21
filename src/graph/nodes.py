@@ -24,8 +24,13 @@ from pathlib import Path
 from typing import Optional
 
 from src.config.settings import settings
-from src.graph.router import _MAX_CLEAN_ITERATIONS, cleaner_should_attempt_clean
+from src.graph.router import (
+    _MAX_CLEAN_ITERATIONS,
+    cleaner_should_attempt_clean,
+    rag_retrieval_decision,
+)
 from src.mcp_client.fallback import SubSystemHardFailure, make_skipped_call_record
+from src.mcp_client.models import RetrievalTier
 from src.state.graph_state import MAEDAState
 from src.utils.logger import get_logger
 
@@ -1112,37 +1117,153 @@ async def generate_viz_node(state: MAEDAState) -> MAEDAState:
     return await _get_viz_agent().process(state)
 
 
+async def skip_retrieval_node(state: MAEDAState) -> MAEDAState:
+    """
+    Phase 7, the "no retrieval this run" branch of route_after_viz
+    (阶段 3 收尾执行计划轮次 3).
+
+    Exists as a real node rather than an edge straight to
+    generate_insights so the decision leaves evidence: a `mode="skipped"`
+    mcp_call_log entry naming the rule that fired, plus the routing
+    decision itself in the decision trace. 附录 CB.1.3: without that
+    record, "force_off" and "auto happened not to retrieve" collapse into
+    the same empty log, which is exactly the ambiguity that would make
+    Experiment 1's off-arm unreadable in the eval report.
+
+    Today only MAEDA_RAG_MODE=force_off routes here (附录 CC.7 裁定 4 —
+    `auto`'s own judgement is deliberately not implemented yet), but the
+    node is written against `rag_retrieval_decision`'s reason string, not
+    against force_off specifically, so an `auto` skip will record itself
+    correctly the day that judgement lands, with no edit here.
+    """
+    logger.info("Node: skip_retrieval")
+    _, reason = rag_retrieval_decision(state)
+    state["mcp_call_log"] = [*state.get("mcp_call_log", []), make_skipped_call_record(
+        "rag_server", "retrieve_with_metadata", {}, reason,
+    )]
+    state["rag_context"] = []
+    state["rag_sources"] = []
+    return _trace(state, "insight_agent", "route_after_viz",
+                  f"skip retrieval: {reason}")
+
+
+def _rag_arm_integrity_problems(log: dict) -> list[str]:
+    """
+    附录 CK.3 conditions 1 and 2: everything about ONE completed
+    retrieve_with_metadata call that says it was not a normal on-arm
+    retrieval. Empty list means the call is trustworthy as an on-arm
+    data point.
+
+    Two independent things are checked, because two independent things
+    can go wrong:
+
+      - `mode == "fallback"` — the call was attempted, failed, and
+        src/mcp_client/fallback.py substituted an empty context under the
+        错误处理矩阵. **This is the channel CK.3 under-counted**: CK.3
+        names nodes.py's `except SubSystemHardFailure` path, but
+        EMBEDDING_PROVIDER_UNAVAILABLE is classified `internal_unknown`
+        (fallback.py's _RAG_ERROR_CODE_CLASS), and internal_unknown is
+        fallback-eligible in degraded mode — which is the DEFAULT
+        (settings.mcp_strict_mode). So under stock configuration a
+        missing OPENAI_API_KEY does not raise here at all; it returns
+        successfully with zero chunks. Same corrupted-mean outcome,
+        quieter path.
+      - the retrieval tier (附录 CI.3 / U.3) — the call succeeded, but at
+        a weaker tier than the arm claims. See
+        settings.maeda_rag_expected_retrieval_mode.
+    """
+    problems: list[str] = []
+    if log.get("mode") == "fallback":
+        problems.append(
+            f"rag call degraded to fallback (empty context): "
+            f"error_class={log.get('error_class')!r} error={log.get('error')!r}"
+        )
+    tier = RetrievalTier.from_dict(log.get("retrieval_tier"))
+    problems.extend(tier.degradations(settings.maeda_rag_expected_retrieval_mode))
+    return problems
+
+
+def _invalidate_rag_arm(state: MAEDAState, problems: list[str]) -> MAEDAState:
+    """
+    附录 CK.3: mark this trial as one that must NOT be aggregated as an
+    on-arm result. Writes state["rag_arm_invalid_reason"], which
+    src/eval/runner.py copies onto EvalResult and src/eval/trials.py's
+    is_applicable() then excludes from BOTH pass@k and the continuous
+    summaries.
+
+    Why invalidate rather than fail the round (CK.3 left the choice to
+    this owner, pointing at 附录 AX):
+
+      1. `is_applicable` already exists for exactly this shape of problem
+         ("the pipeline ran to completion, but this run is not a fair
+         comparison point"), it already excludes from both the binary and
+         continuous aggregations in one place (trials.py::summarize_case),
+         and it already surfaces the exclusion count per case rather than
+         dropping rows silently. Failing the round would need a second,
+         parallel notion of "doesn't count" living somewhere else.
+      2. The failure CK.3 describes is *intermittent* — one missing key,
+         one rate-limit. Fail-fast turns a 5-trial run into zero usable
+         trials for every case that follows, i.e. it converts a
+         contaminated mean into no data at all, plus a re-run bill. Trial
+         invalidation loses exactly the trials that were actually bad.
+      3. The degrade-and-continue behaviour below is *correct* for
+         ordinary operation (CLAUDE.md: MAEDA must run standalone) — 附录
+         CK.3 says so explicitly. Invalidation confines the change to the
+         experiment's bookkeeping instead of forking the pipeline's
+         runtime behaviour by mode; the graph still executes identically,
+         it is the aggregation that refuses the row.
+      4. AX.1's precedent is that the exclusion condition must be narrow
+         and stated, not a loose "isn't a normal run". This one is
+         narrow: force_on only, with the concrete reasons recorded.
+
+    Deliberately NOT gated on "did we get zero chunks": a degraded
+    BM25-only call that returns five plausible chunks is the dangerous
+    case (附录 CI.2), not the visibly empty one.
+    """
+    reason = "; ".join(problems)
+    state["rag_arm_invalid_reason"] = reason
+    logger.error(
+        "MAEDA_RAG_MODE=force_on but this retrieval was not a valid on-arm run; "
+        "trial marked not-applicable for aggregation: %s", reason,
+    )
+    return _trace(state, "insight_agent", "rag_arm_invalidated",
+                  f"force_on arm integrity failure (trial excluded from aggregation): {reason}")
+
+
 async def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
     """
     Phase 7: build focused retrieval query, delegate to RAG-MCP-Server.
 
-    定案 #15 / 附录 CB.3.1/CC.7: MAEDA_RAG_MODE="force_off" is the only
-    value that changes behavior here today. "auto" and "force_on" both
-    call retrieve_knowledge unconditionally -- src/graph/builder.py's
-    "generate_viz" -> "retrieve_domain_knowledge" edge is still a plain
-    `add_edge`, not a conditional route, so "auto"'s real judgement (skip
-    retrieval for purely-computational queries, per 阶段 3's own
-    requirement) does not exist yet; that is 阶段 3 收尾执行计划's 轮次 3,
-    a separate, independent piece of work this switch deliberately does
-    not block on (Experiment 1 only needs force_on/force_off). Do not read
-    this branch as "auto routing is implemented" -- it's the documented
-    degeneration to today's unconditional behavior, not a new feature.
+    Reached via route_after_viz's "retrieve" key (阶段 3 收尾执行计划轮次
+    3). The `generate_viz` → here edge is no longer unconditional; the
+    force_off skip lives in skip_retrieval_node above. `auto` still always
+    routes here — 附录 CC.7 裁定 4's documented, adjudicated degeneration,
+    not a missing feature: the conditional edge exists and is tested, the
+    query-type judgement that would let `auto` skip does not.
+
+    附录 CI.3/CK.3, force_on only: the retrieval is additionally checked
+    for being a *real* on-arm retrieval — right tier, not a fallback, not
+    a hard failure — and the trial is invalidated if it isn't. See
+    _invalidate_rag_arm for why invalidation and not fail-fast, and
+    settings.maeda_rag_expected_retrieval_mode for what "right tier"
+    means.
     """
     logger.info("Node: retrieve_domain_knowledge")
 
-    if settings.maeda_rag_mode == "force_off":
-        state["mcp_call_log"] = [*state.get("mcp_call_log", []), make_skipped_call_record(
-            "rag_server", "retrieve_with_metadata", {}, "MAEDA_RAG_MODE=force_off",
-        )]
-        state["rag_context"] = []
-        state["rag_sources"] = []
-        return _trace(state, "insight_agent", "retrieve_knowledge",
-                      "MAEDA_RAG_MODE=force_off; skipping retrieval")
+    # Defensive backstop for direct invocation (tests, or any future
+    # caller that bypasses the graph): the conditional edge should already
+    # have sent force_off to skip_retrieval_node, but this must never
+    # depend on the topology being right. Same shared gate, so the two
+    # can't drift (附录 CC.2).
+    should_retrieve, reason = rag_retrieval_decision(state)
+    if not should_retrieve:
+        return await skip_retrieval_node(state)
 
     client = _get_subsystem_client()
     insight_agent = _get_insight_agent()
     # 7.1 Build focused retrieval query from analysis results + intent
     query = insight_agent.build_retrieval_query(state)
+    force_on = settings.maeda_rag_mode == "force_on"
 
     try:
         chunks, log = await client.retrieve_knowledge(
@@ -1154,9 +1275,21 @@ async def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
         # critical path -- degrade to no domain context instead of aborting
         # analysis that has already been computed, even in strict mode.
         # The failure is still fully logged, just not treated as terminal.
+        #
+        # 附录 CK.3 condition 3: that degradation stays exactly as it was
+        # -- the pipeline still completes -- but under force_on the
+        # resulting trial is no longer allowed to be scored as an on-arm
+        # result. Silently continuing here is what turns "RAG was
+        # unreachable twice out of five trials" into "RAG's mean score is
+        # lower than we hoped", which is indistinguishable from the one
+        # negative conclusion 阶段 4 is pre-committed to accepting.
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
         state["rag_context"] = []
         state["rag_sources"] = []
+        if force_on:
+            state = _invalidate_rag_arm(
+                state, [f"rag hard failure ({exc.error_class}): {exc}"],
+            )
         return _trace(state, "insight_agent", "retrieve_knowledge",
                       f"RAG hard failure ({exc.error_class}), continuing without domain context: {exc}")
     state["mcp_call_log"] = [*state.get("mcp_call_log", []), log]
@@ -1165,8 +1298,21 @@ async def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
         {"source_file": c.source_file, "page": c.page, "chunk_id": c.chunk_id}
         for c in chunks if c.source_file
     ]
+    tier = RetrievalTier.from_dict(log.get("retrieval_tier"))
+    problems = _rag_arm_integrity_problems(log)
+    if problems and force_on:
+        state = _invalidate_rag_arm(state, problems)
+    elif problems:
+        # auto/force_off make no claim about RAG's contribution, so the
+        # trial stays applicable -- but the tier is still reported, so a
+        # degraded run is never silent (附录 CI.3's "rag says the truth,
+        # MAEDA has to be listening").
+        logger.warning("RAG retrieval ran at a degraded tier (rag_mode=%s): %s",
+                       settings.maeda_rag_mode, "; ".join(problems))
     return _trace(state, "insight_agent", "retrieve_knowledge",
-                  f"Query: {query[:80]!r} → {len(state['rag_context'])} chunks")
+                  f"Query: {query[:80]!r} → {len(state['rag_context'])} chunks "
+                  f"[{reason}; retrieval_mode={tier.retrieval_mode!r}, "
+                  f"embedding_provider={tier.embedding_provider!r}]")
 
 
 async def generate_insights_node(state: MAEDAState) -> MAEDAState:

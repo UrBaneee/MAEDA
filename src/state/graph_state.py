@@ -127,6 +127,17 @@ class MAEDAState(TypedDict):
     # === Insight Generation (RAG via MCP) ===
     rag_context: list[dict]    # From RAG-MCP-Server
     rag_sources: list[dict]    # Source attribution from RAG
+    # 附录 CK.3: non-None means this run retrieved under
+    # MAEDA_RAG_MODE=force_on but the retrieval was NOT a valid on-arm
+    # one — a fallback/hard failure, or a weaker retrieval tier than
+    # settings.maeda_rag_expected_retrieval_mode asserts. The string is
+    # the concrete reason(s). src/eval/runner.py copies it onto
+    # EvalResult and src/eval/trials.py::is_applicable then keeps the
+    # trial out of pass@k and the continuous summaries. None on every
+    # ordinary run, including every auto/force_off run — those make no
+    # claim about RAG's contribution, so nothing about them can be
+    # invalidated on this axis.
+    rag_arm_invalid_reason: Optional[str]
     insights: list[dict]       # [{finding, evidence, confidence, recommendation}]
     report: Optional[str]      # Final markdown report
 
@@ -200,6 +211,7 @@ def initial_state(
         charts=[],
         rag_context=[],
         rag_sources=[],
+        rag_arm_invalid_reason=None,
         insights=[],
         report=None,
         guardrail_checks=[],

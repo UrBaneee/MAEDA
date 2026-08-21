@@ -26,12 +26,13 @@ generic variance number applied everywhere:
                     implementation living here.
 
 Trial applicability (附录 R.3 / 附录 AO.1 / 附录 AP.2's whole reason for
-existing — see is_applicable()'s docstring for the exact condition and
-why it is narrower than a literal "!= full" reading): an inapplicable
-trial is excluded from both the binary and continuous aggregation above,
-not just one of them — a report generated on data the pipeline itself
-flagged as needing manual review isn't a fair comparison point on ANY
-metric, not only the ones this module happens to call "binary".
+existing, plus 附录 CK.3's second condition — see
+not_applicable_reason() for both): an inapplicable trial is excluded
+from both the binary and continuous aggregation above, not just one of
+them — a report generated on data the pipeline itself flagged as needing
+manual review, or an on-arm trial whose RAG retrieval silently degraded,
+isn't a fair comparison point on ANY metric, not only the ones this
+module happens to call "binary".
 """
 from __future__ import annotations
 
@@ -91,10 +92,48 @@ def is_applicable(eval_result: dict) -> bool:
                               denominator, which is not what 附录 R.3 was
                               written to protect against.
 
-    Only "blocked_needs_review" is excluded here. Flagged explicitly in
-    附录 AW for final acceptance to confirm or override this reading.
+    Only "blocked_needs_review" is excluded here (confirmed by 附录 AX.1
+    against a literal "!= full" reading).
+
+    附录 CK.3 adds a SECOND, independent exclusion —
+    `rag_arm_invalid_reason` — see not_applicable_reason() below.
     """
-    return eval_result.get("cleaning_applied_level") != _INAPPLICABLE_CLEANING_LEVEL
+    return not_applicable_reason(eval_result) is None
+
+
+def not_applicable_reason(eval_result: dict) -> Optional[str]:
+    """
+    Why this trial doesn't count, or None if it does. is_applicable() is
+    the boolean view of this function; summarize_case() reports the
+    reasons so an exclusion is never just a shrinking denominator.
+
+    Two independent conditions, deliberately kept as one function:
+
+      "blocked_needs_review"   附录 R.3 / AP.2 / AX.1 — the report was
+                               generated on data the pipeline itself
+                               flagged as needing manual review.
+      `rag_arm_invalid_reason` 附录 CK.3 — the run happened under
+                               MAEDA_RAG_MODE=force_on, but the retrieval
+                               was a fallback, a hard failure, or ran at
+                               a weaker tier than the arm asserts
+                               (src/graph/nodes.py::retrieve_knowledge_node,
+                               settings.maeda_rag_expected_retrieval_mode).
+                               Scoring it anyway would average an off-arm
+                               run into the on-arm mean, intermittently
+                               and invisibly — 附录 CI.2's "a credible
+                               wrong answer" aimed straight at TB6's
+                               "concede RAG isn't worth it" exit.
+
+    Both are "the pipeline completed, but this run is not a fair
+    comparison point", which is why they share one gate instead of the
+    second one growing its own parallel filter somewhere else.
+    """
+    if eval_result.get("cleaning_applied_level") == _INAPPLICABLE_CLEANING_LEVEL:
+        return _INAPPLICABLE_CLEANING_LEVEL
+    rag_reason = eval_result.get("rag_arm_invalid_reason")
+    if rag_reason:
+        return f"rag_arm_invalid: {rag_reason}"
+    return None
 
 
 def pass_at_k(n: int, c: int, k: int) -> Optional[float]:
@@ -182,6 +221,15 @@ def summarize_case(case_id: str, rows: list[dict], k_values: list[int]) -> dict:
     n_trials = len(rows)
     applicable_rows = [r for r in rows if is_applicable(r["eval_result"])]
     n_not_applicable = n_trials - len(applicable_rows)
+    # 附录 CK.3: now that there are two independent exclusion conditions,
+    # a bare count is no longer self-explanatory -- and an exclusion that
+    # only shows up as a smaller denominator is the same class of problem
+    # as the silent degradation it exists to catch.
+    excluded_reasons: dict[str, int] = {}
+    for r in rows:
+        reason = not_applicable_reason(r["eval_result"])
+        if reason:
+            excluded_reasons[reason] = excluded_reasons.get(reason, 0) + 1
 
     all_metrics = sorted({s["metric"] for r in rows for s in r["eval_result"]["scores"]})
 
@@ -222,6 +270,7 @@ def summarize_case(case_id: str, rows: list[dict], k_values: list[int]) -> dict:
         "n_trials": n_trials,
         "n_applicable": len(applicable_rows),
         "n_not_applicable": n_not_applicable,
+        "not_applicable_reasons": excluded_reasons,
         "binary": binary,
         "continuous": continuous,
     }

@@ -105,6 +105,12 @@ async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tu
         # authority" is fragile).
         "cleaner_mode": result_state.get("cleaner_mode"),
         "rag_mode": result_state.get("rag_mode"),
+        # 附录 CK.3: mirrored here for the same self-describing-row reason
+        # as the two above. The authoritative copy for aggregation is on
+        # `eval_result` (src/eval/trials.py::not_applicable_reason reads
+        # it there); this one exists so a reader scanning `meta` can see
+        # WHY a force_on row was dropped without cross-referencing.
+        "rag_arm_invalid_reason": result_state.get("rag_arm_invalid_reason"),
         "data_mismatch": "data_mismatch" in tc.tags,
         # D0 (阶段 3 / 附录 AQ/AS): eval_runner.score() is called with
         # run_id=tc.id above (the golden case id, e.g. "D01" -- same

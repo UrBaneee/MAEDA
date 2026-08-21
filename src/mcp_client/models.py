@@ -315,6 +315,133 @@ class RAGChunk:
 
 
 @dataclass
+class RetrievalTier:
+    """
+    The retrieval tier rag-framework reports it ACTUALLY ran, echoed back
+    on every `retrieve`/`retrieve_with_metadata` response
+    (rag/app/mcp_server/server.py's RetrieveOutput: `retrieval_mode`,
+    `embedding_provider`, `reranker_provider`, `degraded_reason`).
+
+    ECOSYSTEM_INTEGRATION_PLAN.md 附录 CI.3 / CK.3: these four fields
+    existed on the wire long before MAEDA read them (rag commit
+    `cb50570`), and MAEDA dropped all four on the floor —
+    `RAGServerClient.retrieve_with_metadata` parsed `raw["chunks"]` and
+    nothing else. That is the same failure mode 附录 U.3's
+    `scope_fingerprint` rule exists to prevent: **in a cross-process
+    contract an echoed field only means something once somebody
+    validates it**; unvalidated, it just makes people think a guarantee
+    exists.
+
+    What it concretely buys us (附录 CH.2/CI.2): rag resolves its
+    embedding/reranker providers from its OWN env, not from anything
+    MAEDA sends. So a retrieval can silently come back BM25-only —
+    dev Recall@5 0.7083 vs 0.9444 hybrid, 附录 AL.3 — while looking
+    exactly like a normal result. `retrieval_mode` is how the server
+    tells us which of those two actually happened.
+
+    `echoed=False` means the response carried no tier fields at all
+    (an older rag build, or a different RAG-MCP-Server implementation).
+    That is deliberately NOT treated as "fine by default" — see
+    degradations().
+    """
+
+    retrieval_mode: Optional[str] = None       # "hybrid_rerank" | "hybrid" | "bm25_only"
+    embedding_provider: Optional[str] = None   # None when no vector index was used
+    reranker_provider: Optional[str] = None
+    degraded_reason: Optional[str] = None      # non-empty = rag itself flagged this call as degraded
+    echoed: bool = False
+    unavailable_reason: Optional[str] = None   # set when no call reached the server at all
+
+    # rag's two vector-retrieval tiers (server.py: vec_index is not None,
+    # with/without a reranker). Anything else means the vector index was
+    # not consulted for this query.
+    VECTOR_MODES = frozenset({"hybrid", "hybrid_rerank"})
+
+    @classmethod
+    def from_mcp_response(cls, d: Any) -> "RetrievalTier":
+        if not isinstance(d, dict):
+            return cls()
+        keys = ("retrieval_mode", "embedding_provider", "reranker_provider", "degraded_reason")
+        return cls(
+            retrieval_mode=d.get("retrieval_mode"),
+            embedding_provider=d.get("embedding_provider"),
+            reranker_provider=d.get("reranker_provider"),
+            degraded_reason=d.get("degraded_reason"),
+            echoed=any(k in d for k in keys),
+        )
+
+    @classmethod
+    def unavailable(cls, reason: str) -> "RetrievalTier":
+        """No tier was reported because no successful call happened —
+        the fallback/hard-failure paths in src/mcp_client/fallback.py."""
+        return cls(unavailable_reason=reason)
+
+    def to_dict(self) -> dict:
+        return {
+            "retrieval_mode": self.retrieval_mode,
+            "embedding_provider": self.embedding_provider,
+            "reranker_provider": self.reranker_provider,
+            "degraded_reason": self.degraded_reason,
+            "echoed": self.echoed,
+            "unavailable_reason": self.unavailable_reason,
+        }
+
+    @classmethod
+    def from_dict(cls, d: Any) -> "RetrievalTier":
+        """Rebuild from a persisted mcp_call_log entry's `retrieval_tier`."""
+        if not isinstance(d, dict):
+            return cls()
+        return cls(
+            retrieval_mode=d.get("retrieval_mode"),
+            embedding_provider=d.get("embedding_provider"),
+            reranker_provider=d.get("reranker_provider"),
+            degraded_reason=d.get("degraded_reason"),
+            echoed=bool(d.get("echoed")),
+            unavailable_reason=d.get("unavailable_reason"),
+        )
+
+    def degradations(self, expected_mode: str) -> list[str]:
+        """
+        Every reason this retrieval did NOT run at `expected_mode`.
+        Empty list == the tier we asked for is the tier we got.
+
+        `expected_mode`:
+          "hybrid"    — the vector index must actually have been used
+                        (either VECTOR_MODES value; a reranker on top is
+                        a strictly stronger tier, not a violation).
+          "bm25_only" — a BM25-only deployment declared on purpose. Only
+                        `degraded_reason`/no-call/no-echo can still fail
+                        it; mode itself is whatever it is.
+
+        Callers decide what to DO with a non-empty result — this type
+        only reports. See src/graph/nodes.py::retrieve_knowledge_node
+        (invalidates the trial under MAEDA_RAG_MODE=force_on) and
+        settings.maeda_rag_expected_retrieval_mode.
+        """
+        reasons: list[str] = []
+        if self.unavailable_reason:
+            reasons.append(f"no tier reported: {self.unavailable_reason}")
+            return reasons
+        if not self.echoed:
+            # Silence is not evidence of health: an unvalidatable response
+            # is exactly the state 附录 CI.3 says must stop being treated
+            # as a guarantee.
+            reasons.append("response carried no retrieval_mode/embedding_provider echo fields")
+            return reasons
+        if self.degraded_reason:
+            reasons.append(f"rag reported degraded_reason={self.degraded_reason!r}")
+        if expected_mode == "hybrid":
+            if self.retrieval_mode not in self.VECTOR_MODES:
+                reasons.append(
+                    f"retrieval_mode={self.retrieval_mode!r}, expected vector retrieval "
+                    f"({'/'.join(sorted(self.VECTOR_MODES))})"
+                )
+            if not self.embedding_provider:
+                reasons.append("embedding_provider is null (no vector index was used)")
+        return reasons
+
+
+@dataclass
 class Collection:
     name: str
     doc_count: int
