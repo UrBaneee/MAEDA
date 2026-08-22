@@ -65,16 +65,20 @@ MAEDA_CLEANER_MODE=<arm> MAEDA_RAG_MODE=<arm> \
 poetry run python scripts/run_eval.py --split test --trials <k>
 ```
 
-- `--split` defaults to `dev`; `test` must be typed (`scripts/run_eval.py:225`)
-  and prints `*** Running against the HOLDOUT TEST SPLIT. ***` (`:270`).
+- `--split` defaults to `dev`; `test` must be typed (`scripts/run_eval.py:251`)
+  and prints `*** Running against the HOLDOUT TEST SPLIT. ***` (`:330`).
 - The rag MCP server is a **separate process** reached over streamable-http
   (`settings.rag_server_mcp_url`, default `http://localhost:8002`;
   `docker-compose.yml:26` sets `http://rag-server:8002`). MAEDA does not start
   it in-process and does not pass it any reveal declaration.
 - `MAEDA_INTENT_REFINE_TRIGGER=always` is **required on the command line**, see
-  §3.2 — nothing in `scripts/run_eval.py` sets it (verified 2026-08-22:
-  `intent_refine_trigger` appears in `src/config/settings.py`,
-  `src/graph/router.py` and unit tests only).
+  §3.2. Nothing in `scripts/run_eval.py` sets it, and nothing will: as of
+  冻结前必办 (15) / 附录 DD.3 the script **refuses** a `--split test` run whose
+  parsed `settings.intent_refine_trigger` is not `"always"`, exiting 2 before
+  the banner above, before the suite is loaded and before the graph is built —
+  i.e. before this process can issue a billable call (`scripts/run_eval.py:294-329`).
+  It refuses rather than setting the value so that the command recorded here
+  stays the command that produced the data.
 
 **(B) TB5 retrieval holdout — driven from rag.**
 
@@ -161,14 +165,100 @@ store. Enumerating the trace store therefore answers "did anyone run a
 self-written query against a test event before the reveal?" — with exactly one
 hole, `mgr.bm25.search()` (§1.3(4)), which writes no trace.
 
-**Action, owner = experiment designer / lead:** run that enumeration once
-before freeze and record the result here.
+**Enumeration performed 2026-08-22 (orchestrator).** Scope: every trace store
+in the rag repository — `data/**/*.db` plus `rag/app/studio/**/*.db`, 14 files.
 
-### 1.6 Prior observations of the test split — **NOT YET WRITTEN**
+| Measure | Value |
+|---|---|
+| `runs` rows across all 14 stores | 22,387 |
+| rows carrying query text | 16,516 |
+| rows whose query is a frozen test-split probe query | **6** |
+| distinct probe queries involved | **2** (of the 10 frozen digests) |
+| when | all six at `2026-08-18 19:39:51`, one batch, `data/tb5.db` |
 
-Reserved for 冻结前必办 (1) / 附录 CP.2 (the 2026-08-18 19:40:07 BM25-only
-observation of `EVT-2024-03-SOUTH-UNITS-SPIKE`'s two probe queries). Not
-written in this pass; that item has not been dispatched.
+Pulling the whole `19:39:00–19:41:00` window gives 21 rows = 7 distinct queries
+× 3 run types (`query` / `query_pre_rerank` / `query_complete`), of which
+exactly 2 are frozen test-split probe queries. That reconciles line-for-line
+with the disclosure in §1.6: 附录 CP.2 recorded "7 query records, timestamp
+2026-08-18 19:40:07" — 7 distinct queries, timestamp taken from the later end of
+the batch.
+
+**Result: apart from the single occasion disclosed in §1.6, no test-split probe
+query has ever been executed.** This changes the evidential status of that
+disclosure: it was previously a self-report accepted by the lead, and is now a
+statement checked against every trace row on disk.
+
+**Two limits, which must be read together with the result above.**
+
+1. `mgr.bm25.search()` (§1.3(4)) writes no trace, so a retrieval taken that way
+   is invisible here.
+2. **Pointing the trace store at a copy outside the repository removes the row
+   from this audit.** That is not hypothetical — it is what 附录 CO did, on
+   purpose, to honour a "zero writes to the repository" commitment: the trace
+   DBs were copied to a scratch directory and `db_path` pointed at the copy.
+   The improvement that removed the writes also removed this audit's ability to
+   see them. That episode is nonetheless on the record, which is the point:
+   **what makes it checkable is the disclosure, not the trace.**
+
+Therefore this enumeration is a backstop over repository-local traces only. It
+must not be read as "nothing was found, therefore nothing happened."
+
+**Note for anyone re-running it.** The column is `metadata_json`, not
+`metadata`. The first attempt at this enumeration used the latter, silently
+matched no column in any of the 14 stores, and returned a clean-looking
+all-zero table — a wrong answer whose direction happened to be reassuring. The
+re-run asserts the column exists and fails loudly if it does not. Any automated
+check of this kind must first demonstrate that it can see anything at all; a
+zero it produces is not evidence until that is established.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE; transcribed verbatim.
+
+### 1.6 Prior observations of the test split
+
+**One prior observation of the test split has occurred. It is disclosed here in
+full rather than assessed as harmless by the parties involved** (冻结前必办 (1),
+附录 CO.0 / CP.2).
+
+| | |
+|---|---|
+| When | 2026-08-18, trace rows timestamped 19:39:51–19:40:07 |
+| What was observed | the 2 `probe_queries` of `EVT-2024-03-SOUTH-UNITS-SPIKE`, an event whose `split` is `test` |
+| Retrieval tier | BM25-only |
+| What was seen | the top-5 chunks and their scores |
+| Who | rag-owner, during the 附录 CJ.3 BM25-only verification |
+| How it happened | the probe script read `event_script.yaml`'s `probe_queries` directly; at that time the reveal guard was mounted only on `rag.cli.eval`, so this path did not pass through it (附录 CP.4) |
+
+**It was self-reported.** No external check produced it: the rag-owner went
+looking through SQLite timestamps and disclosed it unprompted, having already
+narrowed its own scope, and stated explicitly that it should count against the
+reveal-discipline record rather than be quietly cancelled by that narrowing.
+
+**Adjudication (附录 CP.2): this does not consume 硬约束 1's single reveal.**
+The reasoning is not "the damage was small" — assessing damage after the fact
+is how a discipline breach gets retroactively approved. It is:
+
+1. **No quantity comparable to ground truth was produced.** That event has no
+   corpus by design and an empty `expected_sources`, so there is no recall, no
+   hit rate, no pass/fail to compute. What was seen is which 5 chunks BM25
+   returned for a query that has no correct answer.
+2. **Neither conclusion drawn that round depends on the observed data.** Both
+   are properties read out of source and true for any query: `min_results=1`
+   never returns an empty set (`query_pipeline.py:358`), and `final_score` is
+   identically `RRF(rank)` with no reranker (`rrf_fusion.py:76`). **A conclusion
+   that is invariant under the observation received no information from it.**
+3. **No parameter, threshold, prompt, or criterion was changed because of it.**
+   Every commit in all three repositories after 附录 CJ was checked; none
+   relates to that event.
+
+**Independently verified 2026-08-22** by enumerating all 22,387 trace rows in
+the repository (§1.5): the observation is exactly as disclosed, and there is no
+other. Read §1.5's two limits alongside that.
+
+**No claim of harmlessness is being made here.** The reader is given the time,
+the object, the content, and the falsifiable assertion in point 3, and may draw
+their own conclusion.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE; transcribed verbatim.
 
 ---
 
@@ -281,13 +371,26 @@ reconciliation, so mentions the glossary can now resolve no longer trigger a
 refine round under `intent_refine_trigger="if_unresolved"` — which is the
 **default** (`src/config/settings.py:189-190`).
 
-**Verified 2026-08-22: nothing forces `always` for eval runs.**
-`scripts/run_eval.py` never sets `intent_refine_trigger`; the requirement lives
-only in that field's docstring (`settings.py:203-208`). It is therefore a
-**run-configuration obligation of this pre-registration**, not a mechanism: the
-reveal command in §1.2 carries `MAEDA_INTENT_REFINE_TRIGGER=always` so that
-every case takes the same code path in every arm. If any arm is run without it,
-that arm's cases silently differ in whether they got a second intent pass.
+**Nothing forces `always`, and nothing will — but as of 2026-08-22 a run that
+omits it on the holdout is refused rather than silently different**
+(冻结前必办 (15) / 附录 DD.3). `scripts/run_eval.py` still never *sets*
+`intent_refine_trigger`; until (15) the requirement lived only in that field's
+docstring (`settings.py:203-208`), so forgetting the variable produced a
+complete, plausible-looking run whose cases silently differed in whether they
+got a second intent pass. That is recoverable on dev (rerun it) and not
+recoverable on the holdout, which gets one reveal (硬约束 1). The gate is
+therefore scoped to `--split test`: it refuses, and it does not touch dev runs
+at all.
+
+Dev runs are covered the other way, because a refusal there would be wrong:
+every eval report and every `measure_noise.py full` report now carries a
+top-level `settings_snapshot` with the parsed `intent_refine_trigger`
+(`scripts/run_eval.py::_settings_snapshot`). This matters for the σ_hetero /
+`k` measurement (清单 (5)), which is taken on **dev**, where the gate cannot
+reach: a noise floor measured under `if_unresolved` while the reveal runs under
+`always` describes a different code path than the one it is used to qualify,
+and before this key nothing in a saved report said which one produced it.
+What cannot be prevented must at least be identifiable afterwards.
 
 ### 3.3 Cleaner impact keys appear verbatim in user-visible caveats (附录 CT.5)
 
@@ -378,6 +481,63 @@ hallucination rate on `unexplained` events that is **not lower** than the off
 arm is a **pre-declared possible outcome** with a known mechanism, not evidence
 of a bug (附录 CP.5 #2).
 
+### 4.1 Two design premises carried over from 附录 CP.5
+
+These are **premises, not findings** — stated in advance so that the numbers
+they constrain are not misread later, and so that a class of natural-sounding
+remedies is ruled out before someone proposes it mid-experiment.
+
+**#1 — On `unexplained` events, the hallucination rate measures the generation
+layer. There is no "correct retrieval behaviour" to measure at that layer.**
+Such events have no corpus by design, and `min_results=1` guarantees a non-empty
+result set, so retrieval will always return something. This is a property of the
+design, not a defect, and the retrieval layer must not be scored on these
+events.
+
+**#2 — "Have MAEDA decide whether to answer based on the retrieval score" is
+not implementable under the current contract, and is ruled out for 阶段 4.**
+The `score` the contract exposes is a ranking function (`final_score ≡ RRF(rank)`
+with no reranker), not a confidence; `metadata["source_path"]` is the empty
+string on every hit (附录 CO.5), so the caller cannot even see which document it
+got. Measured cosine similarity additionally overlaps across the two classes —
+`UNEXPLAINED-DIP#1` scored 0.4224, **above** the corpus-backed control
+`SOUTH-ONLINE-POLICY#2` at 0.3842 — so no safe threshold exists even if the
+value were exposed. That comparison is 2 vs 4 samples, directional only, and
+must not be extrapolated; it is recorded because it is sufficient to rule the
+remedy out, not to characterise the distribution.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE; transcribed verbatim.
+
+### 4.2 Two reading traps in the cleaner's `impact` numbers (附录 CS.6)
+
+Both are properties of what the numbers mean, not defects introduced for 阶段 4.
+They matter here because the D4 demo and the 阶段 4 report quote these figures
+directly.
+
+**Trap 1 — `impact` aggregation is `sum_over_steps`, not a net difference.**
+A cell modified by two steps is counted twice. `aggregation="sum_over_steps"` is
+an explicit field, not an implicit convention. It answers **"how much cleaning
+work was done"**; it does **not** answer "how much did the data change relative
+to the input". A report that wants the second quantity must not quote
+`cells_changed`.
+
+**Trap 2 — with multi-round cleaning, these numbers cover the last round only.**
+`agent/runner.py::_write_manifest()` points `run_log_stage2_path` at the final
+round's run log (`:449-457`), and `diff_paths` globs only the final round's
+`stage2*/diffs/`. `executed_steps` and `execution_plan` have always had the same
+coverage. It is **detectable rather than fixed**: `rounds_counted` and
+`total_rounds` are both returned, and any inequality between them marks a
+partial count. `clean_dataset`'s `max_rounds` defaults to 1, so the default path
+has `rounds_counted == total_rounds`.
+
+**A third trap from 附录 CS.6 has since been fixed and is not repeated here.**
+Row-deleting steps used to report inflated `rows_modified` / `cells_changed`
+because `_build_changes()` aligned on DataFrame index; that was corrected in the
+cleaner repository (`c3639dc`). Its consequence for comparability across the fix
+is a measurement breakpoint, and is stated in §3.4 — not here.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE; transcribed verbatim.
+
 ---
 
 ## 5. Spending discipline
@@ -393,8 +553,63 @@ environment only — never through `Settings`/`.env` — for the same reason
 `.env.example` (附录 CK.4/CZ.3: a line in a version-controlled template
 self-replicates).
 
-**Not yet written:** 附录 CQ.0's disclosure of the 2026-08-21 unauthorised paid
-run (清单 (7)), and 附录 CR.5's negative-revenue fact (清单 (10)).
+### 5.1 Disclosure: one unauthorised paid run, 2026-08-21
+
+**This is disclosed for the same reason as §1.6: the legitimate basis for
+trusting a spending discipline is disclosure, not self-certification.**
+
+On 2026-08-21 the maeda-owner ran `poetry run pytest tests/integration` during a
+verification pass, in violation of an explicit instruction for that turn not to
+use any paid or external service. The machine had real API keys configured, so
+`tests/integration/test_eval_judge_calibration.py` did not skip: 3 passed and 1
+xpassed, roughly 6 calls to `score_relevance_and_groundedness`, each asking two
+questions, i.e. **approximately 12 real `claude-sonnet-5` calls**, estimated at
+**$0.05–0.10**. It was self-reported at the top of 附录 CQ, unprompted.
+
+**Boundary established at the time, and unchanged:** that suite uses only
+short synthetic reports hardcoded in the file. It does not read any fixture, does
+not read `test_suite.json`, and touches no split. `logs/runs.db` timestamps were
+unchanged. **硬约束 1 was not affected.**
+
+**This is the failure mode that 清单 (8) exists to close.** Before the gate in
+§5, the suite was safe only in environments that happened to have no key —
+i.e. the safety came from an accident of configuration rather than from a
+declaration of intent. The gate now requires `MAEDA_ALLOW_PAID_TESTS` in
+addition to a key. Re-verified on this machine 2026-08-22 with real keys and no
+opt-in: `4 skipped`, zero calls.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE; transcribed verbatim.
+
+### 5.2 A known physical defect in the demo data: 76 rows of negative revenue
+
+**Not a spending item; recorded here because it is a data fact the 阶段 4
+numbers rest on** (冻结前必办 (10), 附录 CQ.6.1 / CR.5).
+
+`data/demo/sales_data.csv` contains **76 rows with negative `revenue`** out of
+48,960 (**0.16%**, minimum −256.8). Cause: `generate_demo_data.py:255` clamps at
+zero **before** the event coefficients at `:256-257` are applied, so a `down`
+event combined with the lead-product ×3 weight can drive the multiplier
+negative. Negative revenue in sales data is physically impossible.
+
+**Where it falls:** all 76 rows are in `North / Gadget Pro / 2024-05` (50 rows)
+and `2024-06` (26 rows), i.e. the window of `EVT-2024-05-NORTH-GADGETPRO-EOL`,
+whose `split` is **`dev`**. The affected window is not in the test split.
+(Reading an event's `split` is structural metadata and is a precondition for the
+guard to operate at all; it is not an observation of the test split — see §1.3.)
+
+**Not fixed before 阶段 4, deliberately.** Fixing it means changing the render
+order, which means re-rendering `sales_data.csv`, which means recomputing every
+fixture already rebuilt in two prior rounds. The frozen `event_script.yaml` is
+unaffected — this is a defect in the rendering parameters, outside the frozen
+surface.
+
+**Why it belongs in a pre-registration and not only in a backlog:** TB5's
+`verify.py` checks detectability, **not physical plausibility**, so no existing
+gate stops this class of defect; and the cleaner's `handle_outliers` applies IQR
+treatment to `revenue`, so how these negative values are treated lands directly
+on the cleaner arm of experiment 1.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE; transcribed verbatim.
 
 ---
 
@@ -402,15 +617,16 @@ run (清单 (7)), and 附录 CR.5's negative-revenue fact (清单 (10)).
 
 | 冻结前必办 | Written here? |
 |---|---|
-| (1) CP.2 prior-observation disclosure | **No** — §1.6 placeholder |
+| (1) CP.2 prior-observation disclosure | **Yes** — §1.6(text from 附录 DE.2)|
 | (2) split guard sunk below every entry point | Closed in the rag repo (附录 CZ/DB); its **boundary** is stated in §1.3 |
-| (3) CP.5 four clauses | Partly — #2 and #4 in §4; #1/#3 not yet written |
+| (3) CP.5 four clauses | **Yes** — #2/#4 在 §4,#1/#3 在 §4.1(DE.3) |
 | (4) CM.7 on-arm tier | **No — user decision pending.** §0 placeholder, no default |
 | (5) `k` | **No** — candidate only, §0 |
 | (6) behaviour changes | **Yes** — §3 (CQ.4 ×2, CT.5, CX.6) |
-| (7) CQ.0 disclosure | **No** — §5 |
+| (7) CQ.0 disclosure | **Yes** — §5.1(DE.4) |
 | (8) paid-test intent gate | **Yes** — implemented, §5 |
 | (9) pre-registration write-up incl. DB.2(1) and DB.3 | **Yes** — §2 (+ §1.3, §1.4) |
-| (10) CR.5 negative revenue | **No** — §5 |
-| (12) CS.6 reading traps | **No** — `impact` aggregation is `sum_over_steps`, not a net difference; not yet written up |
+| (10) CR.5 negative revenue | **Yes** — §5.2(DE.5) |
+| (12) CS.6 reading traps | **Yes** — §4.2(DE.6) |
 | (14) CU.8 / CV.6 five items | **Yes** — §4 |
+| (15) `--split test` refuses a non-`always` `intent_refine_trigger` (附录 DD.3) | **Yes** — implemented in `scripts/run_eval.py`; stated in §1.2 and §3.2 |
