@@ -25,8 +25,10 @@ from pathlib import Path
 
 from src.config.settings import settings
 from src.eval.metrics import MetricScore
+from src.eval.trials import NOT_APPLICABLE
 from src.eval.runner import EvalResult, EvalRunner, GoldenTestCase, detect_regressions, load_golden_suite
 from src.graph.builder import build_graph
+from src.state import terminal_state as terminal_state_mod
 from src.state.graph_state import initial_state
 
 REPORT_DIR = Path("logs/eval_runs")
@@ -86,16 +88,45 @@ async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tu
         result_state = state
         run_error = f"graph.ainvoke raised: {exc}"
         result_state["error"] = run_error
+        result_state["current_phase"] = "error"
         result_state["error_type"] = "pipeline_error"  # an uncaught exception is never a safe refusal
+        # E3 (附录 CU): the graph never reached handle_error_node, so nothing
+        # classified this run -- do it here rather than leaving
+        # EvalRunner.score to fall back on an unset terminal_state. An
+        # exception that escaped every node's own handling is an agent/code
+        # failure, i.e. exactly what pipeline_error now narrowly means.
+        result_state["terminal_state"] = terminal_state_mod.PIPELINE_ERROR
+        result_state["terminal_detail"] = f"uncaught:{type(exc).__name__}"
     elapsed = time.time() - t0
 
-    eval_result = await eval_runner.score(result_state, test_case=tc, start_time=t0, run_id=tc.id)
+    # E3: eval failing must not abort the whole harness run and lose every
+    # case after this one. The graph's own run_eval_node has the same guard
+    # (src/graph/nodes.py); this covers the second, independent scoring call
+    # the harness makes.
+    try:
+        eval_result = await eval_runner.score(result_state, test_case=tc, start_time=t0, run_id=tc.id)
+    except Exception as exc:                               # noqa: BLE001
+        eval_error = f"{type(exc).__name__}: {exc}"
+        terminal, detail = terminal_state_mod.resolve_terminal_state(result_state)
+        eval_result = EvalResult(
+            run_id=tc.id, query=tc.query, scores=[], aggregate_score=None,
+            test_case_id=tc.id, terminal_state=terminal, terminal_detail=detail,
+            eval_error=eval_error,
+        )
     meta = {
         "elapsed_s": round(elapsed, 2),
         "guardrail_passed": result_state.get("guardrail_passed"),
         "current_phase": result_state.get("current_phase"),
         "error": run_error,
         "error_type": result_state.get("error_type"),
+        # E3 (附录 CU): mirrored here for the same self-describing-row reason
+        # as cleaner_mode/rag_mode/rag_arm_invalid_reason below. The
+        # authoritative copy is on `eval_result` (src/eval/trials.py reads it
+        # there); this one lets someone scanning `meta` see how a row ended
+        # without cross-referencing.
+        "terminal_state": result_state.get("terminal_state"),
+        "terminal_detail": result_state.get("terminal_detail"),
+        "eval_error": eval_result.eval_error,
         "mcp_modes": sorted({c.get("mode", "mcp") for c in (result_state.get("mcp_call_log") or [])}),
         # 定案 #15 / 附录 CB.3.4: mirrored into every row (not just the
         # report-level `report["arm"]` written once in main() below) so a
@@ -128,6 +159,27 @@ async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tu
         "run_id": result_state.get("run_id"),
     }
     return eval_result, meta
+
+
+def _overall_aggregate(rows) -> tuple[float, int]:
+    """
+    E3 (附录 CU): mean aggregate over the rows that HAVE one.
+
+    `aggregate_score` is None for any run that did not terminate in success
+    (src/eval/runner.py::EvalResult) -- its surviving metrics are a different
+    set than a successful run's, so averaging its number in would silently
+    mix two scales. Before E3 a failed run contributed a near-zero aggregate
+    computed largely from metrics scored on an empty report, which is the
+    "不打零分" half of E3 leaking straight into the suite-level number.
+
+    Returns (mean, n_excluded) -- the count is printed, never dropped: an
+    exclusion visible only as a smaller denominator is the same class of
+    problem as the silent degradation 附录 CK.3 exists to catch.
+    """
+    scored = [r["eval_result"]["aggregate_score"] for r in rows
+              if r["eval_result"].get("aggregate_score") is not None]
+    mean = sum(scored) / len(scored) if scored else 0.0
+    return mean, len(rows) - len(scored)
 
 
 async def run_trials(
@@ -264,8 +316,14 @@ async def main():
                 tags.append(f"ERROR: {meta['error']}")
             if any(m == "fallback" for m in meta["mcp_modes"]):
                 tags.append("fallback")
+            if meta["terminal_state"] and meta["terminal_state"] != terminal_state_mod.SUCCESS:
+                tags.append(f"terminal={meta['terminal_state']}"
+                            + (f"/{meta['terminal_detail']}" if meta["terminal_detail"] else ""))
+            if meta["eval_error"]:
+                tags.append(f"EVAL FAILED: {meta['eval_error']}")
             suffix = f" [{', '.join(tags)}]" if tags else ""
-            print(f"aggregate={eval_result.aggregate_score:.2f}{suffix}")
+            agg = eval_result.aggregate_score
+            print(f"aggregate={'n/a' if agg is None else f'{agg:.2f}'}{suffix}")
             rows.append({"test_case_id": tc.id, "eval_result": eval_result.to_dict(), "meta": meta})
         per_trial = [rows]
     else:
@@ -283,16 +341,21 @@ async def main():
         # external tooling reading logs/eval_runs/*.json) keeps working
         # unmodified for the default invocation.
         rows = per_trial[0]
-        aggregate_scores = [r["eval_result"]["aggregate_score"] for r in rows]
-        overall = sum(aggregate_scores) / len(aggregate_scores) if aggregate_scores else 0.0
+        overall, n_no_aggregate = _overall_aggregate(rows)
         report = {
             "timestamp": timestamp, "n_cases": len(rows),
-            "overall_aggregate": overall, "split": args.split, "cases": rows,
+            "overall_aggregate": overall,
+            # E3 (附录 CU): how many of `n_cases` that mean is NOT over.
+            # `overall_aggregate` was a mean over every case before E3; a
+            # non-zero value here is what tells a later reader the two
+            # numbers are not the same statistic.
+            "n_cases_without_aggregate": n_no_aggregate,
+            "split": args.split, "cases": rows,
             "arm": _current_arm(),
         }
         out_path = Path(args.out) if args.out else REPORT_DIR / f"eval_{int(timestamp)}.json"
         out_path.write_text(json.dumps(report, indent=2, default=str))
-        _print_summary(rows, overall)
+        _print_summary(rows, overall, n_no_aggregate)
         print(f"\nReport saved to {out_path}")
         if args.compare:
             _print_regressions(Path(args.compare), rows, overall)
@@ -301,14 +364,15 @@ async def main():
         trial_reports = []
         crashed = []
         for trial_idx, rows in enumerate(per_trial):
-            aggregate_scores = [r["eval_result"]["aggregate_score"] for r in rows]
-            overall = sum(aggregate_scores) / len(aggregate_scores) if aggregate_scores else 0.0
+            overall, n_no_aggregate = _overall_aggregate(rows)
             trial_reports.append({
                 "trial_index": trial_idx, "n_cases": len(rows),
-                "overall_aggregate": overall, "cases": rows,
+                "overall_aggregate": overall,
+                "n_cases_without_aggregate": n_no_aggregate,
+                "cases": rows,
             })
             print(f"\n### trial {trial_idx} ###")
-            _print_summary(rows, overall)
+            _print_summary(rows, overall, n_no_aggregate)
             crashed.extend(
                 f"trial{trial_idx}:{r['test_case_id']}"
                 for r in rows if r["meta"]["error_type"] == "pipeline_error"
@@ -345,16 +409,26 @@ async def main():
         sys.exit(1)
 
 
-def _print_summary(rows, overall):
+def _print_summary(rows, overall, n_no_aggregate: int = 0):
     print("\n" + "=" * 92)
     print(f"{'ID':6s} {'aggregate':>9s} {'relevance':>10s} {'grounded':>9s} {'factual':>8s} {'errrate':>8s}  notes")
     print("-" * 92)
     n_refusals = 0
     n_invalid = 0
+    n_not_applicable = 0
+    terminal_tally: dict = {}
     for r in rows:
         er = r["eval_result"]
         by = {s["metric"]: s["score"] for s in er["scores"]}
-        invalid_metrics = [s["metric"] for s in er["scores"] if not s.get("valid", True)]
+        # E3 (附录 CU): "couldn't be scored" and "shouldn't be scored" are
+        # two different facts and are split by label, not merged into one
+        # FAILED_TO_SCORE bucket -- a judge outage and a batch of failed runs
+        # would otherwise look identical in this table.
+        invalid_metrics = [s["metric"] for s in er["scores"]
+                           if not s.get("valid", True) and s.get("label") != NOT_APPLICABLE]
+        na_metrics = [s["metric"] for s in er["scores"] if s.get("label") == NOT_APPLICABLE]
+        ts = er.get("terminal_state")
+        terminal_tally[ts] = terminal_tally.get(ts, 0) + 1
         notes = []
         if r["meta"]["data_mismatch"]:
             notes.append("data_mismatch")
@@ -365,11 +439,17 @@ def _print_summary(rows, overall):
             notes.append("error")
         if any(m == "fallback" for m in r["meta"]["mcp_modes"]):
             notes.append("fallback")
+        if er.get("eval_error"):
+            notes.append("EVAL_FAILED")
         if invalid_metrics:
             notes.append(f"FAILED_TO_SCORE:{'+'.join(invalid_metrics)}")
             n_invalid += len(invalid_metrics)
+        if na_metrics:
+            notes.append(f"NOT_APPLICABLE:{'+'.join(na_metrics)}")
+            n_not_applicable += len(na_metrics)
+        agg = er.get("aggregate_score")
         print(
-            f"{r['test_case_id']:6s} {er['aggregate_score']:9.2f} "
+            f"{r['test_case_id']:6s} {('n/a' if agg is None else f'{agg:.2f}'):>9s} "
             f"{by.get('answer_relevance', float('nan')):10.2f} "
             f"{by.get('groundedness', float('nan')):9.2f} "
             f"{by.get('factual_accuracy', float('nan')):8.2f} "
@@ -377,9 +457,18 @@ def _print_summary(rows, overall):
         )
     print("-" * 92)
     print(f"{'OVERALL':6s} {overall:9.2f}   safe_refusals={n_refusals}/{len(rows)}")
+    if n_no_aggregate:
+        print(f"  OVERALL is a mean over {len(rows) - n_no_aggregate}/{len(rows)} cases -- "
+              f"{n_no_aggregate} case(s) did not terminate in success and have no comparable "
+              f"aggregate (E3: 失败运行不打零分).")
+    print(f"  terminal states: "
+          + ", ".join(f"{k or 'unrecorded'}={v}" for k, v in sorted(terminal_tally.items(), key=lambda kv: str(kv[0]))))
     if n_invalid:
         print(f"  {n_invalid} metric(s) FAILED TO SCORE this run (judge unreachable after "
               f"retries) -- excluded from their case's aggregate, not silently defaulted.")
+    if n_not_applicable:
+        print(f"  {n_not_applicable} metric(s) NOT APPLICABLE (the run terminated before "
+              f"producing what they score) -- marked, not scored zero.")
     print("=" * 92)
 
 
@@ -412,6 +501,10 @@ def _print_regressions(baseline_path: Path, rows, overall):
     if not any_alert:
         print("  No regressions detected.")
     print(f"\n  Overall aggregate: baseline={baseline_report['overall_aggregate']:.3f} current={overall:.3f}")
+    # E3 (附录 CU): both sides may be means over different denominators now.
+    base_missing = baseline_report.get("n_cases_without_aggregate")
+    if base_missing:
+        print(f"  (baseline excluded {base_missing} non-success case(s) from that mean)")
 
 
 if __name__ == "__main__":

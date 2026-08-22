@@ -146,11 +146,22 @@ def build_graph() -> StateGraph:
         },
     )
 
-    # Terminal nodes — both routed through persist_run so every pipeline
-    # invocation is audited (success or failure) without either node
+    # Terminal nodes — every path is routed through persist_run so every
+    # pipeline invocation is audited (success or failure) without any node
     # needing to know persistence exists.
+    #
+    # E3 (阶段 3 执行顺序表轮次 5, 附录 CU) — 失败路径接入 eval: handle_error
+    # used to go STRAIGHT to persist_run, so no failed run was ever scored
+    # and `eval_scores` was NULL in runs.db for every one of them. It now
+    # runs through run_eval first, which is safe to do unconditionally
+    # because EvalRunner.score marks the metrics a failed run cannot support
+    # as `not_applicable` without invoking the LLM judge — a failed run
+    # therefore costs zero judge calls here, exactly as it did before.
+    # handle_error must stay UPSTREAM of run_eval: it is what writes
+    # `terminal_state`, which is what run_eval keys the not_applicable
+    # decision off.
+    g.add_edge("handle_error", "run_eval")
     g.add_edge("run_eval", "persist_run")
-    g.add_edge("handle_error", "persist_run")
     g.add_edge("persist_run", END)
 
     return g.compile()

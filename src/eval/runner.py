@@ -16,6 +16,7 @@ from typing import Any, Optional
 
 from src.eval.metrics import (
     MetricScore,
+    not_applicable_metric,
     score_answer_relevance,
     score_chart_appropriateness,
     score_factual_accuracy,
@@ -25,6 +26,7 @@ from src.eval.metrics import (
     score_system_metrics,
     score_tool_selection,
 )
+from src.state.terminal_state import SUCCESS, resolve_terminal_state
 from src.utils.logger import get_logger
 
 logger = get_logger("maeda.eval.runner")
@@ -70,7 +72,18 @@ class EvalResult:
     run_id: str
     query: str
     scores: list[MetricScore]
-    aggregate_score: float
+    # E3 (附录 CU): None means "this run has no comparable aggregate", which
+    # is a different fact from "the aggregate is zero" -- the same
+    # distinction src/eval/trials.py::pass_at_k already makes when it
+    # returns None rather than 0.0 for "not enough trials", and for the same
+    # reason (0.0 would be indistinguishable from a real all-failures
+    # result). A run that terminated in anything other than success has most
+    # of the weighted metrics marked not_applicable, so whatever weighted
+    # average survives is taken over a DIFFERENT metric set than a
+    # successful run's and is not comparable with it. Reporting None forces
+    # every consumer to decide explicitly what to do with a failed run
+    # instead of silently averaging a near-zero into a suite mean.
+    aggregate_score: Optional[float]
     timestamp: float = field(default_factory=time.time)
     test_case_id: Optional[str] = None
     # 附录 R.3 / 附录 AO.1 / 附录 AP.2: diagnostic-only fields carried over
@@ -132,6 +145,18 @@ class EvalResult:
     # anything here. The score itself is still computed and still
     # reported; what changes is that trials.py refuses to average it in.
     rag_arm_invalid_reason: Optional[str] = None
+    # E3 (附录 CU): how the run ended, one of src/state/terminal_state.py's
+    # five values, read off state rather than re-derived here. Same
+    # top-level-scalar, structurally-cannot-reach-_aggregate_score pattern
+    # as the fields above. `terminal_detail` is the sub-classification --
+    # verbatim fallback.py error_class for anything that came from a
+    # sub-system call, never a second taxonomy.
+    terminal_state: Optional[str] = None
+    terminal_detail: Optional[str] = None
+    # E3: set when EVAL ITSELF failed for this run (as opposed to the run
+    # failing). Distinct from every scores-based signal because when this is
+    # set, `scores` is not trustworthy -- there may be none at all.
+    eval_error: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -147,6 +172,9 @@ class EvalResult:
             "cleaner_mode": self.cleaner_mode,
             "rag_mode": self.rag_mode,
             "rag_arm_invalid_reason": self.rag_arm_invalid_reason,
+            "terminal_state": self.terminal_state,
+            "terminal_detail": self.terminal_detail,
+            "eval_error": self.eval_error,
         }
 
     def score_by_metric(self, metric: str) -> Optional[float]:
@@ -182,6 +210,31 @@ class EvalRunner:
         charts = state.get("charts") or []
         data_quality_report = state.get("data_quality_report")
 
+        # ─── E3 (附录 CU): terminal state → which metrics are applicable ───
+        #
+        # Read, never re-derived: src/state/terminal_state.py's
+        # resolve_terminal_state returns handle_error_node's stored judgment
+        # when there is one, and classifies only for a state that never went
+        # through a terminal node (e.g. scripts/run_eval.py's
+        # graph.ainvoke-raised path).
+        terminal_state, terminal_detail = resolve_terminal_state(state)
+        na = _not_applicable_metrics(state, terminal_state)
+
+        def _guard(metric: str, fn) -> MetricScore:
+            """One place where a metric is either skipped as not_applicable,
+            scored, or -- E3's "eval 自身失败也要捕获分类" at metric
+            granularity -- turned into a captured scoring failure instead of
+            an exception that costs the caller every OTHER metric too."""
+            reason = na.get(metric)
+            if reason is not None:
+                return not_applicable_metric(metric, reason)
+            try:
+                return fn()
+            except Exception as exc:                       # noqa: BLE001
+                logger.error("Metric %s raised while scoring: %s", metric, exc)
+                return MetricScore(metric, 0.0, "error",
+                                   f"scoring raised {type(exc).__name__}: {exc}", valid=False)
+
         scores: list[MetricScore] = []
 
         # 9.2 / 9.3 LLM-as-judge. answer_relevance/groundedness don't depend
@@ -212,27 +265,64 @@ class EvalRunner:
             return await score_groundedness(query, report, analysis_results, rag_context, llm=self._llm,
                                             data_quality_report=data_quality_report)
 
-        rel, gnd = await asyncio.gather(_relevance(), _groundedness())
-        scores.extend([rel, gnd])
+        # E3: when BOTH judge metrics are not_applicable there is nothing to
+        # gather and, crucially, no judge call to pay for. This is what makes
+        # putting the failure path through eval free (src/graph/builder.py's
+        # handle_error → run_eval edge).
+        if "answer_relevance" in na and "groundedness" in na:
+            scores.extend([
+                not_applicable_metric("answer_relevance", na["answer_relevance"]),
+                not_applicable_metric("groundedness", na["groundedness"]),
+            ])
+        else:
+            try:
+                rel, gnd = await asyncio.gather(_relevance(), _groundedness())
+            except Exception as exc:                       # noqa: BLE001
+                # The judge helpers already convert their own failures into
+                # valid=False scores; anything that still escapes (a bad
+                # provider config, a cached-score dict missing a key) would
+                # otherwise abort the whole EvalResult.
+                logger.error("Judge metrics raised while scoring: %s", exc)
+                detail = f"scoring raised {type(exc).__name__}: {exc}"
+                rel = MetricScore("answer_relevance", 0.0, "error", detail, valid=False)
+                gnd = MetricScore("groundedness", 0.0, "error", detail, valid=False)
+            scores.extend([rel, gnd])
 
         # 9.4 Factual accuracy
         ground_truth = test_case.ground_truth if test_case else None
-        scores.append(score_factual_accuracy(report, analysis_results, ground_truth))
+        scores.append(_guard("factual_accuracy",
+                             lambda: score_factual_accuracy(report, analysis_results, ground_truth)))
 
         # 9.5 Agent performance
         expected_type = test_case.query_type if test_case else None
         expected_metrics = test_case.expected_metrics if test_case else None
         expected_tools = test_case.expected_tools if test_case else None
         expected_chart_types = test_case.expected_chart_types if test_case else None
-        scores.append(score_intent_accuracy(parsed_intent, expected_type, expected_metrics))
-        scores.append(score_tool_selection(analysis_results, expected_tools))
-        scores.append(score_step_success_rate(analysis_results))
-        scores.append(score_chart_appropriateness(charts, expected_chart_types))
+        scores.append(_guard("intent_accuracy",
+                             lambda: score_intent_accuracy(parsed_intent, expected_type, expected_metrics)))
+        scores.append(_guard("tool_selection",
+                             lambda: score_tool_selection(analysis_results, expected_tools)))
+        scores.append(_guard("step_success_rate",
+                             lambda: score_step_success_rate(analysis_results)))
+        scores.append(_guard("chart_appropriateness",
+                             lambda: score_chart_appropriateness(charts, expected_chart_types)))
 
-        # System metrics
-        scores.extend(score_system_metrics(state, start_time))
+        # System metrics. NEVER not_applicable: error_rate and safe_refusal
+        # are the metrics a failed run exists to report, and latency/cost/
+        # retries are real measurements of the run that actually happened
+        # whether or not it produced an answer. This is the "只算适用指标"
+        # half of E3 -- a failed run is scored on less, not on nothing.
+        try:
+            scores.extend(score_system_metrics(state, start_time))
+        except Exception as exc:                           # noqa: BLE001
+            logger.error("System metrics raised while scoring: %s", exc)
+            scores.append(MetricScore("error_rate", 0.0, "error",
+                                      f"scoring raised {type(exc).__name__}: {exc}", valid=False))
 
-        aggregate = _aggregate_score(scores)
+        # E3: a failed run's surviving metrics are a different (smaller) set
+        # than a successful run's, so their weighted average is not on the
+        # same scale -- see EvalResult.aggregate_score.
+        aggregate = None if terminal_state != SUCCESS else _aggregate_score(scores)
 
         result = EvalResult(
             run_id=rid,
@@ -246,14 +336,64 @@ class EvalRunner:
             cleaner_mode=state.get("cleaner_mode"),
             rag_mode=state.get("rag_mode"),
             rag_arm_invalid_reason=state.get("rag_arm_invalid_reason"),
+            terminal_state=terminal_state,
+            terminal_detail=terminal_detail,
+            eval_error=state.get("eval_error"),
         )
 
         logger.info(
-            "Eval run=%s aggregate=%.2f | %s",
-            rid, aggregate,
+            "Eval run=%s terminal=%s aggregate=%s | %s",
+            rid, terminal_state,
+            "n/a" if aggregate is None else f"{aggregate:.2f}",
             " ".join(f"{s.metric}={s.score:.2f}" for s in scores[:4]),
         )
         return result
+
+
+# ─── E3: which metrics a failed run may still be scored on ───────────────────
+
+# The report-quality metrics. On a run that did not complete these are
+# not_applicable UNCONDITIONALLY, even when a `report` string happens to
+# exist in state -- a guardrail-refused run has one, and it is precisely the
+# text the pipeline decided not to deliver. Asking "how good is this answer"
+# about an answer that was never given produces a number that looks like a
+# quality measurement and is not one (and, for the two judge metrics, pays
+# real money to produce it).
+_REPORT_QUALITY_METRICS = ("answer_relevance", "groundedness", "factual_accuracy")
+
+# Every other scorable metric, with the state key holding the artifact it
+# scores. On a failed run these ARE still scored whenever that artifact
+# exists: a run that parsed an intent correctly and then died at profiling
+# gives a real intent_accuracy measurement, and throwing it away would lose
+# signal E3 explicitly wants kept ("只算适用指标", not "算零个指标").
+_METRIC_ARTIFACT = {
+    "intent_accuracy": "parsed_intent",
+    "tool_selection": "analysis_results",
+    "step_success_rate": "analysis_results",
+    "chart_appropriateness": "charts",
+}
+
+
+def _not_applicable_metrics(state: dict, terminal_state: str) -> dict[str, str]:
+    """
+    metric → reason, for the metrics this run must not be scored on.
+
+    Returns EMPTY for a successful run. That is deliberate and is the reason
+    E3 cannot shift any existing 阶段 4 baseline number: on the success path
+    every metric is computed exactly as it was before this change, including
+    the cases where an artifact is missing (a successful run with no charts
+    still gets score_chart_appropriateness' own lenient handling, not a
+    not_applicable). E3 asked about failed runs; widening the rule to
+    successful ones would be a silent metric-definition change of the kind
+    附录 BO.5 exists to warn about.
+    """
+    if terminal_state == SUCCESS:
+        return {}
+    na = {m: f"run terminated as {terminal_state}" for m in _REPORT_QUALITY_METRICS}
+    for metric, artifact in _METRIC_ARTIFACT.items():
+        if not state.get(artifact):
+            na[metric] = f"run terminated as {terminal_state} before producing {artifact}"
+    return na
 
 
 def _aggregate_score(scores: list[MetricScore]) -> float:
@@ -349,7 +489,14 @@ def detect_regressions(
                 metric, base_score, curr_score, drop, severity,
             )
 
-    # Also check aggregate
+    # Also check aggregate. E3 (附录 CU): either side may be None now ("this
+    # run has no comparable aggregate" -- see EvalResult.aggregate_score).
+    # Comparing against a missing aggregate would either raise or, if it were
+    # coerced to 0.0, report a spurious 100% regression every time a run
+    # failed -- which is the "credible wrong answer" shape 附录 CI.2 warns
+    # about, aimed at regression detection instead of at the RAG arm.
+    if baseline.aggregate_score is None or current.aggregate_score is None:
+        return alerts
     agg_drop = baseline.aggregate_score - current.aggregate_score
     if agg_drop >= threshold_warn:
         severity = "critical" if agg_drop >= threshold_critical else "warning"

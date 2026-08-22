@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS runs (
     eval_scores_json    TEXT,
     cleaning_applied_level TEXT,
     cleaning_stop_reason   TEXT,
+    terminal_state      TEXT,
+    terminal_detail     TEXT,
+    eval_error          TEXT,
     created_at          TEXT NOT NULL DEFAULT (datetime('now'))
 );
 """
@@ -51,7 +54,15 @@ CREATE TABLE IF NOT EXISTS runs (
 # recreated). This runs unconditionally on every `init_schema` call, so a
 # brand-new database (already created with these columns by `_SCHEMA`
 # above) just finds nothing missing and no-ops.
-_NEW_COLUMNS = ("cleaning_applied_level", "cleaning_stop_reason")
+# E3 (附录 CU) adds three more, by the same additive ALTER TABLE route:
+# `terminal_state`/`terminal_detail` (how the run ended, see
+# src/state/terminal_state.py) and `eval_error` (eval itself failed).
+# NOTE for anyone reading logs/runs.db: `terminal_state IS NULL` marks a row
+# written BEFORE E3, and such a row's `error_type = 'pipeline_error'` covers
+# the MCP and environment failures that now get their own terminal state --
+# it must not be read as "agent reasoning failure".
+_NEW_COLUMNS = ("cleaning_applied_level", "cleaning_stop_reason",
+                "terminal_state", "terminal_detail", "eval_error")
 
 
 def _migrate_schema(conn: sqlite3.Connection) -> None:
@@ -97,8 +108,9 @@ class RunStore:
                 INSERT OR REPLACE INTO runs
                     (run_id, user_query, current_phase, guardrail_passed,
                      error, error_type, decision_trace_json, mcp_call_log_json,
-                     eval_scores_json, cleaning_applied_level, cleaning_stop_reason)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     eval_scores_json, cleaning_applied_level, cleaning_stop_reason,
+                     terminal_state, terminal_detail, eval_error)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     run_id,
@@ -119,6 +131,15 @@ class RunStore:
                     # which isn't persisted separately).
                     state.get("cleaning_applied_level"),
                     state.get("cleaning_stop_reason"),
+                    # E3 (附录 CU): the terminal classification, persisted
+                    # rather than recoverable only by string-matching
+                    # decision_trace -- the same argument 附录 R.3/AO.1 made
+                    # for cleaning_applied_level, applied to the field 阶段 4
+                    # needs in order to count mcp_error/environment_error
+                    # separately from agent reasoning failures at all.
+                    state.get("terminal_state"),
+                    state.get("terminal_detail"),
+                    state.get("eval_error"),
                 ),
             )
         return run_id
@@ -143,7 +164,8 @@ class RunStore:
             rows = conn.execute(
                 """
                 SELECT run_id, user_query, current_phase, guardrail_passed,
-                       error, error_type, created_at
+                       error, error_type, terminal_state, terminal_detail,
+                       eval_error, created_at
                 FROM runs ORDER BY created_at DESC LIMIT ?
                 """,
                 (limit,),

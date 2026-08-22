@@ -120,16 +120,28 @@ async def main():
         print(f"  [{cid}] {suite[cid].query!r} ...", end=" ", flush=True)
         result = await _replay_one(suite[cid], cache, fp, eval_runner)
         eval_result, meta = result
-        print(f"aggregate={eval_result.aggregate_score:.2f}  (scored in {meta['replay_scoring_s']:.1f}s, "
+        _agg = eval_result.aggregate_score
+        print(f"aggregate={'n/a' if _agg is None else f'{_agg:.2f}'}  "
+              f"(scored in {meta['replay_scoring_s']:.1f}s, "
               f"originally generated in {meta['elapsed_s']:.1f}s)")
         rows.append({"test_case_id": cid, "eval_result": eval_result.to_dict(), "meta": meta})
     wall = time.time() - t0
 
-    aggregate_scores = [r["eval_result"]["aggregate_score"] for r in rows]
+    # E3 (附录 CU): aggregate_score is None for a run that did not terminate
+    # in success -- see src/eval/runner.py::EvalResult. Averaging None in
+    # would crash; averaging a coerced 0.0 in is the exact "不打零分" problem
+    # E3 removed one level down.
+    aggregate_scores = [r["eval_result"]["aggregate_score"] for r in rows
+                        if r["eval_result"].get("aggregate_score") is not None]
     overall = sum(aggregate_scores) / len(aggregate_scores) if aggregate_scores else 0.0
+    n_no_aggregate = len(rows) - len(aggregate_scores)
+    if n_no_aggregate:
+        print(f"  ({n_no_aggregate} replayed case(s) did not terminate in success and are "
+              f"excluded from the overall aggregate)")
 
     report = {
         "timestamp": time.time(), "n_cases": len(rows), "overall_aggregate": overall,
+        "n_cases_without_aggregate": n_no_aggregate,
         "replayed": True, "generation_fingerprint": fp, "split": args.split, "cases": rows,
     }
 

@@ -243,8 +243,13 @@ async def run_full_mode(cases: list[GoldenTestCase], repeats: int, concurrency: 
     trial_metric_means: dict[str, list[float]] = {}
     total_cost = 0.0
     for trial in trials:
-        case_aggs = [c["eval_result"]["aggregate_score"] for c in trial.values()]
-        trial_aggregates.append(sum(case_aggs) / len(case_aggs))
+        # E3 (附录 CU): a run that did not terminate in success has
+        # aggregate_score None -- it has no comparable aggregate, so it is
+        # excluded from the trial mean rather than contributing a zero that
+        # would be read as full-pipeline noise (src/eval/runner.py::EvalResult).
+        case_aggs = [c["eval_result"]["aggregate_score"] for c in trial.values()
+                     if c["eval_result"].get("aggregate_score") is not None]
+        trial_aggregates.append(sum(case_aggs) / len(case_aggs) if case_aggs else 0.0)
         per_metric: dict[str, list[float]] = {}
         for c in trial.values():
             for s in c["eval_result"]["scores"]:
@@ -274,7 +279,14 @@ async def run_full_mode(cases: list[GoldenTestCase], repeats: int, concurrency: 
     _MIN_CASES_FOR_BOOTSTRAP = 8
     bootstrap_sanity = None
     if repeats >= 2:
-        common_ids = sorted(set(trials[0]) & set(trials[1]))
+        # Paired: a case only contributes a delta when BOTH trials produced a
+        # comparable aggregate (E3, 附录 CU -- None on either side means that
+        # trial did not terminate in success).
+        common_ids = [
+            cid for cid in sorted(set(trials[0]) & set(trials[1]))
+            if trials[0][cid]["eval_result"].get("aggregate_score") is not None
+            and trials[1][cid]["eval_result"].get("aggregate_score") is not None
+        ]
         deltas = [
             trials[1][cid]["eval_result"]["aggregate_score"]
             - trials[0][cid]["eval_result"]["aggregate_score"]

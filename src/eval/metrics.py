@@ -42,6 +42,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.config.agent_prompts import EVAL_GROUNDEDNESS_SYSTEM, EVAL_RELEVANCE_SYSTEM
 from src.config.settings import settings
+from src.eval.trials import NOT_APPLICABLE
 from src.utils.logger import get_logger
 from src.utils.retry import call_with_rate_limit_retry
 
@@ -66,6 +67,32 @@ class MetricScore:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+def not_applicable_metric(metric: str, reason: str) -> MetricScore:
+    """
+    E3 (ECOSYSTEM_INTEGRATION_PLAN.md 执行顺序表轮次 5, 附录 CU): "失败运行只算
+    适用指标,答案类指标标 not_applicable,不打零分".
+
+    The load-bearing part is `valid=False`, NOT the 0.0 -- both aggregation
+    paths this repo already has skip invalid entries
+    (src/eval/runner.py::_aggregate_score continues past them;
+    src/eval/trials.py::_binary_success returns None so the trial is
+    excluded from pass@k's n AND c). So E3's "don't score it zero"
+    requirement is satisfied by a mechanism that already exists and is
+    already tested, rather than by a second exclusion filter that would have
+    to be kept in sync with it. The 0.0 is the same inert placeholder the
+    judge-unavailable path (`valid=False`, label "error") already writes.
+
+    The distinct LABEL is the only genuinely new thing: `not_applicable`
+    (src/eval/trials.py::NOT_APPLICABLE, a constant that has carried the
+    comment "same vocabulary E3 will use" since 附录 CK.3) vs "error" says
+    whether the metric COULDN'T be measured because scoring broke, or
+    SHOULDN'T be measured because the run never produced the thing it
+    scores. Collapsing those two into one label is how a systematic judge
+    outage would come to look like a normal batch of failed runs.
+    """
+    return MetricScore(metric, 0.0, NOT_APPLICABLE, reason, valid=False)
 
 
 def _label(score: float, warn: float = 0.6, fail: float = 0.4) -> str:

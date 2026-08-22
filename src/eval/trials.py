@@ -56,7 +56,11 @@ _NON_BINARY_METRICS = frozenset({"safe_refusal"})
 # deliberately narrower than a literal "!= full" filter.
 _INAPPLICABLE_CLEANING_LEVEL = "blocked_needs_review"
 
-NOT_APPLICABLE = "not_applicable"  # same vocabulary E3 (阶段 3) will use for terminal states
+# E3 (执行顺序表轮次 5, 附录 CU) landed and uses this constant literally:
+# src/eval/metrics.py::not_applicable_metric imports it as the LABEL for a
+# metric a failed run must not be scored on. It is deliberately NOT a
+# row-level exclusion for such runs -- see not_applicable_reason below.
+NOT_APPLICABLE = "not_applicable"
 
 
 def is_binary_metric(metric: str) -> bool:
@@ -127,6 +131,19 @@ def not_applicable_reason(eval_result: dict) -> Optional[str]:
     Both are "the pipeline completed, but this run is not a fair
     comparison point", which is why they share one gate instead of the
     second one growing its own parallel filter somewhere else.
+
+    E3 (附录 CU) DELIBERATELY DID NOT ADD A THIRD CONDITION HERE for
+    `terminal_state != "success"`, even though that is superficially the
+    same shape. A failed run is excluded from the metrics it cannot support
+    ONE METRIC AT A TIME, via valid=False (src/eval/metrics.py::
+    not_applicable_metric), precisely so that the metrics it CAN support
+    still count -- above all error_rate and safe_refusal, whose whole job is
+    to count failures. Dropping the whole row here would remove those runs
+    from error_rate's own denominator, i.e. the measured failure rate would
+    IMPROVE as the system failed more, which is the exact inversion 附录
+    CI.2 calls a "credible wrong answer". The two conditions that ARE here
+    describe runs that completed normally but are not comparable; a failed
+    run is not incomparable, it is a result.
     """
     if eval_result.get("cleaning_applied_level") == _INAPPLICABLE_CLEANING_LEVEL:
         return _INAPPLICABLE_CLEANING_LEVEL
@@ -265,12 +282,24 @@ def summarize_case(case_id: str, rows: list[dict], k_values: list[int]) -> dict:
                 "pass_hat_k": {k: pass_hat_k(n_scored, c, k) for k in k_values},
             }
 
+    # E3 (附录 CU): how this case's trials ended, tallied. Reported, never
+    # used to include or exclude anything (see not_applicable_reason's
+    # docstring) -- it exists so "阶段 4 这个 case 的 pass@k 低" can be read
+    # against "它有 3/8 次是 mcp_error" instead of being attributed to model
+    # quality by default. A `None` key is a trial from a report written
+    # before E3, which recorded no terminal state at all.
+    terminal_states: dict[Optional[str], int] = {}
+    for r in rows:
+        ts = r["eval_result"].get("terminal_state")
+        terminal_states[ts] = terminal_states.get(ts, 0) + 1
+
     return {
         "test_case_id": case_id,
         "n_trials": n_trials,
         "n_applicable": len(applicable_rows),
         "n_not_applicable": n_not_applicable,
         "not_applicable_reasons": excluded_reasons,
+        "terminal_states": terminal_states,
         "binary": binary,
         "continuous": continuous,
     }

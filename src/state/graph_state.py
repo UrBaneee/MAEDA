@@ -165,6 +165,12 @@ class MAEDAState(TypedDict):
 
     # === Eval ===
     eval_scores: Optional[dict]  # {accuracy, groundedness, relevance}
+    # E3 (阶段 3 执行顺序表轮次 5, 附录 CU): eval failing must not take the run
+    # record down with it. run_eval_node catches anything EvalRunner.score
+    # raises and records the classified failure here instead of propagating
+    # out of graph.ainvoke -- which would skip persist_run_node entirely and
+    # lose the whole decision_trace/mcp_call_log for that run.
+    eval_error: Optional[str]
 
     # === Meta ===
     decision_trace: list[dict]   # Unified trace across all 3 systems
@@ -172,7 +178,26 @@ class MAEDAState(TypedDict):
     token_usage: dict            # {agent_name: {input, output, cost}}
     current_phase: Literal["plan", "execute", "synthesize", "guardrail", "complete", "error"]
     error: Optional[str]
+    # E3 (附录 CU): `error_type` is now a PROJECTION of `terminal_state`
+    # below, not an independent judgment -- see
+    # src/state/terminal_state.py::legacy_error_type. Kept at its original
+    # two values because src/eval/metrics.py::score_system_metrics, the
+    # `error_type` column of every row already in logs/runs.db, and
+    # scripts/run_eval.py's crash reporting are all frozen against them.
     error_type: Optional[Literal["safe_refusal", "pipeline_error"]]  # what kind of failure `error` represents
+    # E3: how the run ended, as one of src/state/terminal_state.py's five
+    # values ("success" included -- an explicit success state, not the
+    # absence of an error). Written once by handle_error_node (failures) /
+    # persist_run_node (successes); every other consumer reads it through
+    # `resolve_terminal_state`. None only on a state that has not reached a
+    # terminal node yet.
+    terminal_state: Optional[str]
+    # The sub-classification behind `terminal_state`. For anything that came
+    # out of a sub-system call this is verbatim
+    # SubSystemHardFailure.error_class (src/mcp_client/fallback.py::_classify)
+    # -- E3 deliberately does not mint a second error taxonomy alongside
+    # that one.
+    terminal_detail: Optional[str]
     # Number of *completed* clean_dataset calls (附录 B.5) — incremented only
     # after clean_dataset returns successfully, not on every node entry.
     # Previously incremented unconditionally at the top of
@@ -238,12 +263,15 @@ def initial_state(
         guardrail_checks=[],
         guardrail_passed=False,
         eval_scores=None,
+        eval_error=None,
         decision_trace=[],
         mcp_call_log=[],
         token_usage={},
         current_phase="plan",
         error=None,
         error_type=None,
+        terminal_state=None,
+        terminal_detail=None,
         iteration_count=0,
         guardrail_retry_count=0,
         clarification_count=0,

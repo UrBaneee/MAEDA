@@ -205,6 +205,26 @@ official reveal, gated behind `--split test`, not for iterating against).
 
 Regression detection alerts on any metric drop > 5% vs baseline.
 
+### Failed runs are scored too, on less
+
+Every run that reaches a terminal node is classified into one of five
+terminal states (`src/state/terminal_state.py`): `success`, `safe_refusal`,
+`pipeline_error`, `mcp_error`, `environment_error`. `mcp_error` and
+`environment_error` are split out from the old catch-all `pipeline_error`
+so sub-system availability can be read separately from agent reasoning
+failures; the sub-classification carried alongside is the MCP client's own
+`error_class`, not a second taxonomy.
+
+A run that did not end in `success` is still scored — on the metrics it can
+support. Its `error_rate`, `safe_refusal`, latency and cost are real
+measurements; the metrics that score an answer it never produced are marked
+`not_applicable` (`valid=False`) rather than scored zero, and the LLM judge
+is not invoked for them at all. Such a run therefore has **no aggregate
+score**: `aggregate_score` is `null`, not `0.0`, because its surviving
+metrics are a different set than a successful run's. `overall_aggregate` in
+a saved report is a mean over the successful cases only, with
+`n_cases_without_aggregate` recording how many were left out.
+
 ### Human-vs-judge calibration (eval v2)
 
 The harness rebuild above answers "does the pipeline work." A separate,

@@ -31,6 +31,7 @@ from src.graph.router import (
 )
 from src.mcp_client.fallback import SubSystemHardFailure, make_skipped_call_record
 from src.mcp_client.models import RetrievalTier
+from src.state import terminal_state as terminal_state_mod
 from src.state.graph_state import MAEDAState
 from src.tools import glossary
 from src.utils.logger import get_logger
@@ -578,6 +579,7 @@ async def connect_schema(state: MAEDAState) -> MAEDAState:
     if not sources:
         state["error"] = "No data source provided. Please upload a file or specify a data path."
         state["current_phase"] = "error"
+        state["terminal_detail"] = terminal_state_mod.DETAIL_NO_DATA_SOURCE
         return state
 
     source = sources[0]
@@ -755,6 +757,10 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
         state["error"] = f"Data quality profiling failed ({exc.error_class}): {exc}"
         state["current_phase"] = "error"
+        # E3 (附录 CU): carry fallback.py's own error_class across as
+        # `terminal_detail` -- handle_error_node maps it to mcp_error /
+        # environment_error. No second classification is performed here.
+        state["terminal_detail"] = exc.error_class
         return _trace(state, "data_connector", "connect_and_profile",
                       f"profile_dataset hard failure: {exc}")
     state["mcp_call_log"] = [*state.get("mcp_call_log", []), prof_log]
@@ -767,6 +773,7 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
     if fingerprint_error:
         state["error"] = fingerprint_error
         state["current_phase"] = "error"
+        state["terminal_detail"] = terminal_state_mod.DETAIL_SCOPE_FINGERPRINT_MISMATCH
         return _trace(state, "data_connector", "connect_and_profile", fingerprint_error)
     if report.critical_basis:
         _trace(
@@ -872,6 +879,10 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
         state["error"] = f"Data cleaning failed ({exc.error_class}): {exc}"
         state["current_phase"] = "error"
+        # E3 (附录 CU): carry fallback.py's own error_class across as
+        # `terminal_detail` -- handle_error_node maps it to mcp_error /
+        # environment_error. No second classification is performed here.
+        state["terminal_detail"] = exc.error_class
         return _trace(state, "data_connector", "connect_and_profile",
                       f"cleaning hard failure: {exc}")
 
@@ -882,6 +893,7 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
     if fingerprint_error:
         state["error"] = fingerprint_error
         state["current_phase"] = "error"
+        state["terminal_detail"] = terminal_state_mod.DETAIL_SCOPE_FINGERPRINT_MISMATCH
         return _trace(state, "data_connector", "connect_and_profile", fingerprint_error)
 
     # 附录 B.5: counts *completed* clean_dataset calls, incremented right
@@ -1023,6 +1035,10 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
         state["error"] = f"Re-profiling cleaned data failed ({exc.error_class}): {exc}"
         state["current_phase"] = "error"
+        # E3 (附录 CU): carry fallback.py's own error_class across as
+        # `terminal_detail` -- handle_error_node maps it to mcp_error /
+        # environment_error. No second classification is performed here.
+        state["terminal_detail"] = exc.error_class
         return _trace(state, "data_connector", "connect_and_profile",
                       f"re-profile hard failure: {exc}")
     state["mcp_call_log"] = [*state.get("mcp_call_log", []), prof2_log]
@@ -1039,6 +1055,7 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
     if fingerprint_error:
         state["error"] = fingerprint_error
         state["current_phase"] = "error"
+        state["terminal_detail"] = terminal_state_mod.DETAIL_SCOPE_FINGERPRINT_MISMATCH
         return _trace(state, "data_connector", "connect_and_profile", fingerprint_error)
     if report2.critical_basis:
         _trace(
@@ -1068,6 +1085,10 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
         state["mcp_call_log"] = [*state.get("mcp_call_log", []), exc.log]
         state["error"] = f"validate_quality failed ({exc.error_class}): {exc}"
         state["current_phase"] = "error"
+        # E3 (附录 CU): carry fallback.py's own error_class across as
+        # `terminal_detail` -- handle_error_node maps it to mcp_error /
+        # environment_error. No second classification is performed here.
+        state["terminal_detail"] = exc.error_class
         return _trace(state, "data_connector", "connect_and_profile",
                       f"validate_quality hard failure: {exc}")
     state["mcp_call_log"] = [*state.get("mcp_call_log", []), val_log]
@@ -1079,6 +1100,7 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
     if fingerprint_error:
         state["error"] = fingerprint_error
         state["current_phase"] = "error"
+        state["terminal_detail"] = terminal_state_mod.DETAIL_SCOPE_FINGERPRINT_MISMATCH
         return _trace(state, "data_connector", "connect_and_profile", fingerprint_error)
     if validation.critical_basis:
         _trace(
@@ -1416,12 +1438,43 @@ async def run_guardrails_node(state: MAEDAState) -> MAEDAState:
 
 
 async def run_eval_node(state: MAEDAState) -> MAEDAState:
-    """Phase 9: score the completed pipeline run against all eval metrics."""
+    """
+    Phase 9: score the completed pipeline run against all eval metrics.
+
+    E3 (附录 CU) changed two things here.
+
+    1. THIS NODE IS NOW ON THE FAILURE PATH TOO (src/graph/builder.py:
+       handle_error → run_eval → persist_run). Before E3 a failed run
+       skipped eval entirely, so `eval_scores` was NULL in runs.db for every
+       failure and 阶段 4 could not tell "the run failed" apart from "nobody
+       scored it". EvalRunner.score marks the metrics a failed run cannot
+       support as `not_applicable` WITHOUT calling the judge, so putting the
+       failure path through here costs nothing (see EvalRunner.score).
+
+       Consequently `current_phase` is only advanced to "complete" when the
+       run actually completed -- overwriting handle_error_node's "error"
+       here would erase the phase that every persisted failure row records.
+
+    2. EVAL FAILING MUST NOT TAKE THE RUN RECORD DOWN WITH IT. An exception
+       out of this node propagates out of graph.ainvoke, which skips
+       persist_run_node -- the whole decision_trace and mcp_call_log for that
+       run are lost, which is a strictly worse outcome than an unscored run.
+       Caught, classified into `eval_error`, and the pipeline continues to
+       persist_run.
+    """
     logger.info("Node: run_eval")
-    state["current_phase"] = "complete"
+    if not state.get("error"):
+        state["current_phase"] = "complete"
 
     runner = _get_eval_runner()
-    result = await runner.score(state, run_id=state.get("run_id"))
+    try:
+        result = await runner.score(state, run_id=state.get("run_id"))
+    except Exception as exc:
+        state["eval_error"] = f"{type(exc).__name__}: {exc}"
+        logger.error("Node: run_eval | eval itself failed: %s", state["eval_error"])
+        return _trace(state, "orchestrator", "run_eval",
+                      f"eval failed and was captured, run still persisted: {state['eval_error']}")
+
     state["eval_scores"] = {
         s.metric: {"score": s.score, "label": s.label, "reasoning": s.reasoning, "valid": s.valid}
         for s in result.scores
@@ -1431,6 +1484,20 @@ async def run_eval_node(state: MAEDAState) -> MAEDAState:
 
 
 def handle_error_node(state: MAEDAState) -> MAEDAState:
+    """
+    E3 (ECOSYSTEM_INTEGRATION_PLAN.md 执行顺序表轮次 5, 附录 CU): this node is
+    where a failed run gets its terminal classification, and it is the only
+    place that classification is *made* -- everything downstream reads the
+    stored value back through `resolve_terminal_state`.
+
+    Before E3 this node made a two-way judgment (safe_refusal vs
+    pipeline_error) and wrote it to `error_type`. It now makes the same
+    judgment once, in `resolve_terminal_state`, over five states, and
+    `error_type` becomes a projection of the result so the consumers frozen
+    against its original vocabulary (score_system_metrics, the runs.db
+    column, run_eval.py's crash list) keep reading exactly what they read
+    before.
+    """
     checks = state.get("guardrail_checks") or []
     # Reaching handle_error via route_after_guardrails' "fail" branch means the
     # guardrail correctly blocked an unsafe/ungrounded output after exhausting
@@ -1438,7 +1505,8 @@ def handle_error_node(state: MAEDAState) -> MAEDAState:
     # no data source, connection failure) is a genuine pipeline error. This
     # distinction is what eval's error_rate/safe_refusal metrics key off of.
     is_safe_refusal = bool(checks) and checks[-1].get("overall_verdict") == "fail"
-    state["error_type"] = "safe_refusal" if is_safe_refusal else "pipeline_error"
+    if is_safe_refusal:
+        state["terminal_detail"] = terminal_state_mod.DETAIL_GUARDRAIL_FAIL
 
     if not state.get("error"):
         if is_safe_refusal:
@@ -1447,10 +1515,20 @@ def handle_error_node(state: MAEDAState) -> MAEDAState:
         else:
             state["error"] = "Pipeline terminated due to unrecoverable error"
 
-    logger.error("Node: handle_error | error_type=%s | error=%s", state["error_type"], state.get("error"))
+    # `current_phase` must already say "error" before the gate runs: it is one
+    # of the two things resolve_terminal_state reads to tell a failure from a
+    # success, and a state that reached this node has failed by definition.
     state["current_phase"] = "error"
+    terminal, detail = terminal_state_mod.resolve_terminal_state(state)
+    state["terminal_state"] = terminal
+    state["terminal_detail"] = detail
+    state["error_type"] = terminal_state_mod.legacy_error_type(terminal)
+
+    logger.error("Node: handle_error | terminal_state=%s | detail=%s | error=%s",
+                 terminal, detail, state.get("error"))
     state = _trace(state, "orchestrator", "handle_error",
-                    f"{state['error_type']}: {state.get('error')}")
+                    f"terminal_state={terminal} detail={detail} "
+                    f"({state['error_type']}): {state.get('error')}")
     return state
 
 
@@ -1464,6 +1542,19 @@ def persist_run_node(state: MAEDAState) -> MAEDAState:
     Persistence failures must never break the pipeline the user is
     actually waiting on: caught and logged, not raised.
     """
+    # E3 (附录 CU): persist_run is the one node on EVERY path (both run_eval
+    # and handle_error reach it), which makes it the only place a
+    # `terminal_state` can be guaranteed to exist by the time the row is
+    # written. handle_error_node has already set it on every failure path;
+    # this fills in the success case, so the column is never NULL for a run
+    # written after E3 -- and a NULL terminal_state is therefore an
+    # unambiguous marker for a pre-E3 row (see legacy_error_type's docstring
+    # on why that matters for reading old `pipeline_error` values).
+    if not state.get("terminal_state"):
+        terminal, detail = terminal_state_mod.resolve_terminal_state(state)
+        state["terminal_state"] = terminal
+        state["terminal_detail"] = detail
+
     try:
         _get_run_store().save_run(state)
     except Exception as exc:

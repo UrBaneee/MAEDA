@@ -205,7 +205,21 @@ def test_single_trial_report_shape_is_unchanged(monkeypatch, tmp_path):
     # intentional addition to this otherwise-frozen shape -- run-level
     # three-state-switch config, not a new per-case dimension, so it earns
     # updating this lock rather than a --suite-flag-style rejection.
-    assert set(report.keys()) == {"timestamp", "n_cases", "overall_aggregate", "split", "cases", "arm"}
+    #
+    # E3 (执行顺序表轮次 5, 附录 CU) adds the second:
+    # "n_cases_without_aggregate". It is here for the same reason "arm" was
+    # -- it qualifies an existing top-level number rather than adding a new
+    # dimension. `overall_aggregate` used to be a mean over every case; E3
+    # makes it a mean over the cases that terminated in success, and without
+    # this key the change is invisible in the saved JSON (a shrinking
+    # denominator with nothing recording that it shrank is the failure shape
+    # 附录 CK.3 exists to catch). Additive: every existing consumer reads by
+    # key and is unaffected.
+    assert set(report.keys()) == {
+        "timestamp", "n_cases", "overall_aggregate", "n_cases_without_aggregate",
+        "split", "cases", "arm",
+    }
+    assert report["n_cases_without_aggregate"] == 0
     assert report["arm"] == {"cleaner_mode": "auto", "rag_mode": "auto", "mcp_strict_mode": "degraded"}
     assert report["n_cases"] == 2
     assert len(report["cases"]) == 2
