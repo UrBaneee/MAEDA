@@ -215,9 +215,14 @@ def test_single_trial_report_shape_is_unchanged(monkeypatch, tmp_path):
     # denominator with nothing recording that it shrank is the failure shape
     # 附录 CK.3 exists to catch). Additive: every existing consumer reads by
     # key and is unaffected.
+    #
+    # 冻结前必办 (15) (附录 DD.3) adds the third: "settings_snapshot". Same
+    # rule as the two above -- additive, read by key, and it records a value
+    # that already decided how the run behaved but was previously not
+    # written down anywhere in the report.
     assert set(report.keys()) == {
         "timestamp", "n_cases", "overall_aggregate", "n_cases_without_aggregate",
-        "split", "cases", "arm",
+        "split", "cases", "arm", "settings_snapshot",
     }
     assert report["n_cases_without_aggregate"] == 0
     assert report["arm"] == {"cleaner_mode": "auto", "rag_mode": "auto", "mcp_strict_mode": "degraded"}
@@ -348,3 +353,188 @@ def test_current_arm_reflects_settings(monkeypatch):
     assert run_eval._current_arm() == {
         "cleaner_mode": "force_off", "rag_mode": "force_on", "mcp_strict_mode": "strict",
     }
+
+
+# ─── 冻结前必办 (15) / 附录 DD.3: --split test refuses a non-"always" trigger ───
+
+class _MustNotBeBuilt:
+    """build_graph() stand-in that fails the test if the gate let the run
+    get as far as constructing the pipeline. `build_graph()` is the first
+    thing in main() that instantiates LLM clients, and every billable call
+    happens downstream of it -- so 'this was never called' is what
+    'fail fast before any billable action' means in practice."""
+
+    def __call__(self):
+        raise AssertionError(
+            "build_graph() was called on a --split test run whose "
+            "intent_refine_trigger was not 'always' -- the 附录 DD.3 gate "
+            "did not fail fast"
+        )
+
+
+def _run_main_capturing(monkeypatch, tmp_path, argv_tail, suite, graph_factory=None,
+                        suite_loader=None):
+    """Like _run_main_with_args, but lets the caller install loaders that
+    blow up instead of returning, so a test can assert they were never
+    reached rather than only inspecting the exit code."""
+    import run_eval
+
+    monkeypatch.setattr(run_eval, "load_golden_suite", suite_loader or (lambda: suite))
+    monkeypatch.setattr(run_eval, "build_graph", graph_factory or (lambda: _FakeGraph()))
+    monkeypatch.setattr(run_eval, "EvalRunner", lambda: _FakeEvalRunner())
+    monkeypatch.setattr(run_eval, "REPORT_DIR", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["run_eval.py", *argv_tail])
+    try:
+        asyncio.run(run_eval.main())
+    except SystemExit as exc:
+        return exc.code
+    return 0
+
+
+def test_test_split_is_refused_before_anything_is_built_or_loaded(monkeypatch, tmp_path, capsys):
+    """冻结前必办 (15) / 附录 DD.3. The claim under test is not "the
+    comparison is correct" -- it is that this command line stops before the
+    process can spend money on the holdout. So the graph builder and the
+    suite loader are both booby-trapped: reaching either one fails the test.
+    """
+    from src.config.settings import settings as _settings
+
+    def _must_not_load():
+        raise AssertionError("load_golden_suite() was reached -- gate did not fail fast")
+
+    monkeypatch.setattr(_settings, "intent_refine_trigger", "if_unresolved")
+    code = _run_main_capturing(
+        monkeypatch, tmp_path, ["--split", "test"], suite=[],
+        graph_factory=_MustNotBeBuilt(), suite_loader=_must_not_load,
+    )
+
+    assert code == 2
+    captured = capsys.readouterr()
+    err = captured.err
+    assert "intent_refine_trigger" in err          # names the variable
+    assert "'if_unresolved'" in err                # names its current value
+    assert "DD.3" in err                           # names the appendix
+    assert "MAEDA_INTENT_REFINE_TRIGGER=always" in err
+    # The reveal banner belongs to a run that is actually happening.
+    assert "HOLDOUT TEST SPLIT" not in captured.out
+    assert list(tmp_path.iterdir()) == [], "a refused run must write no report"
+
+
+def test_test_split_is_refused_for_any_non_always_value(monkeypatch, tmp_path):
+    """The gate keys on "is it 'always'", not on a blacklist of known-bad
+    values -- a misconfigured/typo'd value must be refused too, the same way
+    src/graph/router.py fails such a value safe rather than treating it as
+    'always'."""
+    from src.config.settings import settings as _settings
+
+    monkeypatch.setattr(_settings, "intent_refine_trigger", "Always")  # wrong case
+    code = _run_main_capturing(
+        monkeypatch, tmp_path, ["--split", "test"], suite=[], graph_factory=_MustNotBeBuilt(),
+    )
+    assert code == 2
+
+
+def test_test_split_runs_when_the_trigger_is_always(monkeypatch, tmp_path):
+    """The gate must refuse only the unsafe command, not the holdout run
+    itself -- otherwise it would block 硬约束 1's one reveal."""
+    from src.config.settings import settings as _settings
+
+    monkeypatch.setattr(_settings, "intent_refine_trigger", "always")
+    suite = [_make_case("T1", split="test")]
+    code = _run_main_with_args(monkeypatch, tmp_path, ["--split", "test"], suite)
+    assert code == 0
+    reports = list(tmp_path.glob("eval_*.json"))
+    assert len(reports) == 1
+    assert json.loads(reports[0].read_text())["split"] == "test"
+
+
+def test_dev_split_is_not_gated(monkeypatch, tmp_path):
+    """附录 DD.3 chose to gate `--split test` only. Dev runs (including the
+    σ_hetero measurement, 清单 (5)) must keep working under the default
+    trigger -- they are covered by the recorded snapshot below, not by a
+    refusal."""
+    from src.config.settings import settings as _settings
+
+    monkeypatch.setattr(_settings, "intent_refine_trigger", "if_unresolved")
+    code = _run_main_with_args(monkeypatch, tmp_path, ["--split", "dev"], [_make_case("A")])
+    assert code == 0
+    assert len(list(tmp_path.glob("eval_*.json"))) == 1
+
+
+def test_single_trial_report_records_the_parsed_intent_refine_trigger(monkeypatch, tmp_path):
+    """附录 DD.3's second half: the `--split test` gate cannot see a dev run,
+    so every run records the value it actually used. Asserted on the report
+    the real main() wrote, not on _settings_snapshot() in isolation."""
+    from src.config.settings import settings as _settings
+
+    monkeypatch.setattr(_settings, "intent_refine_trigger", "if_unresolved")
+    code = _run_main_with_args(monkeypatch, tmp_path, ["--split", "dev"], [_make_case("A")])
+    assert code == 0
+    report = json.loads(next(tmp_path.glob("eval_*.json")).read_text())
+    assert report["settings_snapshot"] == {"intent_refine_trigger": "if_unresolved"}
+    # It is deliberately NOT folded into "arm": these must be equal across
+    # arms, and calling them an arm dimension would suggest otherwise.
+    assert "intent_refine_trigger" not in report["arm"]
+
+
+def test_multi_trial_report_records_the_parsed_intent_refine_trigger(monkeypatch, tmp_path):
+    from src.config.settings import settings as _settings
+
+    monkeypatch.setattr(_settings, "intent_refine_trigger", "always")
+    code = _run_main_with_args(
+        monkeypatch, tmp_path, ["--split", "dev", "--trials", "2"], [_make_case("A")],
+    )
+    assert code == 0
+    report = json.loads(next(tmp_path.glob("eval_trials2_*.json")).read_text())
+    assert report["settings_snapshot"] == {"intent_refine_trigger": "always"}
+
+
+def test_noise_run_report_records_the_parsed_intent_refine_trigger(monkeypatch):
+    """scripts/measure_noise.py `full` is where σ_hetero is measured (清单
+    (5)) -- the exact run the `--split test` gate cannot reach. Its report
+    carries the same snapshot, so a noise floor taken under a different
+    trigger than the reveal is identifiable after the fact."""
+    import measure_noise
+    from src.config.settings import settings as _settings
+
+    monkeypatch.setattr(_settings, "intent_refine_trigger", "if_unresolved")
+    monkeypatch.setattr(measure_noise, "build_graph", lambda: _FakeGraph())
+    monkeypatch.setattr(measure_noise, "EvalRunner", lambda: _FakeEvalRunner())
+    report = asyncio.run(
+        measure_noise.run_full_mode([_make_case("A"), _make_case("B")], repeats=2, concurrency=1)
+    )
+    assert report["settings_snapshot"] == {"intent_refine_trigger": "if_unresolved"}
+
+
+def test_real_cli_refuses_test_split_end_to_end(tmp_path):
+    """The tests above monkeypatch `settings.intent_refine_trigger` directly,
+    which skips the step where `MAEDA_INTENT_REFINE_TRIGGER` is parsed into
+    that field -- so they cannot catch the gate being wired to a field the
+    documented env var does not feed. This runs the actual command line in a
+    subprocess with the actual environment variable and no API keys.
+
+    `--case __NONE__` is belt-and-braces: if this gate ever regresses, the
+    selected suite is empty, so the regression surfaces as a failing test
+    rather than as a real holdout run (硬约束 1 -- there is only one reveal
+    to lose)."""
+    import os
+    import subprocess
+
+    repo_root = Path(__file__).resolve().parents[2]
+    env = {
+        **os.environ,
+        "ANTHROPIC_API_KEY": "", "OPENAI_API_KEY": "",
+        "MAEDA_INTENT_REFINE_TRIGGER": "if_unresolved",
+    }
+    out_path = tmp_path / "must_not_exist.json"
+    proc = subprocess.run(
+        [sys.executable, "scripts/run_eval.py", "--split", "test",
+         "--case", "__NONE__", "--out", str(out_path)],
+        cwd=repo_root, env=env, capture_output=True, text=True, timeout=300,
+    )
+
+    assert proc.returncode == 2, f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+    assert "REFUSING to run --split test" in proc.stderr
+    assert "'if_unresolved'" in proc.stderr
+    assert not out_path.exists()
+    assert "HOLDOUT TEST SPLIT" not in proc.stdout

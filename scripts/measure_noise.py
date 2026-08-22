@@ -69,7 +69,7 @@ from src.state.graph_state import initial_state
 # Reuse scripts/run_eval.py's one-case runner rather than duplicating it.
 # Eval v2 Step 4 consolidated data-source wiring onto GoldenTestCase.data_source
 # (tests/eval/test_suite.json) so this no longer needs its own copy.
-from run_eval import run_one_case  # noqa: E402
+from run_eval import _settings_snapshot, run_one_case  # noqa: E402
 
 REPORT_DIR = Path("logs/noise_runs")
 JUDGE_CACHE_PATH = REPORT_DIR / "judge_fixed_states.json"
@@ -315,6 +315,13 @@ async def run_full_mode(cases: list[GoldenTestCase], repeats: int, concurrency: 
         "per_metric_summary": metric_summaries,
         "bootstrap_sanity_check": bootstrap_sanity,
         "trial_aggregates": [round(a, 4) for a in trial_aggregates],
+        # 冻结前必办 (15) / 附录 DD.3: this is THE run type the requirement
+        # was written for -- σ_hetero (and therefore k, 清单 (5)) is estimated
+        # here, on dev, where run_eval.py's `--split test` gate cannot reach.
+        # A noise floor measured under a different `intent_refine_trigger`
+        # than the reveal describes a different code path; without this key
+        # nothing in the saved report says which one it was.
+        "settings_snapshot": _settings_snapshot(),
         "trials_raw": trials,
     }
 

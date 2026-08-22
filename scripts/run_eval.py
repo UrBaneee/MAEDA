@@ -33,6 +33,12 @@ from src.state.graph_state import initial_state
 
 REPORT_DIR = Path("logs/eval_runs")
 
+#: 冻结前必办 (15) / 附录 DD.3. The value `settings.intent_refine_trigger`
+#: must carry for a `--split test` run to be allowed to start. It is not a
+#: default this script sets -- see the gate in main() for why forcing it
+#: was rejected in favour of refusing.
+REQUIRED_TEST_SPLIT_INTENT_REFINE_TRIGGER = "always"
+
 
 def _current_arm() -> dict:
     """
@@ -51,6 +57,26 @@ def _current_arm() -> dict:
         "rag_mode": settings.maeda_rag_mode,
         "mcp_strict_mode": settings.mcp_strict_mode,
     }
+
+
+def _settings_snapshot() -> dict:
+    """
+    冻结前必办 (15) / 附录 DD.3: the parsed value of settings that decide
+    which code path a run takes but are NOT arm dimensions -- kept out of
+    `report["arm"]` for exactly that reason (a reader must not conclude
+    these vary by arm; they are supposed to be identical across arms, and
+    this record is how a run where they were not is identified afterwards).
+
+    `intent_refine_trigger` is the first entry. The gate in main() refuses
+    a `--split test` run that does not carry "always", but that gate cannot
+    see a **dev** run -- and σ_hetero / k are estimated on dev (清单 (5)).
+    A dev noise estimate taken under "if_unresolved" while the reveal runs
+    under "always" describes a different code path than the one it is used
+    to qualify, and today nothing in a saved report says which one produced
+    it. What cannot be prevented must at least be identifiable afterwards
+    (same construction as 附录 CU.8(4), CX.6's `row_alignment`, DB.2(2)).
+    """
+    return {"intent_refine_trigger": settings.intent_refine_trigger}
 
 # Eval v2 Step 4: data source and data-mismatch status used to live here as
 # two separate hardcoded dicts (CASE_DATA_SOURCES, KNOWN_DATA_MISMATCH),
@@ -268,6 +294,39 @@ async def main():
     args = parser.parse_args()
 
     if args.split == "test":
+        # 冻结前必办 (15) / 附录 DD.3. 附录 DC.3 found this requirement lived
+        # only in settings.py's docstring and in the pre-registered command
+        # (docs/phase4_preregistration.md §1.2) -- nothing in scripts/ set or
+        # checked it. Forgetting the variable does not raise: the run
+        # completes and produces numbers, with some cases silently skipping
+        # the second intent parse. That is survivable on dev (rerun it); it
+        # is not survivable on the holdout, which gets exactly one reveal
+        # (硬约束 1). An unrepeatable mistake cannot be defended by
+        # remembering to type something.
+        #
+        # This REFUSES rather than forcing the value, per DD.3: forcing
+        # would make the same command line mean different things in
+        # different code versions (what 硬约束 7 objects to), and a
+        # pre-registration must record the command that actually produced
+        # the data. Refusing leaves the setting on the command line, so the
+        # pre-registered command IS the command that ran.
+        #
+        # Placed before the banner, before load_golden_suite(), before
+        # build_graph(): nothing billable, and nothing that reads a
+        # test-split case, has happened yet when this exits.
+        if settings.intent_refine_trigger != REQUIRED_TEST_SPLIT_INTENT_REFINE_TRIGGER:
+            print(
+                f"REFUSING to run --split test: settings.intent_refine_trigger is "
+                f"{settings.intent_refine_trigger!r}, and the holdout reveal requires "
+                f"{REQUIRED_TEST_SPLIT_INTENT_REFINE_TRIGGER!r} so every case takes the same "
+                f"refine path (附录 DD.3 / 冻结前必办 (15); "
+                f"docs/phase4_preregistration.md §1.2, §3.2).\n"
+                f"Nothing was run and nothing was billed. Re-issue the command with "
+                f"MAEDA_INTENT_REFINE_TRIGGER=always -- this script will not set it for you, "
+                f"because the pre-registered command must be the command that produced the data.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
         print("*** Running against the HOLDOUT TEST SPLIT. ***")
         print("*** This result should be recorded as an official reveal, not used to iterate. ***\n")
 
@@ -352,6 +411,8 @@ async def main():
             "n_cases_without_aggregate": n_no_aggregate,
             "split": args.split, "cases": rows,
             "arm": _current_arm(),
+            # 冻结前必办 (15) / 附录 DD.3 -- see _settings_snapshot().
+            "settings_snapshot": _settings_snapshot(),
         }
         out_path = Path(args.out) if args.out else REPORT_DIR / f"eval_{int(timestamp)}.json"
         out_path.write_text(json.dumps(report, indent=2, default=str))
@@ -382,6 +443,8 @@ async def main():
             "trials": args.trials, "concurrency": args.concurrency,
             "per_trial": trial_reports,
             "arm": _current_arm(),
+            # 冻结前必办 (15) / 附录 DD.3 -- see _settings_snapshot().
+            "settings_snapshot": _settings_snapshot(),
         }
         out_path = (
             Path(args.out) if args.out
