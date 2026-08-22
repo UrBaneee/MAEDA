@@ -6,28 +6,21 @@ Unlike tests/unit/test_phase9.py (which mocks the LLM to test the scoring
 discrimination ability: does it reliably score an obviously grounded,
 on-topic report high, and an obviously fabricated or off-topic one low?
 
-Requires a real API key for whichever provider settings.resolved_eval_provider
-resolves to — skipped automatically if none is configured, so it never
-blocks `pytest tests/unit/` or CI environments without credentials.
+This suite spends money. 附录 CR.2: a real API key is necessary but NOT
+sufficient — MAEDA_ALLOW_PAID_TESTS must also say so, or the suite skips.
+See tests/paid_calls.py for why "no key configured" was never a gate.
 
 Run explicitly with:
-    poetry run pytest tests/integration/test_eval_judge_calibration.py -v
+    MAEDA_ALLOW_PAID_TESTS=1 poetry run pytest tests/integration/test_eval_judge_calibration.py -v
 """
 import asyncio
 
 import pytest
 
-from src.config.settings import _looks_like_real_key, settings
 from src.eval.metrics import score_relevance_and_groundedness
+from tests.paid_calls import eval_judge_key_looks_real, requires_paid_calls
 
-pytestmark = pytest.mark.skipif(
-    not _looks_like_real_key(
-        settings.anthropic_api_key
-        if settings.resolved_eval_provider == "anthropic"
-        else settings.openai_api_key
-    ),
-    reason="no real API key configured for the resolved eval judge provider",
-)
+pytestmark = requires_paid_calls(eval_judge_key_looks_real())
 
 _QUERY = "What is total revenue by region?"
 _FINDINGS = [{
