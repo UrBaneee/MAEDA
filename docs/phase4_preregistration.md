@@ -148,8 +148,8 @@ does route frozen probe queries through a rag server driven from MAEDA, then:
   `environment:` block, into `.env.example`, or into any file that is committed
   or persists after the run.
 
-Reason (附录 DB.3): rag's `docker-compose.yml:15-16` and `:47-48` give both
-services `env_file: - .env`, so one line in `.env` becomes a permission compose
+Reason (附录 DB.3): rag's `docker-compose.yml` gives both the `studio` and
+`mcp` services `env_file: - .env`, so one line in `.env` becomes a permission compose
 re-applies on every start, and several rag entry points call
 `load_dotenv(override=False)`. **硬约束 1 says "exactly once", not "the first
 time".** A one-off authorisation that lands in a long-lived file stops being
@@ -242,10 +242,18 @@ is how a discipline breach gets retroactively approved. It is:
    hit rate, no pass/fail to compute. What was seen is which 5 chunks BM25
    returned for a query that has no correct answer.
 2. **Neither conclusion drawn that round depends on the observed data.** Both
-   are properties read out of source and true for any query: `min_results=1`
-   never returns an empty set (`query_pipeline.py:358`), and `final_score` is
-   identically `RRF(rank)` with no reranker (`rrf_fusion.py:76`). **A conclusion
-   that is invariant under the observation received no information from it.**
+   are properties read out of source and true for any query: `final_score` is
+   identically `RRF(rank)` with no reranker (the `1.0 / (k + rank)` accumulation
+   in `RRFFusion`), and the language filter applied after fusion
+   (`_language_filter(..., min_results=1)`) cannot empty a non-empty candidate
+   list. State the second one precisely: it is **not** a guarantee that retrieval
+   never returns an empty set — that filter is a no-op for non-CJK queries, and
+   its contract is `length >= min(min_results, len(candidates))`. What actually
+   made the observed query return something is that the index is non-empty, not
+   that fallback. 附录 CP.2's adjudication does not rest on it either way:
+   point 1 — the event has no corpus and no `expected_sources`, so no quantity
+   comparable to ground truth exists — is what carries it. **A conclusion that is
+   invariant under the observation received no information from it.**
 3. **No parameter, threshold, prompt, or criterion was changed because of it.**
    Every commit in all three repositories after 附录 CJ was checked; none
    relates to that event.
@@ -428,7 +436,8 @@ modified). Effects to pre-register:
   `row_alignment` key** was produced by the pre-fix code path; its
   `rows_modified` / `cells_changed` are inflated on row-removing steps and must
   not be compared with post-fix numbers. `row_alignment` (and `rows_compared`)
-  are additive keys added by the fix (`mcp_server/tools/generate_diff.py:195-196`).
+  are additive keys added by the fix, in `_build_changes()` (cleaner repo,
+  `mcp_server/tools/generate_diff.py`).
 - **Correction to 附录 CX.6's phrasing.** CX.6 located the stale artefacts in
   "`logs/`". Verified 2026-08-22: MAEDA's `logs/` contains **no diff files at
   all** (`eval_runs/`, `noise_runs/`, `replay_cache/`, `runs.db`). The pre-fix
@@ -489,10 +498,23 @@ remedies is ruled out before someone proposes it mid-experiment.
 
 **#1 — On `unexplained` events, the hallucination rate measures the generation
 layer. There is no "correct retrieval behaviour" to measure at that layer.**
-Such events have no corpus by design, and `min_results=1` guarantees a non-empty
-result set, so retrieval will always return something. This is a property of the
+Such events have no corpus by design and an empty `expected_sources`, so no
+quantity comparable to ground truth exists at that layer. Retrieval will still
+return something, but state the reason precisely: it is because the index being
+queried is non-empty, and **not** because of the `min_results=1` fallback in the
+language filter applied after fusion (`_language_filter` in the rag query
+pipeline). That filter is a no-op for non-CJK queries, and its contract is only
+`length >= min(min_results, len(candidates))`: it cannot empty a non-empty
+candidate list, and it cannot fill an empty one. This is a property of the
 design, not a defect, and the retrieval layer must not be scored on these
 events.
+
+> Correction, 2026-08-22: the original wording of this paragraph attributed the
+> non-empty result set to `min_results=1`. That attribution was wrong and is
+> withdrawn; the premise itself is unchanged, because it never depended on that
+> mechanism. Authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md
+> 附录 DH.3 (same error, same origin as the §1.6 correction in 附录 DG.2);
+> transcribed verbatim.
 
 **#2 — "Have MAEDA decide whether to answer based on the retrieval score" is
 not implementable under the current contract, and is ruled out for 阶段 4.**
@@ -617,9 +639,9 @@ on the cleaner arm of experiment 1.
 
 | 冻结前必办 | Written here? |
 |---|---|
-| (1) CP.2 prior-observation disclosure | **Yes** — §1.6(text from 附录 DE.2)|
+| (1) CP.2 prior-observation disclosure | **Yes** — §1.6(text from 附录 DE.2; point 2 corrected per 附录 DG.2, 冻结前必办 (17)) |
 | (2) split guard sunk below every entry point | Closed in the rag repo (附录 CZ/DB); its **boundary** is stated in §1.3 |
-| (3) CP.5 four clauses | **Yes** — #2/#4 在 §4,#1/#3 在 §4.1(DE.3) |
+| (3) CP.5 four clauses | **Yes** — #2/#4 在 §4,#1/#3 在 §4.1(DE.3; premise #1 corrected per 附录 DH.3, 冻结前必办 (17)) |
 | (4) CM.7 on-arm tier | **No — user decision pending.** §0 placeholder, no default |
 | (5) `k` | **No** — candidate only, §0 |
 | (6) behaviour changes | **Yes** — §3 (CQ.4 ×2, CT.5, CX.6) |
