@@ -48,6 +48,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -73,6 +74,44 @@ from run_eval import _settings_snapshot, run_one_case  # noqa: E402
 
 REPORT_DIR = Path("logs/noise_runs")
 JUDGE_CACHE_PATH = REPORT_DIR / "judge_fixed_states.json"
+
+#: 冻结前必办 (16) / 附录 DG.3, DH.5. `full --split test` or `--split all`
+#: has no legitimate use in 阶段 4 -- σ_hetero and k (清单 (5)) are estimated
+#: on `--split dev` (the default), which this gate never touches -- so
+#: reaching it can only be a mistake, and the cost of that mistake is
+#: spending 硬约束 1's one-time holdout reveal on a routine noise
+#: measurement instead of the actual reveal. CC.1 (附录 CC.1/CB.2.5,
+#: `warn_if_test_split_involved` below) already turned the *default* case
+#: selection safe; this refuses the two flag values that opt back into
+#: touching the holdout, rather than only warning about them.
+#:
+#: The escape hatch is declaration-style and reads the process environment
+#: ONLY -- never `settings`/`.env`/`.env.example`. `src/config/settings.py`
+#: loads `.env` for its own fields, and 附录 DB.3 records why that matters
+#: here: rag's `docker-compose.yml` gives both services
+#: `env_file: - .env`, so one line written there becomes a standing,
+#: silent permission that outlives the run it was meant for -- 硬约束 1
+#: says "exactly once", not "the first time". Same reasoning, same shape
+#: as `MAEDA_ALLOW_PAID_TESTS` (tests/paid_calls.py) -- reused here by
+#: pattern, not by import, because that module lives under tests/ and this
+#: is production script code.
+ALLOW_TEST_SPLIT_NOISE_MEASUREMENT_ENV = "MAEDA_ALLOW_TEST_SPLIT_NOISE_MEASUREMENT"
+
+#: Accepted affirmative values -- same set as tests/paid_calls.py's
+#: _TRUTHY, so the two declaration-style gates in this codebase don't
+#: quietly diverge on what "yes" means.
+_ALLOW_TEST_SPLIT_TRUTHY = frozenset({"1", "true", "yes", "on"})
+
+
+def test_split_noise_measurement_opted_in(env: dict | None = None) -> bool:
+    """True only if the process environment carries an affirmative,
+    per-invocation opt-in. Never reads `settings` -- see the constant's
+    docstring above for why a Settings/.env-backed field would defeat the
+    point of a declaration-style gate."""
+    raw = (os.environ if env is None else env).get(
+        ALLOW_TEST_SPLIT_NOISE_MEASUREMENT_ENV, "",
+    )
+    return raw.strip().casefold() in _ALLOW_TEST_SPLIT_TRUTHY
 
 # Default fixed-state cases for judge-noise mode: one per query_type plus
 # DG03, the false-premise case ("North is underperforming" when it's
@@ -453,6 +492,37 @@ async def main():
     p_full.add_argument("--concurrency", type=int, default=2)
 
     args = parser.parse_args()
+
+    if args.mode == "full" and args.split in ("test", "all"):
+        # 冻结前必办 (16) / 附录 DG.3, DH.5. Before load_golden_suite(),
+        # before REPORT_DIR.mkdir(), before build_graph() -- nothing
+        # billable, and nothing that even touches the case suite, has
+        # happened yet when this exits. Matches the shape of (15)
+        # (scripts/run_eval.py, commit ba8c175): refuse, don't warn;
+        # name the variable, its value, and the pre-registration section;
+        # say explicitly that nothing was billed.
+        if not test_split_noise_measurement_opted_in():
+            print(
+                f"REFUSING to run `measure_noise.py full --split {args.split}`: "
+                f"in 阶段 4's current plan, a `full`-mode noise measurement has "
+                f"no legitimate reason to touch the HOLDOUT TEST SPLIT -- "
+                f"σ_hetero and k (清单 (5)) are estimated on `--split dev` (the "
+                f"default), which this gate does not touch. Reaching test/all "
+                f"here can only be a mistake, and the cost of that mistake is "
+                f"spending 硬约束 1's one-time holdout reveal on a routine "
+                f"noise measurement instead of the actual reveal "
+                f"(附录 DG.3 / DH.5; 冻结前必办 (16); "
+                f"docs/phase4_preregistration.md §1.2, §3.2).\n"
+                f"Nothing was run and nothing was billed. If this really is an "
+                f"intentional, predetermined action, set "
+                f"{ALLOW_TEST_SPLIT_NOISE_MEASUREMENT_ENV}=1 in the process "
+                f"environment (NOT in .env or .env.example -- 附录 DB.3 -- a "
+                f"standing opt-in there would become a silent, permanent "
+                f"permission) and re-issue this exact command.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     ts = int(time.time())
 
