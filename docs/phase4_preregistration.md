@@ -37,8 +37,31 @@ Two experiments, both defined in `ECOSYSTEM_INTEGRATION_PLAN.md` 阶段 4:
 
 | Open item | Waiting on | Rule |
 |---|---|---|
-| 实验 1 RAG on-arm retrieval tier — (a) real embeddings / `hybrid`, or (b) declared `bm25_only` | **CM.7 — user decision.** lead recommends (a) (附录 CN.5), with 附录 CP.5's "report corpus-backed and corpus-free events separately" as an added condition | **No default may be written here.** `settings.maeda_rag_expected_retrieval_mode` defaults to `"hybrid"` (`src/config/settings.py:153`), and that default must not be allowed to become the answer by omission |
 | Number of paired trials `k` at the reveal | σ_hetero measured on the dev split; k=5 is a candidate only (附录 CA/CC) | Candidate draft, not a pre-registered value |
+
+**Closed:**
+
+**实验 1 RAG on-arm retrieval tier — decided.** The on-arm uses **hybrid
+retrieval** (vector + BM25), the `hybrid` tier reached on the established
+`docker-compose` path (§1.2). `MAEDA_RAG_EXPECTED_RETRIEVAL_MODE=bm25_only` is
+**not** set.
+
+- **Provenance**: this value comes from a **user adjudication dated
+  2026-08-22** (`ECOSYSTEM_INTEGRATION_PLAN.md` 附录 DG.4, user's own words
+  「做 a 没有问题」) — it is **not** a default written in by omission.
+  `settings.maeda_rag_expected_retrieval_mode` happens to default to
+  `"hybrid"` as well (`src/config/settings.py:153`), so the adjudicated value
+  and the default coincide; that coincidence is exactly why this provenance
+  line has to be written down explicitly, per the "no default may be written
+  here" rule this table already carries.
+- **Basis**: 附录 AL.3's measured retrieval-tier gap on the dev split —
+  BM25-only Recall@5 **0.7083** vs hybrid **0.9444**, and 2 of the 12 dev
+  probe queries were not retrieved at all under BM25-only (cross-language
+  term mismatch). 硬约束 1 gives one reveal; it should not be spent on a tier
+  already known to trail by this much and that is not the shipped
+  configuration.
+- **Attached condition** (附录 CP.5 #4): corpus-backed and corpus-free events
+  must be reported separately in the 阶段 4 report; no combined total score.
 
 ---
 
@@ -68,9 +91,9 @@ poetry run python scripts/run_eval.py --split test --trials <k>
 - `--split` defaults to `dev`; `test` must be typed (`scripts/run_eval.py:251`)
   and prints `*** Running against the HOLDOUT TEST SPLIT. ***` (`:330`).
 - The rag MCP server is a **separate process** reached over streamable-http
-  (`settings.rag_server_mcp_url`, default `http://localhost:8002`;
-  `docker-compose.yml:26` sets `http://rag-server:8002`). MAEDA does not start
-  it in-process and does not pass it any reveal declaration.
+  (`settings.rag_server_mcp_url`, default `http://localhost:8002`; **MAEDA's
+  own** `docker-compose.yml:26` sets `http://rag-server:8002`). MAEDA does not
+  start it in-process and does not pass it any reveal declaration.
 - `MAEDA_INTENT_REFINE_TRIGGER=always` is **required on the command line**, see
   §3.2. Nothing in `scripts/run_eval.py` sets it, and nothing will: as of
   冻结前必办 (15) / 附录 DD.3 the script **refuses** a `--split test` run whose
@@ -642,7 +665,7 @@ on the cleaner arm of experiment 1.
 | (1) CP.2 prior-observation disclosure | **Yes** — §1.6(text from 附录 DE.2; point 2 corrected per 附录 DG.2, 冻结前必办 (17)) |
 | (2) split guard sunk below every entry point | Closed in the rag repo (附录 CZ/DB); its **boundary** is stated in §1.3 |
 | (3) CP.5 four clauses | **Yes** — #2/#4 在 §4,#1/#3 在 §4.1(DE.3; premise #1 corrected per 附录 DH.3, 冻结前必办 (17)) |
-| (4) CM.7 on-arm tier | **No — user decision pending.** §0 placeholder, no default |
+| (4) CM.7 on-arm tier | **Yes** — §0 "Closed" (user adjudication 2026-08-22, 附录 DG.4/DJ.4, 冻结前必办 (19)) |
 | (5) `k` | **No** — candidate only, §0 |
 | (6) behaviour changes | **Yes** — §3 (CQ.4 ×2, CT.5, CX.6) |
 | (7) CQ.0 disclosure | **Yes** — §5.1(DE.4) |
