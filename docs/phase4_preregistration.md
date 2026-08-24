@@ -250,7 +250,7 @@ with the disclosure in §1.7: 附录 CP.2 recorded "7 query records, timestamp
 2026-08-18 19:40:07" — 7 distinct queries, timestamp taken from the later end of
 the batch.
 
-**Result: apart from the single occasion disclosed in §1.6, no test-split probe
+**Result: apart from the single occasion disclosed in §1.7, no test-split probe
 query has ever been executed.** This changes the evidential status of that
 disclosure: it was previously a self-report accepted by the lead, and is now a
 statement checked against every trace row on disk.
@@ -822,6 +822,127 @@ on the cleaner arm of experiment 1.
 | (12) CS.6 reading traps | **Yes** — §4.2(DE.6) |
 | (14) CU.8 / CV.6 five items | **Yes** — §4 |
 | (15) `--split test` refuses a non-`always` `intent_refine_trigger` (附录 DD.3) | **Yes** — implemented in `scripts/run_eval.py`; stated in §1.2 and §3.2. **Now targets a retired holdout** (§1.6) — still mechanically active (protects the `test` label), but see (21) |
-| (20) part 2 — pre-registration holdout identity rebuild (附录 DU.3/DW) | **Partially done.** §1.6 rewritten in full (附录 DW.3); §1.1 rewritten in full as a three-set table (附录 DW.4); §1.2 (A) marked SUSPENDED with the retired command retained as record only, (B) untouched (附录 DW.5); §0 `k` row rewritten, N row added, arm-count/硬约束-1 "Closed" block appended (附录 DW.6). **Still open, genuinely, not just unwritten**: the new MAEDA holdout's size N (blocked on σ_hetero, 清单 (5) — 附录 DV: dev-split pilot completed 2026-08-23 but measured `repeats=1`, so σ_hetero was never obtained) and the new reveal command for §1.2 (A) (blocked on 清单 (21)'s labelling decision). Both markers are left as **NOT YET DETERMINED** / **NOT YET WRITTEN** deliberately — they are unresolved facts, not missing prose. |
+| (20) part 2 — pre-registration holdout identity rebuild (附录 DU.3/DW) | **Partially done.** §1.6 rewritten in full (附录 DW.3); §1.1 rewritten in full as a three-set table (附录 DW.4); §1.2 (A) marked SUSPENDED with the retired command retained as record only, (B) untouched (附录 DW.5); §0 `k` row rewritten, N row added, arm-count/硬约束-1 "Closed" block appended (附录 DW.6). **Still open, genuinely, not just unwritten**: the new MAEDA holdout's size N (blocked on σ_hetero, 清单 (5) — 附录 DV: dev-split pilot completed 2026-08-23 but measured `repeats=1`, so σ_hetero was never obtained) and the new reveal command for §1.2 (A) (blocked on 清单 (21)'s labelling decision). Both markers are left as **NOT YET DETERMINED** / **NOT YET WRITTEN** deliberately — they are unresolved facts, not missing prose. §1.7 has restored the CP.2 disclosure that 附录 DW.3 had deleted from this file, so the gap that this row's earlier phrasing implicitly left open is repaired. |
 | (21) new holdout label vs. guard consistency (附录 DU.4) | **Not started.** If the new MAEDA holdout reuses `split == "test"`, gates (15) and (16) continue to protect it unchanged; if it is labelled differently, both gates go silently dead (§1.2 (A) annotation, 附录 DW.5) and must be updated together with a test proving the new label is still caught (判据 CK.6). |
-| (22) 实验 1/2 五臂的十组两两比较清单 (附录 DW.6(3)(ii)) | **Not started.** §0's "Closed" arm-count block (附录 DW.6) states the rule — the set of comparisons must be fixed before any result is seen — but does not itself list which of the ten pairwise comparisons will actually be made. That list is owed to 清单 (22), assigned to lead to draft with user confirmation, and is not present anywhere in this file yet. |
+| (22) pre-registered comparisons and decision rules (附录 DW.6(3)(ii), EB, EC.3, ED.2) | **Yes** — §7. Arms, the three confirmatory hypotheses (H1/H2/H3), the routing-accuracy analysis, sample-eligibility fields, stratification rule, and multiplicity correction are all written. **7.6's decision rule is conditional on N**, the new MAEDA holdout's size, **which is not yet determined** (blocked on σ_hetero, 清单 (5)) — if N comes in materially smaller than the retired holdout's 41, 7.6 must be recomputed rather than carried over as written. |
+
+---
+
+## 7. Pre-registered comparisons and decision rules (清单 (22))
+
+**Fixed before any result from the new holdout is seen.** 附录 AP.4 records a
+real run in which 9 of 28 pairwise comparisons came out falsely significant
+against a calibrated rate of 1/28. Five arms admit ten pairwise comparisons, and
+each case yields **twelve** metrics (`answer_relevance`, `groundedness`,
+`factual_accuracy`, `intent_accuracy`, `tool_selection`, `step_success_rate`,
+`chart_appropriateness`, `token_cost`, `retry_count`, `error_rate`,
+`safe_refusal`, `total_latency`) plus a composite `aggregate_score`. Unconstrained
+that is 120 tests before stratification, at which scale "something came out
+significant" is a mathematical certainty rather than a finding. **Each
+confirmatory hypothesis below is therefore bound to exactly one primary metric,
+and everything else is descriptive.**
+
+### 7.1 Arms
+
+| Label | `cleaner_mode` | `rag_mode` | Role |
+|---|---|---|---|
+| **B** | `force_off` | `force_off` | shared baseline |
+| **C** | `force_on` | `force_off` | 实验 1 cleaner arm |
+| **R** | `force_off` | `force_on` | 实验 1 RAG arm |
+| **CR** | `force_on` | `force_on` | interaction cell |
+| **A** | `auto` | `auto` | 实验 2 |
+
+### 7.2 Confirmatory hypotheses — three, and only three
+
+| | Test | Primary metric | Sample |
+|---|---|---|---|
+| **H1** | `C − B` — cleaner net gain | **`factual_accuracy`** | cases with `cleaning_relevant == true` |
+| **H2** | `R − B` — RAG net gain | **`groundedness`** | cases with `corpus_backed == true` |
+| **H3** | `(CR − R) − (C − B)` — interaction | **`factual_accuracy`** | cases with `cleaning_relevant == true` |
+
+The two subsystems are bound to **different** primary metrics deliberately. The
+cleaner's claim is that dirty data produces wrong answers and cleaning fixes
+them, which `factual_accuracy` measures against ground truth; RAG's claim is
+about attribution and hallucination, which `groundedness` measures. A single
+composite would dilute both. **H3 is a contrast, not two pairwise comparisons:
+it is one test.**
+
+### 7.3 实验 2's primary analysis is not a pairwise comparison
+
+Arm A's result is the **precision / recall / confusion matrix of its routing
+decisions against the labelled "should have fired" ground truth**, reported in
+its own table. `fallback` is classified separately and is never counted as
+`force_off`. **实验 2 does not consume any of the confirmatory budget in 7.2.**
+
+### 7.4 Sample eligibility — fixed at case-authoring time, never recomputed
+
+Both fields are written when the case is authored, from frozen inputs, **without
+running the system on the case**:
+
+- **`cleaning_relevant`** — determined by a deterministic script from the frozen
+  `data/demo/` files: does this case's data slice contain at least one injected
+  defect class (missing revenue, negative revenue, outliers)?
+- **`event_id`** and the derived **`corpus_backed`** — the case is explicitly
+  linked at authoring time to an event in the frozen `event_script.yaml`, or
+  declared unlinked; `corpus_backed` follows from that event's `corpus_evidence`
+  / `event_type`.
+
+Both are frozen with this pre-registration and are **not recomputed at reveal
+time**.
+
+**A deliberate trade-off, stated rather than hidden.** `cleaning_relevant` is
+defined by **whether the defect is present in the data**, not by **whether the
+cleaner actually acted**. These are not equivalent: a case whose data is dirty
+but whose cleaner criteria do not fire stays in H1's sample and shows up in arm C
+as "cleaning did not help". This is intentional for two reasons. Defining
+eligibility by whether the cleaner acted would require running the cleaner on
+holdout cases before the reveal — which is itself an observation of the holdout,
+and would burn it (附录 EC.1). It would also be **selection on a post-treatment
+variable**, which is a bias in its own right. Defining it by a data property
+fixes the sample before treatment assignment. The cost is that H1's effect size
+is diluted by "should have fired but did not" cases — **and that is precisely
+what 实验 2 measures; it must not be quietly removed from 实验 1's sample.**
+
+### 7.5 Stratified reporting is not stratified testing
+
+附录 CP.5 #4 requires corpus-backed and corpus-free events to be reported
+separately. **Reporting and testing are separated here deliberately**, because
+folding strata into the confirmatory set silently doubles it:
+
+- **H2's corpus restriction is a sample definition, not a stratified test.**
+- **H1 and H3 are run on all eligible cases and are not stratified for testing.**
+  Stratified figures are reported and labelled descriptive.
+- **Any stratified comparison not listed in 7.2 is exploratory.**
+
+### 7.6 Multiplicity and the decision rule
+
+- **Three confirmatory tests.** Bonferroni: α = 0.05 / 3 ≈ 0.0167, i.e. report
+  **98.3% paired bootstrap confidence intervals** using the project's existing
+  `paired_bootstrap_ci`.
+- **Directions declared in advance**: H1 and H2 are expected positive; H3 is
+  two-sided with no expected direction.
+- **"The subsystem is worth it" requires BOTH**: the interval excludes zero,
+  **and** the point estimate exceeds the project's standing noise floor of
+  **0.028** (附录 CA). Significance alone is not sufficient: 附录 CA's MDE at
+  k = 5 is ≈ 0.020, **below** the noise floor, so a statistically significant
+  difference can be one that is practically indistinguishable from noise.
+- **Everything else is descriptive**: the other seven pairwise comparisons and
+  the other ten metrics are reported with values and intervals, carry **no**
+  significance claims, support **no** conclusion, and are labelled `exploratory`
+  in the report.
+- **Cost and reliability metrics** (`token_cost`, `total_latency`,
+  `retry_count`, `error_rate`) are always reported in their own table and are
+  never combined with quality metrics.
+
+### 7.7 What this section does not solve
+
+- It cannot prevent the primary metrics being changed after the fact. Its only
+  defence is that it is frozen before the reveal and that the frozen version is
+  traceable.
+- **The decision rule in 7.6 assumes the new holdout's size N supports 附录 CA's
+  k and MDE derivation. N is NOT YET DETERMINED** (清单 (5); σ_hetero was never
+  obtained — 附录 DV). **If N turns out materially smaller than the retired
+  holdout's 41, 7.6 must be recomputed rather than carried over.**
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 ED.2;
+> transcribed verbatim.
