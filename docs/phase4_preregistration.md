@@ -246,7 +246,7 @@ in the rag repository — `data/**/*.db` plus `rag/app/studio/**/*.db`, 14 files
 Pulling the whole `19:39:00–19:41:00` window gives 21 rows = 7 distinct queries
 × 3 run types (`query` / `query_pre_rerank` / `query_complete`), of which
 exactly 2 are frozen test-split probe queries. That reconciles line-for-line
-with the disclosure in §1.6: 附录 CP.2 recorded "7 query records, timestamp
+with the disclosure in §1.7: 附录 CP.2 recorded "7 query records, timestamp
 2026-08-18 19:40:07" — 7 distinct queries, timestamp taken from the later end of
 the batch.
 
@@ -368,6 +368,75 @@ reading degenerates into "burn, re-draw, repeat, report the best" — the same
 overfitting the constraint exists to prevent, at a slower cadence.
 
 > Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DW.3; transcribed verbatim.
+
+### 1.7 The TB5 retrieval holdout: one prior observation, and why its reveal is still unspent
+
+This section holds material that was §1.6's entire content until 附录 DW.3
+replaced §1.6 to disclose the MAEDA holdout burn. It is **about the other
+holdout** (§1.1, row 3) and is kept here because §1.1 and §1.6 both assert that
+the TB5 reveal is unspent, and this is the evidence for that assertion. Its
+removal without a new home was a drafting error by the orchestrator, recorded in
+附录 DY.
+
+**One prior observation of the TB5 retrieval holdout has occurred. It is
+disclosed here in full rather than assessed as harmless by the parties
+involved** (冻结前必办 (1), 附录 CO.0 / CP.2).
+
+| | |
+|---|---|
+| When | 2026-08-18, trace rows timestamped 19:39:51–19:40:07 |
+| What was observed | the 2 `probe_queries` of `EVT-2024-03-SOUTH-UNITS-SPIKE`, an event whose `split` is `test` |
+| Retrieval tier | BM25-only |
+| What was seen | the top-5 chunks and their scores |
+| Who | rag-owner, during the 附录 CJ.3 BM25-only verification |
+| How it happened | the probe script read `event_script.yaml`'s `probe_queries` directly; at that time the reveal guard was mounted only on `rag.cli.eval`, so this path did not pass through it (附录 CP.4) |
+
+**It was self-reported.** No external check produced it: the rag-owner went
+looking through SQLite timestamps and disclosed it unprompted, having already
+narrowed its own scope, and stated explicitly that it should count against the
+reveal-discipline record rather than be quietly cancelled by that narrowing.
+
+**Adjudication (附录 CP.2): this does not consume the TB5 holdout's single
+reveal.** The reasoning is not "the damage was small" — assessing damage after
+the fact is how a discipline breach gets retroactively approved. It is:
+
+1. **No quantity comparable to ground truth was produced.** That event has no
+   corpus by design and an empty `expected_sources`, so there is no recall, no
+   hit rate, no pass/fail to compute. What was seen is which 5 chunks BM25
+   returned for a query that has no correct answer.
+2. **Neither conclusion drawn that round depends on the observed data.** Both
+   are properties read out of source and true for any query: `final_score` is
+   identically `RRF(rank)` with no reranker (the `1.0 / (k + rank)` accumulation
+   in `RRFFusion`), and the language filter applied after fusion
+   (`_language_filter(..., min_results=1)`) cannot empty a non-empty candidate
+   list. State the second one precisely: it is **not** a guarantee that retrieval
+   never returns an empty set — that filter is a no-op for non-CJK queries, and
+   its contract is `length >= min(min_results, len(candidates))`. What actually
+   made the observed query return something is that the index is non-empty, not
+   that fallback. 附录 CP.2's adjudication does not rest on it either way:
+   point 1 — the event has no corpus and no `expected_sources`, so no quantity
+   comparable to ground truth exists — is what carries it. **A conclusion that is
+   invariant under the observation received no information from it.**
+3. **No parameter, threshold, prompt, or criterion was changed because of it.**
+   Every commit in all three repositories after 附录 CJ was checked; none
+   relates to that event.
+
+**Independently verified 2026-08-22** by enumerating all 22,387 trace rows in
+the rag repository (§1.5): **no test-split probe query has ever been executed
+apart from this one occasion.** Read §1.5's two limits alongside that, and read
+the scope of that sentence precisely — **it is a statement about the TB5
+retrieval holdout only.** An earlier version of this text said "there is no
+other" without that qualifier, and was thereby read as covering the MAEDA
+holdout, which §1.5 never examined. That error is what §1.6 now discloses; the
+qualifier here is the correction (附录 DN / DP).
+
+**No claim of harmlessness is being made here.** The reader is given the time,
+the object, the content, and the falsifiable assertion in point 3, and may draw
+their own conclusion.
+
+> Table, adjudication and points 1–3 authored by the orchestrator in
+> ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE, restored and scope-corrected in 附录 DY.2;
+> transcribed verbatim.
 
 ---
 
@@ -740,7 +809,7 @@ on the cleaner arm of experiment 1.
 
 | 冻结前必办 | Written here? |
 |---|---|
-| (1) CP.2 prior-observation disclosure | **Superseded, not currently written anywhere in this file.** The disclosure table (rag-owner's 2026-08-18 BM25-only observation of `EVT-2024-03-SOUTH-UNITS-SPIKE`, and the CP.2 adjudication that it did not consume 硬约束 1) used to be §1.6's entire content; §1.6 was replaced whole-cloth by 附录 DW.3 (冻结前必办 (20) 第 2 件) to disclose the MAEDA holdout burn instead, and DW.3 did not provide a new home for the CP.2 material. **§1.5 still says "this reconciles line-for-line with the disclosure in §1.6"** (§1.5, the paragraph after the enumeration table) and that pointer is now dangling — §1.6 no longer contains any such disclosure. Not fixed by this baton: 附录 DW gave no instruction to touch §1.5, and inventing a new location was outside the transcription authorized here. Flagged to lead, not resolved. |
+| (1) CP.2 prior-observation disclosure | **Yes** — §1.7(restored and scope-corrected per 附录 DY.2;原文出自 附录 DE) |
 | (2) split guard sunk below every entry point | Closed in the rag repo (附录 CZ/DB); its **boundary** is stated in §1.3 |
 | (3) CP.5 four clauses | **Yes** — #2/#4 在 §4,#1/#3 在 §4.1(DE.3; premise #1 corrected per 附录 DH.3, 冻结前必办 (17)) |
 | (4) CM.7 on-arm tier | **Yes** — §0 "Closed" (user adjudication 2026-08-22, 附录 DG.4/DJ.4, 冻结前必办 (19)) |
