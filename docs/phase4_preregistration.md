@@ -37,7 +37,8 @@ Two experiments, both defined in `ECOSYSTEM_INTEGRATION_PLAN.md` 阶段 4:
 
 | Open item | Waiting on | Rule |
 |---|---|---|
-| Number of paired trials `k` at the reveal | σ_hetero measured on the dev split; k=5 is a candidate only (附录 CA/CC) | Candidate draft, not a pre-registered value |
+| Number of paired trials `k` at the reveal | σ_hetero measured on the dev split; **and the size N of the new holdout, which σ_hetero also sets** (清单 (5)) | Candidate draft, not a pre-registered value |
+| Size N of the new MAEDA holdout | σ_hetero (清单 (5)); the suite must then be authored (附录 DQ) | Not yet determined. No case may be authored into it before N is fixed |
 
 **Closed:**
 
@@ -63,23 +64,66 @@ retrieval** (vector + BM25), the `hybrid` tier reached on the established
 - **Attached condition** (附录 CP.5 #4): corpus-backed and corpus-free events
   must be reported separately in the 阶段 4 report; no combined total score.
 
+**Arm count — decided.** The reveal collects **five** conditions: the 2×2
+factorial of 实验 1 ({`cleaner_mode`: `force_on` / `force_off`} ×
+{`rag_mode`: `force_on` / `force_off`}, four cells including the interaction),
+plus 实验 2's `(cleaner_mode=auto, rag_mode=auto)`.
+
+- **Provenance**: user adjudication, 2026-08-23. Not a default.
+- **Two conditions attached, both binding**: (i) **separate reporting** — 实验 1's
+  net-gain table and 实验 2's routing precision/recall/confusion matrix are
+  reported as two tables and never combined into one score; `fallback` is
+  classified separately and never counted as `force_off`. (ii) **the set of
+  pairwise comparisons is fixed here, in advance** — five arms admit ten
+  pairwise comparisons where four admit six, and 附录 AP.4 records a real run
+  in which 9 of 28 pairwise comparisons came out falsely significant against a
+  calibrated 1/28. The comparisons actually to be made must be listed before
+  any result is seen; any comparison not listed here is exploratory and is
+  reported as such.
+
+**硬约束 1 — reading and budget, decided.** Read per holdout, not per project;
+re-draw budget one. See §1.6.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DW.6; transcribed verbatim.
+
 ---
 
 ## 1. 硬约束 1 — the one reveal
 
-### 1.1 There are two holdouts, not one
+### 1.1 There are three sets now, and only two of them are holdouts
 
-| Holdout | Where | Size (measured 2026-08-22) | Driven from |
+| Set | Where | Size | Status |
 |---|---|---|---|
-| MAEDA eval holdout | `tests/eval/test_suite.json`, entries with `split == "test"` | 41 of 100 cases | **MAEDA** |
-| TB5 retrieval holdout | rag `eval/fixtures/tb5_retrieval/test.json`, derived from the frozen test-split `probe_queries` in `eval/fixtures/event_script/event_script.yaml` | 8 derived entries; the guard's digest set holds **10** frozen test-split probe queries | **rag** |
+| **Retired MAEDA holdout** | `tests/eval/test_suite.json`, `split == "test"` | 41 of 100 | **Not a holdout.** Reveal adjudicated CONSUMED 2026-08-23 (§1.6) |
+| **New MAEDA holdout** | not yet constructed | N — **NOT YET DETERMINED**, set by σ_hetero (清单 (5)) | Holdout, one reveal, re-draw budget spent |
+| **TB5 retrieval holdout** | rag `eval/fixtures/tb5_retrieval/test.json`, from the frozen test-split `probe_queries` in `event_script.yaml` | 8 derived entries; the guard's digest set holds 10 frozen test-split probe queries | Holdout, **reveal unspent** (§1.5, 附录 CP.2) |
 
-Conflating the two is easy and wrong: the rag split guard (附录 CZ) protects
-the second one only. See §1.3.
+Conflating any two of these is the error §1.6 records. The rag split guard
+(附录 CZ) protects the third row only; it has never protected either MAEDA set.
+See §1.3.
+
+The new MAEDA holdout excludes `predictive` cases by decision (user, 2026-08-23):
+`scripts/compute_ground_truth.py` structurally skips predictive /
+data_mismatch / ambiguous cases, so their ground truth cannot be audited.
+**阶段 4's conclusions therefore do not cover predictive queries.** This is a
+deliberate narrowing of scope, not an omission.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DW.4; transcribed verbatim.
 
 ### 1.2 How the reveal is executed — who, in which process, with which command
 
-**(A) MAEDA holdout — driven from MAEDA.**
+**(A) MAEDA holdout — SUSPENDED.** The command below targeted the retired
+holdout and no longer points at one (§1.6). The reveal command for the new
+MAEDA holdout is **NOT YET WRITTEN**: its form depends on how the new holdout
+is labelled, which is 清单 (21) — if it reuses `split == "test"` the two
+existing gates (清单 (15) on `run_eval.py`, 清单 (16) on `measure_noise.py`)
+continue to apply unchanged; if it is labelled differently, both gates go
+silently dead and must be changed with it. The block below is retained as the
+record of what the retired reveal would have been, not as an instruction.
+
+**(B) below is unaffected and remains in force.**
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DW.5; transcribed verbatim.
 
 ```
 cd ~/MAEDA
@@ -236,60 +280,94 @@ zero it produces is not evidence until that is established.
 
 > Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE; transcribed verbatim.
 
-### 1.6 Prior observations of the test split
+### 1.6 The first MAEDA holdout was burned. This section is its disclosure.
 
-**One prior observation of the test split has occurred. It is disclosed here in
-full rather than assessed as harmless by the parties involved** (冻结前必办 (1),
-附录 CO.0 / CP.2).
+**Status: 硬约束 1's reveal on the first MAEDA holdout is adjudicated
+CONSUMED** (user adjudication, 2026-08-23). The 41 cases carrying
+`split == "test"` in `tests/eval/test_suite.json` **are no longer a holdout**
+and must not be reported as one.
 
-| | |
-|---|---|
-| When | 2026-08-18, trace rows timestamped 19:39:51–19:40:07 |
-| What was observed | the 2 `probe_queries` of `EVT-2024-03-SOUTH-UNITS-SPIKE`, an event whose `split` is `test` |
-| Retrieval tier | BM25-only |
-| What was seen | the top-5 chunks and their scores |
-| Who | rag-owner, during the 附录 CJ.3 BM25-only verification |
-| How it happened | the probe script read `event_script.yaml`'s `probe_queries` directly; at that time the reveal guard was mounted only on `rag.cli.eval`, so this path did not pass through it (附录 CP.4) |
+This section replaces an earlier version stating that one prior observation had
+occurred and that "there is no other". **That statement was false.** It was
+written by the orchestrator on the strength of the §1.5 audit, which enumerated
+every trace store *in the rag repository* and therefore answered a question
+about the TB5 retrieval holdout only. The MAEDA holdout had never been audited
+at all. §1.1 warns that conflating the two is easy and wrong; the earlier text
+did exactly that.
 
-**It was self-reported.** No external check produced it: the rag-owner went
-looking through SQLite timestamps and disclosed it unprompted, having already
-narrowed its own scope, and stated explicitly that it should count against the
-reveal-discipline record rather than be quietly cancelled by that narrowing.
+**What the audit found once it was actually run** (附录 DM / DN / DO / DP):
 
-**Adjudication (附录 CP.2): this does not consume 硬约束 1's single reveal.**
-The reasoning is not "the damage was small" — assessing damage after the fact
-is how a discipline breach gets retroactively approved. It is:
+1. The 41 cases were run in full **at least three times**: 2026-08-02
+   19:52–20:04 and 2026-08-03 22:17–22:48, both recorded only in
+   `logs/runs.db` — which is not under version control and which no
+   file-listing audit could see — and 2026-08-03 15:48, which produced
+   `logs/eval_runs/v1_test_reveal.json` carrying
+   `overall_aggregate = 0.7365189129975717`, an aggregate score over the
+   entire holdout.
+2. `data/annotations/answer_key_claude_sonnet_5_100.json` carries real judge
+   scores with per-case reasoning for all 100 cases, all 41 included.
+3. **Three layers of the evaluation chain were changed after looking at these
+   cases:**
+   - **the system under test** — `164b78d` (2026-08-02 21:38, 1h34m after the
+     run covering all 41) fixed false-superlative claims, citing C14 and DG09
+     as its confirming evidence; both are holdout cases. Its new guardrail was
+     validated as "0/100 false positives across the full cached corpus", i.e.
+     including the holdout.
+   - **the judge** — `8a6e7f7` (2026-08-01) changed `EVAL_GROUNDEDNESS_SYSTEM`
+     on the strength of human labels pooled across all 100 cases, all 41
+     included.
+   - **the ground truth** — the 2026-08-17 rewrites changed `ground_truth` on
+     **69 of 100** cases, **30 of them in the holdout**, after
+     `v1_test_reveal.json` had already scored `factual_accuracy` against the
+     older values.
+4. **A disclosure to this effect already existed in the repository and never
+   reached this document.** `docs/judge_calibration.md`, written 2026-08-01/02,
+   states that the judge fix was measured "not a blind holdout", that "all 120
+   collected labels had already been read in full while diagnosing the bug",
+   and that the fix should be validated "once a genuine (unread-by-Claude)
+   holdout exists". DG09 is discussed there by name.
+5. **No uncontaminated case remains in the suite.** All 100 were observed.
+   Excluding `logs/runs.db` entirely, every case still appears in **at least
+   seven** independent channels, and four files each cover 100/100 — every
+   case carries both judge scores and human labels.
 
-1. **No quantity comparable to ground truth was produced.** That event has no
-   corpus by design and an empty `expected_sources`, so there is no recall, no
-   hit rate, no pass/fail to compute. What was seen is which 5 chunks BM25
-   returned for a query that has no correct answer.
-2. **Neither conclusion drawn that round depends on the observed data.** Both
-   are properties read out of source and true for any query: `final_score` is
-   identically `RRF(rank)` with no reranker (the `1.0 / (k + rank)` accumulation
-   in `RRFFusion`), and the language filter applied after fusion
-   (`_language_filter(..., min_results=1)`) cannot empty a non-empty candidate
-   list. State the second one precisely: it is **not** a guarantee that retrieval
-   never returns an empty set — that filter is a no-op for non-CJK queries, and
-   its contract is `length >= min(min_results, len(candidates))`. What actually
-   made the observed query return something is that the index is non-empty, not
-   that fallback. 附录 CP.2's adjudication does not rest on it either way:
-   point 1 — the event has no corpus and no `expected_sources`, so no quantity
-   comparable to ground truth exists — is what carries it. **A conclusion that is
-   invariant under the observation received no information from it.**
-3. **No parameter, threshold, prompt, or criterion was changed because of it.**
-   Every commit in all three repositories after 附录 CJ was checked; none
-   relates to that event.
+**The adjudication, and what it does not rest on.** The user ruled the reveal
+CONSUMED rather than ruling it harmless. No assessment of how much the
+observations mattered is offered here and none should be inferred: assessing
+damage after the fact is how a discipline breach gets retroactively approved,
+which is the reasoning 附录 CP.2 itself used and which applies here with more
+force, not less.
 
-**Independently verified 2026-08-22** by enumerating all 22,387 trace rows in
-the repository (§1.5): the observation is exactly as disclosed, and there is no
-other. Read §1.5's two limits alongside that.
+**One fact that cuts against a comfortable reading, stated deliberately.** It
+is tempting to say the contamination was ordinary development that happened to
+precede the split's creation on 2026-08-01, and the timeline partly supports
+that. **That defence is weak.** `164b78d` landed on 2026-08-02, after the split
+existed and 1h34m after a run covering all 41 cases, and it changed the system
+on evidence read off two of them. That is "looked at holdout behaviour, then
+changed the system" — precisely what 硬约束 1 forbids in the same breath as it
+defines itself ("只揭盲一次、不反复回看调参"). **What follows is a re-draw
+after a breach, not a clarification of a non-breach.**
 
-**No claim of harmlessness is being made here.** The reader is given the time,
-the object, the content, and the falsifiable assertion in point 3, and may draw
-their own conclusion.
+**Scope of the adjudication.** 硬约束 1 reads "test split 只进行一次正式
+reveal … 只揭盲一次、不反复回看调参". Its subject is *a* test split and its
+stated purpose is to prevent an iterate-on-feedback loop, not to impose a
+project-lifetime quota. It is therefore read **per holdout**: the retired
+holdout's reveal is spent; a newly constructed holdout carries its own single
+reveal. **The TB5 retrieval holdout is a separate holdout and its reveal is
+unspent** — §1.5's audit is what establishes that, and it is the question that
+audit actually answered. **The two budgets are not interchangeable**, and the
+TB5 reveal must not be spent early on the reasoning that the MAEDA side is
+being redone anyway.
 
-> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DE; transcribed verbatim.
+**Re-draw budget: one.** This is a pre-registered limit, fixed before any
+result from the new holdout is seen. The new MAEDA holdout gets one reveal.
+**If it is contaminated in turn, it may not be re-drawn on the authority of
+this document**: the reason the first one was burned must be disclosed and the
+situation re-adjudicated by the user. Without this limit the per-holdout
+reading degenerates into "burn, re-draw, repeat, report the best" — the same
+overfitting the constraint exists to prevent, at a slower cadence.
+
+> Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DW.3; transcribed verbatim.
 
 ---
 
@@ -662,11 +740,11 @@ on the cleaner arm of experiment 1.
 
 | 冻结前必办 | Written here? |
 |---|---|
-| (1) CP.2 prior-observation disclosure | **Yes** — §1.6(text from 附录 DE.2; point 2 corrected per 附录 DG.2, 冻结前必办 (17)) |
+| (1) CP.2 prior-observation disclosure | **Superseded, not currently written anywhere in this file.** The disclosure table (rag-owner's 2026-08-18 BM25-only observation of `EVT-2024-03-SOUTH-UNITS-SPIKE`, and the CP.2 adjudication that it did not consume 硬约束 1) used to be §1.6's entire content; §1.6 was replaced whole-cloth by 附录 DW.3 (冻结前必办 (20) 第 2 件) to disclose the MAEDA holdout burn instead, and DW.3 did not provide a new home for the CP.2 material. **§1.5 still says "this reconciles line-for-line with the disclosure in §1.6"** (§1.5, the paragraph after the enumeration table) and that pointer is now dangling — §1.6 no longer contains any such disclosure. Not fixed by this baton: 附录 DW gave no instruction to touch §1.5, and inventing a new location was outside the transcription authorized here. Flagged to lead, not resolved. |
 | (2) split guard sunk below every entry point | Closed in the rag repo (附录 CZ/DB); its **boundary** is stated in §1.3 |
 | (3) CP.5 four clauses | **Yes** — #2/#4 在 §4,#1/#3 在 §4.1(DE.3; premise #1 corrected per 附录 DH.3, 冻结前必办 (17)) |
 | (4) CM.7 on-arm tier | **Yes** — §0 "Closed" (user adjudication 2026-08-22, 附录 DG.4/DJ.4, 冻结前必办 (19)) |
-| (5) `k` | **No** — candidate only, §0 |
+| (5) `k` and N | **No** — `k` still candidate only (§0); **N (new MAEDA holdout size) is a newly introduced open item, NOT YET DETERMINED**, both wait on σ_hetero, which 附录 DV records as never measured (pilot completed 2026-08-23, repeats=1, no σ obtained) |
 | (6) behaviour changes | **Yes** — §3 (CQ.4 ×2, CT.5, CX.6) |
 | (7) CQ.0 disclosure | **Yes** — §5.1(DE.4) |
 | (8) paid-test intent gate | **Yes** — implemented, §5 |
@@ -674,4 +752,7 @@ on the cleaner arm of experiment 1.
 | (10) CR.5 negative revenue | **Yes** — §5.2(DE.5) |
 | (12) CS.6 reading traps | **Yes** — §4.2(DE.6) |
 | (14) CU.8 / CV.6 five items | **Yes** — §4 |
-| (15) `--split test` refuses a non-`always` `intent_refine_trigger` (附录 DD.3) | **Yes** — implemented in `scripts/run_eval.py`; stated in §1.2 and §3.2 |
+| (15) `--split test` refuses a non-`always` `intent_refine_trigger` (附录 DD.3) | **Yes** — implemented in `scripts/run_eval.py`; stated in §1.2 and §3.2. **Now targets a retired holdout** (§1.6) — still mechanically active (protects the `test` label), but see (21) |
+| (20) part 2 — pre-registration holdout identity rebuild (附录 DU.3/DW) | **Partially done.** §1.6 rewritten in full (附录 DW.3); §1.1 rewritten in full as a three-set table (附录 DW.4); §1.2 (A) marked SUSPENDED with the retired command retained as record only, (B) untouched (附录 DW.5); §0 `k` row rewritten, N row added, arm-count/硬约束-1 "Closed" block appended (附录 DW.6). **Still open, genuinely, not just unwritten**: the new MAEDA holdout's size N (blocked on σ_hetero, 清单 (5) — 附录 DV: dev-split pilot completed 2026-08-23 but measured `repeats=1`, so σ_hetero was never obtained) and the new reveal command for §1.2 (A) (blocked on 清单 (21)'s labelling decision). Both markers are left as **NOT YET DETERMINED** / **NOT YET WRITTEN** deliberately — they are unresolved facts, not missing prose. |
+| (21) new holdout label vs. guard consistency (附录 DU.4) | **Not started.** If the new MAEDA holdout reuses `split == "test"`, gates (15) and (16) continue to protect it unchanged; if it is labelled differently, both gates go silently dead (§1.2 (A) annotation, 附录 DW.5) and must be updated together with a test proving the new label is still caught (判据 CK.6). |
+| (22) 实验 1/2 五臂的十组两两比较清单 (附录 DW.6(3)(ii)) | **Not started.** §0's "Closed" arm-count block (附录 DW.6) states the rule — the set of comparisons must be fixed before any result is seen — but does not itself list which of the ten pairwise comparisons will actually be made. That list is owed to 清单 (22), assigned to lead to draft with user confirmation, and is not present anywhere in this file yet. |
