@@ -427,8 +427,13 @@ evidence field — an unchecked superlative with no visible competing value
 is a different, lesser problem than one that contradicts a value sitting
 in the same findings.
 
-If the report makes no checkable claims at all (e.g. it only restates the
-question, or gives no specifics), return an empty claims list.
+If the report truly makes no checkable factual assertions at all (e.g. it
+only restates the question or explicitly says no answer can be produced),
+return an empty claims list AND set no_claims_reason to the exact string
+"no_factual_assertions". Do not use an empty list merely because the report
+is off-topic or because none of its claims are supported: those are still
+checkable claims and must each be returned with supported=false. When claims
+is non-empty, no_claims_reason must be null.
 
 Keep every "claim" and "evidence" string terse — a short phrase or the
 specific number/entity being checked, not a full sentence restating the
@@ -444,6 +449,7 @@ Return JSON only:
   "claims": [
     {"claim": str, "supported": bool, "evidence": str or null}
   ],
+  "no_claims_reason": "no_factual_assertions" or null,
   "reasoning": str
 }
 """

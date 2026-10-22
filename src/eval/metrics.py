@@ -35,10 +35,10 @@ import json
 import re
 import statistics
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any, Optional
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from src.config.agent_prompts import EVAL_GROUNDEDNESS_SYSTEM, EVAL_RELEVANCE_SYSTEM
 from src.config.settings import settings
@@ -47,6 +47,49 @@ from src.utils.logger import get_logger
 from src.utils.retry import call_with_rate_limit_retry
 
 logger = get_logger("maeda.eval.metrics")
+
+
+class _OpenAIReasoningJudge:
+    """Small adapter exposing LangChain's ``ainvoke`` shape without its
+    legacy forced temperature default, which GPT-5.6 reasoning rejects."""
+
+    def __init__(
+        self, *, model: str, api_key: str, max_tokens: int,
+        max_completion_tokens: int, reasoning_effort: str,
+    ):
+        from openai import AsyncOpenAI
+
+        self.model_name = model
+        self.reasoning_effort = reasoning_effort
+        self.max_tokens = max_tokens
+        self.max_completion_tokens = max_completion_tokens
+        self._client = AsyncOpenAI(api_key=api_key)
+
+    async def ainvoke(self, messages) -> AIMessage:
+        payload = []
+        for message in messages:
+            role = "system" if isinstance(message, SystemMessage) else "user"
+            payload.append({"role": role, "content": message.content})
+        response = await self._client.chat.completions.create(
+            model=self.model_name,
+            messages=payload,
+            reasoning_effort=self.reasoning_effort,
+            max_completion_tokens=self.max_completion_tokens,
+            response_format={"type": "json_object"},
+        )
+        usage = response.usage
+        prompt_details = getattr(usage, "prompt_tokens_details", None)
+        cached = int(getattr(prompt_details, "cached_tokens", 0) or 0)
+        return AIMessage(
+            content=response.choices[0].message.content or "",
+            usage_metadata={
+                "input_tokens": usage.prompt_tokens,
+                "output_tokens": usage.completion_tokens,
+                "total_tokens": usage.total_tokens,
+                "input_token_details": {"cached_tokens": cached},
+            },
+            response_metadata={"model_name": response.model},
+        )
 
 
 @dataclass
@@ -133,7 +176,7 @@ def _response_text(response) -> str:
 
 # ─── LLM factory ─────────────────────────────────────────────────────────────
 
-def _build_eval_llm(max_tokens: int = 256):
+def _build_eval_llm(max_tokens: int = 256, metric: str = "answer_relevance"):
     """
     The eval judge deliberately does NOT reuse settings.llm_provider/llm_model
     (the agent pipeline's own model) — a judge sharing weights/training with
@@ -167,7 +210,17 @@ def _build_eval_llm(max_tokens: int = 256):
     see 附录 BB for what remains unproven and what a minimal confirmation
     run would cost).
     """
-    if settings.resolved_eval_provider == "anthropic":
+    provider = (
+        settings.resolved_groundedness_provider
+        if metric == "groundedness"
+        else settings.resolved_eval_provider
+    )
+    model = (
+        settings.resolved_groundedness_model
+        if metric == "groundedness"
+        else settings.resolved_eval_model
+    )
+    if provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
         # temperature is deliberately omitted, not just set to 0.0: the
         # current-generation Claude 5 models (e.g. claude-sonnet-5) reject
@@ -178,14 +231,103 @@ def _build_eval_llm(max_tokens: int = 256):
         # judge scoring instead comes from EVAL_JUDGE_SAMPLES's median
         # aggregation across independent calls, not from temperature=0.
         return ChatAnthropic(
-            model=settings.resolved_eval_model,
+            model=model,
             max_tokens=max_tokens, api_key=settings.anthropic_api_key or "sk-no-key",
         )
     from langchain_openai import ChatOpenAI
-    return ChatOpenAI(
-        model=settings.resolved_eval_model, temperature=0.0,
-        max_tokens=max_tokens, api_key=settings.openai_api_key or "sk-no-key",
+    if provider == "dmxapi":
+        return ChatOpenAI(
+            model=model,
+            temperature=0.2,
+            max_tokens=max_tokens,
+            api_key=settings.dmx_api_key or "sk-no-key",
+            base_url=settings.dmx_api_base_url,
+            extra_body={"thinking": {"type": "disabled"}},
+        )
+    kwargs = {
+        "model": model,
+        "max_tokens": max_tokens,
+        "api_key": settings.openai_api_key or "sk-no-key",
+    }
+    if metric == "groundedness" and model.startswith("gpt-5.6"):
+        return _OpenAIReasoningJudge(
+            model=model,
+            api_key=settings.openai_api_key or "sk-no-key",
+            max_tokens=max_tokens,
+            max_completion_tokens=settings.eval_groundedness_max_completion_tokens,
+            reasoning_effort=settings.eval_groundedness_reasoning_effort,
+        )
+    else:
+        kwargs["temperature"] = 0.0
+    return ChatOpenAI(**kwargs)
+
+
+def _judge_usage(response) -> dict[str, Any]:
+    usage = getattr(response, "usage_metadata", None) or {}
+    metadata = getattr(response, "response_metadata", None) or {}
+    if not isinstance(usage, dict):
+        usage = {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+    token_usage = metadata.get("token_usage") or metadata.get("usage") or {}
+    if not isinstance(token_usage, dict):
+        token_usage = {}
+    input_tokens = int(usage.get("input_tokens", token_usage.get("prompt_tokens", 0)) or 0)
+    output_tokens = int(usage.get("output_tokens", token_usage.get("completion_tokens", 0)) or 0)
+    input_details = usage.get("input_token_details") or token_usage.get("prompt_tokens_details") or {}
+    if not isinstance(input_details, dict):
+        input_details = {}
+    cached_tokens = int(input_details.get("cache_read", input_details.get("cached_tokens", 0)) or 0)
+    return {
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "cached_tokens": cached_tokens,
+        "returned_model": (
+            metadata.get("model_name") or metadata.get("model")
+        ) if isinstance(metadata.get("model_name") or metadata.get("model"), str) else None,
+    }
+
+
+def _judge_usage_summary(samples: list[dict], metric: str) -> dict:
+    calls = [sample.get("usage") or {} for sample in samples]
+    input_tokens = sum(item.get("input_tokens", 0) for item in calls)
+    output_tokens = sum(item.get("output_tokens", 0) for item in calls)
+    cached_tokens = sum(item.get("cached_tokens", 0) for item in calls)
+    returned_models = sorted({
+        item["returned_model"] for item in calls if item.get("returned_model")
+    })
+    provider = (
+        settings.resolved_groundedness_provider
+        if metric == "groundedness"
+        else settings.resolved_eval_provider
     )
+    model = (
+        settings.resolved_groundedness_model
+        if metric == "groundedness"
+        else settings.resolved_eval_model
+    )
+    summary = {
+        "provider": provider,
+        "model": model,
+        "calls": len(calls),
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "cached_input_tokens": cached_tokens,
+        "returned_models": returned_models,
+    }
+    if provider == "dmxapi":
+        uncached = max(0, input_tokens - cached_tokens)
+        summary["cost_cny"] = round((
+            uncached * settings.dmx_input_price_cny_per_million
+            + cached_tokens * settings.dmx_cached_input_price_cny_per_million
+            + output_tokens * settings.dmx_output_price_cny_per_million
+        ) / 1_000_000, 8)
+    elif provider == "openai" and model.startswith("gpt-5.6-sol"):
+        uncached = max(0, input_tokens - cached_tokens)
+        summary["cost_usd"] = round((
+            uncached * 4.0 + cached_tokens * 0.4 + output_tokens * 20.0
+        ) / 1_000_000, 8)
+    return summary
 
 
 # ─── 9.2 / 9.3 LLM-as-judge ─────────────────────────────────────────────────
@@ -308,9 +450,19 @@ async def _run_judge_samples(sample_fn, n: int) -> tuple[list[dict], list[BaseEx
     malformed JSON) used to abort the whole batch and throw away every
     other sample that had already succeeded. Never raises; callers decide
     what an all-failed batch means."""
-    raw_results = await asyncio.gather(
-        *[sample_fn() for _ in range(n)], return_exceptions=True,
+    if n <= 0:
+        return [], []
+    # Warm one identical prompt first, then fan out the remaining samples.
+    # DMXAPI/Anthropic-style prompt caches cannot serve simultaneous cold
+    # requests because no request has completed writing the cache yet.
+    try:
+        first: dict | BaseException = await sample_fn()
+    except BaseException as exc:  # preserve the existing partial-failure contract
+        first = exc
+    rest = await asyncio.gather(
+        *[sample_fn() for _ in range(n - 1)], return_exceptions=True,
     )
+    raw_results = [first, *rest]
     samples = [r for r in raw_results if not isinstance(r, BaseException)]
     errors = [r for r in raw_results if isinstance(r, BaseException)]
     return samples, errors
@@ -359,7 +511,11 @@ async def score_answer_relevance(
                 # failure rather than silently injecting a fake mid-point
                 # score (eval v2 Step 2a).
                 raise ValueError(f"Judge response missing 'answer_relevance': {raw!r}")
-            return {"score": float(raw["answer_relevance"]), "reasoning": raw.get("reasoning", "")}
+            return {
+                "score": float(raw["answer_relevance"]),
+                "reasoning": raw.get("reasoning", ""),
+                "usage": _judge_usage(response),
+            }
         return await call_with_rate_limit_retry(_call, logger=logger, label="Relevance judge call")
 
     samples, errors = await _run_judge_samples(_one_sample, n)
@@ -380,7 +536,10 @@ async def score_answer_relevance(
         spread = max(scores) - min(scores)
         if spread >= 0.3:
             reasoning += f" [judge disagreement across {len(samples)} samples: spread={spread:.2f}]"
-    return MetricScore("answer_relevance", score, _label(score), reasoning)
+    return MetricScore(
+        "answer_relevance", score, _label(score), reasoning,
+        raw_value=_judge_usage_summary(samples, "answer_relevance"),
+    )
 
 
 async def score_groundedness(
@@ -402,7 +561,7 @@ async def score_groundedness(
     # Started at 1024 (eval v2 Step 2c), still not enough against real
     # (not synthetic) reports -- see _build_eval_llm's docstring for the
     # 附录 AZ/BB history of this exact truncation failing repeatedly.
-    _llm = llm or _build_eval_llm(max_tokens=2048)
+    _llm = llm or _build_eval_llm(max_tokens=2048, metric="groundedness")
     n = max(1, n_samples if n_samples is not None else settings.eval_judge_samples)
     prompt = _build_judge_prompt(query, report, analysis_results, rag_context, data_quality_report)
 
@@ -416,14 +575,26 @@ async def score_groundedness(
             claims = raw.get("claims")
             if not isinstance(claims, list):
                 raise ValueError(f"Judge response missing 'claims' list: {raw!r}")
+            if not claims:
+                if raw.get("no_claims_reason") != "no_factual_assertions":
+                    raise ValueError(
+                        "Judge returned empty claims without "
+                        "no_claims_reason='no_factual_assertions'"
+                    )
+                return {
+                    "score": None,
+                    "claims": [],
+                    "reasoning": raw.get("reasoning", ""),
+                    "usage": _judge_usage(response),
+                }
             supported = sum(1 for c in claims if isinstance(c, dict) and c.get("supported"))
             total = len(claims)
-            # No checkable claims is neither grounded nor ungrounded -- a
-            # lenient default, same convention and same value as
-            # score_factual_accuracy's "no numbers to cross-check" case
-            # below.
-            score = (supported / total) if total else 0.8
-            return {"score": score, "claims": claims, "reasoning": raw.get("reasoning", "")}
+            return {
+                "score": supported / total,
+                "claims": claims,
+                "reasoning": raw.get("reasoning", ""),
+                "usage": _judge_usage(response),
+            }
         return await call_with_rate_limit_retry(_call, logger=logger, label="Groundedness judge call")
 
     samples, errors = await _run_judge_samples(_one_sample, n)
@@ -437,19 +608,29 @@ async def score_groundedness(
             len(errors), n, errors[-1], len(samples),
         )
 
-    scores = [s["score"] for s in samples]
+    scored_samples = [s for s in samples if s["score"] is not None]
+    if not scored_samples:
+        return MetricScore(
+            "groundedness", 0.0, NOT_APPLICABLE,
+            "No checkable factual assertions in report.",
+            raw_value=_judge_usage_summary(samples, "groundedness"), valid=False,
+        )
+    scores = [s["score"] for s in scored_samples]
     score = statistics.median(scores)
     # The sample whose own score is closest to the reported median supplies
     # the claim list shown as "the reasoning" -- so the reasoning can never
     # describe a different result than the score (the old shared-prompt
     # design let exactly this happen; see module comment above).
-    closest = min(samples, key=lambda s: abs(s["score"] - score))
+    closest = min(scored_samples, key=lambda s: abs(s["score"] - score))
     reasoning = _render_claims(closest["claims"])
     if len(samples) > 1:
         spread = max(scores) - min(scores)
         if spread >= 0.3:
             reasoning += f" [judge disagreement across {len(samples)} samples: spread={spread:.2f}]"
-    return MetricScore("groundedness", score, _label(score), reasoning)
+    return MetricScore(
+        "groundedness", score, _label(score), reasoning,
+        raw_value=_judge_usage_summary(samples, "groundedness"),
+    )
 
 
 async def score_relevance_and_groundedness(
@@ -752,7 +933,9 @@ def _parse_json(text: str) -> dict:
     (mid-string, mid-key, no closing braces), which a head-only excerpt
     can never show."""
     if "```" in text:
-        text = "\n".join(l for l in text.split("\n") if not l.strip().startswith("```"))
+        text = "\n".join(
+            line for line in text.split("\n") if not line.strip().startswith("```")
+        )
     start, end = text.find("{"), text.rfind("}")
     if start != -1 and end != -1:
         try:

@@ -80,6 +80,7 @@ def main():
 
     if args.answer_key:
         raw_key = json.loads(Path(args.answer_key).read_text())
+        raw_key = raw_key.get("scores", raw_key)
         other = {cid: {m: v.get("score") for m, v in entry.items() if m in METRICS}
                  for cid, entry in raw_key.items()}
         other_name, comparison = "judge", "human vs. judge"

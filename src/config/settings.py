@@ -19,6 +19,15 @@ class MAEDASettings(BaseSettings):
     # ── LLM Provider ─────────────────────────────────────────────────────────
     openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
     anthropic_api_key: Optional[str] = Field(default=None, alias="ANTHROPIC_API_KEY")
+    dmx_api_key: Optional[str] = Field(default=None, alias="DMX_API_KEY")
+    dmx_api_base_url: str = Field(default="https://www.dmxapi.cn/v1", alias="DMX_API_BASE_URL")
+    dmx_input_price_cny_per_million: float = Field(default=0.79, alias="DMX_INPUT_PRICE_CNY_PER_MILLION")
+    dmx_cached_input_price_cny_per_million: float = Field(
+        default=0.158, alias="DMX_CACHED_INPUT_PRICE_CNY_PER_MILLION"
+    )
+    dmx_output_price_cny_per_million: float = Field(
+        default=1.58, alias="DMX_OUTPUT_PRICE_CNY_PER_MILLION"
+    )
 
     llm_provider: Literal["openai", "anthropic"] = Field(
         default="openai", alias="MAEDA_LLM_PROVIDER"
@@ -256,10 +265,22 @@ class MAEDASettings(BaseSettings):
     # resolved_eval_model below) — a judge sharing weights/training with the
     # agent it's scoring is a self-preference risk, and DEV_SPEC originally
     # called for a distinct EVAL_MODEL that was never actually wired up.
-    eval_llm_provider: Optional[Literal["openai", "anthropic"]] = Field(
+    eval_llm_provider: Optional[Literal["openai", "anthropic", "dmxapi"]] = Field(
         default=None, alias="EVAL_LLM_PROVIDER"
     )
     eval_llm_model: Optional[str] = Field(default=None, alias="EVAL_MODEL")
+    eval_groundedness_provider: Optional[Literal["openai", "anthropic", "dmxapi"]] = Field(
+        default=None, alias="EVAL_GROUNDEDNESS_PROVIDER"
+    )
+    eval_groundedness_model: Optional[str] = Field(
+        default=None, alias="EVAL_GROUNDEDNESS_MODEL"
+    )
+    eval_groundedness_reasoning_effort: Literal[
+        "none", "low", "medium", "high", "xhigh", "max"
+    ] = Field(default="xhigh", alias="EVAL_GROUNDEDNESS_REASONING_EFFORT")
+    eval_groundedness_max_completion_tokens: int = Field(
+        default=16384, alias="EVAL_GROUNDEDNESS_MAX_COMPLETION_TOKENS"
+    )
     # How many independent judge calls to make per relevance/groundedness
     # check, aggregated by median. Mitigates single-sample judge variance
     # (the same case scoring 0.5 one run and 1.0 the next).
@@ -308,7 +329,17 @@ class MAEDASettings(BaseSettings):
         """Default to a stronger model than the (typically cost-optimized) agent model."""
         if self.eval_llm_model:
             return self.eval_llm_model
+        if self.resolved_eval_provider == "dmxapi":
+            return "deepseek-v4-flash-0731"
         return "claude-sonnet-5" if self.resolved_eval_provider == "anthropic" else "gpt-4o"
+
+    @property
+    def resolved_groundedness_provider(self) -> str:
+        return self.eval_groundedness_provider or self.resolved_eval_provider
+
+    @property
+    def resolved_groundedness_model(self) -> str:
+        return self.eval_groundedness_model or self.resolved_eval_model
 
     @property
     def resolved_planner_model(self) -> str:

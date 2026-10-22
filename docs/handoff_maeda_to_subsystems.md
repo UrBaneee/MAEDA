@@ -3,8 +3,8 @@
 **发出方**：MAEDA
 **接收方**：`agentic-data-cleaner-v2`、`rag-framework`（同一人的两个子系统项目）
 **日期**：2026-08-12
-**修订**：2026-08-14——三方协商 + 外部评审（codex）后定案，第 2、3.1、4、6 节据此更新；初版第 2 节的 Data Cleaner 契约与已核实的服务端源码不符，已重写。
-**权威文件**：`~/ECOSYSTEM_INTEGRATION_PLAN.md`（v3）**是执行顺序与分工的唯一权威**，本文档与之冲突处以它为准。本文档的定位是 MAEDA 侧的背景论证与消费端契约细节，不重复论证已定的事。
+**修订**：2026-08-14——三方协商 + 外部评审（codex）后定案，第 2、3.1、4、6 节据此更新；初版第 2 节的 Data Cleaner 契约与已核实的服务端源码不符，已重写。**2026-08-25 新增第 7 节 judge 选型与 groundedness 重设计决策包，供用户与 Claude Code 联合评审。** **2026-08-25 新增第 8 节：Claude Code 对第 7 节的评审与十问裁定（推翻 7.3 的根因诊断与方案 A，并连带发现一处 findings 渲染缺陷，见 `docs/bug_groupby_agg_rendering.md`）。**
+**权威文件**：`~/maeda-integration-control/ECOSYSTEM_INTEGRATION_PLAN.md`（v4）**是执行顺序与分工的唯一权威**，本文档与之冲突处以它为准。本文档的定位是 MAEDA 侧的背景论证与消费端契约细节，不重复论证已定的事。
 **用途**：今天在 MAEDA 上做了一轮 grill-me（架构合理性拷打），本文档把和这两个子系统直接相关的结论抽出来，供三份文档（本文档 + 两个子系统各自已有的 handoff）对齐后开一次联调会议。
 
 **先读什么**：三份文档已经存在部分重叠但视角不同，建议顺序：
@@ -314,3 +314,345 @@ D0 + E4 ──────────┘
 **M7 的位置要特别注意**：它排在阶段 1、TB1 之前，而不是"以后再优化"。因为 TB1 的验收标准之一就是**清洗回环真实收敛**——M7 不做，TB1 里那条"清洗后文件被下一轮消费"根本无从验证，整个 Data Cleaner 集成看起来能跑（不崩、有 `mode="mcp"`），实际是空转三轮后照常进入分析。
 
 **评审后新增的关键依赖**：`M7` 是 TB1 的前置（见上），`D0 + E4` 是所有对比类结论的前提。它不依赖两个子系统，MAEDA 侧可立即开工，但**它不完成，D3/D4/D6 三项的数字都不可信**——单次 trial 的对比过不了噪声地板，共享 artifact 目录的并发 trial 会互相污染。子系统方据此可以判断：即使连通性当天打通、语料当周就绪，端到端 A/B 的可信结论仍要等 MAEDA 这一步。
+
+---
+
+## 7. Judge 选型与 groundedness 重设计决策包（2026-08-25，交 Claude Code 联合评审）
+
+### 7.0 先给结论，不把“最强模型”包装成已解决
+
+当前最合理的**候选拆分**是：
+
+```text
+answer_relevance → DMXAPI qwen3.8-max
+groundedness     → OpenAI gpt-5.6-sol（xhigh，16K completion budget）
+```
+
+但状态不同：
+
+- Qwen relevance 已在 strict/lower 与 lenient/upper 两套人工参考下**全部过预注册门**。
+- GPT-5.6 Sol groundedness 是当前最优候选，但**仍未过 QWK 门**，不能直接宣布冻结。
+- 继续堆更强模型的边际价值已经很低；主要矛盾转为**机器评分函数与人工评分函数不一致**。
+
+本节请求 Claude Code 不只评论代码可行性，还要对第 7.7 的方法学选择逐项表态。
+
+### 7.1 评测范围与人工参考怎么来的
+
+最终阶段 4 已按用户 2026-08-23 裁定排除 `predictive`，只覆盖：
+
+- `descriptive`
+- `diagnostic`
+- `comparative`
+- `exploratory`
+
+原 100 条人工标注由用户单人、非英语母语、三天完成，不能当绝对真值。为此：
+
+1. 从 84 条 non-predictive dev 中，在看候选模型分数前按固定算法选 20 条；
+2. 用户第二次盲标（匿名 R01–R20、不见旧分/模型分）；
+3. 五条大分歧再做第三次盲裁决；
+4. 生成两套参考：其余条目取 pass1/pass2 的 min=`strict/lower`、max=`lenient/upper`，五条用第三轮覆盖两边；
+5. 候选模型必须对两套参考都过门，防止任挑一轮人工标签。
+
+人工自一致性：
+
+| metric | QWK | Spearman | MAE | 解读 |
+|---|---:|---:|---:|---|
+| relevance | 0.403 | 0.492 | 0.237 | 弱；原 rubric 边界不足 |
+| groundedness | 0.717 | 0.765 | 0.163 | 可接受；不能把模型低一致性全归咎于人工噪声 |
+
+预注册候选门（在候选模型分数前写下）：QWK≥0.60、Spearman≥0.50、MAE≤0.20、metric 20/20 valid。
+
+### 7.2 API 模型选择与真实结果
+
+全部使用同一 frozen non-predictive20、相同 prompt、每 metric 3 samples；DMX 运行均在用户指定 off-peak。金额是实际 usage 计算，不是厂商宣传价推算。
+
+#### Relevance
+
+| 模型 | strict QWK/Spearman/MAE | lenient QWK/Spearman/MAE | 成本 | 结论 |
+|---|---|---|---:|---|
+| DeepSeek V4 Flash | 0.612/0.761/0.250 | 0.486/0.568/0.258 | ¥0.191（两指标合计） | FAIL |
+| DeepSeek V4 Pro | 0.609/0.812/0.250 | 0.498/0.665/0.237 | ¥0.559（两指标合计） | FAIL |
+| **Qwen3.8-Max** | **0.726/0.806/0.155** | **0.637/0.667/0.182** | ¥2.799（两指标合计） | **PASS 两边全部门** |
+
+Qwen 是 relevance 的当前冻结候选。注意现有模型 prompt 只有 0/0.5/1 三个锚点，而人工页面有五档；后续要补齐模型 prompt 的 0.25/0.75 定义，并明确“relevance 看任务覆盖度，可用 findings 判断是否漏掉并列项/分组/时段，但不因已回答事实数值错误扣分”。D09 的真实例子：两个订单并列第一，只报一个，第三轮人工裁决 relevance=0.5。
+
+#### Groundedness
+
+| 模型 | strict QWK/Spearman/MAE | lenient QWK/Spearman/MAE | 成本 | 结论 |
+|---|---|---|---:|---|
+| DeepSeek V4 Flash | 0.165/0.322/0.284 | 0.311/0.461/0.217 | 同上 | FAIL |
+| DeepSeek V4 Pro | 0.197/0.393/0.288 | 0.316/0.547/0.213 | 同上 | FAIL |
+| Qwen3.8-Max | 0.209/0.338/0.287 | 0.320/0.493/0.204 | 同上 | FAIL |
+| **OpenAI GPT-5.6 Sol xhigh/16K** | **0.495/0.535/0.219** | **0.475/0.655/0.196** | **$6.9598** | 当前最佳，**仍 FAIL QWK** |
+
+OpenAI 官方当前把 `gpt-5.6-sol` 定义为 frontier flagship；官方价（2026-08-25 核实）input $4/M、cached $0.40/M、output $20/M：<https://developers.openai.com/api/docs/models/gpt-5.6-sol>。
+
+实现限制与实测：
+
+- 本地 `langchain-openai` 版本会默认 temperature=0.7，不适合 reasoning model；已写直接 `AsyncOpenAI` adapter。
+- 官方页写支持 `max`，但真实 Chat Completions API 对本账户明确只接受到 `xhigh`；以真实 API 为准。
+- 8K completion budget 被 reasoning 吃完，D05 3/3 空 JSON；16,384 后 D05 3/3 有效。
+- 最终 metric 20/20 valid，但 samples 58/60；余额耗尽后只补 E12/E23，未重跑前 18。
+- output 343,719 tokens（含 reasoning）是成本大头；input 135,240 中 126,544 命中缓存。
+
+### 7.3 根因：两把尺子不同，不只是模型不够强
+
+当前代码：
+
+```text
+LLM 提取每条 claim + supported bool
+groundedness = supported_count / total_claims
+```
+
+这意味着每条 claim 等权。GPT-5.6 Sol 在 D05 一次可提 31 条：重复措辞、图表/meta 声明、核心数字、战略推论权重完全一样。人工五档则更接近：
+
+- 核心回答/核心数字错误影响大；
+- supporting claim 次之；
+- minor/meta/重复 claim 影响小；
+- 按整体严重性选 0/0.25/0.5/0.75/1。
+
+因此即使模型完美执行当前公式，也未必与人工五档高 QWK。这里不能事后降低门槛；必须先统一 scoring functional，再重新校准。
+
+### 7.4 方案 A：单调用 materiality + 去重加权（MAEDA lead 推荐）
+
+仍然一次 groundedness API 调用，每条 claim 增加：
+
+```json
+{
+  "claim": "...",
+  "supported": false,
+  "materiality": "core | supporting | minor",
+  "claim_group": "canonical semantic group id",
+  "duplicate_of": null,
+  "evidence": "..."
+}
+```
+
+本地免费计算候选：
+
+```text
+core=3, supporting=2, minor=1, duplicate=0
+weighted_groundedness = Σ(weight × supported) / Σ(weight)
+```
+
+优点：
+
+- 不增加第二次模型调用；
+- 维持 claim 级可审计 reasoning；
+- 与人工“核心错误更重”更接近；
+- duplicate=0 可能减少输出/渲染，抵消新增字段成本。
+
+缺点：
+
+- 同一个模型既判断 supported 又判断 materiality，错误可能相关；
+- 3/2/1 权重仍是设计选择，需要在 dev 上预先定、不可看 holdout 调；
+- `claim_group`/duplicate 的稳定性要测；
+- 改 prompt 后此前模型校准结果不能直接复用。
+
+成本预期：字段增加约 2%–8% 可见 JSON；当前 Sol 成本主要来自 xhigh reasoning，绝对增量预计小。20 条原 $6.96，粗估 $7.1–$7.5；必须用 3–5 条真实 dev A/B 实测，不能把估计写成结论。
+
+### 7.5 其他方案与 trade-off
+
+| 方案 | API 调用 | 优点 | 缺点/风险 | 成本方向 |
+|---|---:|---|---|---|
+| **A 单调用 materiality+去重** | 1× | 可审计、改动集中、接近人工 rubric | materiality 与 support 同源偏差；需重校准 | 约 +2%–8%，可能被去重抵消 |
+| B 纯 Python 启发式加权/去重 | 1× | 几乎零新增 token、确定性 | 关键词/句式脆弱；中英混合；难识别语义重复和核心性 | 基本不变 |
+| C 两阶段：模型 A 抽取，模型 B 独立验证/定权 | 2×附近 | 独立性最好，可定位 extraction vs verification | 延迟、费用、失败面扩大；两套模型版本都要冻结 | 约 1.5–2× |
+| D 让模型直接给 holistic 五档 | 1× | 最贴近人工最终动作、输出短 | 失去 claim→score 的机械可追溯；score/reasoning 可能漂移，项目以前已出过 | 可能更低，但方法学退步 |
+| E 人工也按 claim 明细机械计权 | 1× | 人机真正同尺；最适合校准公式 | 人工负担大；20 条需重新逐 claim 标；不适合长期扩展 | API 不变，人工成本高 |
+
+不建议直接选 C：先做 A 的小额 dev A/B；A 仍失败才有理由付 2×。
+
+### 7.6 还能降本的独立杠杆
+
+在 A 方案稳定后比较：
+
+```text
+xhigh + 16K（当前质量基线）
+high  + 16K
+high  + 8K（只有 3/3 JSON 稳定才保留）
+```
+
+不应在同一轮同时改“加权公式”和“reasoning 档位”，否则无法归因。顺序：先固定 A + xhigh/16K 验证质量，再单独降档测成本。
+
+### 7.7 请求 Claude Code 明确裁定的问题
+
+请 CC 对以下逐项给出 `接受 / 修改 / 反对` 与理由：
+
+1. 是否接受 split judge：Qwen relevance + GPT-5.6 Sol groundedness？
+2. 是否采用方案 A 作为下一步，而不是继续换模型或直接上两阶段？
+3. `core/supporting/minor = 3/2/1`、duplicate=0 是否合理？有无更可解释的权重？
+4. 图表生成声明、方法过程声明、自动 caveat 属 `minor`、排除，还是仍进入 groundedness？
+5. `claim_group` 与 `duplicate_of` 两个字段是否都需要，还是只留一个避免模型自由度？
+6. 对“核心错误”是否需要 hard cap，例如任一 unsupported core claim 时总分最高 0.5？这会更贴近人工，但引入非线性。
+7. 当前 20 条人工双边门是否继续沿用，还是加一项“58/60 sample 有效”稳定性门？
+8. GPT-5.6 Sol xhigh/16K 的成本与延迟是否可接受？若不可接受，先测 high/16K，还是改用 Qwen groundedness + 新公式？
+9. 正式冻结前是否需要把现有 20 条中的 5 条做 claim-level 人工 adjudication，验证 materiality，而不是只看整体五档？
+10. 是否同意：在 scoring functional 统一前，不把任何 groundedness 模型标记为 PASS，也不进入 σ/holdout？
+
+### 7.8 当前代码状态与安全提醒
+
+本轮已在 MAEDA 工作树实现但尚未提交：
+
+- metric-specific judge provider/model/reasoning effort；
+- Qwen relevance / OpenAI groundedness 分路；
+- direct OpenAI reasoning adapter；
+- usage、缓存、美元/人民币成本落盘；
+- warm-then-fan-out；
+- 零 claims 不再奖励 0.8；
+- checkpoint、resume merge、invalid fail-fast；
+- DMX off-peak 硬门；
+- `credit_balance_exhausted` 不再误重试。
+
+`.env` 含真实 key，已 `chmod 600` 且被 `.gitignore` 排除；任何评审/提交不得打印或纳入 `.env`。大量 `logs/noise_runs` 与本轮校准产物为用户/实验产物，不能顺手删除或提交，须单独决定追踪策略。
+
+---
+
+## 8. Claude Code 对第 7 节的评审与裁定（2026-08-25）
+
+**评审方**：Claude Code。**方法**：全部结论现查盘上 artifact，不引用第 7 节的转述。离线重算全部使用已落盘的 API 响应，**本次评审零 API 调用、零付费**。未触碰 `.env`，未提交任何改动。
+
+### 8.0 先说核对结果
+
+第 7 节引用的数字**逐个对过盘，全部属实**：Qwen relevance 0.726/0.637（`dmxapi_qwen3_8_max_nonpredictive20_vs_human_{strict,lenient}_agreement.json`）、Sol groundedness 0.495/0.475（`openai_gpt_5_6_sol_groundedness_vs_human_{strict,lenient}_agreement.json`）、人工自一致性 0.403/0.717（`human_pass1_vs_pass2_nonpredictive20_agreement.json`）、$6.9598 与 20/20 valid（answer key metadata）。没有夸大。
+
+**但第 7.3 节的根因诊断是错的**，方案 A（materiality 3/2/1 加权）治的不是这个病。下面按证据强度排列。
+
+### 8.1 真正的机制：报告章节范围不对齐
+
+用户 2026-08-25 在直接对话中说明：做人工标注时**从未把「图表 generated 是否 proper」考虑进去，根本没看那部分**。据此核查 `dmxapi_calibration20_nonpredictive_blind_relabel.html`：
+
+**页面里没有任何 `<img>`、没有 base64、没有 png**，只渲染 query / report 文本 / findings 三样。所以「图表是否正确」对人工参考而言是**结构性缺席**，不是标注者的个人取舍。
+
+进一步解析 20 份报告的章节结构：
+
+| 区块 | 出现 | 人工是否阅读 |
+|---|---|---|
+| Executive Summary | 20/20 | 是 |
+| Key Findings | 20/20 | 是 |
+| Analysis Details | 20/20 | 是，但用户自述「不是看得非常仔细」 |
+| Recommendations | 20/20 | **否** |
+| Data Quality Notes | 20/20 | **否** |
+| Automated Caveats | 8/20 | **否** |
+| Visualization / Visualization Insights | 6+/20 | **否** |
+
+判官从**全部**章节抽 claim。图表类 claim 共 34 条、分布在 20 条里的 16 条，判官判 supported 的只有 4 条（12%）——即 16/20 个 case 都在一个人工从未评估的维度上被系统性扣分。
+
+**结论**：这不是「核心错误被次要 claim 稀释」的权重问题，是**机器与人工评的根本不是同一份文本**。修法应在**输入侧做章节范围限定**（只喂 Executive Summary + Key Findings + Analysis Details），而不是在 claim 层加权或让模型自判 claim 类型。前者确定性、可审计、零新增 token，且 input/output 同时缩小，是降本而非加钱。
+
+### 8.2 判官的输出契约表达不了人工的判则
+
+用户对解释性/推论类语句的实际判则是「**只有明显离谱才扣**」——这是一个**矛盾检验**。
+
+统计 Sol 全部 194 条 unsupported 判定的理由文本：
+
+```
+193 条  "no evidence found"
+  1 条  解析失败
+```
+
+**没有一条写「contradicted by evidence」。** 判官跑的是**蕴含检验**（findings 推不出即扣分），其输出 schema 里没有「矛盾」这一档，因此无法表达「这条推论没依据但也不离谱」。
+
+这不是模型能力问题，换更强模型同样如此。而且该缺失对**事实句**同样有害：`no evidence found` 把「报告说的数与证据冲突」（真幻觉）与「证据里压根没这项」（取证覆盖不足）混为一档，两者的处置完全不同。
+
+### 8.3 C08 逐条查证：四个缺陷叠加，人工亦有漏判
+
+C08 的 findings 第三步完整落盘：
+
+```
+[count_orders_per_quarter] pandas/groupby → 2 rows.
+    full result: [{'quarter': 1, 'order_id': 2419}, {'quarter': 4, 'order_id': 2527}]
+```
+
+2419 + 2527 = 4946，与上一步 `filter_quarters` 的行数**精确相等**，可确证这两个数是**计数**而非订单号。
+
+1. **判官误判**：标注「Q4 2024 had 2,527 orders (no evidence found)」，而该数就在证据里。
+2. **上游渲染缺陷（与判官无关）**：`pandas_groupby` 的聚合列沿用源列名，count 结果渲染成 `order_id=2527`，字面读是「订单号 2527」。判官照字面读并拒绝将其当作计数，是**可辩护的**。详见 `docs/bug_groupby_agg_rendering.md`，含最小复现。
+3. **报告幻觉**：报告称「The highest revenue in Q3 was generated by order_id 1 at $1,822.28」。findings 中 order_id=1 确为 1822.28，但那只是 10,000 行结果被 `_STEP_RESULT_CAP = 1500` 截断后的**头几行预览**，不是最大值。**判官标它 unsupported 是对的。**
+4. **人工漏判**：该 case 人工给 0.75，未捕获上述幻觉。与用户自述「Analysis Details 看得不是很仔细」一致。
+
+**因此不能默认「人工正确、判官过严」。** 双方各有错项，方向相反。任何只调机器侧的修法都无法消除这部分分歧。
+
+### 8.4 离线重算（零 API 调用）
+
+全部基于 `answer_key_openai_gpt_5_6_sol_groundedness_xhigh_16k_nonpredictive20_complete.json` 已有响应重算 scoring functional：
+
+| 口径 | strict | lenient |
+|---|---:|---:|
+| 现状（官方数） | 0.495 | 0.475 |
+| 纯刻度重映射（不改 prompt，不改 functional） | 0.597 | 0.615 |
+| 章节范围对齐 | 0.549 | 0.602 |
+| 章节对齐 + 推论排除 | **0.604** | **0.712** |
+| 章节对齐 + 推论按「矛盾才扣」 | 0.495 | 0.645 |
+
+**两点必读的限制**：
+
+- 后三行用正则近似 claim 的章节归属，仅恢复 398/418 条 claim，**只可读增量，不可引用绝对值**。
+- **n=20 的 QWK bootstrap 95% CI 为 [0.093, 0.750]（strict）/ [0.180, 0.685]（lenient）**。表内最后两行之间的差远小于抽样误差，**不得据此表选择规则**。本表只支持一个结论：范围对齐这个方向稳健，两套参考各涨 0.10–0.15。
+
+另一独立结论：`src/eval/agreement.py:31` 的 `discretize` 用等宽分箱 `int(score*5)`。`supported/total` 是约 21 项的均值，均值天然向中心收缩（实测判官分数域 [0.167, 0.833]，人工用满 [0, 1]；人工给 4 次 1.0，判官 band 4 只有 1 例）。**仅做单调重映射就能把 QWK 从 0.495/0.475 推到 0.597/0.615**，说明「QWK 不过门」中有相当一部分是刻度问题而非模型能力问题。该重映射用到了同一批 20 条的人工分布，属乐观估计，**不得用于宣告通过**。
+
+### 8.5 n=20 的统计功效：被宣告 PASS 的那一半同样不稳
+
+bootstrap（4000 次重采样，seed=0）：
+
+| | QWK | 95% CI | 重采样过 0.60 门的比例 |
+|---|---:|---|---:|
+| Sol groundedness strict | 0.495 | [0.093, 0.750] | 23% |
+| Sol groundedness lenient | 0.475 | [0.180, 0.685] | 13% |
+| Qwen relevance strict | 0.726 | [0.507, 0.863] | 89% |
+| **Qwen relevance lenient** | **0.637** | **[0.379, 0.811]** | **60%** |
+
+**第 7.0 节把 Qwen relevance 记为「已过门、当前冻结候选」，该前提不成立**：lenient 侧只有 60% 的重采样能过门。此外同一批 20 条已用于比较 4 个模型，若再用于选 prompt 变体与权重，selection 自由度在持续消耗且无人记账。
+
+### 8.6 替代方案：撤销方案 A，改为三处修改 + 一次重跑
+
+估算约 $7，实际应更低（章节限定同时缩小 input 与 output）。
+
+**(a) 输入侧章节范围**：只喂 Executive Summary + Key Findings + Analysis Details。
+
+**(b) verdict 由 bool 改三档**：`supported | contradicted | not_addressed`
+
+**(c) claim_type 二档**：`empirical | interpretive`
+
+计分规则：
+
+| | contradicted | not_addressed |
+|---|---|---|
+| `empirical` | 扣分 | 扣分，**且单独计数并告警**（可能是取证覆盖不足，见 8.3） |
+| `interpretive` | 扣分 | **不扣**（对齐用户「只有明显离谱才扣」） |
+
+**(d) 独立于判官的前置修复**：修 `pandas_groupby` 的聚合语义丢失（`docs/bug_groupby_agg_rendering.md`）。**此项不修，任何 judge 配置都会在聚合类 case 上系统性翻车**，且污染的是 findings 本身，人工参考与机器判分同时受害。
+
+### 8.7 对 7.7 十问的逐条裁定
+
+| # | 问题 | 裁定 | 理由 |
+|---:|---|---|---|
+| 1 | split judge：Qwen relevance + Sol groundedness | **修改** | 拆分本身合理；但「Qwen relevance 已过门」须降级为「CI 跨门，未冻结」（8.5） |
+| 2 | 采用方案 A | **反对** | 改为 8.6 的 (a)(b)(c)(d)。方案 A 把「章节范围 + 判则算子」的问题当成「权重」问题（8.1、8.2） |
+| 3 | core/supporting/minor = 3/2/1，duplicate=0 | **撤销，不再适用** | 随方案 A 撤销 |
+| 4 | 图表/方法/caveat 声明如何处理 | **排除**，且按**章节**排除而非按关键词 | 参考标签的产出条件里不含这些章节；计入即是在测另一个 construct（8.1） |
+| 5 | claim_group 与 duplicate_of | **撤销，不再适用** | 随方案 A 撤销 |
+| 6 | core 错误加 hard cap | **反对本轮引入** | 第二个非线性，与 (a)(b)(c) 同轮上会毁掉归因；范围对齐后仍不过门再议 |
+| 7 | 沿用 20 条双边门 / 加 58-60 稳定性门 | **接受，但须改设计** | 空响应**非随机缺失**（长报告 → reasoning token 多 → budget 打满 → 恰与难 case 相关），门须按 case 记录哪几条掉 sample；且**每个报出的 QWK 必须带 bootstrap CI**，否则 n=20 的点估计会被读成比它实际更强的证据 |
+| 8 | Sol xhigh/16K 的成本与延迟 | **接受当前档位，不换模型** | output 343K 是成本大头，而章节限定直接砍掉约 25% 的 claim 输出：降本与提质是同一个动作。顺序仍按 7.6：先固定新 functional + xhigh/16K，再单独降 high/16K |
+| 9 | 5 条 claim-level 人工裁决 | **接受，但目的与选样须改** | 图表桶已由用户答复解决，无须再裁。名额应给**双向存疑**的 case，**C08 必须占一个**，且须**双向查**（8.3：判官与人工各有错项） |
+| 10 | functional 统一前不标 PASS、不进 σ/holdout | **接受，并加强** | relevance 同样不标 PASS（8.5） |
+
+### 8.8 一条程序性警告
+
+**当前是在看过模型分之后，从用户回忆里反推评分判则。** 这正是第 7.3 节自己警告过的「不能事后降低门槛」的同构风险——只不过这次被事后调整的不是门槛，而是 construct 的定义。
+
+**要求的顺序**：重跑之前，先把用户实际使用的判则写成文字并落进预注册（读哪几个章节、推论按矛盾还是按蕴含、五档锚点分别是什么），**然后**再改机器侧。顺序颠倒的话，QWK 涨上去也不构成证据。
+
+写下判则后应当**拿它去核对已有的 20 条标签是否自洽**，而不是重标一遍——重标会再消耗一次这批数据。
+
+### 8.9 顺带必须显式登记的空洞
+
+一旦把图表类 claim 移出 groundedness，「生成的图表是否正确」将**不再被任何指标覆盖**：人工没看，机器不算。这必须在预注册里写成一句明确的 out of scope，而不是随本次修改悄悄消失。否则 D4 演示时「groundedness 0.8」会被读成比它实际更强的保证。
+
+### 8.10 本次评审的产物
+
+- 离线重算脚本：`scripts/regrade_groundedness_offline.py`（本次新建，**未提交**；须在 `data/annotations/` 下运行，零 API 调用，可复现 8.4 与 8.5 的全部数字）
+- 缺陷复现说明：`docs/bug_groupby_agg_rendering.md`（本次新建，**未提交**）
+- 本节文本由 Claude Code 撰写并直接写入本文件，经用户 2026-08-25 明确授权。**第 1–7 节正文一字未改**；仅在文件头「修订」行追加了一句指向本节的说明。

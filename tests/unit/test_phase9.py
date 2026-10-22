@@ -363,7 +363,7 @@ def test_render_findings_includes_full_result_for_small_structured_steps():
 
 
 def test_render_findings_caps_large_results_instead_of_dumping_them():
-    from src.eval.metrics import render_findings, _STEP_RESULT_CAP
+    from src.eval.metrics import render_findings
     huge_result = [{"row": i} for i in range(5000)]  # a full-dataframe-sized result
     results = [{"method": "derive", "failed": False, "result_summary": "12240 rows",
                 "result": huge_result}]
@@ -450,9 +450,13 @@ def _mock_relevance_response(score, reasoning="r"):
     return resp
 
 
-def _mock_groundedness_response(claims, reasoning="r"):
+def _mock_groundedness_response(claims, reasoning="r", no_claims_reason=None):
     resp = MagicMock()
-    resp.content = json.dumps({"claims": claims, "reasoning": reasoning})
+    resp.content = json.dumps({
+        "claims": claims,
+        "no_claims_reason": no_claims_reason,
+        "reasoning": reasoning,
+    })
     resp.usage_metadata = {"input_tokens": 10, "output_tokens": 10}
     return resp
 
@@ -664,17 +668,29 @@ def test_score_groundedness_all_claims_supported_scores_one():
     assert gnd.score == 1.0
 
 
-def test_score_groundedness_no_checkable_claims_is_lenient_not_zero():
-    """No claims to check is neither grounded nor ungrounded -- same
-    lenient-default convention as score_factual_accuracy's 'no numbers to
-    cross-check' case, not a penalty."""
+def test_score_groundedness_no_checkable_claims_is_not_applicable():
+    """A genuinely assertion-free report must not receive a free 0.8."""
+    mock_llm = MagicMock()
+    mock_llm.ainvoke = AsyncMock(return_value=_mock_groundedness_response(
+        [], no_claims_reason="no_factual_assertions",
+    ))
+
+    from src.eval.metrics import score_groundedness
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm))
+    assert gnd.score == 0.0
+    assert gnd.label == "not_applicable"
+    assert gnd.valid is False
+
+
+def test_score_groundedness_empty_claims_without_reason_is_a_failed_sample():
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(return_value=_mock_groundedness_response([]))
 
     from src.eval.metrics import score_groundedness
-    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm))
-    assert gnd.score == 0.8
-    assert gnd.valid is True
+    gnd = asyncio.run(score_groundedness("q", "report", [], [], llm=mock_llm, n_samples=1))
+    assert gnd.label == "error"
+    assert gnd.valid is False
+    assert "no_claims_reason" in gnd.reasoning
 
 
 def test_score_groundedness_reasoning_is_the_claim_list_not_generic_prose():
@@ -734,13 +750,17 @@ def test_score_groundedness_requests_2048_max_tokens():
     judge call."""
     mock_llm = MagicMock()
     mock_llm.ainvoke = AsyncMock(return_value=MagicMock(
-        content=json.dumps({"claims": [], "reasoning": "no claims"}),
+        content=json.dumps({
+            "claims": [],
+            "no_claims_reason": "no_factual_assertions",
+            "reasoning": "no claims",
+        }),
     ))
 
     from src.eval.metrics import score_groundedness
     with patch("src.eval.metrics._build_eval_llm", return_value=mock_llm) as mock_build:
         asyncio.run(score_groundedness("q", "report", [], []))  # no llm= -- forces _build_eval_llm
-    mock_build.assert_called_once_with(max_tokens=2048)
+    mock_build.assert_called_once_with(max_tokens=2048, metric="groundedness")
 
 
 def test_score_groundedness_fallback_on_llm_error():
@@ -982,8 +1002,8 @@ def test_eval_runner_reuses_existing_relevance_groundedness_instead_of_rejudging
 
 
 def test_eval_result_score_by_metric():
-    from src.eval.runner import EvalResult
     from src.eval.metrics import MetricScore
+    from src.eval.runner import EvalResult
     result = EvalResult(
         run_id="r1", query="q",
         scores=[MetricScore("answer_relevance", 0.9, "pass")],
@@ -1384,7 +1404,6 @@ def test_regression_detector_warning_threshold():
 
 def test_regression_detects_aggregate_drop():
     from src.eval.runner import EvalResult, detect_regressions
-    from src.eval.metrics import MetricScore
 
     baseline = EvalResult("b1", "q", [], aggregate_score=0.85)
     current = EvalResult("c1", "q", [], aggregate_score=0.60)

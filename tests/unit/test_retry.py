@@ -28,6 +28,12 @@ def test_is_rate_limit_error_rejects_unrelated_errors():
     assert not is_rate_limit_error(ValueError("no JSON found"))
 
 
+def test_is_rate_limit_error_rejects_nonrecoverable_credit_exhaustion_429():
+    assert not is_rate_limit_error(RuntimeError(
+        "Error code: 429 - insufficient_quota credit_balance_exhausted"
+    ))
+
+
 @pytest.mark.asyncio
 async def test_retries_on_rate_limit_then_succeeds(monkeypatch):
     monkeypatch.setattr("src.utils.retry.asyncio.sleep", AsyncMock())

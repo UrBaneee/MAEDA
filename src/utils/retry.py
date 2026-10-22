@@ -25,10 +25,15 @@ def is_rate_limit_error(exc: BaseException) -> bool:
     """Duck-typed rate-limit detection across OpenAI's and Anthropic's
     client exception classes (both expose a 429 one way or another)
     without hard-importing either SDK's exception hierarchy here."""
+    text = str(exc).lower()
+    # OpenAI reports exhausted billing credit as HTTP 429 too. It cannot
+    # recover with backoff; retrying only delays fail-fast and floods logs.
+    if "insufficient_quota" in text or "credit_balance_exhausted" in text:
+        return False
     status = getattr(exc, "status_code", None) or getattr(exc, "code", None)
     if status == 429:
         return True
-    return "429" in str(exc) or "rate_limit" in str(exc).lower()
+    return "429" in text or "rate_limit" in text
 
 
 async def call_with_rate_limit_retry(
