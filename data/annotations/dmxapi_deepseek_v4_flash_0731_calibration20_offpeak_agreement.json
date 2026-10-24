@@ -1,0 +1,101 @@
+{
+  "labels_file": "data/annotations/dmxapi_calibration20_manifest.json",
+  "compared_against": "data/annotations/answer_key_dmxapi_deepseek_v4_flash_0731_calibration20_offpeak.json",
+  "comparison_type": "human vs. judge",
+  "metrics": {
+    "answer_relevance": {
+      "metric": "answer_relevance",
+      "n": 20,
+      "qwk": 0.5857,
+      "spearman": 0.6897,
+      "spearman_p": 0.0008,
+      "mae": 0.1825,
+      "exact_match_rate": 0.5,
+      "confusion": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          2,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          4
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          7
+        ]
+      ],
+      "n_bands": 5
+    },
+    "groundedness": {
+      "metric": "groundedness",
+      "n": 20,
+      "qwk": 0.1316,
+      "spearman": 0.0556,
+      "spearman_p": 0.8159,
+      "mae": 0.2731,
+      "exact_match_rate": 0.25,
+      "confusion": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          3,
+          0
+        ],
+        [
+          0,
+          1,
+          2,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          3,
+          2,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          3,
+          1
+        ]
+      ],
+      "n_bands": 5
+    }
+  }
+}

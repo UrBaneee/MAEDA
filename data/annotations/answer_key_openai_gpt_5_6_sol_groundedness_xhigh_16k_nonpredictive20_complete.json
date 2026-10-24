@@ -1,0 +1,449 @@
+{
+  "metadata": {
+    "provider": "dmxapi",
+    "model": "deepseek-v4-flash-0731",
+    "judge_samples": 3,
+    "base_url": "https://www.dmxapi.cn/v1",
+    "cases_from": "data/annotations/dmxapi_calibration20_nonpredictive_manifest.json",
+    "cases_from_sha256": "f82b9a5b2bc0cfd3604ff32afcf038bd4cca1862e205fa7878cacd59eaac27ac",
+    "case_ids": [
+      "C02",
+      "C04",
+      "C07",
+      "C08",
+      "C16",
+      "C17",
+      "C20",
+      "D01",
+      "D05",
+      "D07",
+      "D08",
+      "D09",
+      "D11",
+      "DG01",
+      "DG03",
+      "DG07",
+      "DG12",
+      "E03",
+      "E12",
+      "E23"
+    ],
+    "concurrency": 4,
+    "metrics": [
+      "groundedness"
+    ],
+    "groundedness_provider": "openai",
+    "groundedness_model": "gpt-5.6-sol",
+    "groundedness_reasoning_effort": "xhigh",
+    "groundedness_max_completion_tokens": 16384,
+    "status": "complete",
+    "invalid_metrics": [],
+    "resumed_from": "data/annotations/answer_key_openai_gpt_5_6_sol_groundedness_resume_e12_e23.json",
+    "resume_case_ids": [
+      "E12",
+      "E23"
+    ]
+  },
+  "scores": {
+    "C04": {
+      "groundedness": {
+        "score": 0.5,
+        "label": "warn",
+        "reasoning": "7/14 claims supported. ✓ Books has the highest category margin, about 217.83 (evidence: Books 217.8345; others: Furniture 180.2023, Electronics 153.5656, Clothing 153.2315, Office Supplies 43.67) | ✓ Office Supplies has the lowest category margin, about 43.67 (evidence: Office Supplies 43.67; all other category margins exceed it) | ✗ Books has strong profitability potential (no evidence found) | ✓ Product 2 has a margin of $362.98 (evidence: Product 2 margin=362.98) | ✗ Product 2 has the highest product margin (no evidence found) | ✗ Product 2 significantly outperforms other products (no evidence found) | ✓ Product 1 is incurring a loss (evidence: Product 1 margin=-161.82) | ✓ Product 4 is incurring a loss (evidence: Product 4 margin=-86.93) | ✗ Products 1 and 4 have substantial or significant losses (no evidence found) | ✗ Product 1 and 4 losses could affect overall profitability (no evidence found) | ✓ Category margins were determined with groupby_aggregate_margin (evidence: groupby_aggregate_margin finding lists five category margins) | ✗ A horizontal bar chart of product margins was generated (no evidence found) | ✓ Data quality checks passed (evidence: Data Quality: 1000 rows; no quality issues flagged) | ✗ Passed quality checks ensure the reliability of the insights (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 6270,
+          "output_tokens": 10527,
+          "cached_input_tokens": 6261,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.2130804
+        }
+      }
+    },
+    "C08": {
+      "groundedness": {
+        "score": 0.3,
+        "label": "fail",
+        "reasoning": "6/20 claims supported. ✗ Q1 2024 had 2,419 orders (no evidence found) | ✗ Q4 2024 had 2,527 orders (no evidence found) | ✗ Q4 2024 surpassed Q1 2024 in order count (no evidence found) | ✓ Aggregate Q4 orders exceeded aggregate Q1 orders (evidence: Groupby: Q4=2,527; Q1=2,419) | ✗ Order volume showed a positive upward trend through 2024 (no evidence found) | ✗ The higher Q4 volume indicates growing demand (no evidence found) | ✓ Orders were counted by quarter (evidence: count_orders_per_quarter groupby) | ✗ The Q1-to-Q4 increase was significant (no evidence found) | ✓ order_id 1 was in Q3 with $1,822.28 revenue (evidence: order_id 1: quarter=3, revenue=1822.28) | ✗ order_id 1 generated the highest Q3 revenue (no evidence found) | ✓ order_id 2 was in Q4 with $2,812.70 revenue (evidence: order_id 2: quarter=4, revenue=2812.70) | ✗ order_id 2 generated the highest Q4 revenue (no evidence found) | ✗ Revenue was analyzed to identify quarterly maxima (no evidence found) | ✗ Q3 and Q4 both showed strong sales performance (no evidence found) | ✗ A scatter plot compared quarters with order volume (no evidence found) | ✗ A scatter plot confirmed Q4 outperformed Q1 (no evidence found) | ✗ Q4 offered increased revenue potential (no evidence found) | ✓ Data quality checks passed (evidence: Data Quality: no quality issues flagged) | ✗ Data quality checks ensured the reliability of the results (no evidence found) | ✓ No significant data quality issues were identified (evidence: No quality issues flagged)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 9246,
+          "output_tokens": 19555,
+          "cached_input_tokens": 9237,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.3948308
+        }
+      }
+    },
+    "C02": {
+      "groundedness": {
+        "score": 0.4166666666666667,
+        "label": "warn",
+        "reasoning": "10/24 claims supported. ✓ Search has the highest mean channel conversion rate (evidence: Search 6.4934%; Email 4.4166%, Affiliate 3.7320%, Social 2.1592%, Display 1.2048%) | ✗ Search significantly outperforms every other channel (no evidence found) | ✓ A one-way ANOVA compared conversion rates by channel (evidence: significance_test: one-way ANOVA) | ✓ The ANOVA statistic is 994.85 (evidence: statistic: 994.85) | ✓ The ANOVA p-value is 0.0 (evidence: p_value: 0.0) | ✓ Conversion rates differ significantly among channels overall (evidence: ANOVA significant: true) | ✗ Email's channel conversion rate is 4.71% (no evidence found) | ✗ Affiliate's channel conversion rate is 2.69% (no evidence found) | ✗ Social's channel conversion rate is 3.36% (no evidence found) | ✓ Email outperforms Affiliate on conversion rate (evidence: Email mean 4.4166% > Affiliate 3.7320%) | ✗ Social outperforms Affiliate on conversion rate (no evidence found) | ✗ Campaign conversion rates have a wide or notable overall range (no evidence found) | ✗ The maximum campaign conversion rate is approximately 13.00% (no evidence found) | ✗ The minimum campaign conversion rate is 0.00% (no evidence found) | ✗ A horizontal bar chart illustrated campaign ROI (no evidence found) | ✗ CAM0001 achieved the highest ROI (no evidence found) | ✓ CAM0001's ROI is 2023.7 (evidence: CAM0001 roi: 2023.7) | ✓ CAM0001's conversion rate is 4.71% (evidence: CAM0001 conversion_rate: 0.0471099) | ✓ CAM0001 had lower spend than other campaigns (evidence: CAM0001 spend 1873.25; visible CAM0002-CAM0007 spends are higher) | ✓ Data-quality checks found values beyond 1.5×IQR (evidence: Flags at 6.9%, 7.5%, and 5.7%) | ✗ 6.9% of conversion values are beyond 1.5×IQR (no evidence found) | ✗ 7.5% of revenue values are beyond 1.5×IQR (no evidence found) | ✗ 5.7% of ROI values are beyond 1.5×IQR (no evidence found) | ✗ The outliers may reduce conversion-rate reliability (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 8376,
+          "output_tokens": 25898,
+          "cached_input_tokens": 8367,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.5213428
+        }
+      }
+    },
+    "C07": {
+      "groundedness": {
+        "score": 0.5862068965517241,
+        "label": "warn",
+        "reasoning": "17/29 claims supported. ✓ North 2022 revenue was $439,901.01 (evidence: 2022 North revenue=439901.01) | ✓ North 2024 revenue was $476,047.98 (evidence: 2024 North revenue=476047.98) | ✓ North revenue had a positive annual trend from 2022 to 2024 (evidence: 439901.01 → 447811.56 → 476047.98) | ✗ North's 2022–2024 increase was projected (no evidence found) | ✓ South 2022 revenue was $348,526.24 (evidence: 2022 South revenue=348526.24) | ✓ South 2023 revenue was $313,930.46 (evidence: 2023 South revenue=313930.46) | ✓ South revenue decreased from 2022 to 2023 (evidence: 348526.24 → 313930.46) | ✓ South revenue increased from 2023 to 2024 (evidence: 313930.46 → 343617.57) | ✗ South's 2022–2023 decrease was expected or forecast (no evidence found) | ✗ South's 2024 increase was projected (no evidence found) | ✓ No explicit North or South growth rate was reported (evidence: Findings show annual totals and averages, but no rates) | ✗ Specific regional growth rates could not be calculated (no evidence found) | ✗ A growth-rate analysis step failed (no evidence found) | ✗ Analysis failure caused the missing growth rates (no evidence found) | ✗ The analysis failure limited further insights (no evidence found) | ✓ Average revenue was calculated by region (evidence: average_revenue_growth groupby lists five regional averages) | ✓ North average revenue was $577.38 (evidence: North=577.3753386960203) | ✓ South average revenue was $432.35 (evidence: South=432.3482036957456) | ✓ North had the highest regional average revenue (evidence: North 577.375; West 516.990; East 489.481; South 432.348; Central 350.630) | ✓ South average revenue was lower than North's (evidence: South 432.348 < North 577.375) | ✗ North and South had a significant revenue-performance disparity (no evidence found) | ✓ South revenue fluctuated over 2022–2024 (evidence: 348526.24 → 313930.46 → 343617.57) | ✓ The dataset had a data-quality issue involving duplicates (evidence: Data Quality warning identifies fully duplicated rows) | ✓ There were 238 fully duplicated rows (evidence: 238 fully duplicated rows) | ✓ Fully duplicated rows represented 1.9% of the dataset (evidence: Data Quality: 1.9%) | ✗ The duplicates may affect the accuracy of reported revenue (no evidence found) | ✗ More North marketing or product offerings could sustain or enhance growth (no evidence found) | ✗ Corrective measures could ensure consistent South growth (no evidence found) | ✗ Addressing the recommendations could help MAEDA enhance growth in both regions (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 10458,
+          "output_tokens": 24204,
+          "cached_input_tokens": 10449,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.4882956
+        }
+      }
+    },
+    "C16": {
+      "groundedness": {
+        "score": 0.5,
+        "label": "warn",
+        "reasoning": "9/18 claims supported. ✓ North had the highest total revenue in 2023 (evidence: North $447,811.56; West $395,309.38; East $350,064.96; South $313,930.46; Central $250,618.14) | ✗ North significantly outperformed every other region (no evidence found) | ✗ West and East revenue figures could not be determined (no evidence found) | ✗ Multiple analyses confirmed North as the highest-revenue region (no evidence found) | ✓ North sold Gadget Lite online for $4,968.80 on January 1, 2023 (evidence: 2023 row: North, Gadget Lite, Online, revenue=4968.8) | ✗ $4,968.80 was North's highest recorded revenue (no evidence found) | ✓ Step 3 compared revenue by region (evidence: Third finding is compare_revenue_by_region with aggregation=sum) | ✗ The regional comparison lacked West and East figures (no evidence found) | ✗ A horizontal bar chart showed the January 1, 2022 results (no evidence found) | ✓ North Service Pack revenue was $652.30 on January 1, 2022 (evidence: 2022 row: North, Service Pack, revenue=652.3) | ✗ $652.30 was the highest revenue on January 1, 2022 (no evidence found) | ✗ A horizontal bar chart showed the January 1, 2023 results (no evidence found) | ✗ $4,968.80 significantly outpaced other products and channels (no evidence found) | ✓ There were 238 fully duplicated rows (evidence: Data Quality: 238 fully duplicated rows) | ✓ Fully duplicated rows represented 1.9% of the dataset (evidence: Data Quality: 238 fully duplicated rows (1.9%)) | ✓ East total revenue was $350,064.96 (evidence: East sum=350064.96) | ✓ West total revenue was $395,309.38 (evidence: West sum=395309.38) | ✓ The analysis does provide specific West and East revenue figures (evidence: West $395,309.38; East $350,064.96)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 9714,
+          "output_tokens": 21424,
+          "cached_input_tokens": 9705,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.432398
+        }
+      }
+    },
+    "C17": {
+      "groundedness": {
+        "score": 0.6875,
+        "label": "pass",
+        "reasoning": "11/16 claims supported. ✓ UK total revenue exceeds Germany's (evidence: UK 2,123,799.70 > Germany 2,000,370.95) | ✓ UK total revenue is 2,123,799.70 (evidence: UK total_revenue=2123799.7000000016) | ✓ Germany total revenue is 2,000,370.95 (evidence: Germany total_revenue=2000370.9500000011) | ✓ UK revenue is approximately 2.12 million (evidence: UK total_revenue=2123799.7000000016) | ✓ Germany revenue is approximately 2 million (evidence: Germany total_revenue=2000370.9500000011) | ✗ Revenue figures are dollar-denominated (no evidence found) | ✓ Totals were calculated for Germany and the UK (evidence: SQL returned Germany and UK totals) | ✓ UK is the top country among those analyzed (evidence: top_segment=UK; only UK and Germany shown) | ✗ UK significantly outperforms its competitors (no evidence found) | ✓ A significance test was attempted (evidence: significance_test test=t-test) | ✓ Significance could not be determined because of NaN results (evidence: statistic=nan; p_value=nan; significant=None) | ✓ Data limitations prevented a definitive significance conclusion (evidence: count=1 per country; std=nan; significant=None) | ✗ A bar chart was generated (no evidence found) | ✗ A bar chart clearly showed the UK leading at about 2.12 million (no evidence found) | ✗ Data quality issues caused the NaN values (no evidence found) | ✓ Data quality checks passed (evidence: 1000 rows; no quality issues flagged)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 4209,
+          "output_tokens": 15648,
+          "cached_input_tokens": 4200,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.314676
+        }
+      }
+    },
+    "C20": {
+      "groundedness": {
+        "score": 0.55,
+        "label": "warn",
+        "reasoning": "11/20 claims supported. ✗ Churned customers have significantly higher average monthly charges than retained customers (no evidence found) | ✓ Monthly charges and retention have a potential association (evidence: Means differ and t-test significant=true) | ✓ T-test statistic is 6.1314 (evidence: statistic=6.1314) | ✓ T-test p-value is 0.0 (evidence: p_value=0.0) | ✗ Higher charges have a strong correlation with customer churn (no evidence found) | ✓ A t-test compared average monthly charges between churned and retained customers (evidence: significance_test=test: t-test) | ✓ Average monthly charges differ significantly between the groups (evidence: significant=true; p_value=0.0) | ✗ The pricing structure may be influencing customer retention (no evidence found) | ✗ A bar chart was generated (no evidence found) | ✗ The bar chart shows churned customers incur significantly higher charges (no evidence found) | ✗ The outlier issue belongs to support_calls_last_90d (no evidence found) | ✓ 7.3% of values are outside 1.5×IQR (evidence: Data Quality: 7.3% outside 1.5×IQR) | ✗ The 7.3% outlier share is high (no evidence found) | ✗ The outliers may reduce reliability of related analyses (no evidence found) | ✗ Report numbers do not overlap the analysis summaries (no evidence found) | ✓ The report's higher-charge statement is incorrect (evidence: Report says higher; findings show 56.5776 below 63.5769) | ✓ Churned customers average about $56.58 monthly (evidence: churned=1 mean 56.577586) | ✓ Retained customers average about $63.58 monthly (evidence: churned=0 mean 63.576931) | ✓ Churned customers have lower average charges than retained customers (evidence: 56.5776 below 63.5769) | ✓ The conclusion linking higher charges to churn is misleading (evidence: Observed direction is lower charges for churned customers)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 4317,
+          "output_tokens": 14209,
+          "cached_input_tokens": 4308,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.2859392
+        }
+      }
+    },
+    "D01": {
+      "groundedness": {
+        "score": 0.65,
+        "label": "pass",
+        "reasoning": "13/20 claims supported. ✓ North revenue is $1,363,760.55, over $1.36M (evidence: North revenue=1,363,760.55) | ✓ North has the highest regional revenue (evidence: North 1,363,760.55 exceeds West 1,271,795.18, East 1,164,964.55, South 1,006,074.27, Central 821,174.97) | ✗ North significantly outperforms the other regions (no evidence found) | ✓ West revenue is $1,271,795.18 (evidence: West revenue=1,271,795.18) | ✓ West has the second-highest revenue (evidence: Only North 1,363,760.55 is higher) | ✓ East revenue is $1,164,964.55 (evidence: East revenue=1,164,964.55) | ✓ East has the third-highest revenue (evidence: North and West are higher; South and Central are lower) | ✓ Central revenue is $821,174.97 (evidence: Central revenue=821,174.97) | ✓ Central has the lowest regional revenue (evidence: Central 821,174.97 is below South 1,006,074.27 and all others) | ✓ A group-by aggregation calculated total revenue by region (evidence: [groupby_aggregate] pandas/groupby produced 5 regional rows) | ✗ The presented analysis-detail list gives revenue for each region (no evidence found) | ✗ A bar chart was generated (no evidence found) | ✗ The bar chart clearly shows North leading (no evidence found) | ✓ North has high revenue performance (evidence: North is highest at 1,363,760.55) | ✗ East shows strong revenue potential (no evidence found) | ✓ Central has lower sales than the other regions (evidence: Central has the lowest revenue at 821,174.97) | ✓ There are 238 fully duplicated rows (evidence: Data Quality: 238 fully duplicated rows) | ✓ Duplicated rows account for 1.9% of the dataset (evidence: Data Quality: 238 duplicates (1.9%)) | ✗ Duplicates may affect the accuracy of reported revenue (no evidence found) | ✗ Report numbers do not overlap with analysis summaries (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 3876,
+          "output_tokens": 13288,
+          "cached_input_tokens": 3867,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.2673428
+        }
+      }
+    },
+    "D08": {
+      "groundedness": {
+        "score": 0.5,
+        "label": "warn",
+        "reasoning": "7/14 claims supported. ✓ Average tenure differs significantly by churn status (evidence: t-test significant=True; means 27.22 vs 31.07) | ✓ t-test statistic is 5.6565 (evidence: statistic=5.6565) | ✓ p-value is 0.0 (evidence: p_value=0.0) | ✓ The result strongly rejects the null hypothesis (evidence: p_value=0.0; significant=True) | ✓ Churned customers have significantly shorter tenure (evidence: churned=1 mean 27.22; churned=0 mean 31.07; significant=True) | ✓ A t-test compared churned and non-churned customers (evidence: significance_test.test=t-test) | ✗ A bar chart was generated (no evidence found) | ✗ The bar chart showed average tenure in months by churn status (no evidence found) | ✗ The visual supports shorter tenure among churned customers (no evidence found) | ✗ The data-quality issue concerns support calls (no evidence found) | ✓ 7.3% of values are outside 1.5×IQR (evidence: Data Quality: 7.3% outside 1.5×IQR) | ✗ The outlying values are specifically high outliers (no evidence found) | ✗ The outliers may reduce dataset insight reliability (no evidence found) | ✗ Report numbers do not overlap analysis summaries (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 4005,
+          "output_tokens": 6630,
+          "cached_input_tokens": 3996,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.1342344
+        }
+      }
+    },
+    "D09": {
+      "groundedness": {
+        "score": 0.35714285714285715,
+        "label": "fail",
+        "reasoning": "5/14 claims supported. ✓ Maximum single-order revenue was $4,992.20 (evidence: Orders 5810 and 6553 each have revenue 4992.2; all other visible values are lower) | ✓ Order 5810 generated $4,992.20 (evidence: order_id=5810, revenue=4992.2) | ✓ Order 5810 was tied with order 6553 for highest revenue (evidence: 5810=4992.2; 6553=4992.2; next visible value=4965.5) | ✓ Order 5810's customer was from the UK (evidence: order_id=5810, country=UK) | ✗ The UK offers significant opportunities for targeting high-value orders (no evidence found) | ✗ The UK leads in revenue generation (no evidence found) | ✗ Order 5810 is a key contributor to overall sales performance (no evidence found) | ✗ A scatter plot of order_id versus revenue was generated (no evidence found) | ✗ A bar chart displaying order_id by country was created (no evidence found) | ✗ The UK is a significant market (no evidence found) | ✗ Order 5810 was the singular revenue standout (no evidence found) | ✗ The UK has potential for high-value orders similar to order 5810 (no evidence found) | ✓ Data quality checks passed (evidence: Data Quality: no quality issues flagged) | ✗ Data quality checks ensure the reliability of the analysis results (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 5814,
+          "output_tokens": 9605,
+          "cached_input_tokens": 5805,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.194458
+        }
+      }
+    },
+    "D07": {
+      "groundedness": {
+        "score": 0.6538461538461539,
+        "label": "pass",
+        "reasoning": "17/26 claims supported. ✓ Email spend: $2,094,536.45 (evidence: Email spend=2094536.45) | ✓ Email has the highest spend (evidence: Max of five; next is Affiliate at $2,076,441.72) | ✓ Search spend: $1,797,704.70 (evidence: Search spend=1797704.7) | ✓ Search has the lowest spend (evidence: All other spends exceed $1,797,704.70) | ✓ Email revenue: $60,607,080.18 (evidence: Email revenue=60607080.18) | ✗ Email has the highest revenue (no evidence found) | ✓ Search revenue: $73,111,916.05 (evidence: Search revenue=73111916.05) | ✓ Search shows strong performance relative to investment (evidence: Highest revenue and lowest spend; revenue/spend is about 40.7, highest of five) | ✓ Display revenue: $14,921,637.30 (evidence: Display revenue=14921637.3) | ✓ Display has the lowest revenue (evidence: All other revenues exceed $14,921,637.30) | ✓ Affiliate spend: $2,076,441.72 (evidence: Affiliate spend=2076441.72) | ✓ Affiliate has high spend (evidence: Second-highest spend among five channels) | ✓ Affiliate revenue: $51,309,441.79 (evidence: Affiliate revenue=51309441.79) | ✓ Affiliate revenue is lower than Email and Search (evidence: Affiliate $51.31m; Email $60.61m; Search $73.11m) | ✓ Affiliate follows Email closely in spend (evidence: Second-highest; $18,094.73 below Email) | ✗ Email and Affiliate represent substantial investments (no evidence found) | ✗ Affiliate spend does not correlate with its revenue (no evidence found) | ✗ Affiliate effectiveness is questionable (no evidence found) | ✓ Email has high revenue generation (evidence: Revenue is $60,607,080.18, second-highest of five) | ✓ Email is an effective channel (evidence: Second-highest revenue and about 28.9 revenue per spend dollar) | ✓ The data has quality issues involving outliers (evidence: Data Quality lists 6.9%, 7.5%, and 5.7% outside 1.5×IQR) | ✗ Conversions have a high 6.9% outlier share (no evidence found) | ✗ Revenue has a high 7.5% outlier share (no evidence found) | ✗ ROI has a high 5.7% outlier share (no evidence found) | ✗ The outliers may affect analysis reliability (no evidence found) | ✗ Report numbers do not overlap analysis summaries (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 5445,
+          "output_tokens": 23815,
+          "cached_input_tokens": 5436,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.4785104
+        }
+      }
+    },
+    "D11": {
+      "groundedness": {
+        "score": 0.6111111111111112,
+        "label": "pass",
+        "reasoning": "11/18 claims supported. ✓ Widget B sold 24,291 units (evidence: Widget B units=24291) | ✓ Widget B has the highest sales (evidence: 24291 exceeds SP 23922, Lite 23057, A 22916, Pro 22689) | ✓ Service Pack sold 23,922 units (evidence: Service Pack units=23922) | ✓ Service Pack ranks behind Widget B as the second-highest seller (evidence: B 24291 > SP 23922 > Lite 23057 > A 22916 > Pro 22689) | ✗ Service Pack follows Widget B closely (no evidence found) | ✓ Gadget Lite sold 23,057 units (evidence: Gadget Lite units=23057) | ✓ Gadget Pro sold 22,689 units (evidence: Gadget Pro units=22689) | ✓ Gadget Lite and Gadget Pro sell less than Widget B and Service Pack (evidence: Lite 23057 and Pro 22689; SP 23922 and B 24291) | ✗ Gadget Lite and Gadget Pro have significantly lower sales (no evidence found) | ✓ Widget B and Service Pack are the top two sellers (evidence: B 24291, SP 23922; all others at or below 23057) | ✗ Focusing marketing on top sellers and enhancing lower sellers would have a high revenue impact (no evidence found) | ✓ A group-by aggregation was used to total units by product (evidence: [groupby_aggregate] pandas/groupby) | ✗ A bar chart of units sold by product was generated (no evidence found) | ✗ Widget B and Service Pack have strong sales performance (no evidence found) | ✓ There were 238 fully duplicated rows (evidence: Data Quality: 238 fully duplicated rows) | ✓ Fully duplicated rows account for 1.9% of the dataset (evidence: Data Quality: 1.9%) | ✗ Duplicate rows may affect the accuracy of the reported sales figures (no evidence found) | ✗ Report numbers do not overlap with analysis result summaries (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 3771,
+          "output_tokens": 13073,
+          "cached_input_tokens": 3762,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.2630008
+        }
+      }
+    },
+    "DG01": {
+      "groundedness": {
+        "score": 0.45454545454545453,
+        "label": "warn",
+        "reasoning": "5/11 claims supported. ✓ Q3 revenue was $1,178,006.80 (evidence: groupby_aggregate_revenue: quarter=3, revenue=1178006.8) | ✗ Q3 revenue dropped significantly versus previous quarters (no evidence found) | ✓ Specific prior-quarter revenue figures were not provided (evidence: Findings provide only the Q3 aggregate) | ✓ Q3 contains missing revenue data (evidence: filter_q3 shows multiple revenue=NaN rows) | ✓ Widget A in the North had missing Q3 revenue (evidence: 2022-07-01, North, Widget A, revenue=NaN) | ✗ Missing revenue data may have contributed to the Q3 decline (no evidence found) | ✓ The dataset contains 238 duplicate rows, or 1.9% (evidence: Data Quality: 238 fully duplicated rows (1.9%)) | ✗ Duplicate rows may skew revenue calculations or reduce reliability (no evidence found) | ✗ Some product lines or channels may have underperformed versus Q2 (no evidence found) | ✗ Fixing missing revenue would improve data integrity (no evidence found) | ✗ Removing duplicates would enhance future reporting accuracy (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 8775,
+          "output_tokens": 10658,
+          "cached_input_tokens": 8766,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.2167024
+        }
+      }
+    },
+    "D05": {
+      "groundedness": {
+        "score": 0.39285714285714285,
+        "label": "fail",
+        "reasoning": "11/28 claims supported. ✗ Monthly-volume analysis/aggregation was limited to five months. (no evidence found) | ✗ The analyzed last five months were January through May. (no evidence found) | ✗ The last 12 months were not fully analyzed. (no evidence found) | ✗ A complete 12-month analysis was impossible because data were limited. (no evidence found) | ✗ Five-month order volumes showed a consistent trend. (no evidence found) | ✗ Five-month quantities ranged from 1,524 to 1,593. (no evidence found) | ✓ January order volume was 1,524. (evidence: month=1, quantity=1524) | ✓ February order volume was 1,454. (evidence: month=2, quantity=1454) | ✓ March order volume was 1,581. (evidence: month=3, quantity=1581) | ✓ April order volume was 1,541. (evidence: month=4, quantity=1541) | ✓ May order volume was 1,593. (evidence: month=5, quantity=1593) | ✗ March had the highest order volume at 1,581. (no evidence found) | ✗ January had the lowest order volume at 1,524. (no evidence found) | ✗ Demand peaked during the early spring months. (no evidence found) | ✓ Order volume had a general upward trend from January to May. (evidence: Jan–May: 1524, 1454, 1581, 1541, 1593; net increase from 1524 to 1593.) | ✓ Order 1 generated $1,822.28 in July 2024. (evidence: order_id=1, 2024-07-28, revenue=1822.28) | ✗ Order 1 was the highest-revenue single order at $1,822.28. (no evidence found) | ✓ Order 2 generated $2,812.70 on October 9, 2022. (evidence: order_id=2, 2022-10-09, revenue=2812.7) | ✗ Order 2 on October 9, 2022 was the highest-revenue order. (no evidence found) | ✗ October 2022 was a peak sales month. (no evidence found) | ✗ Revenue data received a separate analysis. (no evidence found) | ✗ Revenue analysis showed significant peaks. (no evidence found) | ✗ The October 9, 2022 order was a notable revenue peak. (no evidence found) | ✓ Data quality checks passed. (evidence: Data Quality: no quality issues flagged.) | ✗ Passing data-quality checks ensured the findings were reliable. (no evidence found) | ✗ A five-month scope may not represent 12-month trends. (no evidence found) | ✓ The analysis results contain data for all 12 months. (evidence: 12 groupby rows, months 1 through 12.) | ✓ The report's five-month limitation statement is incorrect. (evidence: Full groupby result covers months 1–12.)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 10125,
+          "output_tokens": 30257,
+          "cached_input_tokens": 10116,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.6092224
+        }
+      }
+    },
+    "DG07": {
+      "groundedness": {
+        "score": 0.5833333333333334,
+        "label": "warn",
+        "reasoning": "14/24 claims supported. ✓ Product 8 is unprofitable (evidence: cost 195.4 > unit_price 191.65) | ✓ Product 8's profit margin is -3.75 (evidence: filter_product: profit_margin=-3.75) | ✗ Product 8's -3.75 margin is a percentage (no evidence found) | ✓ Product 8's costs exceed its selling price (evidence: cost=195.4; unit_price=191.65) | ✓ Product 8's negative margin results from cost exceeding price (evidence: 191.65 - 195.4 = -3.75) | ✓ Product 8's unit price is 191.65 (evidence: filter_product: unit_price=191.65) | ✓ Product 8's cost is 195.4 (evidence: filter_product: cost=195.4) | ✓ Product 8 is in Office Supplies (evidence: filter_product: category=Office Supplies) | ✓ Profit margins were analyzed across products (evidence: derive_profit_margin returned 100 product rows) | ✓ Product 2's profit margin is 362.98 (evidence: Product 2: profit_margin=362.98) | ✗ Product 2 has the highest profit margin (no evidence found) | ✗ Product 2 significantly outperforms other products (no evidence found) | ✓ Product 1 has a loss (evidence: Product 1: profit_margin=-161.82) | ✓ Product 4 has a loss (evidence: Product 4: profit_margin=-86.93) | ✗ Products 1 and 4 have substantial losses (no evidence found) | ✗ Products 1 and 4 have significant losses (no evidence found) | ✓ Profitability varies substantially among products (evidence: Visible margins range from -161.82 to 429.23) | ✗ A horizontal bar chart showed the product comparison (no evidence found) | ✗ A bar chart identified the eight highest-margin products (no evidence found) | ✗ The top eight products offer significant revenue-maximization opportunities (no evidence found) | ✗ Promoting the eight highest-margin products would enhance overall revenue (no evidence found) | ✓ Data quality checks passed (evidence: Data Quality: no quality issues flagged) | ✓ No significant data quality issues were identified (evidence: No quality issues flagged) | ✗ The data quality checks ensure the analysis results are reliable (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 6375,
+          "output_tokens": 15858,
+          "cached_input_tokens": 6366,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.3197424
+        }
+      }
+    },
+    "DG03": {
+      "groundedness": {
+        "score": 0.625,
+        "label": "pass",
+        "reasoning": "15/24 claims supported. ✗ North has strong revenue potential (no evidence found) | ✗ Partner channel has high revenue potential (no evidence found) | ✗ Widget B has strong revenue potential (no evidence found) | ✓ Partner channel revenue is about $343,805.58 (evidence: Partner revenue=$343,805.58) | ✓ Widget B revenue is about $292,693.47 (evidence: Widget B revenue=$292,693.47) | ✗ Targeted marketing and partnership enhancements are clear opportunities (no evidence found) | ✗ North's total revenue is significant (no evidence found) | ✓ Widget B is North's highest-revenue product (evidence: $292,693.47; next highest Service Pack=$276,564.94) | ✓ Partner is North's leading revenue channel (evidence: $343,805.58 vs Direct $342,107.09, Online $339,051.10, Retail $338,796.78) | ✓ North sales-representative performance varies (evidence: Visible rep revenues range from $39,449.54 to at least $23,569.74) | ✓ Rep 1048 is the top rep at about $39,449.54 (evidence: 1048=$39,449.54; next 1027=$38,376.21) | ✗ Widget B has strong market demand (no evidence found) | ✓ Widget B sold 5,805 units (evidence: Widget B units=5,805) | ✓ Widget B has the highest unit sales among products (evidence: 5,805 vs 5,766, 5,623, 5,546, and 5,370) | ✓ Widget B revenue exceeds Service Pack and Gadget Pro (evidence: $292,693.47 vs $276,564.94 and $267,152.37) | ✗ Widget B significantly outperforms Service Pack and Gadget Pro (no evidence found) | ✓ Direct channel revenue is $342,107.09 (evidence: Direct revenue=$342,107.09) | ✓ Direct is the second-highest revenue channel (evidence: Partner $343,805.58 > Direct $342,107.09 > Online $339,051.10 > Retail $338,796.78) | ✓ Direct closely follows Partner in revenue (evidence: Gap=$1,698.49, about 0.5% of Partner revenue) | ✓ Widget B has strong current revenue performance (evidence: Highest product revenue at $292,693.47) | ✓ Lower-performing sales representatives exist (evidence: Many rep revenues are below top rep 1048's $39,449.54) | ✓ There are 238 fully duplicated rows, 1.9% of the dataset (evidence: Data Quality: 238 fully duplicated rows (1.9%)) | ✗ Duplicates may affect reported metric accuracy (no evidence found) | ✗ Following the recommendations can enhance North's performance (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 9891,
+          "output_tokens": 18962,
+          "cached_input_tokens": 9882,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.3832288
+        }
+      }
+    },
+    "DG12": {
+      "groundedness": {
+        "score": 0.42857142857142855,
+        "label": "warn",
+        "reasoning": "9/21 claims supported. ✗ The analysis attempted a churn comparison across loyalty tiers (no evidence found) | ✓ The loyalty_tier column was absent from the dataset (evidence: Displayed 5,000-row fields omit loyalty_tier) | ✓ Gold-tier churn could not be calculated because loyalty-tier data was missing (evidence: No loyalty_tier field or Gold labels in output) | ✓ A one-way ANOVA compared churn rates across plan types (evidence: significance_test: one-way ANOVA) | ✓ The ANOVA statistic was 32.8209 (evidence: statistic: 32.8209) | ✓ The ANOVA p-value was 0.0 (evidence: p_value: 0.0) | ✓ Churn rates differed significantly across plan types (evidence: significant: true; p=0.0) | ✓ Basic had the highest plan churn rate (evidence: Basic 0.2139 > Premium 0.1331 and Standard 0.1208) | ✗ Basic differed significantly from each of the other plans (no evidence found) | ✗ Plan type influences customer retention (no evidence found) | ✗ Longer-tenure customers tend to have lower monthly charges (no evidence found) | ✗ Longer-tenure customers tend to have higher engagement (no evidence found) | ✗ Loyalty is correlated with reduced churn (no evidence found) | ✗ A horizontal bar chart of tenure and engagement was generated (no evidence found) | ✓ C00004 had 59 months of tenure (evidence: C00004 tenure_months: 59) | ✗ C00004 had lower monthly charges (no evidence found) | ✗ C00004 had higher engagement (no evidence found) | ✓ 7.3% of values fell outside 1.5×IQR (evidence: Data Quality: 7.3% outside 1.5×IQR) | ✗ The 7.3% outlier share belonged to support_calls_last_90d (no evidence found) | ✗ The 7.3% outlier share was high (no evidence found) | ✗ The outliers may reduce the reliability of the insights (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 7104,
+          "output_tokens": 18294,
+          "cached_input_tokens": 7095,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.368754
+        }
+      }
+    },
+    "E03": {
+      "groundedness": {
+        "score": 0.8333333333333334,
+        "label": "pass",
+        "reasoning": "30/36 claims supported. ✓ 2024 total revenue was approximately $4.18 million (evidence: 2024 revenue=$4,183,854.57) | ✓ 2024 total revenue was $4,183,854.57 (evidence: 2024 revenue=$4,183,854.57) | ✓ 2022 total revenue was approximately $4.15 million (evidence: 2022 revenue=$4,152,972.88) | ✓ 2022 total revenue was $4,152,972.88 (evidence: 2022 revenue=$4,152,972.88) | ✓ 2023 total revenue was approximately $4.08 million (evidence: 2023 revenue=$4,085,291.63) | ✓ 2023 total revenue was $4,085,291.63 (evidence: 2023 revenue=$4,085,291.63) | ✓ 2024 revenue was higher than 2022 revenue (evidence: $4,183,854.57 > $4,152,972.88) | ✓ 2024 revenue was higher than 2023 revenue (evidence: $4,183,854.57 > $4,085,291.63) | ✗ Revenue had an upward trend across 2022–2024 (no evidence found) | ✗ The revenue pattern indicates improved purchasing behavior (no evidence found) | ✓ Consumer segment revenue was approximately $4.18 million (evidence: Consumer=$4,181,965.25) | ✓ Consumer segment revenue was $4,181,965.25 (evidence: Consumer=$4,181,965.25) | ✓ Corporate segment revenue was approximately $4.17 million (evidence: Corporate=$4,165,301.42) | ✓ Corporate segment revenue was $4,165,301.42 (evidence: Corporate=$4,165,301.42) | ✓ Consumer slightly outperformed Corporate in revenue (evidence: Consumer=$4,181,965.25; Corporate=$4,165,301.42; gap=$16,663.83) | ✓ Consumer was the highest-revenue segment (evidence: Consumer=$4.182m; Corporate=$4.165m; Home Office=$4.075m) | ✓ Corporate ranked second and closely followed Consumer (evidence: Consumer=$4.182m; Corporate=$4.165m; Home Office=$4.075m) | ✓ Books revenue was approximately $3.11 million (evidence: Books=$3,112,756.28) | ✓ Books revenue was $3,112,756.28 (evidence: Books=$3,112,756.28) | ✓ Furniture revenue was approximately $3.07 million (evidence: Furniture=$3,071,245.54) | ✓ Furniture revenue was $3,071,245.54 (evidence: Furniture=$3,071,245.54) | ✓ Books and Furniture were the top two revenue categories (evidence: Books $3.113m > Furniture $3.071m > Clothing $2.753m > Electronics $1.804m > Office Supplies $1.681m) | ✓ The top five customers each generated approximately $28,920–$36,410 (evidence: Top-five range=$28,920.05–$36,409.53) | ✓ Customer 583 was the top customer by revenue (evidence: Top results: 583=$36,409.53; 478=$34,205.61) | ✓ Customer 583 generated $36,409.53 (evidence: customer_id 583=$36,409.53) | ✓ Customer 145 ranked fifth by revenue (evidence: Fifth listed result: customer_id 145) | ✓ Customer 145 generated $28,920.05 (evidence: customer_id 145=$28,920.05) | ✗ Revenue was significantly concentrated among a few customers (no evidence found) | ✓ Product 51 had the highest quantity sold (evidence: Product 51=687; Product 19=678; Product 56=669) | ✓ Product 51 sold 687 units (evidence: product_id 51 quantity=687) | ✓ Product 51 was a popular item among customers (evidence: Highest aggregate quantity sold: 687) | ✗ Product 51 showed strong customer preference (no evidence found) | ✓ Data quality checks passed (evidence: Data Quality: no quality issues flagged) | ✓ No significant quality issues were noted (evidence: No quality issues flagged) | ✗ No significant data-cleaning issues were noted (no evidence found) | ✗ The quality checks ensure the reliability of the analysis (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 1,
+          "input_tokens": 4062,
+          "output_tokens": 11462,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.245488
+        }
+      }
+    },
+    "E12": {
+      "groundedness": {
+        "score": 0.2608695652173913,
+        "label": "fail",
+        "reasoning": "6/23 claims supported. ✗ Customers are willing to purchase larger quantities (no evidence found) | ✗ The overall average discount is low (no evidence found) | ✗ Many orders receive no discount (no evidence found) | ✗ Promotional strategies could enhance sales (no evidence found) | ✓ Multiple orders have a 0.0 discount (evidence: Orders 1, 2, 9, 20, 23, 28, 35) | ✗ A significant number of orders receive no discount (no evidence found) | ✗ The overall average order quantity is relatively high (no evidence found) | ✓ Several orders have quantity 10.0 (evidence: Orders 2, 5, 7, 27, 28) | ✓ Observed order quantities reach 10.0 (evidence: Orders 2, 5, 7, 27, 28 have 10.0) | ✗ A discount scatter plot was produced (no evidence found) | ✗ Most orders received no discount (no evidence found) | ✗ Only a few orders received discounts (no evidence found) | ✗ Discounts were no higher than 15% (no evidence found) | ✗ A quantity scatter plot was produced (no evidence found) | ✓ Order 2 has average quantity 10.0 (evidence: order_id=2, quantity=10.0) | ✓ Order 5 has average quantity 10.0 (evidence: order_id=5, quantity=10.0) | ✗ Orders 2 and 5 have the highest average quantity (no evidence found) | ✗ There is a trend toward larger orders (no evidence found) | ✗ Customers may be inclined to purchase in bulk (no evidence found) | ✗ Increasing discount use may increase sales volumes (no evidence found) | ✗ Bulk discounts or loyalty programs incentivize larger quantities (no evidence found) | ✓ Data quality checks passed (evidence: Data Quality: no quality issues flagged) | ✗ The quality checks ensure the reliability of the insights (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 7542,
+          "output_tokens": 19520,
+          "cached_input_tokens": 5022,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.4024888
+        }
+      }
+    },
+    "E23": {
+      "groundedness": {
+        "score": 0.16666666666666666,
+        "label": "fail",
+        "reasoning": "3/18 claims supported. ✗ Most customers have tenure of 1–5 months (no evidence found) | ✗ Customer IDs 93 and 95 represent the shortest tenures (no evidence found) | ✗ Customer tenure ranges from 1 to 5 months (no evidence found) | ✗ Customer ID 93 has tenure of 1 month (no evidence found) | ✗ Customer ID 95 has tenure of 2 months (no evidence found) | ✗ Customer ID 82 has tenure of 3 months (no evidence found) | ✗ Customer ID 95 has tenure of 4 months (no evidence found) | ✗ Customer ID 88 has tenure of 5 months (no evidence found) | ✗ The grouped values identify individual early-stage customers (no evidence found) | ✗ A tenure-versus-customer-ID scatter plot was generated (no evidence found) | ✗ The scatter plot confirms a concentration in the 1–5 month range (no evidence found) | ✓ Customer tenure data was aggregated (evidence: describe_distribution pandas/groupby, 60 rows) | ✗ The tenure visualization contains notable outliers (no evidence found) | ✗ The data-quality issue concerns support calls (no evidence found) | ✓ 7.3% of values lie beyond 1.5×IQR (evidence: Data Quality: 7.3% outside 1.5×IQR) | ✓ The findings do not support the 1–5 month majority claim (evidence: Months 1–5 total 453 of 5,000; many tenures exceed 5) | ✗ The analysis only lists specific customer IDs and does not summarize the distribution (no evidence found) | ✗ The analysis lacked a comprehensive tenure view of the dataset (no evidence found) [judge disagreement across 3 samples: spread=0.37]",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 5865,
+          "output_tokens": 20832,
+          "cached_input_tokens": 3904,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.4260456
+        }
+      }
+    }
+  }
+}

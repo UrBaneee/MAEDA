@@ -1,0 +1,50 @@
+{
+  "schema_version": "1",
+  "purpose": "Pre-freeze DMXAPI judge calibration on already-observed dev reports",
+  "created_before_dmxapi_scores": true,
+  "source_labels": "data/annotations/human_labels_pooled100.json",
+  "source_labels_sha256": "2dca811fc97ee5cc269d1cae20140c0827dcf5928c37b0e2481c880d64e512ff",
+  "selection_seed": "dmxapi-calibration-v1",
+  "selection_method": "Deterministic greedy marginal-band coverage, then risk-keyword count, then SHA-256 order",
+  "judge_contract": {
+    "provider": "dmxapi",
+    "model": "deepseek-v4-flash-0731",
+    "thinking": "disabled",
+    "samples_per_metric": 3,
+    "base_url": "https://www.dmxapi.cn/v1",
+    "agent_prompts_sha256": "ff4d710acb28d035e91e2c6a7cf56944e272119623e26f51d724854f8f308c71"
+  },
+  "acceptance_gates": {
+    "valid_metric_rate": 1.0,
+    "answer_relevance": {"qwk_min": 0.60, "spearman_min": 0.50, "mae_max": 0.20},
+    "groundedness": {"qwk_min": 0.60, "spearman_min": 0.50, "mae_max": 0.20},
+    "zero_claim_groundedness_count": 0,
+    "notes": "All 20 cached reports contain factual assertions; any not_applicable groundedness is a failed calibration case. Thresholds were fixed before seeing DMXAPI scores."
+  },
+  "label_distribution": {
+    "answer_relevance": {"0.25": 4, "0.5": 4, "0.75": 5, "1.0": 7},
+    "groundedness": {"0.25": 4, "0.5": 6, "0.75": 6, "1.0": 4}
+  },
+  "labels": {
+    "DG03": {"answer_relevance": 0.5, "groundedness": 0.5},
+    "D01": {"answer_relevance": 0.75, "groundedness": 1.0},
+    "D07": {"answer_relevance": 0.25, "groundedness": 0.75},
+    "P14": {"answer_relevance": 1.0, "groundedness": 0.25},
+    "C02": {"answer_relevance": 0.75, "groundedness": 0.25},
+    "DG01": {"answer_relevance": 0.25, "groundedness": 0.5},
+    "D09": {"answer_relevance": 1.0, "groundedness": 0.75},
+    "P11": {"answer_relevance": 0.5, "groundedness": 1.0},
+    "C20": {"answer_relevance": 0.75, "groundedness": 0.5},
+    "C04": {"answer_relevance": 1.0, "groundedness": 0.75},
+    "P13": {"answer_relevance": 0.5, "groundedness": 1.0},
+    "DG11": {"answer_relevance": 0.25, "groundedness": 0.25},
+    "D05": {"answer_relevance": 0.25, "groundedness": 0.5},
+    "C08": {"answer_relevance": 1.0, "groundedness": 0.75},
+    "D11": {"answer_relevance": 0.75, "groundedness": 1.0},
+    "E12": {"answer_relevance": 0.5, "groundedness": 0.25},
+    "C07": {"answer_relevance": 0.75, "groundedness": 0.5},
+    "E03": {"answer_relevance": 1.0, "groundedness": 0.5},
+    "DG07": {"answer_relevance": 1.0, "groundedness": 0.75},
+    "E02": {"answer_relevance": 1.0, "groundedness": 0.75}
+  }
+}

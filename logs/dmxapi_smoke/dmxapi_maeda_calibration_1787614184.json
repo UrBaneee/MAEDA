@@ -1,0 +1,50 @@
+{
+  "probe": "dmxapi_maeda_judge_calibration_v1",
+  "model": "deepseek-v4-flash-0731",
+  "thinking": "disabled",
+  "samples_per_metric": 1,
+  "expected": {
+    "grounded": "relevance >= 0.7 and groundedness >= 0.7",
+    "fabricated": "groundedness <= 0.4",
+    "off_topic": "relevance <= 0.4"
+  },
+  "results": {
+    "grounded": {
+      "answer_relevance": {
+        "score": 1.0,
+        "valid": true,
+        "reasoning": "The report directly answers the user's question by providing the total revenue for each region with specific dollar amounts, fully addressing the query."
+      },
+      "groundedness": {
+        "score": 1.0,
+        "valid": true,
+        "reasoning": "5/5 claims supported. ✓ North leads with $1,363,760.55 (evidence: Findings: North=1363760.55) | ✓ West at $1,271,795.18 (evidence: Findings: West=1271795.18) | ✓ East at $1,164,964.55 (evidence: Findings: East=1164964.55) | ✓ South at $1,006,074.27 (evidence: Findings: South=1006074.27) | ✓ Central at $821,174.97 (evidence: Findings: Central=821174.97)"
+      }
+    },
+    "fabricated": {
+      "answer_relevance": {
+        "score": 0.0,
+        "valid": true,
+        "reasoning": "The report does not address the user's question about total revenue by region. It mentions North region revenue but provides a different figure ($50 million) than the analysis findings, and does not include revenue for South, East, West, or Central regions. The report focuses on year-over-year growth and partnership channels, which are not relevant to the query."
+      },
+      "groundedness": {
+        "score": 0.0,
+        "valid": true,
+        "reasoning": "0/4 claims supported. ✗ North generated $50 million (no evidence found) | ✗ 300% year-over-year increase (no evidence found) | ✗ driven by a new premium product line (no evidence found) | ✗ Partnership channel revenue tripled (no evidence found)"
+      }
+    },
+    "off_topic": {
+      "answer_relevance": {
+        "score": 0.0,
+        "valid": true,
+        "reasoning": "The report does not address the user's question about total revenue by region at all. Instead, it discusses customer churn and unrelated factors, providing no revenue figures or regional breakdown."
+      },
+      "groundedness": {
+        "score": 0.8,
+        "valid": true,
+        "reasoning": "No checkable claims in report."
+      }
+    }
+  },
+  "passed": true
+}

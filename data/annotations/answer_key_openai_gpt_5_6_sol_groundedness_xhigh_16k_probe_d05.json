@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "provider": "dmxapi",
+    "model": "deepseek-v4-flash-0731",
+    "judge_samples": 3,
+    "base_url": "https://www.dmxapi.cn/v1",
+    "cases_from": "data/annotations/openai_groundedness_probe_d05.json",
+    "cases_from_sha256": "acc1d6ca4581a0dd3dba8c7bd4e5dd800d73f7e1a4d41bb148211883a7b03498",
+    "case_ids": [
+      "D05"
+    ],
+    "concurrency": 1,
+    "metrics": [
+      "groundedness"
+    ],
+    "groundedness_provider": "openai",
+    "groundedness_model": "gpt-5.6-sol",
+    "groundedness_reasoning_effort": "xhigh",
+    "groundedness_max_completion_tokens": 16384,
+    "status": "complete",
+    "elapsed_seconds": 336.394,
+    "invalid_metrics": []
+  },
+  "scores": {
+    "D05": {
+      "groundedness": {
+        "score": 0.41935483870967744,
+        "label": "warn",
+        "reasoning": "13/31 claims supported. \u2717 Only five months were analyzed or aggregated (no evidence found) | \u2717 The last 12 months were not fully analyzed (no evidence found) | \u2717 A complete 12-month analysis was impossible because data were limited (no evidence found) | \u2717 Full 12-month order-volume data was not captured (no evidence found) | \u2717 The five-month volume trend was consistent (no evidence found) | \u2717 Five-month quantities ranged from 1,524 to 1,593 (no evidence found) | \u2713 January order volume was 1,524 (evidence: month=1, quantity=1524) | \u2713 February order volume was 1,454 (evidence: month=2, quantity=1454) | \u2713 March order volume was 1,581 (evidence: month=3, quantity=1581) | \u2713 April order volume was 1,541 (evidence: month=4, quantity=1541) | \u2713 May order volume was 1,593 (evidence: month=5, quantity=1593) | \u2713 Order volume generally increased from January to May (evidence: Jan=1,524; May=1,593; net +69, with intervening dips) | \u2717 March had the highest order volume (no evidence found) | \u2717 January had the lowest order volume (no evidence found) | \u2717 Demand peaked in early spring (no evidence found) | \u2717 A revenue-peak analysis was performed (no evidence found) | \u2717 Revenue analysis established significant peaks (no evidence found) | \u2713 Order 1 was in July 2024 and generated $1,822.28 (evidence: order_id=1, 2024-07-28, revenue=1822.28) | \u2717 Order 1 was the highest-revenue single order (no evidence found) | \u2713 Order 2 on October 9, 2022 generated $2,812.70 (evidence: order_id=2, 2022-10-09, revenue=2812.7) | \u2717 Order 2 was the highest-revenue order (no evidence found) | \u2717 The October 9 order was a revenue peak (no evidence found) | \u2717 Sales peaked in October (no evidence found) | \u2717 Revenue peaks occurred on specific dates (no evidence found) | \u2713 Data quality checks passed with no flagged issues (evidence: Data Quality: 1000 rows \u2014 no quality issues flagged) | \u2717 Passing data-quality checks ensured reliability (no evidence found) | \u2717 The five-month-only analysis may not represent 12-month trends (no evidence found) | \u2713 The analysis results contain data for all 12 months (evidence: Groupby lists months 1 through 12) | \u2713 The report's five-month limitation statement is incorrect (evidence: Findings show 12 monthly rows, not five) | \u2713 The report states that only five months were aggregated (evidence: Key Findings and Data Quality Notes state five months) | \u2713 The report suggests a consistent five-month trend (evidence: Executive Summary and Key Findings use 'consistent trend')",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 10125,
+          "output_tokens": 31938,
+          "cached_input_tokens": 10116,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.6428424
+        }
+      }
+    }
+  }
+}

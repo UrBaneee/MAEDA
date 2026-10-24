@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "provider": "dmxapi",
+    "model": "deepseek-v4-flash-0731",
+    "judge_samples": 3,
+    "base_url": "https://www.dmxapi.cn/v1",
+    "cases_from": "data/annotations/openai_groundedness_resume_e12_e23.json",
+    "cases_from_sha256": "a3ab1ef4891c43e76e31d587de47911ecc8ef06db1d9f2cf346438bfb5becc01",
+    "case_ids": [
+      "E12",
+      "E23"
+    ],
+    "concurrency": 2,
+    "metrics": [
+      "groundedness"
+    ],
+    "groundedness_provider": "openai",
+    "groundedness_model": "gpt-5.6-sol",
+    "groundedness_reasoning_effort": "xhigh",
+    "groundedness_max_completion_tokens": 16384,
+    "status": "complete",
+    "elapsed_seconds": 232.106,
+    "invalid_metrics": []
+  },
+  "scores": {
+    "E12": {
+      "groundedness": {
+        "score": 0.2608695652173913,
+        "label": "fail",
+        "reasoning": "6/23 claims supported. \u2717 Customers are willing to purchase larger quantities (no evidence found) | \u2717 The overall average discount is low (no evidence found) | \u2717 Many orders receive no discount (no evidence found) | \u2717 Promotional strategies could enhance sales (no evidence found) | \u2713 Multiple orders have a 0.0 discount (evidence: Orders 1, 2, 9, 20, 23, 28, 35) | \u2717 A significant number of orders receive no discount (no evidence found) | \u2717 The overall average order quantity is relatively high (no evidence found) | \u2713 Several orders have quantity 10.0 (evidence: Orders 2, 5, 7, 27, 28) | \u2713 Observed order quantities reach 10.0 (evidence: Orders 2, 5, 7, 27, 28 have 10.0) | \u2717 A discount scatter plot was produced (no evidence found) | \u2717 Most orders received no discount (no evidence found) | \u2717 Only a few orders received discounts (no evidence found) | \u2717 Discounts were no higher than 15% (no evidence found) | \u2717 A quantity scatter plot was produced (no evidence found) | \u2713 Order 2 has average quantity 10.0 (evidence: order_id=2, quantity=10.0) | \u2713 Order 5 has average quantity 10.0 (evidence: order_id=5, quantity=10.0) | \u2717 Orders 2 and 5 have the highest average quantity (no evidence found) | \u2717 There is a trend toward larger orders (no evidence found) | \u2717 Customers may be inclined to purchase in bulk (no evidence found) | \u2717 Increasing discount use may increase sales volumes (no evidence found) | \u2717 Bulk discounts or loyalty programs incentivize larger quantities (no evidence found) | \u2713 Data quality checks passed (evidence: Data Quality: no quality issues flagged) | \u2717 The quality checks ensure the reliability of the insights (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 7542,
+          "output_tokens": 19520,
+          "cached_input_tokens": 5022,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.4024888
+        }
+      }
+    },
+    "E23": {
+      "groundedness": {
+        "score": 0.16666666666666666,
+        "label": "fail",
+        "reasoning": "3/18 claims supported. \u2717 Most customers have tenure of 1\u20135 months (no evidence found) | \u2717 Customer IDs 93 and 95 represent the shortest tenures (no evidence found) | \u2717 Customer tenure ranges from 1 to 5 months (no evidence found) | \u2717 Customer ID 93 has tenure of 1 month (no evidence found) | \u2717 Customer ID 95 has tenure of 2 months (no evidence found) | \u2717 Customer ID 82 has tenure of 3 months (no evidence found) | \u2717 Customer ID 95 has tenure of 4 months (no evidence found) | \u2717 Customer ID 88 has tenure of 5 months (no evidence found) | \u2717 The grouped values identify individual early-stage customers (no evidence found) | \u2717 A tenure-versus-customer-ID scatter plot was generated (no evidence found) | \u2717 The scatter plot confirms a concentration in the 1\u20135 month range (no evidence found) | \u2713 Customer tenure data was aggregated (evidence: describe_distribution pandas/groupby, 60 rows) | \u2717 The tenure visualization contains notable outliers (no evidence found) | \u2717 The data-quality issue concerns support calls (no evidence found) | \u2713 7.3% of values lie beyond 1.5\u00d7IQR (evidence: Data Quality: 7.3% outside 1.5\u00d7IQR) | \u2713 The findings do not support the 1\u20135 month majority claim (evidence: Months 1\u20135 total 453 of 5,000; many tenures exceed 5) | \u2717 The analysis only lists specific customer IDs and does not summarize the distribution (no evidence found) | \u2717 The analysis lacked a comprehensive tenure view of the dataset (no evidence found) [judge disagreement across 3 samples: spread=0.37]",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 5865,
+          "output_tokens": 20832,
+          "cached_input_tokens": 3904,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.4260456
+        }
+      }
+    }
+  }
+}

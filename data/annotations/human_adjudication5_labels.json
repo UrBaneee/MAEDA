@@ -1,0 +1,31 @@
+{
+  "exported_at": "2026-08-25T21:14:03.743Z",
+  "n_cases": 5,
+  "labels": {
+    "A01": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": "groundedness：“ This figure indicates a significant drop, although the exact revenue from the previous quarter is not provided.” not mentioned from the data"
+    },
+    "A02": {
+      "answer_relevance": 0.5,
+      "groundedness": 0.75,
+      "notes": ""
+    },
+    "A03": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.25,
+      "notes": ""
+    },
+    "A04": {
+      "answer_relevance": 0.25,
+      "groundedness": 0.5,
+      "notes": ""
+    },
+    "A05": {
+      "answer_relevance": 0.75,
+      "groundedness": 0.75,
+      "notes": ""
+    }
+  }
+}

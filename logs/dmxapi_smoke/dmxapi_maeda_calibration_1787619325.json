@@ -1,0 +1,50 @@
+{
+  "probe": "dmxapi_maeda_judge_calibration_v1",
+  "model": "deepseek-v4-flash-0731",
+  "thinking": "disabled",
+  "samples_per_metric": 1,
+  "expected": {
+    "grounded": "relevance >= 0.7 and groundedness >= 0.7",
+    "fabricated": "groundedness <= 0.4",
+    "off_topic": "relevance <= 0.4 and groundedness valid and <= 0.4"
+  },
+  "results": {
+    "grounded": {
+      "answer_relevance": {
+        "score": 1.0,
+        "valid": true,
+        "reasoning": "The report directly answers the user's question by providing the total revenue for each region, listing all five regions with their specific revenue amounts. It fully addresses the query with specific, relevant details."
+      },
+      "groundedness": {
+        "score": 1.0,
+        "valid": true,
+        "reasoning": "6/6 claims supported. ✓ North revenue is $1,363,760.55 (evidence: Findings: North=1363760.55) | ✓ West revenue is $1,271,795.18 (evidence: Findings: West=1271795.18) | ✓ East revenue is $1,164,964.55 (evidence: Findings: East=1164964.55) | ✓ South revenue is $1,006,074.27 (evidence: Findings: South=1006074.27) | ✓ Central revenue is $821,174.97 (evidence: Findings: Central=821174.97) | ✓ North has the highest revenue among regions (evidence: Findings show North=1363760.55, West=1271795.18, East=1164964.55, South=1006074.27, Central=821174.97; no other value exceeds North)"
+      }
+    },
+    "fabricated": {
+      "answer_relevance": {
+        "score": 0.0,
+        "valid": true,
+        "reasoning": "The report does not address the user's question about total revenue by region. It mentions North region revenue but provides a different figure ($50 million) than the analysis findings ($1,363,760.55) and does not include revenue for South, East, West, or Central regions. The report focuses on year-over-year growth and partnership channels, which are not requested."
+      },
+      "groundedness": {
+        "score": 0.0,
+        "valid": true,
+        "reasoning": "0/4 claims supported. ✗ North generated $50 million (no evidence found) | ✗ North had a 300% year-over-year increase (no evidence found) | ✗ Increase driven by a new premium product line (no evidence found) | ✗ Partnership channel revenue tripled (no evidence found)"
+      }
+    },
+    "off_topic": {
+      "answer_relevance": {
+        "score": 0.0,
+        "valid": true,
+        "reasoning": "The report does not address the user's question about total revenue by region at all. It discusses customer churn, support tickets, and competitor promotions, which are unrelated to the requested revenue breakdown by region."
+      },
+      "groundedness": {
+        "score": 0.0,
+        "valid": true,
+        "reasoning": "0/3 claims supported. ✗ Customer churn spiked in March (no evidence found) | ✗ Support tickets rose 40% (no evidence found) | ✗ Competitor launched a 20%-off promotion (no evidence found)"
+      }
+    }
+  },
+  "passed": true
+}

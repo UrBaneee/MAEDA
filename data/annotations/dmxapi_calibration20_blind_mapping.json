@@ -1,0 +1,28 @@
+{
+  "schema_version": "1",
+  "manifest": "data/annotations/dmxapi_calibration20_manifest.json",
+  "manifest_sha256": "addcd900ec9ea81696e6438a8fc2d58e754cf582f4b774b97b827d52a4d02df1",
+  "seed": "dmxapi-calibration20-blind-relabel-v1",
+  "mapping": {
+    "R01": "P14",
+    "R02": "DG03",
+    "R03": "P11",
+    "R04": "E02",
+    "R05": "E12",
+    "R06": "C02",
+    "R07": "C07",
+    "R08": "P13",
+    "R09": "D01",
+    "R10": "C20",
+    "R11": "E03",
+    "R12": "D09",
+    "R13": "C04",
+    "R14": "DG11",
+    "R15": "C08",
+    "R16": "D07",
+    "R17": "DG07",
+    "R18": "D11",
+    "R19": "D05",
+    "R20": "DG01"
+  }
+}

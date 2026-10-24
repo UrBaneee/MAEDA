@@ -1,0 +1,434 @@
+{
+  "repeats": 1,
+  "n_cases": 3,
+  "total_cost_usd": 0.0618,
+  "overall_aggregate_summary": null,
+  "per_metric_summary": {
+    "answer_relevance": null,
+    "groundedness": null,
+    "factual_accuracy": null,
+    "intent_accuracy": null,
+    "tool_selection": null,
+    "step_success_rate": null,
+    "chart_appropriateness": null,
+    "token_cost": null,
+    "retry_count": null,
+    "error_rate": null,
+    "safe_refusal": null,
+    "total_latency": null
+  },
+  "bootstrap_sanity_check": null,
+  "trial_aggregates": [
+    0.8136
+  ],
+  "settings_snapshot": {
+    "intent_refine_trigger": "always"
+  },
+  "trials_raw": [
+    {
+      "D01": {
+        "eval_result": {
+          "run_id": "D01",
+          "query": "Show total sales by region",
+          "scores": [
+            {
+              "metric": "answer_relevance",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "The report directly and fully answers the query 'Show total sales by region' by providing the total revenue for each of the five regions (North, East, West, South, Central), clearly ranking them and presenting the data in both narrative and detailed formats, along with a visualization. All regions are covered with specific figures.",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "groundedness",
+              "score": 0.75,
+              "label": "pass",
+              "reasoning": "9/12 claims supported. \u2713 North region revenue ~$5.26 million (5,260,486.99) (evidence: matches findings North=5260486.99) | \u2713 Central region revenue ~$3.33 million (3,335,031.51) (evidence: matches findings Central=3335031.51) | \u2713 East region revenue ~$4.37 million (4,365,085.285) (evidence: matches findings East=4365085.285) | \u2713 West region revenue ~$4.83 million (4,827,992.42) (evidence: matches findings West=4827992.42) | \u2713 South region revenue ~$3.99 million (3,997,931.605) (evidence: matches findings South=3997931.605) | \u2713 North region has the highest revenue (evidence: 5260486.99 is highest among all 5 region values in findings) | \u2713 Central region has the lowest revenue (evidence: 3335031.51 is lowest among all 5 region values in findings) | \u2713 North significantly outperforms Central (evidence: consistent with values, both extremes verified) | \u2713 South revenue lower than East and West but higher than Central (evidence: 3997931.605 < 4365085.285, 4827992.42; > 3335031.51) | \u2717 Data cleaning removed 942 rows (no evidence found) | \u2717 Data cleaning modified 1,440 rows, affecting 1,440 cells (no evidence found) | \u2717 Cleaning process classified as 'lossy reversible' (no evidence found)",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "factual_accuracy",
+              "score": 0.5,
+              "label": "warn",
+              "reasoning": "Ground truth overlap: 50%",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "intent_accuracy",
+              "score": 0.8,
+              "label": "pass",
+              "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "tool_selection",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "step_success_rate",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "0/1 steps failed",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "chart_appropriateness",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "used ['bar'], expected one of ['bar', 'horizontal_bar']",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "token_cost",
+              "score": 0.98748,
+              "label": "pass",
+              "reasoning": "$0.0125",
+              "raw_value": 0.012519999999999998,
+              "valid": true
+            },
+            {
+              "metric": "retry_count",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "0 retries",
+              "raw_value": 0,
+              "valid": true
+            },
+            {
+              "metric": "error_rate",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "No errors",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "safe_refusal",
+              "score": 0.0,
+              "label": "info",
+              "reasoning": "No refusal",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "total_latency",
+              "score": 0.7,
+              "label": "pass",
+              "reasoning": "57.9s",
+              "raw_value": 57.85514426231384,
+              "valid": true
+            }
+          ],
+          "aggregate_score": 0.8136363636363636,
+          "timestamp": 1787528634.3530471,
+          "test_case_id": "D01",
+          "cleaning_applied_level": "full",
+          "cleaning_stop_reason": "passed",
+          "intent_refined": true,
+          "cleaner_mode": "force_on",
+          "rag_mode": "force_on",
+          "rag_arm_invalid_reason": "rag hard failure (data_input): MCP tool error: Error executing tool retrieve_with_metadata: INDEX_NOT_FOUND: No vector index found for index_dir (requested provider='openai') \u2014 the corpus was never embedded, or index_dir is empty/BM25-only.",
+          "terminal_state": "success",
+          "terminal_detail": null,
+          "eval_error": null
+        },
+        "meta": {
+          "elapsed_s": 57.85,
+          "guardrail_passed": true,
+          "current_phase": "complete",
+          "error": null,
+          "error_type": null,
+          "terminal_state": "success",
+          "terminal_detail": null,
+          "eval_error": null,
+          "mcp_modes": [
+            "mcp"
+          ],
+          "cleaner_mode": "force_on",
+          "rag_mode": "force_on",
+          "rag_arm_invalid_reason": "rag hard failure (data_input): MCP tool error: Error executing tool retrieve_with_metadata: INDEX_NOT_FOUND: No vector index found for index_dir (requested provider='openai') \u2014 the corpus was never embedded, or index_dir is empty/BM25-only.",
+          "data_mismatch": false,
+          "run_id": "a40516195b8f43d8a7c3d1bb07b4e6d6"
+        }
+      },
+      "E01": {
+        "eval_result": {
+          "run_id": "E01",
+          "query": "Give me an overview of this dataset",
+          "scores": [
+            {
+              "metric": "answer_relevance",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as safe_refusal",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "groundedness",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as safe_refusal",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "factual_accuracy",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as safe_refusal",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "intent_accuracy",
+              "score": 0.4,
+              "label": "warn",
+              "reasoning": "query_type mismatch: got descriptive expected exploratory",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "tool_selection",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "used ['pandas_transform'], expected one of ['pandas_transform']",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "step_success_rate",
+              "score": 0.0,
+              "label": "fail",
+              "reasoning": "7/7 steps failed",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "chart_appropriateness",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as safe_refusal before producing charts",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "token_cost",
+              "score": 0.950992,
+              "label": "pass",
+              "reasoning": "$0.0490",
+              "raw_value": 0.049008,
+              "valid": true
+            },
+            {
+              "metric": "retry_count",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "0 retries",
+              "raw_value": 0,
+              "valid": true
+            },
+            {
+              "metric": "error_rate",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "The report claims that 942 rows were removed and 1,440 rows were modified, but there is no evidence or analysis results provided to support these numbers.; The numbers regarding rows removed and modified appear to be fabricated as there are no successful analysis steps or data provided to verify these claims.",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "safe_refusal",
+              "score": 1.0,
+              "label": "info",
+              "reasoning": "The report claims that 942 rows were removed and 1,440 rows were modified, but there is no evidence or analysis results provided to support these numbers.; The numbers regarding rows removed and modified appear to be fabricated as there are no successful analysis steps or data provided to verify these claims.",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "total_latency",
+              "score": 0.7,
+              "label": "pass",
+              "reasoning": "46.5s",
+              "raw_value": 46.51519513130188,
+              "valid": true
+            }
+          ],
+          "aggregate_score": null,
+          "timestamp": 1787528680.868544,
+          "test_case_id": "E01",
+          "cleaning_applied_level": "full",
+          "cleaning_stop_reason": "passed",
+          "intent_refined": true,
+          "cleaner_mode": "force_on",
+          "rag_mode": "force_on",
+          "rag_arm_invalid_reason": "rag hard failure (data_input): MCP tool error: Error executing tool retrieve_with_metadata: INDEX_NOT_FOUND: No vector index found for index_dir (requested provider='openai') \u2014 the corpus was never embedded, or index_dir is empty/BM25-only.",
+          "terminal_state": "safe_refusal",
+          "terminal_detail": "guardrail_fail",
+          "eval_error": null
+        },
+        "meta": {
+          "elapsed_s": 46.52,
+          "guardrail_passed": false,
+          "current_phase": "error",
+          "error": "The report claims that 942 rows were removed and 1,440 rows were modified, but there is no evidence or analysis results provided to support these numbers.; The numbers regarding rows removed and modified appear to be fabricated as there are no successful analysis steps or data provided to verify these claims.",
+          "error_type": "safe_refusal",
+          "terminal_state": "safe_refusal",
+          "terminal_detail": "guardrail_fail",
+          "eval_error": null,
+          "mcp_modes": [
+            "mcp"
+          ],
+          "cleaner_mode": "force_on",
+          "rag_mode": "force_on",
+          "rag_arm_invalid_reason": "rag hard failure (data_input): MCP tool error: Error executing tool retrieve_with_metadata: INDEX_NOT_FOUND: No vector index found for index_dir (requested provider='openai') \u2014 the corpus was never embedded, or index_dir is empty/BM25-only.",
+          "data_mismatch": false,
+          "run_id": "0735520bd2ca4a52b6416f1537b1841e"
+        }
+      },
+      "D06": {
+        "eval_result": {
+          "run_id": "D06",
+          "query": "How many orders were placed by customers in the USA?",
+          "scores": [
+            {
+              "metric": "answer_relevance",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as environment_error",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "groundedness",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as environment_error",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "factual_accuracy",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as environment_error",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "intent_accuracy",
+              "score": 0.6,
+              "label": "pass",
+              "reasoning": "query_type correct: descriptive; metrics overlap: 0%",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "tool_selection",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as environment_error before producing analysis_results",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "step_success_rate",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as environment_error before producing analysis_results",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "chart_appropriateness",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as environment_error before producing charts",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "token_cost",
+              "score": 0.99971,
+              "label": "pass",
+              "reasoning": "$0.0003",
+              "raw_value": 0.00029,
+              "valid": true
+            },
+            {
+              "metric": "retry_count",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "0 retries",
+              "raw_value": 0,
+              "valid": true
+            },
+            {
+              "metric": "error_rate",
+              "score": 0.0,
+              "label": "fail",
+              "reasoning": "Data cleaning failed (data_input): clean_dataset reported an internal error: Dataset not found: sqlite:///data/demo/ecommerce_orders.db",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "safe_refusal",
+              "score": 0.0,
+              "label": "info",
+              "reasoning": "No refusal",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "total_latency",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "4.4s",
+              "raw_value": 4.381120204925537,
+              "valid": true
+            }
+          ],
+          "aggregate_score": null,
+          "timestamp": 1787528685.2499578,
+          "test_case_id": "D06",
+          "cleaning_applied_level": null,
+          "cleaning_stop_reason": null,
+          "intent_refined": true,
+          "cleaner_mode": "force_on",
+          "rag_mode": "force_on",
+          "rag_arm_invalid_reason": null,
+          "terminal_state": "environment_error",
+          "terminal_detail": "data_input",
+          "eval_error": null
+        },
+        "meta": {
+          "elapsed_s": 4.38,
+          "guardrail_passed": false,
+          "current_phase": "error",
+          "error": "Data cleaning failed (data_input): clean_dataset reported an internal error: Dataset not found: sqlite:///data/demo/ecommerce_orders.db",
+          "error_type": "pipeline_error",
+          "terminal_state": "environment_error",
+          "terminal_detail": "data_input",
+          "eval_error": null,
+          "mcp_modes": [
+            "fallback",
+            "mcp"
+          ],
+          "cleaner_mode": "force_on",
+          "rag_mode": "force_on",
+          "rag_arm_invalid_reason": null,
+          "data_mismatch": false,
+          "run_id": "27fee229211f4b4b864a378d523cee83"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "reference_mode": "strict_lower",
+  "n_cases": 20,
+  "rule": "Third-pass adjudication overrides both bounds for five material disagreements; all other values use min/max of blind human passes 1 and 2.",
+  "labels": {
+    "DG03": {
+      "answer_relevance": 0.25,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.5
+    },
+    "C02": {
+      "answer_relevance": 0.25,
+      "notes": "third_pass_adjudication",
+      "groundedness": 0.25
+    },
+    "D09": {
+      "answer_relevance": 0.5,
+      "notes": "third_pass_adjudication",
+      "groundedness": 0.75
+    },
+    "D08": {
+      "answer_relevance": 0.25,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 1.0
+    },
+    "DG01": {
+      "answer_relevance": 0.25,
+      "notes": "third_pass_adjudication",
+      "groundedness": 0.5
+    },
+    "D01": {
+      "answer_relevance": 0.75,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 1.0
+    },
+    "C08": {
+      "answer_relevance": 0.75,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.75
+    },
+    "DG12": {
+      "answer_relevance": 0.25,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.25
+    },
+    "D05": {
+      "answer_relevance": 0.25,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.25
+    },
+    "C04": {
+      "answer_relevance": 1.0,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.75
+    },
+    "D11": {
+      "answer_relevance": 0.75,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 1.0
+    },
+    "E23": {
+      "answer_relevance": 0.25,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0
+    },
+    "D07": {
+      "answer_relevance": 0.75,
+      "notes": "third_pass_adjudication",
+      "groundedness": 0.75
+    },
+    "C07": {
+      "answer_relevance": 0.5,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.5
+    },
+    "C17": {
+      "answer_relevance": 1.0,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 1.0
+    },
+    "E12": {
+      "answer_relevance": 0.25,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0
+    },
+    "C20": {
+      "answer_relevance": 0.5,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.5
+    },
+    "E03": {
+      "answer_relevance": 1.0,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.5
+    },
+    "DG07": {
+      "answer_relevance": 0.75,
+      "notes": "human_pass1_pass2_bounds",
+      "groundedness": 0.5
+    },
+    "C16": {
+      "answer_relevance": 0.25,
+      "notes": "third_pass_adjudication",
+      "groundedness": 0.5
+    }
+  }
+}

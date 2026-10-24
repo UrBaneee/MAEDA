@@ -1,0 +1,302 @@
+{
+  "metadata": {
+    "provider": "dmxapi",
+    "model": "deepseek-v4-flash-0731",
+    "judge_samples": 3,
+    "base_url": "https://www.dmxapi.cn/v1",
+    "cases_from": "data/annotations/dmxapi_calibration20_manifest.json",
+    "cases_from_sha256": "addcd900ec9ea81696e6438a8fc2d58e754cf582f4b774b97b827d52a4d02df1",
+    "case_ids": [
+      "C02",
+      "C04",
+      "C07",
+      "C08",
+      "C20",
+      "D01",
+      "D05",
+      "D07",
+      "D09",
+      "D11",
+      "DG01",
+      "DG03",
+      "DG07",
+      "DG11",
+      "E02",
+      "E03",
+      "E12",
+      "P11",
+      "P13",
+      "P14"
+    ],
+    "concurrency": 4,
+    "status": "incomplete"
+  },
+  "scores": {
+    "C04": {
+      "answer_relevance": {
+        "score": 1.0,
+        "label": "pass",
+        "reasoning": "The report directly answers the user's question by identifying the highest margin category (Books at ~217.83) and the lowest margin category (Office Supplies at ~43.67), and provides specific supporting details such as product-level margins and recommendations.",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 4587,
+          "output_tokens": 199,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00393815
+        }
+      },
+      "groundedness": {
+        "score": 0.5,
+        "label": "warn",
+        "reasoning": "3/6 claims supported. \u2713 Books has the highest margin at approximately 217.83 (evidence: groupby_aggregate_margin shows Books=217.8345, highest among the 5 categories) | \u2713 Office Supplies has the lowest margin at approximately 43.67 (evidence: groupby_aggregate_margin shows Office Supplies=43.67, lowest among the 5 categories) | \u2717 Product 2 generates the highest margin at $362.98 (no evidence found) | \u2717 Product 2 significantly outperforms other products (no evidence found) | \u2713 Products 1 and 4 are incurring substantial losses (evidence: derive_margin shows Product 1 margin=-161.82, Product 4 margin=-86.93) | \u2717 A horizontal bar chart was generated to visualize product margins (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 6336,
+          "output_tokens": 1190,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00688564
+        }
+      }
+    },
+    "C07": {
+      "answer_relevance": {
+        "score": 1.0,
+        "label": "pass",
+        "reasoning": "The report directly addresses the user's question by comparing revenue growth in the North and South regions from 2022 to 2024. It provides specific revenue figures for both regions across the years (North: $439,901.01 in 2022 to $476,047.98 in 2024; South: $348,526.24 in 2022, $313,930.46 in 2023, and $343,617.57 in 2024), highlights the growth trends (North positive growth, South decline then increase), and includes additional relevant details like average revenue comparison. Although it notes that specific growth rates could not be calculated due to an analysis failure, it still fully addresses the core question with the available data. [judge disagreement across 3 samples: spread=0.30]",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 8772,
+          "output_tokens": 510,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00773568
+        }
+      },
+      "groundedness": {
+        "score": 1.0,
+        "label": "pass",
+        "reasoning": "10/10 claims supported. \u2713 North revenue 2022 = $439,901.01 (evidence: groupby_aggregate_revenue: year=2022, region=North, revenue=439901.01) | \u2713 North revenue 2024 = $476,047.98 (evidence: groupby_aggregate_revenue: year=2024, region=North, revenue=476047.98) | \u2713 North revenue growth 2022-2024 is positive (evidence: 439901.01 to 476047.98 is an increase) | \u2713 South revenue 2022 = $348,526.24 (evidence: groupby_aggregate_revenue: year=2022, region=South, revenue=348526.24) | \u2713 South revenue 2023 = $313,930.46 (evidence: groupby_aggregate_revenue: year=2023, region=South, revenue=313930.46) | \u2713 South revenue declined from 2022 to 2023 (evidence: 348526.24 to 313930.46 is a decrease) | \u2713 South revenue increased in 2024 (evidence: groupby_aggregate_revenue: year=2024, region=South, revenue=343617.57 (higher than 313930.46)) | \u2713 North has the highest average revenue at $577.38 (evidence: average_revenue_growth: North=577.3753386960203; other regions: Central=350.63, East=489.48, South=432.35, West=516.99 \u2014 none exceed North) | \u2713 South average revenue is $432.35 (evidence: average_revenue_growth: South=432.3482036957456) | \u2713 238 fully duplicated rows (1.9%) (evidence: Data Quality: 238 fully duplicated rows (1.9%))",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 10521,
+          "output_tokens": 2079,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.01159641
+        }
+      }
+    },
+    "C20": {
+      "answer_relevance": {
+        "score": 0.0,
+        "label": "fail",
+        "reasoning": "The report directly addresses the user's question about comparing average monthly charges between churned and retained customers, but it contains a critical factual error: it states that churned customers have significantly higher average monthly charges, while the analysis findings clearly show the opposite (churned customers have lower average charges: $56.58 vs $63.58 for retained). Since the report's central claim is incorrect and contradicts the evidence, it fails to accurately answer the question. [judge disagreement across 3 samples: spread=1.00]",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 2586,
+          "output_tokens": 336,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00257382
+        }
+      },
+      "groundedness": {
+        "score": 0.42857142857142855,
+        "label": "warn",
+        "reasoning": "3/7 claims supported. \u2717 Churned customers have significantly higher average monthly charges than retained customers (no evidence found) | \u2713 t-test statistic is 6.1314 (evidence: Findings: statistic 6.1314) | \u2713 p-value is 0.0 (evidence: Findings: p_value 0.0) | \u2713 Difference is statistically significant (evidence: Findings: significant True) | \u2717 Strong correlation between higher charges and customer churn (no evidence found) | \u2717 Bar chart shows churned customers incur significantly higher monthly charges (no evidence found) | \u2717 Data quality issue with support_calls_last_90d has 7.3% outliers (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 4335,
+          "output_tokens": 1245,
+          "cached_input_tokens": 1024,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00474458
+        }
+      }
+    },
+    "C08": {
+      "answer_relevance": {
+        "score": 1.0,
+        "label": "pass",
+        "reasoning": "The report directly answers the user's question by comparing the number of orders in Q1 2024 (2,419) versus Q4 2024 (2,527), clearly stating that Q4 had more orders. It provides specific counts and a clear comparison, fully addressing the query.",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 7569,
+          "output_tokens": 241,
+          "cached_input_tokens": 2304,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00490416
+        }
+      },
+      "groundedness": {
+        "score": 0.625,
+        "label": "pass",
+        "reasoning": "5/8 claims supported. \u2713 Q4 2024 had 2,527 orders (evidence: count_orders_per_quarter: quarter=4, order_id=2527) | \u2713 Q1 2024 had 2,419 orders (evidence: count_orders_per_quarter: quarter=1, order_id=2419) | \u2713 Q4 2024 orders surpassed Q1 2024 orders (evidence: 2527 > 2419; no other quarter values shown) | \u2713 Q4 has the highest number of orders compared to Q1 (evidence: 2527 > 2419; no other quarter values shown) | \u2717 Highest revenue in Q3 was order_id 1 at $1,822.28 (no evidence found) | \u2717 Q4's top revenue came from order_id 2 at $2,812.70 (no evidence found) | \u2717 A scatter plot analysis confirms Q4 has the highest number of orders compared to Q1 (no evidence found) | \u2713 Data quality checks passed with no significant issues (evidence: Data Quality: 1000 rows \u2014 no quality issues flagged)",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 9318,
+          "output_tokens": 1723,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.01008356
+        }
+      }
+    },
+    "C02": {
+      "answer_relevance": {
+        "score": 1.0,
+        "label": "pass",
+        "reasoning": "The report directly answers the user's question about how conversion rate differs by marketing channel. It identifies Search as the top channel with the highest conversion rate, provides specific mean conversion rates for each channel (Search, Email, Affiliate, Social, Display), and includes statistical significance testing (ANOVA). It also offers recommendations based on the channel differences. The report fully addresses the question with specific, relevant details.",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 6720,
+          "output_tokens": 309,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00579702
+        }
+      },
+      "groundedness": {
+        "score": 0.7142857142857143,
+        "label": "pass",
+        "reasoning": "10/14 claims supported. \u2713 Search channel has the highest conversion rate (evidence: compare_conversion_rate_by_channel: top=Search, mean=0.0649, highest among segments) | \u2713 Search significantly outperforms other channels (evidence: ANOVA statistic=994.85, p=0.0, significant=True) | \u2713 Email conversion rate is 4.71% (evidence: CAM0001 conversion_rate=0.0471) | \u2713 Affiliate conversion rate is 2.69% (evidence: CAM0002 conversion_rate=0.0269) | \u2713 Social conversion rate is 3.36% (evidence: CAM0003 conversion_rate=0.0336) | \u2713 Email and Social are more effective than Affiliate (evidence: Email mean=0.0442, Social mean=0.0216, Affiliate mean=0.0373; Email>Affiliate, Social<Affiliate) | \u2717 Maximum conversion rate is approximately 13.00% (no evidence found) | \u2717 Minimum conversion rate is 0.00% (no evidence found) | \u2717 CAM0001 achieved the highest ROI of 2023.7 (no evidence found) | \u2713 CAM0001 has a conversion rate of 4.71% (evidence: CAM0001 conversion_rate=0.0471) | \u2717 CAM0001 has lower spend compared to other campaigns (no evidence found) | \u2713 Conversions: 6.9% of values are outliers (evidence: Data Quality: 6.9% outside 1.5\u00d7IQR) | \u2713 Revenue: 7.5% of values are outliers (evidence: Data Quality: 7.5% outside 1.5\u00d7IQR) | \u2713 ROI: 5.7% of values are outliers (evidence: Data Quality: 5.7% outside 1.5\u00d7IQR)",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 8469,
+          "output_tokens": 2752,
+          "cached_input_tokens": 2816,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00925896
+        }
+      }
+    },
+    "D01": {
+      "answer_relevance": {
+        "score": 1.0,
+        "label": "pass",
+        "reasoning": "The report directly answers the user's query 'Show total sales by region' by providing the total revenue for each of the five regions (North, West, East, South, Central) with specific dollar amounts. It includes all regions from the analysis findings, highlights the top and bottom performers, and presents the data clearly in multiple sections. The only minor omission is that the South region's revenue is not explicitly listed in the 'Analysis Details' section, but it is included in the 'Key Findings' and the executive summary context, so the answer is essentially complete.",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 2151,
+          "output_tokens": 346,
+          "cached_input_tokens": 512,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00192239
+        }
+      },
+      "groundedness": {
+        "score": 0.7647058823529411,
+        "label": "pass",
+        "reasoning": "13/17 claims supported. \u2713 North region leads in revenue generation with over $1.36 million (evidence: North revenue=1363760.55) | \u2717 North significantly outperforms other regions (no evidence found) | \u2713 Central region has the lowest revenue at $821,174.97 (evidence: Central=821174.97 is lowest among all regions) | \u2713 North region has the highest revenue at $1,363,760.55 (evidence: North=1363760.55 is highest among all regions) | \u2713 West region revenue is $1,271,795.18 (evidence: West=1271795.18) | \u2713 East region is the third highest region (evidence: East=1164964.55; North and West are higher, South=1006074.27 and Central=821174.97 are lower) | \u2713 East region generated $1,164,964.55 in revenue (evidence: East=1164964.55) | \u2713 Central region has the lowest revenue at $821,174.97 (evidence: Central=821174.97 is lowest among all regions) | \u2713 A group-by aggregation was performed to calculate total revenue for each region (evidence: Findings show groupby_aggregate) | \u2713 North: $1,363,760.55 (evidence: North=1363760.55) | \u2713 West: $1,271,795.18 (evidence: West=1271795.18) | \u2713 East: $1,164,964.55 (evidence: East=1164964.55) | \u2713 Central: $821,174.97 (evidence: Central=821174.97) | \u2717 A bar chart was generated to visually represent revenue by region (no evidence found) | \u2717 Bar chart clearly shows North region leads in revenue generation (no evidence found) | \u2713 238 fully duplicated rows, accounting for 1.9% of the dataset (evidence: Data Quality: 238 fully duplicated rows (1.9%)) | \u2717 Data quality issues may affect the accuracy of the revenue figures reported (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 3900,
+          "output_tokens": 2501,
+          "cached_input_tokens": 512,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.006709
+        }
+      }
+    },
+    "D05": {
+      "answer_relevance": {
+        "score": 0.3,
+        "label": "fail",
+        "reasoning": "The report partially addresses the user's request for monthly order volume over the last 12 months. It provides monthly order volume data for all 12 months in the analysis findings, but the report itself incorrectly claims only five months were analyzed and only presents data for January through May. It misses the key aspect of presenting the complete 12-month monthly order volume breakdown, instead focusing on limited months and irrelevant revenue details. [judge disagreement across 3 samples: spread=0.40]",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 8472,
+          "output_tokens": 293,
+          "cached_input_tokens": 0,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.00715582
+        }
+      },
+      "groundedness": {
+        "score": 0.5384615384615384,
+        "label": "warn",
+        "reasoning": "7/13 claims supported. \u2713 Monthly order volume over the last five months ranged from 1,524 to 1,593 (evidence: groupby result shows Jan=1524, Feb=1454, Mar=1581, Apr=1541, May=1593; range 1524-1593) | \u2717 Only five months of order volume were aggregated (no evidence found) | \u2717 March recorded the highest order volume with 1,581 units (no evidence found) | \u2717 January had the lowest order volume at 1,524 units (no evidence found) | \u2717 Highest revenue from a single order was in July 2024 with order_id 1 at $1,822.28 (no evidence found) | \u2717 Highest revenue from orders occurred on October 9, 2022 with order_id 2 generating $2,812.70 (no evidence found) | \u2713 January order volume was 1,524 (evidence: groupby result: month=1, quantity=1524) | \u2713 February order volume was 1,454 (evidence: groupby result: month=2, quantity=1454) | \u2713 March order volume was 1,581 (evidence: groupby result: month=3, quantity=1581) | \u2713 April order volume was 1,541 (evidence: groupby result: month=4, quantity=1541) | \u2713 May order volume was 1,593 (evidence: groupby result: month=5, quantity=1593) | \u2717 General upward trend in order volume from January to May (no evidence found) | \u2713 Data quality checks passed (evidence: Data Quality section: 1000 rows \u2014 no quality issues flagged)",
+        "valid": true,
+        "raw_value": {
+          "provider": "dmxapi",
+          "model": "deepseek-v4-flash-0731",
+          "calls": 3,
+          "input_tokens": 10221,
+          "output_tokens": 2383,
+          "cached_input_tokens": 512,
+          "returned_models": [
+            "xopdeepseekv4flash0731"
+          ],
+          "cost_cny": 0.01151615
+        }
+      }
+    }
+  }
+}

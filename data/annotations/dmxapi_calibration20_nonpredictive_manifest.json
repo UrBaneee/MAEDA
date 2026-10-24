@@ -1,0 +1,53 @@
+{
+  "schema_version": "2",
+  "purpose": "Pre-freeze DMXAPI judge calibration on the four query types covered by phase 4",
+  "created_before_scores_for_this_case_set": true,
+  "supersedes": "data/annotations/dmxapi_calibration20_manifest.json",
+  "supersession_reason": "The v1 selector omitted the pre-existing 2026-08-23 decision that phase 4 excludes predictive queries; this v2 applies that scope before deterministic selection.",
+  "source_labels": "data/annotations/human_labels_pooled100.json",
+  "source_labels_sha256": "2dca811fc97ee5cc269d1cae20140c0827dcf5928c37b0e2481c880d64e512ff",
+  "eligible_query_types": ["descriptive", "diagnostic", "comparative", "exploratory"],
+  "excluded_query_types": ["predictive"],
+  "eligible_pool_size": 84,
+  "selection_seed": "dmxapi-calibration-v2-nonpredictive",
+  "selection_method": "Filter query_type first; then deterministic greedy marginal-band coverage, risk-keyword count, and SHA-256 order. No DMXAPI answer key is read.",
+  "judge_contract": {
+    "provider": "dmxapi",
+    "model": "deepseek-v4-flash-0731",
+    "thinking": "disabled",
+    "samples_per_metric": 3,
+    "base_url": "https://www.dmxapi.cn/v1"
+  },
+  "acceptance_gates": {
+    "valid_metric_rate": 1.0,
+    "answer_relevance": {"qwk_min": 0.60, "spearman_min": 0.50, "mae_max": 0.20},
+    "groundedness": {"qwk_min": 0.60, "spearman_min": 0.50, "mae_max": 0.20},
+    "zero_claim_groundedness_count": 0
+  },
+  "label_distribution": {
+    "answer_relevance": {"0.25": 4, "0.5": 4, "0.75": 5, "1.0": 7},
+    "groundedness": {"0.25": 4, "0.5": 6, "0.75": 6, "1.0": 4}
+  },
+  "labels": {
+    "DG03": {"answer_relevance": 0.5, "groundedness": 0.5},
+    "C02": {"answer_relevance": 0.75, "groundedness": 0.25},
+    "D09": {"answer_relevance": 1.0, "groundedness": 0.75},
+    "D08": {"answer_relevance": 0.25, "groundedness": 1.0},
+    "DG01": {"answer_relevance": 0.25, "groundedness": 0.5},
+    "D01": {"answer_relevance": 0.75, "groundedness": 1.0},
+    "C08": {"answer_relevance": 1.0, "groundedness": 0.75},
+    "DG12": {"answer_relevance": 0.5, "groundedness": 0.25},
+    "D05": {"answer_relevance": 0.25, "groundedness": 0.5},
+    "C04": {"answer_relevance": 1.0, "groundedness": 0.75},
+    "D11": {"answer_relevance": 0.75, "groundedness": 1.0},
+    "E23": {"answer_relevance": 0.5, "groundedness": 0.25},
+    "D07": {"answer_relevance": 0.25, "groundedness": 0.75},
+    "C07": {"answer_relevance": 0.75, "groundedness": 0.5},
+    "C17": {"answer_relevance": 1.0, "groundedness": 1.0},
+    "E12": {"answer_relevance": 0.5, "groundedness": 0.25},
+    "C20": {"answer_relevance": 0.75, "groundedness": 0.5},
+    "E03": {"answer_relevance": 1.0, "groundedness": 0.5},
+    "DG07": {"answer_relevance": 1.0, "groundedness": 0.75},
+    "C16": {"answer_relevance": 1.0, "groundedness": 0.75}
+  }
+}

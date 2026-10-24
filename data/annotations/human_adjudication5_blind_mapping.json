@@ -1,0 +1,13 @@
+{
+  "schema_version": "1",
+  "manifest": "data/annotations/human_adjudication5_manifest.json",
+  "manifest_sha256": "00db6d446992c13c439b83e1cb774535729f313b23c4ea1ab3e7e7e154982954",
+  "seed": "human-adjudication5-v1",
+  "mapping": {
+    "A01": "DG01",
+    "A02": "D09",
+    "A03": "C02",
+    "A04": "C16",
+    "A05": "D07"
+  }
+}

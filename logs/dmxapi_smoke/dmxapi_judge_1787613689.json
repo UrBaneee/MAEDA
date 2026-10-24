@@ -1,0 +1,58 @@
+{
+  "probe": "dmxapi_judge_qualification_v1",
+  "base_url": "https://www.dmxapi.cn",
+  "requested_model": "deepseek-v4-flash-0731",
+  "thinking": "disabled",
+  "pattern": "warm_then_fan_out",
+  "price_cny_per_million": {
+    "input_uncached": 0.79,
+    "input_cached": 0.158,
+    "output": 1.58
+  },
+  "max_cost_cny": 0.05,
+  "total_cost_cny": 0.00044556,
+  "calls": [
+    {
+      "index": 1,
+      "model": "xopdeepseekv4flash0731",
+      "model_is_gateway_alias": true,
+      "latency_seconds": 1.734,
+      "score": 1.0,
+      "reason": "答案与证据完全一致，准确复述了营收和同比增长数据。",
+      "usage": {
+        "completion_tokens": 29,
+        "prompt_tokens": 122,
+        "total_tokens": 151
+      },
+      "cost_cny": 0.0001422
+    },
+    {
+      "index": 2,
+      "model": "xopdeepseekv4flash0731",
+      "model_is_gateway_alias": true,
+      "latency_seconds": 0.964,
+      "score": 1.0,
+      "reason": "答案与证据完全一致，准确反映了2024年华东区Widget A的营收和同比增长数据。",
+      "usage": {
+        "completion_tokens": 35,
+        "prompt_tokens": 122,
+        "total_tokens": 157
+      },
+      "cost_cny": 0.00015168
+    },
+    {
+      "index": 3,
+      "model": "xopdeepseekv4flash0731",
+      "model_is_gateway_alias": true,
+      "latency_seconds": 1.399,
+      "score": 1.0,
+      "reason": "答案与证据完全一致，准确反映了2024年华东区Widget A的营收和同比增长数据。",
+      "usage": {
+        "completion_tokens": 35,
+        "prompt_tokens": 122,
+        "total_tokens": 157
+      },
+      "cost_cny": 0.00015168
+    }
+  ]
+}

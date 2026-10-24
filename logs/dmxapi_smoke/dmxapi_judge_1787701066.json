@@ -1,0 +1,70 @@
+{
+  "probe": "dmxapi_judge_qualification_v1",
+  "base_url": "https://www.dmxapi.cn",
+  "requested_model": "qwen3.8-max",
+  "thinking": "disabled",
+  "pattern": "warm_then_fan_out",
+  "price_cny_per_million": {
+    "input_uncached": 9.48,
+    "input_cached": 1.185,
+    "output": 28.44
+  },
+  "max_cost_cny": 0.1,
+  "total_cost_cny": 0.00662652,
+  "calls": [
+    {
+      "index": 1,
+      "model": "qwen3.8-max",
+      "model_is_gateway_alias": false,
+      "latency_seconds": 1.784,
+      "score": 1.0,
+      "reason": "The answer exactly matches the revenue and growth rate stated in the evidence.",
+      "usage": {
+        "completion_tokens": 27,
+        "prompt_tokens": 155,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 155
+        },
+        "total_tokens": 182
+      },
+      "cost_cny": 0.00223728
+    },
+    {
+      "index": 2,
+      "model": "qwen3.8-max",
+      "model_is_gateway_alias": false,
+      "latency_seconds": 1.536,
+      "score": 1.0,
+      "reason": "Answer exactly matches the evidence regarding revenue and growth rate.",
+      "usage": {
+        "completion_tokens": 24,
+        "prompt_tokens": 155,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 155
+        },
+        "total_tokens": 179
+      },
+      "cost_cny": 0.00215196
+    },
+    {
+      "index": 3,
+      "model": "qwen3.8-max",
+      "model_is_gateway_alias": false,
+      "latency_seconds": 1.759,
+      "score": 1.0,
+      "reason": "The answer exactly matches the revenue and growth rate stated in the evidence.",
+      "usage": {
+        "completion_tokens": 27,
+        "prompt_tokens": 155,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 155
+        },
+        "total_tokens": 182
+      },
+      "cost_cny": 0.00223728
+    }
+  ]
+}

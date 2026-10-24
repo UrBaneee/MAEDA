@@ -1,0 +1,174 @@
+{
+  "repeats": 1,
+  "n_cases": 1,
+  "total_cost_usd": 0.0336,
+  "overall_aggregate_summary": null,
+  "per_metric_summary": {
+    "answer_relevance": null,
+    "groundedness": null,
+    "factual_accuracy": null,
+    "intent_accuracy": null,
+    "tool_selection": null,
+    "step_success_rate": null,
+    "chart_appropriateness": null,
+    "token_cost": null,
+    "retry_count": null,
+    "error_rate": null,
+    "safe_refusal": null,
+    "total_latency": null
+  },
+  "bootstrap_sanity_check": null,
+  "trial_aggregates": [
+    0.0
+  ],
+  "settings_snapshot": {
+    "intent_refine_trigger": "always"
+  },
+  "trials_raw": [
+    {
+      "C02": {
+        "eval_result": {
+          "run_id": "C02",
+          "query": "How does conversion rate differ by marketing channel?",
+          "scores": [
+            {
+              "metric": "answer_relevance",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as safe_refusal",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "groundedness",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as safe_refusal",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "factual_accuracy",
+              "score": 0.0,
+              "label": "not_applicable",
+              "reasoning": "run terminated as safe_refusal",
+              "raw_value": null,
+              "valid": false
+            },
+            {
+              "metric": "intent_accuracy",
+              "score": 0.75,
+              "label": "pass",
+              "reasoning": "query_type correct: comparative; metrics overlap: 0%",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "tool_selection",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "used ['pandas_transform'], expected one of ['comparison', 'pandas_transform']",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "step_success_rate",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "0/2 steps failed",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "chart_appropriateness",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "used ['bar', 'dashboard', 'horizontal_bar'], expected one of ['bar']",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "token_cost",
+              "score": 0.966429,
+              "label": "pass",
+              "reasoning": "$0.0336",
+              "raw_value": 0.033571000000000004,
+              "valid": true
+            },
+            {
+              "metric": "retry_count",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "0 retries",
+              "raw_value": 0,
+              "valid": true
+            },
+            {
+              "metric": "error_rate",
+              "score": 1.0,
+              "label": "pass",
+              "reasoning": "Report claims 'Campaign CAM0002' has the highest 'conversion rate' (0.00133), but the underlying data shows 'CAM0090' at 0.005643695834498183 is actually highest \u2014 a specific, checkable factual error, not the true extreme.",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "safe_refusal",
+              "score": 1.0,
+              "label": "info",
+              "reasoning": "Report claims 'Campaign CAM0002' has the highest 'conversion rate' (0.00133), but the underlying data shows 'CAM0090' at 0.005643695834498183 is actually highest \u2014 a specific, checkable factual error, not the true extreme.",
+              "raw_value": null,
+              "valid": true
+            },
+            {
+              "metric": "total_latency",
+              "score": 0.7,
+              "label": "pass",
+              "reasoning": "53.7s",
+              "raw_value": 53.68503403663635,
+              "valid": true
+            }
+          ],
+          "aggregate_score": null,
+          "timestamp": 1787529080.1860118,
+          "test_case_id": "C02",
+          "cleaning_applied_level": "full",
+          "cleaning_stop_reason": "no_diff",
+          "intent_refined": true,
+          "cleaner_mode": "force_on",
+          "rag_mode": "force_on",
+          "rag_arm_invalid_reason": null,
+          "terminal_state": "safe_refusal",
+          "terminal_detail": "guardrail_fail",
+          "eval_error": null
+        },
+        "meta": {
+          "elapsed_s": 53.68,
+          "guardrail_passed": false,
+          "current_phase": "error",
+          "error": "Report claims 'Campaign CAM0002' has the highest 'conversion rate' (0.00133), but the underlying data shows 'CAM0090' at 0.005643695834498183 is actually highest \u2014 a specific, checkable factual error, not the true extreme.",
+          "error_type": "safe_refusal",
+          "terminal_state": "safe_refusal",
+          "terminal_detail": "guardrail_fail",
+          "eval_error": null,
+          "mcp_modes": [
+            "mcp"
+          ],
+          "cleaner_mode": "force_on",
+          "rag_mode": "force_on",
+          "rag_arm_invalid_reason": null,
+          "data_mismatch": false,
+          "run_id": "7b430a39eb1f4f7e8e51c303cc2163aa"
+        }
+      }
+    }
+  ],
+  "judge_usage_metadata_measured": [],
+  "judge_cost_usd_measured": 0.0,
+  "judge_pricing_used": {
+    "claude-sonnet-5": {
+      "input": 0.002,
+      "output": 0.01
+    }
+  },
+  "pipeline_plus_judge_cost_usd": 0.0336
+}

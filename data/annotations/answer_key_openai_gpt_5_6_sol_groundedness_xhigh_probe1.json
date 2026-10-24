@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "provider": "dmxapi",
+    "model": "deepseek-v4-flash-0731",
+    "judge_samples": 3,
+    "base_url": "https://www.dmxapi.cn/v1",
+    "cases_from": "data/annotations/openai_groundedness_probe1.json",
+    "cases_from_sha256": "45c3eef7d69afb67c4e1a28dc411b1d6fb2171ca0d5bc111301ea38b6435a8ed",
+    "case_ids": [
+      "D09"
+    ],
+    "concurrency": 1,
+    "metrics": [
+      "groundedness"
+    ],
+    "groundedness_provider": "openai",
+    "groundedness_model": "gpt-5.6-sol",
+    "groundedness_reasoning_effort": "xhigh",
+    "status": "complete",
+    "elapsed_seconds": 79.642,
+    "invalid_metrics": []
+  },
+  "scores": {
+    "D09": {
+      "groundedness": {
+        "score": 0.35714285714285715,
+        "label": "fail",
+        "reasoning": "5/14 claims supported. \u2713 Maximum single-order revenue was $4,992.20 (evidence: 5810=$4,992.20; 6553=$4,992.20; next-highest=$4,965.50) | \u2713 Order 5810 generated $4,992.20 and was co-highest (evidence: 5810=4992.2; tied with 6553=4992.2) | \u2713 Order 5810's customer was from the UK (evidence: join result: 5810, 4992.2, UK) | \u2717 The UK offers significant high-value-order targeting opportunities (no evidence found) | \u2717 The UK leads in revenue generation (no evidence found) | \u2717 Order 5810 is a key contributor to overall sales performance (no evidence found) | \u2717 A scatter plot of order_id and revenue was generated (no evidence found) | \u2713 Order 6553 tied order 5810 at $4,992.20 (evidence: 5810=4992.2; 6553=4992.2) | \u2717 A bar chart displaying order_id by country was created (no evidence found) | \u2717 The UK is a significant market (no evidence found) | \u2717 Order 5810 was the sole revenue standout (no evidence found) | \u2717 The UK has demonstrated potential for similar high-value orders (no evidence found) | \u2713 Data quality checks passed (evidence: Data Quality: 1000 rows; no quality issues flagged) | \u2717 Data quality checks ensured the analysis results were reliable (no evidence found)",
+        "valid": true,
+        "raw_value": {
+          "provider": "openai",
+          "model": "gpt-5.6-sol",
+          "calls": 3,
+          "input_tokens": 5814,
+          "output_tokens": 8344,
+          "cached_input_tokens": 3870,
+          "returned_models": [
+            "gpt-5.6-sol"
+          ],
+          "cost_usd": 0.176204
+        }
+      }
+    }
+  }
+}

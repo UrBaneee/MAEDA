@@ -1,0 +1,13 @@
+{
+  "schema_version": "1",
+  "purpose": "Blind third-pass adjudication of the five material human-label disagreements",
+  "created_before_third_pass_labels": true,
+  "source": "ECOSYSTEM_INTEGRATION_PLAN.md appendix EV",
+  "labels": {
+    "C16": {},
+    "D09": {},
+    "D07": {},
+    "C02": {},
+    "DG01": {}
+  }
+}

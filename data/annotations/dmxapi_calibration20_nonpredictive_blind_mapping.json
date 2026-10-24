@@ -1,0 +1,28 @@
+{
+  "schema_version": "1",
+  "manifest": "data/annotations/dmxapi_calibration20_nonpredictive_manifest.json",
+  "manifest_sha256": "f82b9a5b2bc0cfd3604ff32afcf038bd4cca1862e205fa7878cacd59eaac27ac",
+  "seed": "dmxapi-calibration20-nonpredictive-blind-v1",
+  "mapping": {
+    "R01": "D01",
+    "R02": "C07",
+    "R03": "D11",
+    "R04": "E23",
+    "R05": "DG01",
+    "R06": "C16",
+    "R07": "C17",
+    "R08": "D09",
+    "R09": "C08",
+    "R10": "D08",
+    "R11": "D05",
+    "R12": "C02",
+    "R13": "E12",
+    "R14": "E03",
+    "R15": "DG03",
+    "R16": "C04",
+    "R17": "C20",
+    "R18": "D07",
+    "R19": "DG12",
+    "R20": "DG07"
+  }
+}
