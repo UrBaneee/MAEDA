@@ -1389,8 +1389,16 @@ Candidates, applied cumulatively to Layer 1's output:
 | 0 | baseline: `supported_count / total_claims`, all claims, boolean verdict |
 | 1 | **restrict to the human-read sections** (Executive Summary, Key Findings, Analysis Details) via `section` |
 | 2 | **exempt honest failure reports**: a `not_addressed` claim that reports a tool or step failure is not a deduction (§9 R2.2) |
+| 2a | **remove chart claims** (§9 R5): a claim about a chart, plot or other visual enters neither score. Applied offline by a fixed pattern over `claim` (`CHART` in `scripts/regrade_incremental_offline.py`), frozen with the rest of the rule by commit hash |
 | 3 | **three-way verdict**: `contradicted` always deducts; `not_addressed` deducts, and is counted and warned separately as possible evidence-coverage failure |
 | 4 | **centrality weighting** by `references` |
+
+**Step 2a was added after steps 0–2 had been computed on the calibration set**
+(user adjudication, 2026-10-31, 附录 FG). The rule itself predates that result
+(§9 R5, 2026-10-30) and has no tunable parameter, but its placement in this table
+was decided after seeing that steps 1 and 2 did not close the gap, and after a
+post-hoc diagnostic on the same 20 cases (附录 FF.3). Its effect there is
+therefore not evidence for it; only data the rule has not seen can be.
 
 **The stopping rule is pre-registered, not chosen afterwards.** QWK against the
 human reference is computed with bootstrap CI at each step. **The frozen rule is
@@ -1601,8 +1609,8 @@ Neither metric covers these. Each is also declared out of scope in §8.3.
 
 - **Chart correctness.** The annotation page contains no rendered chart (no
   `<img>`, no embedded image data), so it is **structurally absent** from the
-  reference. Chart claims are still tagged and counted by §8.6.1 and reported
-  descriptively; they do not enter either score.
+  reference. Chart claims are identified offline (§8.6.2 step 2a), counted and
+  reported descriptively; they do not enter either score.
 - **Citation attribution.** Whether a cited source is the right one is not
   judged, and today it could not be: `insight.sources` is never produced by the
   model (`INSIGHT_GENERATOR_SYSTEM`'s output schema has no such field), and
