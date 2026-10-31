@@ -1177,3 +1177,29 @@ def test_analysis_plan_from_dict_with_metadata():
     plan = AnalysisPlan.from_llm_response(data)
     assert plan.estimated_complexity == "complex"
     assert plan.rationale == "multi-step"
+
+
+class TestGroupbyCountRendering:
+    """docs/bug_groupby_agg_rendering.md / 附录 FF."""
+
+    def _df(self):
+        return pd.DataFrame({"order_id": range(1, 7), "quarter": [1, 1, 1, 4, 4, 2]})
+
+    def test_count_is_not_rendered_as_the_source_column(self):
+        r = pandas_tool(self._df(), {"operation": "groupby", "group_by": ["quarter"],
+                                     "agg_col": "order_id", "agg_func": "count"}, {})
+        assert r["result"][0] == {"quarter": 1, "order_id_count": 3}
+        assert "order_id_count=3" in r["result_summary"]
+        assert "order_id=3" not in r["result_summary"]
+        assert r["agg_func"] == "count" and r["n_groups"] == 3
+
+    def test_chained_df_keeps_source_name(self):
+        r = pandas_tool(self._df(), {"operation": "groupby", "group_by": ["quarter"],
+                                     "agg_col": "order_id", "agg_func": "count"}, {})
+        assert "order_id" in r["result_df"].columns
+
+    def test_sum_name_unchanged(self):
+        df = pd.DataFrame({"region": ["a", "a"], "revenue": [1.0, 2.0]})
+        r = pandas_tool(df, {"operation": "groupby", "group_by": ["region"],
+                             "agg_col": "revenue", "agg_func": "sum"}, {})
+        assert r["result"] == [{"region": "a", "revenue": 3.0}]

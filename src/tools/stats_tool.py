@@ -408,8 +408,15 @@ def pandas_groupby(
     result = df.groupby(group_by)[agg_col].agg(func).reset_index()
     if sort_desc:
         result = result.sort_values(agg_col, ascending=False)
+    # docs/bug_groupby_agg_rendering.md: a count keeps the source column's
+    # name, so `order_id=2527` reads as an ID when it means 2,527 orders. Only
+    # the rendered records are renamed. result_df keeps the source name on
+    # purpose: analysis_agent._select_input_dataframe chains it into later
+    # steps whose parameters were planned against source column names (附录 FF).
+    # sum/mean/etc. keep the name because the unit is unchanged.
+    rendered = result.rename(columns={agg_col: f"{agg_col}_count"}) if func == "count" else result
     return {
-        "result": result.to_dict(orient="records"),
+        "result": rendered.to_dict(orient="records"),
         "result_df": result,
         "n_groups": len(result),
         "agg_func": func,
@@ -643,6 +650,7 @@ def pandas_tool(df: pd.DataFrame, parameters: dict, prior_results: dict) -> dict
         "result_df": r.get("result_df"),
         "result_summary": summary,
         "warnings": [],
+        **{k: r[k] for k in ("agg_func", "n_groups") if k in r},
     }
 
 
