@@ -110,6 +110,48 @@ deliberate narrowing of scope, not an omission.
 
 > Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DW.4; transcribed verbatim.
 
+**Two other query types are also skipped by `scripts/compute_ground_truth.py`
+and are nevertheless retained.** The script skips predictive / data_mismatch /
+ambiguous because none has a checkable **numeric** ground truth
+(`_KNOWN_UNANSWERABLE_CASES`, `tests/unit/test_phase9.py:1262`). That reason is
+not the same in all three cases:
+
+- **predictive** — the fact is not in the data at all. No method recovers it.
+  **Excluded** (user adjudication, 2026-08-23, above).
+- **data_mismatch** — the query asks for something the dataset does not
+  contain. Whether it contains it is trivially decidable at authoring time;
+  what is missing is only that the correct answer is a refusal rather than a
+  number. **Retained.**
+- **ambiguous** — whether a query is ambiguous given the schema is likewise
+  decidable at authoring time. **Retained.**
+
+The two retained types carry a **behavioural** ground truth
+(`expected_behavior`) and are scored by `safe_refusal` and `error_rate`, not by
+`factual_accuracy`. They are **not** part of H1/H3's sample under any value of
+`cleaning_relevant`.
+
+**Why they are not dropped along with predictive**: `safe_refusal` is the one
+metric that answers "does the system invent an answer when the data cannot
+support one". A holdout with no absent-data cases cannot measure it. The RAG
+side protects exactly this property deliberately — TB5's event script carries
+two `unexplained` events for it, and 附录 AA.2 raised an alarm when IQR
+clipping threatened one of them. Removing the MAEDA-side equivalent would leave
+the two halves asymmetric for no reason.
+
+**Prerequisite, not yet met.** `score_factual_accuracy` returns a score for
+every case rather than `valid=False` when no numeric ground truth exists
+(`src/eval/metrics.py:714-727`: a case with no comparable summary numbers
+returns 0.8 / "pass" / "No numbers to cross-check"), and it is **not** covered
+by E3's not-applicable gate, which reaches only `answer_relevance` and
+`groundedness` (`src/eval/runner.py:272-275`). Until corrected these cases
+would contribute a fabricated `factual_accuracy` to any sample they entered —
+and the same defect lets a run whose analysis steps all failed score 0.8 on
+H1/H3's primary metric. **The correction is required before the reveal** and is
+tracked in the pre-reveal patch batch.
+
+> Adjudications 2026-10-28 (query-type scope) and 2026-10-30 (the
+> `score_factual_accuracy` defect, found while verifying the prerequisite).
+
 ### 1.2 How the reveal is executed — who, in which process, with which command
 
 **(A) MAEDA holdout — SUSPENDED.** The command below targeted the retired
@@ -528,6 +570,25 @@ introduced before the freeze and declared here**.
 Everything in this section changed **before** the freeze and is declared so that
 a reader of the 阶段 4 report does not attribute it to the experiment.
 
+### 3.0 `insight.sources` is removed before the calibration re-run
+
+`insight.sources` is never produced by the model — `INSIGHT_GENERATOR_SYSTEM`'s
+output schema has no such field — and `src/agents/insight_agent.py:199-203`
+fills it with the run's top three retrieved filenames, identically on every
+insight. It then reaches the report-writer prompt through
+`to_dict()` (`:255`). Removal is adjudicated (路线 A, user, 2026-10-26).
+
+**It must land before the calibration re-run**, so that calibration and reveal
+score the same report shape; landing it afterwards would calibrate on reports
+carrying the fabricated field and reveal on reports without it.
+
+**Measured scope of the change: none of the 20 stored calibration reports cites
+any source file** (zero hits for a filename pattern across all 20), so the
+report writer is already ignoring the field and its removal is not expected to
+alter report text. *A bound, not a proof*: the field's presence in the prompt
+could still affect wording in ways a filename search does not detect, and these
+20 reports predate the 2026-08-17 data re-render.
+
 ### 3.1 Glossary alias matching changes intent resolution (附录 CQ.4 #1)
 
 Since `a7f808d`, alias matching can resolve mentions that previously failed:
@@ -824,7 +885,8 @@ on the cleaner arm of experiment 1.
 | (15) `--split test` refuses a non-`always` `intent_refine_trigger` (附录 DD.3) | **Yes** — implemented in `scripts/run_eval.py`; stated in §1.2 and §3.2. **Now targets a retired holdout** (§1.6) — still mechanically active (protects the `test` label), but see (21) |
 | (20) part 2 — pre-registration holdout identity rebuild (附录 DU.3/DW) | **Partially done.** §1.6 rewritten in full (附录 DW.3); §1.1 rewritten in full as a three-set table (附录 DW.4); §1.2 (A) marked SUSPENDED with the retired command retained as record only, (B) untouched (附录 DW.5); §0 `k` row rewritten, N row added, arm-count/硬约束-1 "Closed" block appended (附录 DW.6). **Still open, genuinely, not just unwritten**: the new MAEDA holdout's size N (blocked on σ_hetero, 清单 (5) — 附录 DV: dev-split pilot completed 2026-08-23 but measured `repeats=1`, so σ_hetero was never obtained) and the new reveal command for §1.2 (A) (blocked on 清单 (21)'s labelling decision). Both markers are left as **NOT YET DETERMINED** / **NOT YET WRITTEN** deliberately — they are unresolved facts, not missing prose. §1.7 has restored the CP.2 disclosure that 附录 DW.3 had deleted from this file, so the gap that this row's earlier phrasing implicitly left open is repaired. |
 | (21) new holdout label vs. guard consistency (附录 DU.4) | **Not started.** If the new MAEDA holdout reuses `split == "test"`, gates (15) and (16) continue to protect it unchanged; if it is labelled differently, both gates go silently dead (§1.2 (A) annotation, 附录 DW.5) and must be updated together with a test proving the new label is still caught (判据 CK.6). |
-| (22) pre-registered comparisons and decision rules (附录 DW.6(3)(ii), EB, EC.3, ED.2) | **Yes** — §7. Arms, the three confirmatory hypotheses (H1/H2/H3), the routing-accuracy analysis, sample-eligibility fields, stratification rule, and multiplicity correction are all written. **7.6's decision rule is conditional on N**, the new MAEDA holdout's size, **which is not yet determined** (blocked on σ_hetero, 清单 (5)) — if N comes in materially smaller than the retired holdout's 41, 7.6 must be recomputed rather than carried over as written. |
+| (22) pre-registered comparisons and decision rules (附录 DW.6(3)(ii), EB, EC.3, ED.2) | **Yes** — §7. Arms, the three confirmatory hypotheses (H1/H2/H3), the routing-accuracy analysis, sample-eligibility fields, stratification rule, and multiplicity correction are all written. **7.6's decision rule is conditional on N**, the new MAEDA holdout's size, **which is not yet determined** (blocked on σ_hetero, 清单 (5)) — if N comes in materially smaller than the retired holdout's 41, 7.6 must be recomputed rather than carried over as written. **Amended 2026-10-30**: `groundedness` does not meet §8.1's bar, so **H2 is exploratory and the confirmatory set is H1 and H3** (§8.3(1)); §7.6's multiplicity is recomputed at two tests, 97.5%. §7.3 is expanded with 实验 2's labels, a pre-derived prediction for the cleaner half, the RAG routing predicate, and a per-arm k. §7.4 gains `cleaning_material`. |
+| (23) judge validity threshold, its pre-committed consequences, and the human labelling rubric | **Yes** — §8 and §9. The threshold is relative to the human reference's own test-retest reliability, measured at `answer_relevance` 0.4032 / `groundedness` 0.7167, replacing the absolute 0.60 bar (**stricter** for groundedness, **looser** for relevance). Four consequences pre-committed in §8.3; offline re-scoring bounded in §8.5; judge output specification and offline scoring rules in §8.6; the rubric, derived from the annotator's contemporaneous notes, in §9. **Provenance**: user adjudications 2026-10-28 and 2026-10-30; §8.1 carries its own disclosure that the rule was formulated after the machine scores were known. |
 
 ---
 
@@ -867,17 +929,158 @@ about attribution and hallucination, which `groundedness` measures. A single
 composite would dilute both. **H3 is a contrast, not two pairwise comparisons:
 it is one test.**
 
-### 7.3 实验 2's primary analysis is not a pairwise comparison
+**H2's confirmatory status is conditional on §8.1 and is currently not met.**
+On the evidence in 附录 FB/EZ, `groundedness` falls below the human-ceiling bar
+(0.475–0.495 against a ceiling of 0.7167), so H2 is reported as exploratory
+under §8.3(1) and the confirmatory set is H1 and H3. The hypothesis itself is
+unchanged; only its status is. Were the judge to meet the bar before the
+freeze, H2 returns to confirmatory and §7.6's multiplicity reverts to three
+tests at 98.3%.
+
+### 7.3 实验 2: routing accuracy, and a prediction made before the reveal
 
 Arm A's result is the **precision / recall / confusion matrix of its routing
 decisions against the labelled "should have fired" ground truth**, reported in
-its own table. `fallback` is classified separately and is never counted as
-`force_off`. **实验 2 does not consume any of the confirmatory budget in 7.2.**
+its own table. `fallback` is classified separately and is **never** counted as
+`force_off` — "tried and degraded" is not "decided not to call". **实验 2 does
+not consume any of the confirmatory budget in 7.2.**
+
+**The labels** are the authoring-time fields of §7.4, not a separate annotation
+pass: `cleaning_material` is "cleaning should have fired", `corpus_backed` is
+"retrieval should have fired".
+
+#### 7.3.1 Cleaner half: a falsifiable prediction derived in advance
+
+The cleaner's trigger is `has_critical_issues`, frozen at 附录 U.4.1 as three
+dimensions over the intent's `required` column scope:
+
+| Dimension | Threshold | Reachable maximum on the frozen data |
+|---|---|---|
+| missing | mean `null_ratio` > 0.10 | **0.03** |
+| duplicate | `duplicate_row_ratio` > 0.05 | **≈0.0196** |
+| schema / type inconsistency | any hit | **unreachable** |
+
+`outlier` is deliberately **not** a trigger dimension (附录 B.1, carried into v2
+unchanged).
+
+The maxima come from the generator, not from observation:
+`scripts/generate_demo_data.py:279-288` injects quality noise into
+**`sales_data.csv` only** — 3% missing `revenue`, 2% duplicated rows, 1% outlier
+revenues (×10). The other three demo datasets receive none. Because only
+`revenue` carries nulls, the arithmetic mean of `null_ratio` over any column
+scope is **at most 0.03**, reached only when the scope is exactly
+`["revenue"]`; any wider scope is diluted by zero-null columns. The duplicate
+figure is 2% of the original rows appended, i.e. 2/102 of the final file.
+
+**Prediction, recorded before the reveal:** `has_critical_issues` cannot be true
+for any query against this frozen corpus. 实验 2's cleaner half will therefore
+report **recall = 0** and **precision undefined** (the system emits no
+positives, so the precision denominator is zero). **If the reveal shows
+otherwise, this derivation or the frozen inputs have changed, and that
+discrepancy must be investigated before the routing numbers are read.**
+
+**What this measures is a coverage gap, not a tuning error.** The data's three
+defect classes are: low-rate missing (3%, below a threshold set deliberately
+high), **negative `revenue` on 76 rows** (§5.2) which **no dimension covers at
+any threshold**, and outliers (excluded by design, and correctly so — 附录 AM
+records the llm planner selecting `skip_columns=["revenue","units","rep_id"]`
+with the reason "extreme values are legitimate", a judgement that requires
+intent and therefore cannot live in a pre-intent gate).
+
+**The criterion is not changed to make this experiment produce a different
+number.** Widening it (a lower missing threshold, or a new dimension covering
+negative values) is a 附录 U.4 contract change requiring a TB4 v2 design round,
+and is recorded as future work. Changing the system under test so the
+measurement improves is the inversion this pre-registration exists to prevent.
+
+#### 7.3.2 RAG half
+
+RAG's `auto` is currently equivalent to "always retrieve" (附录 CC.7 裁定 4 — an
+adjudicated, documented degeneration, not a missing feature). Measured as is,
+the RAG half returns recall = 1 and precision = the base rate: both are
+determined by the design, not by the system, and carry no information.
+
+**A minimal conditional criterion is therefore added MAEDA-side before the
+reveal**, declared here in full:
+
+> **Retrieval is attempted when, and only when, the parsed intent's
+> `query_type` is `diagnostic` or `exploratory`. It is skipped for
+> `descriptive` and `comparative`.** (`predictive` does not occur: the new
+> holdout excludes it, §1.1.)
+
+The predicate lives in the **shared gate** `rag_retrieval_decision(state)`,
+which both the conditional edge and `retrieve_knowledge_node`'s defensive
+backstop already call, so the routing decision and the backstop cannot drift
+apart — the same construction 附录 CC.2 required for the cleaner gate.
+
+**This governs `auto` only.** `force_on` still retrieves unconditionally and
+`force_off` still skips unconditionally; the criterion is bypassed in both.
+实验 1's R and CR arms are therefore unchanged by this addition, and remain
+comparable to every measurement taken before it.
+
+**The two binding constraints are met:**
+
+1. **Decidable from runtime state alone.** `query_type` comes from the parsed
+   intent. The gate never reads `corpus_backed`, `event_id`, or any other
+   authoring-time field — the system cannot see its own label.
+2. **Declared before any reveal data is seen**, in this frozen document.
+
+**One source of trial-to-trial variation, deliberately.** `query_type` is
+produced by the LLM intent parser, so it can differ between trials and from the
+case's authored `expected_query_type`. This is why arm A runs at k = 2 rather
+than k = 1 (§7.3.3).
+
+**A decomposition that costs nothing.** Both the parsed and the authored
+`query_type` are recorded on every row, so each routing error splits into two
+causes without additional measurement:
+
+| Parsed vs authored | What the error means |
+|---|---|
+| differ | **intent classification error** — the router behaved correctly on the label it was given |
+| agree | **routing-logic error** — the criterion itself is wrong for this case |
+
+**This decomposition is reported, and is descriptive.** It supports no
+confirmatory claim.
+
+#### 7.3.3 Arm A does not need the same k as the net-gain arms
+
+附录 DT.2 noted this without developing it. Routing is a binary decision, and on
+the cleaner side it is **deterministic**: `has_critical_issues` is computed from
+the profile, so for fixed data and a fixed column scope it does not vary between
+trials. The only source of trial-to-trial variation is the intent parse, which
+can move the column scope.
+
+**Arm A therefore runs at k = 2**, not at the k chosen for the net-gain arms.
+Per-arm k values and this reasoning are frozen here. At N = 41 this saves about
+$16 against a uniform k = 5; at N = 74, about $29.
+
+#### 7.3.4 The confusion matrix is partly an authoring choice, and is pre-registered as such
+
+The routing predicate reads `query_type`; the label is `corpus_backed`. **Both
+are set when the case is authored.** If every `diagnostic`/`exploratory` case
+were authored as corpus-backed and every `descriptive`/`comparative` case as
+not, precision and recall would both be 1 by construction, and 实验 2 would
+report nothing but the authoring convention.
+
+**The intended joint distribution is therefore fixed here**, as the sixth
+quantity in the case-authoring spec (§7.4):
+
+- **About one quarter of cases are deliberately discordant**, split evenly
+  between the two directions:
+  - `corpus_backed = true` with a `descriptive`/`comparative` query — a question
+    about an event-affected period that the criterion will skip
+    (**expected FN**);
+  - `corpus_backed = false` with a `diagnostic`/`exploratory` query — an
+    explanatory question with no corpus behind it (**expected FP**).
+- The remaining three quarters are concordant.
+
+**Without the discordant quarter there are no off-diagonal cells and the matrix
+is a tautology.** Exact counts are fixed once N is known (清单 (5)).
 
 ### 7.4 Sample eligibility — fixed at case-authoring time, never recomputed
 
-Both fields are written when the case is authored, from frozen inputs, **without
-running the system on the case**:
+These three fields are written when the case is authored, from frozen inputs,
+**without running the system on the case**:
 
 - **`cleaning_relevant`** — determined by a deterministic script from the frozen
   `data/demo/` files: does this case's data slice contain at least one injected
@@ -886,9 +1089,40 @@ running the system on the case**:
   linked at authoring time to an event in the frozen `event_script.yaml`, or
   declared unlinked; `corpus_backed` follows from that event's `corpus_evidence`
   / `event_type`.
+- **`cleaning_material`** — determined by the same deterministic script from
+  the same frozen `data/demo/` files: does the defect **change the answer to the
+  question this case asks**? Computed by running the case's own ground-truth
+  function twice — once on the raw slice, once on the slice repaired by a fixed,
+  declared rule (drop null-`revenue` rows, drop negative-`revenue` rows, clip to
+  the declared IQR bounds) — and comparing the two results against the **1%
+  scoring tolerance** used by `_numbers_match`. True iff they differ by more
+  than that.
 
-Both are frozen with this pre-registration and are **not recomputed at reveal
-time**.
+**`cleaning_relevant` and `cleaning_material` are different fields answering
+different questions, and are used in different places:**
+
+| Field | Question | Used by |
+|---|---|---|
+| `cleaning_relevant` | Is a defect **present** in this slice? | H1 / H3 sample eligibility (§7.2) |
+| `cleaning_material` | Does the defect **change this case's answer**? | 实验 2's "should have fired" label (§7.3) |
+
+The wider field stays bound to H1 deliberately: the trade-off note below says a
+case whose data is dirty but whose cleaner criteria do not fire must stay in
+H1's sample, because that dilution is real and **"that is precisely what 实验 2
+measures; it must not be quietly removed from 实验 1's sample."** Narrowing H1
+to `cleaning_material` would remove exactly those cases.
+
+The narrower field is what 实验 2 needs, because scoring routing against
+`cleaning_relevant` would mark the system wrong for a judgement that is
+defensibly right: the frozen data carries 3% missing `revenue`, and the
+cleaner's criterion deliberately does not fire below 10% (附录 B.1: the threshold
+is set so that only "坏到一半以上" triggers a lossy modification). Labelling
+those cases "should have fired" would score correct restraint as a miss.
+
+**All three are pre-treatment.** None requires running the system on the case,
+so none reintroduces the post-treatment selection bias this section was written
+to avoid (附录 EC.1). All are frozen with this pre-registration and are **not
+recomputed at reveal time**.
 
 **A deliberate trade-off, stated rather than hidden.** `cleaning_relevant` is
 defined by **whether the defect is present in the data**, not by **whether the
@@ -916,9 +1150,26 @@ folding strata into the confirmatory set silently doubles it:
 
 ### 7.6 Multiplicity and the decision rule
 
-- **Three confirmatory tests.** Bonferroni: α = 0.05 / 3 ≈ 0.0167, i.e. report
-  **98.3% paired bootstrap confidence intervals** using the project's existing
-  `paired_bootstrap_ci`.
+- **Two confirmatory tests.** H1 and H3. **H2 is exploratory**: the metric it is
+  bound to (`groundedness`) does not meet the judge-validity bar in §8.1.
+  Bonferroni: α = 0.05 / 2 = 0.025, i.e. report **97.5% paired bootstrap
+  confidence intervals** using the project's existing `paired_bootstrap_ci`.
+  - Both remaining confirmatory tests are bound to `factual_accuracy`, computed
+    by a pure function against frozen ground truth
+    (`src/eval/metrics.py::score_factual_accuracy`, no LLM call). **The
+    confirmatory core therefore does not depend on judge validity.**
+  - Had H2 remained confirmatory the multiplier would be 2.394 (98.3%) rather
+    than 2.241 (97.5%); every MDE in 附录 CA's table improves by about 6% as a
+    result. This is a **consequence** of dropping a test, not a reason to drop
+    it.
+  - **附录 CA's MDE table is optimistic on two further counts** and must not be
+    read as written. It uses the 2σ multiplier (≈95%), not the Bonferroni one;
+    and it uses n = 41, the whole retired holdout, while **no hypothesis is
+    tested on all of it** — H1/H3 run on the `cleaning_relevant` subset, H2 on
+    the `corpus_backed` subset (§7.2). At σ_hetero = 0.05 and k = 5 the middle
+    cell moves from CA's 0.0196 to 0.0220 at 97.5%, and to 0.0307 if the
+    eligible subset is half of 41. **The subset sizes, not N, are what must
+    clear the threshold** (清单 (5)).
 - **Directions declared in advance**: H1 and H2 are expected positive; H3 is
   two-sided with no expected direction.
 - **"The subsystem is worth it" requires BOTH**: the interval excludes zero,
@@ -946,3 +1197,447 @@ folding strata into the confirmatory set silently doubles it:
 
 > Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 ED.2;
 > transcribed verbatim.
+
+---
+
+## 8. Judge validity: the threshold, and what happens if it is not met
+
+### 8.1 The threshold is relative to the human reference's own reliability
+
+A machine-vs-human agreement statistic is bounded by how reliably the human
+reference labels the same material twice. Measured on the non-predictive 20
+(`data/annotations/human_pass1_vs_pass2_nonpredictive20_agreement.json`,
+n = 20):
+
+| Metric | Human test-retest QWK | Spearman | Exact-match rate |
+|---|---|---|---|
+| `answer_relevance` | **0.4032** | 0.4919 | 0.35 |
+| `groundedness` | **0.7167** | 0.7648 | 0.45 |
+
+**Pre-registered rule.** A judge is treated as validated for a metric when its
+QWK against the frozen human reference is **at least the human's own test-retest
+QWK for that metric**. The rule carries no free parameter: meeting it means the
+judge is not statistically distinguishable from a second pass by the human
+annotator.
+
+This **replaces** the previous absolute bar of QWK ≥ 0.60, which ignored the
+reliability of the reference it was measured against. The replacement is
+**stricter for `groundedness`** (0.7167 vs 0.60) and **looser for
+`answer_relevance`** (0.4032 vs 0.60). It is a recalibration in both
+directions, not a relaxation.
+
+**Provenance**: user adjudication, 2026-10-28. **Disclosure**: the rule was
+formulated after the machine scores in 附录 FB/EZ were known. The specific form
+"100% of the human ceiling" was chosen *because* it admits no tunable fraction;
+fractional variants were examined, and a bar at 65% of the ceiling would flip
+`groundedness` to passing. That is precisely why no fraction is used here.
+
+**Status under this rule, on the evidence as of 附录 FB/EZ:**
+
+| Metric | Judge | QWK (strict / lenient) | Bar | Status |
+|---|---|---|---|---|
+| `answer_relevance` | Qwen3.8-Max | 0.726 / 0.637 | 0.4032 | **Met** |
+| `groundedness` | GPT-5.6 Sol | 0.495 / 0.475 | 0.7167 | **Not met** |
+
+**Both the judge QWK and the human ceiling are estimated at n = 20 and must be
+reported with bootstrap CIs** (附录 FD, 第 8.7 Q7). The ceiling is itself an
+estimate; a wide CI on the ceiling widens the uncertainty on this verdict.
+
+### 8.2 What is reported is the number, not a verdict
+
+Every 阶段 4 report of a judged metric carries, in this order: the point
+estimate, its bootstrap CI, the human test-retest ceiling for that metric, and
+whether the bar in 8.1 was met. **A bare PASS/FAIL is not an acceptable
+presentation** — a reader cannot tell a near miss from a gross one, and the
+distance to the ceiling is the part that carries the meaning.
+
+### 8.3 Pre-committed consequences when the bar is not met
+
+These apply per metric, are fixed here in advance, and are **not** contingent on
+what the 阶段 4 numbers turn out to be.
+
+1. **The hypothesis bound to that metric drops to exploratory.** With
+   `groundedness` not meeting the bar, **H2 is exploratory**; the confirmatory
+   set is **H1 and H3 only**. Both are bound to `factual_accuracy`, computed by
+   a pure function against frozen ground truth
+   (`src/eval/metrics.py::score_factual_accuracy` — no LLM call), so the
+   confirmatory core does not depend on judge validity at all.
+   - Multiplicity is recomputed accordingly: two confirmatory tests, Bonferroni
+     α = 0.05 / 2 = 0.025, i.e. **97.5% paired bootstrap CIs** (§7.6).
+2. **The metric's paired difference is still reported**, labelled exploratory.
+   **Only the difference is interpreted; the absolute level is not.** Reported
+   alongside it, mandatorily: **the per-arm distribution of claim counts**, so
+   that a difference arising from a shift in the denominator rather than in
+   groundedness is visible rather than inferred.
+3. **The machine score is also reported against both frozen human reference
+   bounds** (`human_reference_nonpredictive20_strict_lower.json` and
+   `..._lenient_upper.json`, 附录 EW). Only differences that hold under **both**
+   bounds are stated descriptively; a difference holding under one bound only is
+   reported as such and supports nothing.
+4. **Post-hoc validation on the reveal data itself.** After the single reveal,
+   20 holdout reports are sampled at random and labelled by hand, and the
+   machine-vs-human agreement on that sample is reported. This costs no
+   additional API calls and is not a second reveal: no run is repeated, no trial
+   is added, and the result is already locked.
+   **It is pre-committed here that this check will not be used to revise any
+   reported conclusion**, under any outcome. It is a limitation report, not a
+   gate — otherwise it would be a back door to "look, then adjust".
+
+### 8.4 What this section does not solve
+
+- It does not make an uncalibrated judge trustworthy. It makes the confirmatory
+  core independent of the judge, and it makes the uncertainty legible.
+- The ceiling is measured on the same non-predictive 20 that has now been used
+  to compare four judge models (附录 FD.4's warning about selection degrees of
+  freedom). **The remedy is to enlarge the calibration set, not to keep testing
+  variants on the same 20**; enlarging it is dev-side and touches neither
+  holdout.
+- **The calibration reports may predate the 2026-08-17 data re-render.** C07's
+  report states North 2022 revenue as $439,901.01 where the current fixture is
+  $1,784,443.68 — a ratio of about 4.06, against the TB5 row-count change of
+  12,000 → 48,960 (4.08). This does not affect groundedness itself, which is
+  judged against the findings shown rather than against current fixtures, but it
+  means **the judge is calibrated on reports produced by an older pipeline over
+  older data**, and the transfer of that calibration to the new holdout is an
+  assumption rather than a measurement. Confirming the generation provenance of
+  these 20 reports is tracked in the pre-reveal patch batch.
+- It does not establish that `factual_accuracy` is a *good* metric, only that it
+  is a deterministic one. Its ground truth is reproducible
+  (`scripts/compute_ground_truth.py`, re-verified 2026-10-24: 76 checked,
+  0 mismatch, 0 error, 24 skipped), but reproducibility is internal consistency,
+  not evidence that each derivation formula is correct (附录 BN.2/BN.3).
+
+### 8.5 Offline re-scoring: free before the freeze, forbidden after the reveal
+
+Judge output is stored as a per-claim record
+(`data/annotations/answer_key_*.json`), so **any scoring rule can be re-applied
+to it with no API call and no re-run**
+(`scripts/regrade_groundedness_offline.py`). This is a capability, and therefore
+a back door: **none of the existing guards sees it.** The rag split guard
+refuses a second run against a test split; nothing refuses a second *scoring* of
+the first run's output.
+
+**The governing principle:**
+
+> A paid run is needed **only to obtain information the judge has never
+> emitted**. Everything downstream of emitted information is free and may be
+> recomputed any number of times — before the freeze.
+
+**Corollary, which §8.6 is built on: tag, do not filter; emit, do not decide.**
+A decision made inside the judge call costs another paid run to revise. The same
+decision made offline, over an emitted field, costs nothing.
+
+**Before the freeze — permitted and preferred.** Candidate scoring rules are
+compared offline on stored output. **Limit:** offline re-scoring cannot invent
+information the judge never produced. Section attribution and failure-report
+identification can be **approximated** from claim wording; the three-way
+`verdict` **cannot be recovered at all**, because what is stored is a boolean.
+
+**On the dev split during the σ run — permitted, counted.** Each offline
+re-scoring pass is a selection-degree-of-freedom expenditure in the sense of
+附录 FD.4, recorded with what was chosen and why.
+
+**After the reveal — forbidden, under every outcome including an inconclusive
+one.** The scoring rule is frozen before the reveal, **identified by the commit
+hash of the code that implements it**, and each primary metric is computed once,
+by that frozen code.
+
+**The line:** statistics computed *alongside* a frozen number are permitted
+(per-arm claim-count distributions, per-section unsupported rates, §8.3(4)'s
+post-hoc agreement check). **Changing how a frozen number is computed is not.**
+
+### 8.6 Judge output specification, and scoring rules applied to it
+
+> **Naming**: this is **the pre-registration's §8.6**. It supersedes the
+> *handoff's* 第 8.6 节 (`~/MAEDA/docs/handoff_maeda_to_subsystems.md`), which
+> proposed the same three changes in a single undifferentiated layer. Cite both
+> in full; 附录 AF and 附录 C/CA record what label collisions cost here.
+
+The handoff's 第 8.6 节 proposed three changes: (a) restrict the judge's input
+to three sections, (b) make `verdict` three-way, (c) add a two-value
+`claim_type`. **(a) and (c) are decisions taken inside the judge call and are
+therefore re-split here into an emitted field plus an offline rule.** Only (b)
+is genuinely new information the judge must produce.
+
+#### 8.6.1 Layer 1 — what the judge must emit (requires the paid run)
+
+Per claim, five fields. **The judge filters nothing and weights nothing.**
+
+| Field | Content |
+|---|---|
+| `claim` | the assertion, terse |
+| `section` | the report heading it was taken from, verbatim |
+| `verdict` | `supported` / `contradicted` / `not_addressed` |
+| `references` | which of this case's `expected_metrics`, `expected_dimensions` or `ground_truth` keys the claim concerns, or null |
+| `evidence` | the supporting or refuting text, or the reason none was found |
+
+`section` and `references` are **offline-auditable**: the tagged section must
+contain the claim's text, and the named field must appear in the claim. This is
+the property `claim_type` never had, and the reason it is replaced.
+
+**The full report is supplied.** Nothing is withheld from the judge; section
+scope becomes an offline filter (8.6.2), so the coverage holes that input
+restriction would have created — cleaning disclosures in Data Quality Notes and
+Automated Caveats (U.7/R.2's forced disclosure chain) — do not open.
+
+#### 8.6.2 Layer 2 — scoring rules, applied offline
+
+Candidates, applied cumulatively to Layer 1's output:
+
+| Step | Rule |
+|---|---|
+| 0 | baseline: `supported_count / total_claims`, all claims, boolean verdict |
+| 1 | **restrict to the human-read sections** (Executive Summary, Key Findings, Analysis Details) via `section` |
+| 2 | **exempt honest failure reports**: a `not_addressed` claim that reports a tool or step failure is not a deduction (§9 R2.2) |
+| 3 | **three-way verdict**: `contradicted` always deducts; `not_addressed` deducts, and is counted and warned separately as possible evidence-coverage failure |
+| 4 | **centrality weighting** by `references` |
+
+**The stopping rule is pre-registered, not chosen afterwards.** QWK against the
+human reference is computed with bootstrap CI at each step. **The frozen rule is
+the earliest step after which the next step's QWK CI lower bound does not exceed
+the current step's point estimate** — the curve is treated as flat unless the
+improvement clears the noise. Steps beyond it are not applied, and the fact that
+they were evaluated and rejected is reported.
+
+**This is why the `claim_type` / centrality question needed no prior
+adjudication.** It is no longer an argument about whether the axis is right; it
+is step 4 of a curve, kept only if it earns its place. The C07 diagnostic
+already suggests it may not: steps 1 and 2 alone close an estimated 60% of that
+case's machine-human gap (0.586 → ≈0.818 against a human 0.75), **with no
+weighting of any kind**.
+
+#### 8.6.3 Order, and what each step costs
+
+| Step | Cost |
+|---|---|
+| Offline re-score existing output: baseline → 1 → 2 | **zero** |
+| `pandas_groupby` rendering fix (附录 FD.3) + rubric written down (§9) | **zero**, both prerequisites |
+| One judge run emitting all five fields over the calibration set | **about $7–10** |
+| Offline curve over the new output, steps 0–4 | **zero** |
+| Freeze the chosen rule by commit hash | **zero** |
+
+**The paid run buys emitted information, not a scoring decision.** If the
+offline pass over existing output already closes the gap, the run's scope
+narrows to obtaining `verdict` alone.
+
+---
+
+## 9. Human labelling rubric
+
+**Status**: written down 2026-10-30, **after** the labels it describes were
+produced (2026-08-25) and after machine scores for the same cases were known.
+附录 FD 第 8.8 names that order as a fault: a rubric reverse-engineered from
+memory once the scores are visible is not a constraint on anything.
+
+**What makes this version better than the one 8.8 warned about, and where it is
+still weak.** It is derived from the annotator's own **contemporaneous written
+notes** on each case
+(`data/annotations/human_labels_dmxapi_calibration20_nonpredictive_relabel_decoded.json`),
+not from recollection: every rule below cites the case notes that support it.
+That is stronger evidence than recall and weaker than a rubric written in
+advance. **It does not retroactively make the 20 labels pre-registered.**
+
+**What it is for.** Two things, and not a third:
+
+1. the scoring rules in §8.6.2 are written to match it, not the other way round;
+2. it makes the reference auditable — a label it cannot explain is a recorded
+   gap (R6);
+3. **it is not used to relabel.** See R6.
+
+### R1. What text is judged
+
+**Executive Summary, Key Findings, and Analysis Details only.**
+
+Later sections — Recommendations, Data Quality Notes, Automated Caveats,
+Visualization — are **not read** by the annotator (direct answer, 2026-08-25,
+附录 FD.2). The annotation page renders them; the annotator does not use them.
+
+**This is a property of the reference, not an instruction to the judge.** The
+judge is shown the whole report and tags each claim with its section (§8.6.1);
+the restriction is applied offline (§8.6.2 step 1). Measured consequence on
+C07: of 12 machine deductions, **at least 3 came from sections the annotator
+never read**.
+
+### R2. Groundedness: when a statement is deducted
+
+A statement is deducted when the report **asserts something the evidence does
+not license**. Four observed forms.
+
+**R2.1 Contradicted by the evidence.** A figure, ordering or characterisation
+the analysis results refute.
+*C02: stated conversion rates "wrong". D05: "March recorded the highest order
+volume … January the lowest" — "this claim is wrong". E23: "most customers have
+been with the company for 1 to 5 months" — wrong. C07: 2022–2024 historical
+actuals described as "projected", three times, in the Executive Summary and both
+Key Findings.*
+
+**R2.2 False claim of inability.** The report says it could not compute
+something the evidence shows it could.
+*C16: "the analysis did not yield specific revenue figures for the West and East
+regions" — "wrong. it DID yield". D05: "not possible due to the limited data
+available" — "however, the data IS available".*
+
+> **Not a deduction when the report honestly reports a tool or step failure.**
+> "due to a failure in analysis steps" is an accurate statement about what
+> happened; the resulting gap in the answer is an `answer_relevance` deduction
+> (R4), not a groundedness one. *Added 2026-10-30 from the C07 review; it
+> changes that case's second flagged item from a deduction to a non-deduction,
+> and it reached **4 of C07's 12 machine deductions**.*
+
+> **Severity depends on whether the denied content is delivered elsewhere in the
+> report.** *C07 denies being able to compute a growth rate while listing every
+> figure needed — peripheral. C16 denies yielding the requested regional figures
+> and does not provide them — core.*
+
+**R2.3 Unlicensed inference.** A causal or evaluative conclusion the evidence
+cannot support, **even when nothing contradicts it**.
+*C20: t-test numbers correct but the direction reversed, then read as "higher
+charges 导致 churn / pricing influences retention" — "这些都没有被表格支持".
+D07: "efficiency" / "effectiveness" / "does not correlate" — "没有直接由两张汇总
+表支持". DG12: "后半部分引入了多个没有数据支持的结论". DG03: "strong revenue
+potential". C02: "Social channels" did not "show promising conversion rates".*
+
+**This is the single largest category in the recorded notes**, and the one a
+two-value `empirical | interpretive` split would have mis-handled: these are
+interpretive claims, the evidence does not refute them, and the annotator
+deducted for all of them.
+
+**R2.4 Superlative from a partial view.** "Highest" or "lowest" asserted when
+the visible evidence does not cover the whole population.
+*C08: "not the highest cuz we cannot see the whole data". C04: "since we can't
+see the whole picture, we can't get the conclusion that Product 2 generates the
+highest margin".*
+
+**R2.5 What is NOT deducted: a claim the evidence merely does not mention.** No
+recorded note deducts on that basis.
+
+**This is the largest divergence from the machine judge**, which recorded
+`no evidence found` on **193 of its 194** unsupported verdicts (附录 FD.2) —
+including, on C07, the three `projected` claims that are in fact R2.1
+contradictions. The judge identified the right problem and could only express it
+in the wrong category. §8.6.1's three-way `verdict` exists for this.
+
+### R2.6 Do not complete the report's reasoning on its behalf
+
+Judge only what the report **states**. When the question asks for a comparison,
+a trend or a conclusion and the report lists the inputs but never states it,
+that is a **failure to answer**; it does not become an answer because the reader
+can perform the step mentally.
+
+**Operational check**: before crediting a conclusion, locate the sentence that
+states it. If there is no such sentence, the conclusion was not made.
+
+**Why this is written down.** The annotator identified the risk in their own
+practice (2026-10-30): when the arithmetic is easy enough to do at a glance, the
+gap closes unnoticed and the report is credited for a step it skipped. The bias
+has a **fixed direction** — it inflates reports that list raw figures without
+synthesising them — and that is precisely the distinction between a data dump
+and an analysis.
+
+**It corrupts the reference, not the judge.** A judge that correctly deducts for
+a missing synthesis would be scored as *disagreeing with the human*. Any
+diagnosis of "the judge is too harsh" has to rule this out first.
+
+**Which axis it belongs to**: a missing required conclusion is an
+`answer_relevance` deduction, **not** a groundedness one. If the report states
+nothing unsupported, groundedness is unaffected. **The same defect is never
+penalised on both axes.**
+
+### R3. Groundedness: how the band is chosen
+
+The band reflects **whether the error reaches the answer to the question**, not
+how many statements were flagged.
+
+| Band | Criterion |
+|---|---|
+| **1.00** | Nothing flagged |
+| **0.75** | Flagged statements are peripheral; the core answer stands |
+| **0.50** | A real error reaches the answer; part of the answer survives |
+| **0.25** | The requested content is substantially wrong or unsupported |
+| **0.00** | The central conclusion is fabricated, or the data is fundamentally misread |
+
+**Count is not the criterion.** *C07 carries two flagged statements and scores
+0.75. DG01 carries one and scores 0.00, because its central conclusion — "a
+significant drop compared to previous quarters" — rests on a comparison the data
+cannot contain.*
+
+This is the functional the machine's equal-weight `supported / total` cannot
+reproduce, and why §8.6.2 treats weighting as a candidate step to be earned
+rather than an assumption.
+
+### R4. `answer_relevance`: deductions and bands
+
+Relevance asks **whether the report addressed what was asked**, independent of
+whether what it said was supported.
+
+**Deducted for:**
+
+- **an omitted required element** *(D01: "doesn't mention south region"; D11:
+  "didn't mention Widget A")*
+- **an omitted required metric** *(D08: "didn't mention 'average tenure' at
+  all")*
+- **the required operation not actually performed** *(C07: "doesn't really
+  compare revenue growth")*
+- **partial coverage** *(D05: "only show monthly order volume for 5 months")*
+- **answering a different question** *(DG12: 用户问的是为什么 Gold tier churn
+  更少,"报告基本没有回答,只是在解释'分析不了',然后转去分析 plan")*
+
+| Band | Criterion |
+|---|---|
+| **1.00** | Fully addressed |
+| **0.75** | One required element omitted |
+| **0.50** | The required operation was not really performed, or coverage is partial |
+| **0.25** | The main ask was not answered, or a different question was answered |
+| **0.00** | Unrelated to the question as asked |
+
+**Lower stakes than R2/R3**: `answer_relevance`'s judge meets the §8.1 validity
+bar (QWK 0.637–0.726 against a human test-retest ceiling of 0.4032), so this
+rubric is recorded for consistency and because R2.2 and R2.6 route deductions
+here. It is not the subject of §8.6's redesign.
+
+### R5. Out of scope, stated rather than implied
+
+Neither metric covers these. Each is also declared out of scope in §8.3.
+
+- **Chart correctness.** The annotation page contains no rendered chart (no
+  `<img>`, no embedded image data), so it is **structurally absent** from the
+  reference. Chart claims are still tagged and counted by §8.6.1 and reported
+  descriptively; they do not enter either score.
+- **Citation attribution.** Whether a cited source is the right one is not
+  judged, and today it could not be: `insight.sources` is never produced by the
+  model (`INSIGHT_GENERATOR_SYSTEM`'s output schema has no such field), and
+  `src/agents/insight_agent.py:199-203` fills it with the run's top three
+  retrieved filenames, identically on every insight. **Removal is adjudicated
+  (路线 A, user, 2026-10-26) and scheduled in the pre-reveal patch batch; it must
+  land before the calibration re-run** so that calibration and reveal score the
+  same report shape (§3.0). **Measured scope: none of the 20 stored calibration
+  reports cites any source file** (zero hits for a filename pattern across all
+  20), so the field is already ignored by the report writer and its removal is
+  not expected to alter report text. *A bound, not a proof.*
+
+### R6. Self-consistency check, not relabelling
+
+Per 附录 FD 第 8.8: this rubric is checked **against the existing 20 labels** to
+find labels it cannot explain. **The 20 cases are not relabelled** — that would
+consume the calibration set a second time and, worse, would encode the rubric's
+drafter into the reference.
+
+Labels the rubric cannot account for are **reported as rubric gaps**, not
+corrected.
+
+#### R6.1 Known gap: C07
+
+Reviewed 2026-10-30. After R2.2's honest-failure-report exemption, one
+groundedness deduction survives: historical data described as "projected", three
+times, in the Executive Summary and both Key Findings. That is clearly not
+peripheral, but **R3 does not resolve whether it reaches "a real error reaches
+the answer" (0.50) or leaves "the core answer standing" (0.75)**.
+
+**The label stands at 0.75, unchanged**, because (a) 8.8 prescribes a
+consistency check rather than relabelling; (b) the corrections this review
+produced reach other cases, so applying them to C07 alone would make the
+reference non-uniform; (c) the annotator was indifferent between the two bands,
+so any change would record the drafter's reading rather than theirs.
+
+**The ambiguity is itself the finding**: the reference has limited resolution in
+this band region, and that limit is reported rather than papered over.
