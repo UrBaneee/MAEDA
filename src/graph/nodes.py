@@ -520,6 +520,58 @@ def _cleaning_applied_level(state: MAEDAState) -> str:
     return "none"
 
 
+def _cleaner_arm_integrity_problems(log: dict, plan: dict, requested: str) -> list[str]:
+    """
+    附录 FE.4(1) / FF: everything about ONE clean_dataset call that says it
+    was not the cleaning the force_on arm claims. Empty list = trustworthy.
+
+      - `mode == "fallback"`: fallback.py returned the input path untouched,
+        so the trial is an off-arm run scored as an on-arm one.
+      - planner mismatch: the cleaner degraded llm -> rule (LLMPlanner reports
+        it via planner_mode_used). The rule plan carries no skip_columns, so
+        its IQR step can clip the very signals TB5 planted (附录 AM.3).
+      - no echo: same rule as 附录 CM.2, a call that cannot state what ran
+        cannot be trusted to have run as asked.
+    """
+    if log.get("mode") == "fallback":
+        return [f"clean_dataset degraded to fallback (no cleaning applied): "
+                f"error_class={log.get('error_class')!r} error={log.get('error')!r}"]
+    if requested != "llm":
+        return []
+    used = (plan or {}).get("planner_mode_used")
+    if used == "llm":
+        return []
+    if used is None:
+        return ["clean_dataset returned no planner_mode_used echo"]
+    return [f"planner degraded: requested 'llm', used {used!r} "
+            f"({(plan or {}).get('planner_fallback_reason') or 'no reason reported'})"]
+
+
+def _invalidate_cleaner_arm(state: MAEDAState, problems: list[str]) -> MAEDAState:
+    """
+    Mark this trial as not aggregable as a cleaner on-arm result. Same chain
+    as _invalidate_rag_arm, chosen over a strict-only hard failure for the
+    reasons in 附录 FF. strict needs no help: it already fails in
+    data_cleaner.py::_check_planner_mode_not_silently_degraded, so this gate
+    is what closes the DEFAULT degraded path. One round failing taints the
+    trial, so a later round must not clear the reason.
+
+    Unlike RAG this exclusion is not purely environmental: LLMPlanner's
+    `except Exception` also catches plans that repeatedly fail validate_plan,
+    which correlates with the case. Reasons are therefore kept verbatim so
+    the exclusion rate can be split by cause, per arm (附录 FF).
+    """
+    reason = "; ".join(problems)
+    prior = state.get("cleaning_arm_invalid_reason")
+    state["cleaning_arm_invalid_reason"] = f"{prior}; {reason}" if prior else reason
+    logger.error(
+        "MAEDA_CLEANER_MODE=force_on but this clean was not a valid on-arm run; "
+        "trial marked not-applicable for aggregation: %s", reason,
+    )
+    return _trace(state, "data_connector", "cleaning_arm_invalidated",
+                  f"force_on arm integrity failure (trial excluded from aggregation): {reason}")
+
+
 def _trace(state: MAEDAState, agent_name: str, action: str, reasoning: str) -> MAEDAState:
     """Append a minimal decision trace record (no LLM, no cost)."""
     record = {
@@ -885,6 +937,13 @@ async def profile_and_clean(state: MAEDAState) -> MAEDAState:
         state["terminal_detail"] = exc.error_class
         return _trace(state, "data_connector", "connect_and_profile",
                       f"cleaning hard failure: {exc}")
+
+    if settings.maeda_cleaner_mode == "force_on":
+        problems = _cleaner_arm_integrity_problems(
+            clean_log, result.execution_plan, settings.data_cleaner_planner_mode,
+        )
+        if problems:
+            state = _invalidate_cleaner_arm(state, problems)
 
     fingerprint_error = _check_scope_fingerprint(
         state, "clean_dataset", expected_fingerprint, result.scope_fingerprint,

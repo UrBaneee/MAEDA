@@ -168,6 +168,7 @@ async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tu
         # it there); this one exists so a reader scanning `meta` can see
         # WHY a force_on row was dropped without cross-referencing.
         "rag_arm_invalid_reason": result_state.get("rag_arm_invalid_reason"),
+        "cleaning_arm_invalid_reason": result_state.get("cleaning_arm_invalid_reason"),
         "data_mismatch": "data_mismatch" in tc.tags,
         # D0 (阶段 3 / 附录 AQ/AS): eval_runner.score() is called with
         # run_id=tc.id above (the golden case id, e.g. "D01" -- same

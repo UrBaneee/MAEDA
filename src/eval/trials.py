@@ -111,7 +111,7 @@ def not_applicable_reason(eval_result: dict) -> Optional[str]:
     the boolean view of this function; summarize_case() reports the
     reasons so an exclusion is never just a shrinking denominator.
 
-    Two independent conditions, deliberately kept as one function:
+    Three independent conditions, deliberately kept as one function:
 
       "blocked_needs_review"   附录 R.3 / AP.2 / AX.1 — the report was
                                generated on data the pipeline itself
@@ -127,8 +127,12 @@ def not_applicable_reason(eval_result: dict) -> Optional[str]:
                                and invisibly — 附录 CI.2's "a credible
                                wrong answer" aimed straight at TB6's
                                "concede RAG isn't worth it" exit.
+      `cleaning_arm_invalid_reason` 附录 FE.4(1) / FF — same shape for
+                               MAEDA_CLEANER_MODE=force_on: clean_dataset
+                               fell back, or the planner degraded from the
+                               requested mode.
 
-    Both are "the pipeline completed, but this run is not a fair
+    All are "the pipeline completed, but this run is not a fair
     comparison point", which is why they share one gate instead of the
     second one growing its own parallel filter somewhere else.
 
@@ -150,6 +154,9 @@ def not_applicable_reason(eval_result: dict) -> Optional[str]:
     rag_reason = eval_result.get("rag_arm_invalid_reason")
     if rag_reason:
         return f"rag_arm_invalid: {rag_reason}"
+    cleaning_reason = eval_result.get("cleaning_arm_invalid_reason")
+    if cleaning_reason:
+        return f"cleaning_arm_invalid: {cleaning_reason}"
     return None
 
 

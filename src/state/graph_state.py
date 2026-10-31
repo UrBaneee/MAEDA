@@ -156,6 +156,10 @@ class MAEDAState(TypedDict):
     # claim about RAG's contribution, so nothing about them can be
     # invalidated on this axis.
     rag_arm_invalid_reason: Optional[str]
+    # 附录 FF: cleaner counterpart of rag_arm_invalid_reason, written only under
+    # MAEDA_CLEANER_MODE=force_on when clean_dataset fell back or the planner
+    # degraded from the requested mode.
+    cleaning_arm_invalid_reason: Optional[str]
     insights: list[dict]       # [{finding, evidence, confidence, recommendation}]
     report: Optional[str]      # Final markdown report
 
@@ -258,6 +262,7 @@ def initial_state(
         rag_context=[],
         rag_sources=[],
         rag_arm_invalid_reason=None,
+        cleaning_arm_invalid_reason=None,
         insights=[],
         report=None,
         guardrail_checks=[],
