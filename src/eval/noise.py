@@ -34,7 +34,7 @@ class BootstrapResult:
 def paired_bootstrap_ci(
     deltas: list[float],
     confidence: float = 0.95,
-    n_resamples: int = 10000,
+    n_resamples: int = 100000,
     seed: int = 0,
 ) -> BootstrapResult:
     """
