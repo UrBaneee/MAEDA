@@ -902,7 +902,8 @@ each case yields **twelve** metrics (`answer_relevance`, `groundedness`,
 that is 120 tests before stratification, at which scale "something came out
 significant" is a mathematical certainty rather than a finding. **Each
 confirmatory hypothesis below is therefore bound to exactly one primary metric,
-and everything else is descriptive.**
+and everything else is descriptive.** H2's primary metric (§7.2.1) is a thirteenth
+metric, computed for H2 only.
 
 ### 7.1 Arms
 
@@ -919,23 +920,75 @@ and everything else is descriptive.**
 | | Test | Primary metric | Sample |
 |---|---|---|---|
 | **H1** | `C − B` — cleaner net gain | **`factual_accuracy`** | cases with `cleaning_relevant == true` |
-| **H2** | `R − B` — RAG net gain | **`groundedness`** | cases with `corpus_backed == true` |
+| **H2** | `R − B` — RAG net gain | **`event_attribution_accuracy`** (§7.2.1) | cases linked to an event with `event_type == normal` |
 | **H3** | `(CR − R) − (C − B)` — interaction | **`factual_accuracy`** | cases with `cleaning_relevant == true` |
 
 The two subsystems are bound to **different** primary metrics deliberately. The
 cleaner's claim is that dirty data produces wrong answers and cleaning fixes
 them, which `factual_accuracy` measures against ground truth; RAG's claim is
-about attribution and hallucination, which `groundedness` measures. A single
+that retrieved knowledge lets the report name the real cause of an anomaly,
+which `event_attribution_accuracy` measures against the frozen event script. A single
 composite would dilute both. **H3 is a contrast, not two pairwise comparisons:
 it is one test.**
 
-**H2's confirmatory status is conditional on §8.1 and is currently not met.**
-On the evidence in 附录 FB/EZ, `groundedness` falls below the human-ceiling bar
-(0.475–0.495 against a ceiling of 0.7167), so H2 is reported as exploratory
-under §8.3(1) and the confirmatory set is H1 and H3. The hypothesis itself is
-unchanged; only its status is. Were the judge to meet the bar before the
-freeze, H2 returns to confirmatory and §7.6's multiplicity reverts to three
-tests at 98.3%.
+**H2's confirmatory status is conditional on the scorer bar in §7.2.1 and is
+currently not met: the scorer does not exist yet.** Until the bar is met, H2 is
+reported as exploratory and the confirmatory set is H1 and H3. Were the scorer to
+meet the bar before the freeze, H2 returns to confirmatory and §7.6's multiplicity
+reverts to three tests at 98.3%.
+
+**Disclosure: H2's metric was changed on 2026-11-01 (user, 附录 FI/FJ).** It was
+`groundedness`. The change came after that metric was seen to miss its §8.1 bar on
+the calibration set, so that sequence is stated here. The stated reason is
+construct validity, not the miss: `groundedness` measures traceability to the
+evidence shown, the evidence set differs by arm, a distractor document makes a
+wrong cause count as supported, and all 20 calibration samples had empty
+`rag_context` (附录 FH). No `R − B` result on any metric had been observed, on dev
+or holdout, when the change was made. `groundedness` stays in the report as a
+descriptive metric.
+
+#### 7.2.1 `event_attribution_accuracy`
+
+**Unit.** The event is the independent unit. Each `normal` event in the frozen
+event script contributes one score per arm; several cases on one event are
+averaged first and never counted as separate observations.
+
+**Trial score.** 1 if the label is `correct`, otherwise 0. The scorer reads the
+report and assigns one of three labels against the event's cause in the frozen
+script:
+
+| Label | Meaning | Trial score |
+|---|---|---|
+| `correct` | names the event's cause as an explanation of the anomaly, and no other cause as the main one | 1 |
+| `wrong` | names a different cause as the main one | 0 |
+| `none` | describes the anomaly and offers no cause | 0 |
+
+Hedged wording ("possibly because of ...") counts as naming the cause, since this
+metric does not measure stated confidence. The arm is hidden from the scorer and
+from the human labeller. String matching is not a permitted scorer (附录 X.8).
+
+**Test.** Exact event-level sign-flip test on the per-event `R − B` means (random
+sign-flips only if the number of events makes enumeration impractical), at the
+§7.6 α. This replaces `paired_bootstrap_ci` for H2 only: on simulated null data
+the bootstrap ran at 0.072 at n = 5 and 0.041 at n = 10 against a nominal 0.0167
+(附录 FI). The bootstrap interval is reported descriptively. The 0.028 practical
+floor in §7.6 still applies.
+
+**Scorer bar, same logic as §8.1.** Machine-vs-human Cohen's κ on the three labels
+must reach the human test-retest κ on the same reports, 100% of the ceiling. At
+least 60 dev reports, from arms B and R, labelled blind. The rubric is frozen
+before the first label is written. If the bar is missed, the remedy is more
+reports, not more scorer variants on the same reports (§8.4).
+
+**Reported separately, descriptive only (附录 CP.5).** Wrong-attribution rate on
+`distractor` events and hallucination rate on `unexplained` events. The holdout
+has one of each today, which supports no test. An on-arm hallucination rate not
+below the off arm's is a foreseeable result (附录 CO, CP.5).
+
+**N is open.** At least 7 events are required for any result to reach α = 0.0167
+at all (2/2^7 = 0.0156), so the 3 `normal` events now in the test split cannot
+support H2 whatever the effect. The planning value is **about 12**; the final
+number is set from a dev pilot of the two arms' rates (附录 FI).
 
 ### 7.3 实验 2: routing accuracy, and a prediction made before the reveal
 
@@ -1143,7 +1196,8 @@ what 实验 2 measures; it must not be quietly removed from 实验 1's sample.**
 separately. **Reporting and testing are separated here deliberately**, because
 folding strata into the confirmatory set silently doubles it:
 
-- **H2's corpus restriction is a sample definition, not a stratified test.**
+- **H2's restriction to `normal` events is a sample definition, not a stratified
+  test.**
 - **H1 and H3 are run on all eligible cases and are not stratified for testing.**
   Stratified figures are reported and labelled descriptive.
 - **Any stratified comparison not listed in 7.2 is exploratory.**
@@ -1151,7 +1205,7 @@ folding strata into the confirmatory set silently doubles it:
 ### 7.6 Multiplicity and the decision rule
 
 - **Two confirmatory tests.** H1 and H3. **H2 is exploratory**: the metric it is
-  bound to (`groundedness`) does not meet the judge-validity bar in §8.1.
+  bound to (`event_attribution_accuracy`) has no validated scorer yet (§7.2.1).
   Bonferroni: α = 0.05 / 2 = 0.025, i.e. report **97.5% paired bootstrap
   confidence intervals** using the project's existing `paired_bootstrap_ci`.
   - Both remaining confirmatory tests are bound to `factual_accuracy`, computed
@@ -1166,7 +1220,7 @@ folding strata into the confirmatory set silently doubles it:
     read as written. It uses the 2σ multiplier (≈95%), not the Bonferroni one;
     and it uses n = 41, the whole retired holdout, while **no hypothesis is
     tested on all of it** — H1/H3 run on the `cleaning_relevant` subset, H2 on
-    the `corpus_backed` subset (§7.2). At σ_hetero = 0.05 and k = 5 the middle
+    `normal`-event cases (§7.2). At σ_hetero = 0.05 and k = 5 the middle
     cell moves from CA's 0.0196 to 0.0220 at 97.5%, and to 0.0307 if the
     eligible subset is half of 41. **The subset sizes, not N, are what must
     clear the threshold** (清单 (5)).
@@ -1187,6 +1241,10 @@ folding strata into the confirmatory set silently doubles it:
 
 ### 7.7 What this section does not solve
 
+- **H2 needs events that do not exist yet.** No case in `tests/eval/test_suite.json`
+  carries an `event_id`, and new `normal` events must come from a new event-script
+  version, which re-renders `data/demo/` and therefore moves ground truth (附录 FI).
+  The scorer is also calibrated on few events: dev has 4 `normal`.
 - It cannot prevent the primary metrics being changed after the fact. Its only
   defence is that it is frozen before the reveal and that the frozen version is
   traceable.
@@ -1256,9 +1314,11 @@ distance to the ceiling is the part that carries the meaning.
 These apply per metric, are fixed here in advance, and are **not** contingent on
 what the 阶段 4 numbers turn out to be.
 
-1. **The hypothesis bound to that metric drops to exploratory.** With
-   `groundedness` not meeting the bar, **H2 is exploratory**; the confirmatory
-   set is **H1 and H3 only**. Both are bound to `factual_accuracy`, computed by
+1. **The hypothesis bound to that metric drops to exploratory.** Since
+   2026-11-01 `groundedness` binds no hypothesis, so missing the bar affects its
+   descriptive reporting only. H2 is governed by its own scorer bar (§7.2.1); until
+   that is met **H2 is exploratory** and the confirmatory set is **H1 and H3
+   only**. Both are bound to `factual_accuracy`, computed by
    a pure function against frozen ground truth
    (`src/eval/metrics.py::score_factual_accuracy` — no LLM call), so the
    confirmatory core does not depend on judge validity at all.
@@ -1611,8 +1671,10 @@ Neither metric covers these. Each is also declared out of scope in §8.3.
   `<img>`, no embedded image data), so it is **structurally absent** from the
   reference. Chart claims are identified offline (§8.6.2 step 2a), counted and
   reported descriptively; they do not enter either score.
-- **Citation attribution.** Whether a cited source is the right one is not
-  judged, and today it could not be: `insight.sources` is never produced by the
+- **Citation attribution.** This means which source file a report cites. It is
+  **not** event attribution, whether the report names the right cause of an
+  anomaly, which is H2's primary metric (§7.2.1). Whether a cited source is the
+  right one is not judged, and today it could not be: `insight.sources` is never produced by the
   model (`INSIGHT_GENERATOR_SYSTEM`'s output schema has no such field), and
   `src/agents/insight_agent.py:199-203` fills it with the run's top three
   retrieved filenames, identically on every insight. **Removal is adjudicated
