@@ -120,7 +120,7 @@
       "type": "csv",
       "path": "data/demo/sales_data.csv"
     },
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "D05",
@@ -183,7 +183,7 @@
       "type": "csv",
       "path": "data/demo/sales_data.csv"
     },
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG02",
@@ -214,7 +214,7 @@
       "type": "csv",
       "path": "data/demo/churn_data.csv"
     },
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG03",
@@ -304,7 +304,7 @@
       "type": "csv",
       "path": "data/demo/sales_data.csv"
     },
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C02",
@@ -365,7 +365,7 @@
       "path": "sqlite:///data/demo/ecommerce_orders.db",
       "table_name": "orders"
     },
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C04",
@@ -452,7 +452,7 @@
       "type": "csv",
       "path": "data/demo/churn_data.csv"
     },
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "P03",
@@ -535,7 +535,7 @@
       "type": "csv",
       "path": "data/demo/sales_data.csv"
     },
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E03",
@@ -593,7 +593,7 @@
       "type": "csv",
       "path": "data/demo/marketing_campaigns.csv"
     },
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "D06",
@@ -685,7 +685,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "D09",
@@ -716,7 +716,7 @@
       "pandas_transform"
     ],
     "expected_chart_types": [],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG05",
@@ -777,7 +777,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG07",
@@ -843,7 +843,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C05",
@@ -873,7 +873,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C06",
@@ -941,7 +941,7 @@
       "line",
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C08",
@@ -1001,7 +1001,7 @@
     "expected_chart_types": [
       "line"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "P05",
@@ -1059,7 +1059,7 @@
       "line",
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "P07",
@@ -1109,7 +1109,7 @@
     },
     "expected_tools": [],
     "expected_chart_types": [],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E06",
@@ -1191,7 +1191,7 @@
     "expected_chart_types": [
       "scatter"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "D10",
@@ -1250,7 +1250,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "D12",
@@ -1310,7 +1310,7 @@
       "sql_query"
     ],
     "expected_chart_types": [],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG09",
@@ -1344,7 +1344,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG10",
@@ -1522,7 +1522,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C12",
@@ -1583,7 +1583,7 @@
     "expected_chart_types": [
       "line"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "P09",
@@ -1727,7 +1727,7 @@
     "expected_chart_types": [
       "scatter"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E12",
@@ -1803,7 +1803,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "D15",
@@ -1832,7 +1832,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "D16",
@@ -1962,7 +1962,7 @@
       "bar",
       "scatter"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG15",
@@ -2086,7 +2086,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C15",
@@ -2233,7 +2233,7 @@
     "expected_chart_types": [
       "line"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E14",
@@ -2291,7 +2291,7 @@
     "expected_chart_types": [
       "scatter"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E17",
@@ -2346,7 +2346,7 @@
     "expected_chart_types": [
       "box"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E19",
@@ -2457,7 +2457,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "D21",
@@ -2487,7 +2487,7 @@
       "histogram",
       "box"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG17",
@@ -2549,7 +2549,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "DG19",
@@ -2608,7 +2608,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C17",
@@ -2640,7 +2640,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "C18",
@@ -2734,7 +2734,7 @@
     "expected_chart_types": [
       "bar"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "P15",
@@ -2763,7 +2763,7 @@
     "expected_chart_types": [
       "line"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "P16",
@@ -2820,7 +2820,7 @@
     "expected_chart_types": [
       "line"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E20",
@@ -2848,7 +2848,7 @@
       "box",
       "scatter"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E21",
@@ -2931,7 +2931,7 @@
       "histogram",
       "box"
     ],
-    "split": "test"
+    "split": "dev"
   },
   {
     "id": "E24",
