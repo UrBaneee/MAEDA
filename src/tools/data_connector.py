@@ -40,8 +40,13 @@ class ColumnInfo:
     sample_values: list[Any] = field(default_factory=list)
     is_numeric: bool = False
     is_datetime: bool = False
+    # ISO date strings, set only for date columns. SCHEMA_SUMMARIZER_SYSTEM
+    # asks for time coverage, which sample_values cannot show.
+    min_date: Optional[str] = None
+    max_date: Optional[str] = None
 
     def to_dict(self) -> dict:
+        extra = {"min_date": self.min_date, "max_date": self.max_date} if self.min_date else {}
         return {
             "name": self.name,
             "dtype": self.dtype,
@@ -50,6 +55,7 @@ class ColumnInfo:
             "sample_values": [str(v) for v in self.sample_values],
             "is_numeric": self.is_numeric,
             "is_datetime": self.is_datetime,
+            **extra,
         }
 
 
@@ -110,6 +116,21 @@ class SchemaInfo:
 
 # ─── Schema extractor ─────────────────────────────────────────────────────────
 
+def _date_range(series: pd.Series) -> tuple[Optional[str], Optional[str]]:
+    """(min, max) for a datetime column or a string column holding only
+    dates; (None, None) otherwise. CSVs load dates as strings, so checking the
+    dtype alone would miss every CSV in data/demo/."""
+    values = series.dropna()
+    if values.empty or pd.api.types.is_numeric_dtype(series) or pd.api.types.is_bool_dtype(series):
+        return None, None
+    if not pd.api.types.is_datetime64_any_dtype(series):
+        try:
+            values = pd.to_datetime(values.astype(str), format="ISO8601")
+        except (ValueError, TypeError):
+            return None, None
+    return values.min().date().isoformat(), values.max().date().isoformat()
+
+
 def extract_schema(df: pd.DataFrame, source_type: str, path: str,
                    table_name: Optional[str] = None) -> SchemaInfo:
     columns = []
@@ -120,6 +141,7 @@ def extract_schema(df: pd.DataFrame, source_type: str, path: str,
         sample = series.dropna().head(3).tolist()
         is_numeric = pd.api.types.is_numeric_dtype(series)
         is_datetime = pd.api.types.is_datetime64_any_dtype(series)
+        min_date, max_date = _date_range(series)
 
         columns.append(ColumnInfo(
             name=col,
@@ -128,6 +150,8 @@ def extract_schema(df: pd.DataFrame, source_type: str, path: str,
             unique_count=unique_count,
             sample_values=sample,
             is_numeric=is_numeric,
+            min_date=min_date,
+            max_date=max_date,
             is_datetime=is_datetime,
         ))
 

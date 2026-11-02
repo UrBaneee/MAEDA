@@ -1488,3 +1488,12 @@ class TestSchemaInfo:
             assert "dtype" in d
             assert "null_pct" in d
             assert "sample_values" in d
+
+
+def test_extract_schema_reports_date_range_for_string_dates():
+    import pandas as pd
+    from src.tools.data_connector import extract_schema
+    df = pd.DataFrame({"day": ["2023-02-01", None, "2024-03-05"], "region": ["N", "S", "E"]})
+    cols = {c.name: c.to_dict() for c in extract_schema(df, "csv", "x.csv").columns}
+    assert (cols["day"]["min_date"], cols["day"]["max_date"]) == ("2023-02-01", "2024-03-05")
+    assert "min_date" not in cols["region"]
