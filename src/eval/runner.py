@@ -19,6 +19,7 @@ from src.eval.metrics import (
     not_applicable_metric,
     score_answer_relevance,
     score_chart_appropriateness,
+    score_event_attribution,
     score_factual_accuracy,
     score_groundedness,
     score_intent_accuracy,
@@ -53,6 +54,12 @@ class GoldenTestCase:
     # src.tools.chart_tool.recommend_chart can return.
     expected_tools: Optional[list[str]] = None
     expected_chart_types: Optional[list[str]] = None
+    # 预注册 §7.4/§7.2.1: authored link to a frozen event. A case with no
+    # event_id costs no attribution judge call.
+    event_id: Optional[str] = None
+    event_type: Optional[str] = None
+    event_anomaly: Optional[str] = None
+    event_cause: Optional[str] = None
     # Eval v2 Step 4: dev/test split, fixed at authoring time so a holdout
     # set can't be re-randomized (and silently re-peeked-at) across runs.
     split: Optional[str] = None
@@ -293,6 +300,19 @@ class EvalRunner:
                 gnd = MetricScore("groundedness", 0.0, "error", detail, valid=False)
             scores.extend([rel, gnd])
 
+        if test_case and test_case.event_id:
+            if "groundedness" in na:
+                scores.append(not_applicable_metric("event_attribution_accuracy", na["groundedness"]))
+            else:
+                try:
+                    scores.append(await score_event_attribution(
+                        report, test_case.event_anomaly or "", test_case.event_cause, llm=self._llm,
+                    ))
+                except Exception as exc:                   # noqa: BLE001
+                    logger.error("Attribution judge raised while scoring: %s", exc)
+                    scores.append(MetricScore("event_attribution_accuracy", 0.0, "error",
+                                              f"scoring raised {type(exc).__name__}: {exc}", valid=False))
+
         # 9.4 Factual accuracy
         ground_truth = test_case.ground_truth if test_case else None
         scores.append(_guard("factual_accuracy",
@@ -437,6 +457,9 @@ def _aggregate_score(scores: list[MetricScore]) -> float:
         # detection (a refusal rate that changes across runs is worth
         # seeing), just not folded into this weighted average.
         "safe_refusal": 0.0,
+        # H2's primary metric only (预注册 §7.2.1). Exists on event-linked cases
+        # alone, so weighting it would make aggregates incomparable across cases.
+        "event_attribution_accuracy": 0.0,
     }
     total_w = total_wv = 0.0
     for s in scores:

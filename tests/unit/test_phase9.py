@@ -1571,3 +1571,64 @@ def test_parse_json_distinguishes_no_braces_from_invalid_json_inside_braces():
     assert str(no_braces.value) != str(invalid_inside.value)
     assert "json.loads failed" in str(invalid_inside.value)
     assert "json.loads failed" not in str(no_braces.value)
+
+
+# ─── H2 primary metric (预注册 §7.2.1) ──────────────────────────────────────
+
+def _attribution_llm(*labels):
+    responses = []
+    for label in labels:
+        r = MagicMock()
+        r.content = json.dumps({"label": label, "quote": "q"})
+        r.usage_metadata = {"input_tokens": 1, "output_tokens": 1}
+        responses.append(r)
+    llm = MagicMock()
+    llm.ainvoke = AsyncMock(side_effect=responses)
+    return llm
+
+
+@pytest.mark.parametrize("labels,expected,score", [
+    (("correct", "correct", "none"), "correct", 1.0),
+    (("correct", "wrong", "none"), "wrong", 0.0),
+    (("none", "none", "correct"), "none", 0.0),
+])
+def test_event_attribution_majority(labels, expected, score):
+    from src.eval.metrics import score_event_attribution
+    ms = asyncio.run(score_event_attribution(
+        "report", "anomaly", "cause", llm=_attribution_llm(*labels), n_samples=3))
+    assert (ms.raw_value, ms.score) == (expected, score)
+
+
+def test_event_attribution_invalid_labels_do_not_become_a_score():
+    from src.eval.metrics import score_event_attribution
+    llm = MagicMock()
+    bad = MagicMock(content='{"label": "maybe"}', usage_metadata={})
+    llm.ainvoke = AsyncMock(return_value=bad)
+    ms = asyncio.run(score_event_attribution("r", "a", "c", llm=llm, n_samples=1))
+    assert ms.valid is False
+
+
+def test_event_attribution_empty_report_calls_no_judge():
+    from src.eval.metrics import score_event_attribution
+    llm = MagicMock()
+    llm.ainvoke = AsyncMock()
+    ms = asyncio.run(score_event_attribution("", "a", "c", llm=llm))
+    assert ms.valid is False
+    llm.ainvoke.assert_not_awaited()
+
+
+def test_event_attribution_prompt_carries_no_arm_or_evidence():
+    from src.eval.metrics import score_event_attribution
+    llm = _attribution_llm("none")
+    asyncio.run(score_event_attribution("the report", "the anomaly", None, llm=llm, n_samples=1))
+    prompt = llm.ainvoke.await_args.args[0][1].content
+    assert "no documented cause" in prompt
+    assert "Analysis" not in prompt and "RAG" not in prompt
+
+
+def test_unlinked_case_gets_no_attribution_metric_and_aggregate_ignores_it():
+    from src.eval.metrics import MetricScore
+    from src.eval.runner import _aggregate_score
+    base = [MetricScore("factual_accuracy", 0.5, "warn")]
+    extra = base + [MetricScore("event_attribution_accuracy", 1.0, "pass")]
+    assert _aggregate_score(base) == _aggregate_score(extra)

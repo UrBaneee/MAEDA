@@ -40,7 +40,11 @@ from typing import Any, Optional
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-from src.config.agent_prompts import EVAL_GROUNDEDNESS_SYSTEM, EVAL_RELEVANCE_SYSTEM
+from src.config.agent_prompts import (
+    EVAL_EVENT_ATTRIBUTION_SYSTEM,
+    EVAL_GROUNDEDNESS_SYSTEM,
+    EVAL_RELEVANCE_SYSTEM,
+)
 from src.config.settings import settings
 from src.eval.trials import NOT_APPLICABLE
 from src.utils.logger import get_logger
@@ -744,6 +748,63 @@ def score_factual_accuracy(
     score = min(1.0, overlap * 2)  # generous: even 50% overlap → full score
     return MetricScore("factual_accuracy", score, _label(score),
                        f"{matched}/{len(summary_nums)} numbers overlap")
+
+
+# ─── H2 primary metric (预注册 §7.2.1) ──────────────────────────────────────
+
+ATTRIBUTION_LABELS = ("correct", "wrong", "none")
+
+
+def _majority_attribution(labels: list[str]) -> str:
+    """`correct` needs a strict majority, so a split judge cannot earn the
+    point; otherwise the commoner of the two failing labels, `wrong` on a tie."""
+    if labels.count("correct") * 2 > len(labels):
+        return "correct"
+    return "wrong" if labels.count("wrong") >= labels.count("none") else "none"
+
+
+async def score_event_attribution(
+    report: str,
+    anomaly: str,
+    documented_cause: Optional[str],
+    llm=None,
+    n_samples: Optional[int] = None,
+) -> MetricScore:
+    """Which cause the report gives for one scripted event. The frozen event
+    script is the truth; the judge only reads what the report said. Takes no
+    arm, analysis result or RAG context, so the evidence shown cannot differ
+    by arm. The label is kept in raw_value for the distractor/unexplained
+    rates, which score differently from `normal` events."""
+    if not report:
+        return not_applicable_metric("event_attribution_accuracy", "no report")
+    _llm = llm or _build_eval_llm(metric="event_attribution_accuracy")
+    n = max(1, n_samples if n_samples is not None else settings.eval_judge_samples)
+    cause = documented_cause or "(no documented cause exists)"
+    prompt = f"### Anomaly\n{anomaly}\n\n### Documented cause\n{cause}\n\n### Report\n{report}"
+
+    async def _one_sample() -> dict:
+        async def _call():
+            response = await _llm.ainvoke([
+                SystemMessage(content=EVAL_EVENT_ATTRIBUTION_SYSTEM),
+                HumanMessage(content=prompt),
+            ])
+            raw = _parse_json(_response_text(response).strip())
+            label = raw.get("label") if isinstance(raw, dict) else None
+            if label not in ATTRIBUTION_LABELS:
+                raise ValueError(f"Judge response has no valid label: {raw!r}")
+            return {"label": label, "quote": raw.get("quote", ""), "usage": _judge_usage(response)}
+        return await call_with_rate_limit_retry(_call, logger=logger, label="Attribution judge call")
+
+    samples, errors = await _run_judge_samples(_one_sample, n)
+    if not samples:
+        return MetricScore("event_attribution_accuracy", 0.0, "error",
+                           f"LLM unavailable: {errors[-1] if errors else 'no samples'}", valid=False)
+    labels = [s["label"] for s in samples]
+    label = _majority_attribution(labels)
+    quote = next((s["quote"] for s in samples if s["label"] == label), "")
+    score = 1.0 if label == "correct" else 0.0
+    return MetricScore("event_attribution_accuracy", score, _label(score),
+                       f"{label} ({labels}): {quote}", raw_value=label)
 
 
 # ─── 9.5 Agent performance ────────────────────────────────────────────────────

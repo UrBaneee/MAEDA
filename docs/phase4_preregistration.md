@@ -1685,6 +1685,21 @@ Neither metric covers these. Each is also declared out of scope in §8.3.
   20), so the field is already ignored by the report writer and its removal is
   not expected to alter report text. *A bound, not a proof.*
 
+### R5.1 Event attribution labels (§7.2.1)
+
+Labelled separately from R2–R4, one label per report, from report text alone,
+with the arm hidden. `EVAL_EVENT_ATTRIBUTION_SYSTEM` carries the same definitions.
+
+| Situation in the report | Label |
+|---|---|
+| Names the documented cause, in any wording, including hedged | `correct` |
+| Names the documented cause and a second, minor one | `correct` |
+| Lists several causes with none as the main one, documented cause among them | `correct` |
+| A different cause is the main one, even if the documented cause is also named | `wrong` |
+| Only size, timing or location of the anomaly | `none` |
+| No documented cause exists, and the report asserts a specific one | `wrong` |
+| No documented cause exists, and the report says the cause is unknown | `none` |
+
 ### R6. Self-consistency check, not relabelling
 
 Per 附录 FD 第 8.8: this rubric is checked **against the existing 20 labels** to

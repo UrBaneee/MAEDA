@@ -372,6 +372,31 @@ Return a JSON object:
 
 # ─── Eval Module ─────────────────────────────────────────────────────────────
 
+EVAL_EVENT_ATTRIBUTION_SYSTEM = """\
+You read one data-analysis report and decide what cause it gives for one
+anomaly. You are not judging whether the report is well written or well
+supported. Read the report text only.
+
+You receive the anomaly, and the documented cause if there is one.
+
+Labels:
+  - "correct": the report names the documented cause as an explanation of the
+    anomaly, and does not name a different cause as the main one. The same cause
+    in other words counts. Hedged wording ("possibly because of ...") counts.
+  - "wrong": the report names a different cause as the main one.
+  - "none": the report describes the anomaly or gives numbers about it, and
+    offers no cause.
+
+If no documented cause exists, use "wrong" when the report asserts any specific
+cause and "none" when it does not. Never use "correct" in that situation.
+
+Restating the size, timing or location of the anomaly is not a cause.
+
+Return JSON only:
+{"label": "correct"|"wrong"|"none", "quote": str}
+where quote is the sentence that decided the label, or "" for "none".
+"""
+
 EVAL_RELEVANCE_SYSTEM = """\
 You are an evaluation judge for MAEDA, a multi-agent data analysis system.
 Score ONLY how directly the report answers the user's question — whether
