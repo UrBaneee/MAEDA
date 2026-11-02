@@ -147,6 +147,7 @@ class EvalResult:
     rag_arm_invalid_reason: Optional[str] = None
     # 附录 FF: same pattern, from src/graph/nodes.py::_invalidate_cleaner_arm.
     cleaning_arm_invalid_reason: Optional[str] = None
+    degradation_log: list = field(default_factory=list)
     # E3 (附录 CU): how the run ended, one of src/state/terminal_state.py's
     # five values, read off state rather than re-derived here. Same
     # top-level-scalar, structurally-cannot-reach-_aggregate_score pattern
@@ -175,6 +176,7 @@ class EvalResult:
             "rag_mode": self.rag_mode,
             "rag_arm_invalid_reason": self.rag_arm_invalid_reason,
             "cleaning_arm_invalid_reason": self.cleaning_arm_invalid_reason,
+            "degradation_log": self.degradation_log,
             "terminal_state": self.terminal_state,
             "terminal_detail": self.terminal_detail,
             "eval_error": self.eval_error,
@@ -342,6 +344,7 @@ class EvalRunner:
             rag_mode=state.get("rag_mode"),
             rag_arm_invalid_reason=state.get("rag_arm_invalid_reason"),
             cleaning_arm_invalid_reason=state.get("cleaning_arm_invalid_reason"),
+            degradation_log=state.get("degradation_log") or [],
             terminal_state=terminal_state,
             terminal_detail=terminal_detail,
             eval_error=state.get("eval_error"),

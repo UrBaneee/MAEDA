@@ -193,15 +193,25 @@ class InsightAgent(BaseAgent):
             raw = _parse_json(response.content.strip())
             if not isinstance(raw, list):
                 raw = [raw]
-            # 7.4 Confidence scoring. `sources` stays whatever the model
-            # emitted (today: nothing). It used to be filled with the run's
-            # top three filenames on every insight, which asserted a citation
-            # nobody made (预注册 §3.0, 路线 A).
-            for item in raw:
-                insights.append(Insight.from_dict(item))
-
         except Exception as exc:
             logger.warning("Insight generation LLM failed: %s — using rule-based fallback", exc)
+            _record_degradation(state, "insight_generation", "rule_based_fallback", str(exc))
+            raw = []
+            insights = _rule_based_insights(successful, rag_chunks, rag_sources)
+
+        # 7.4 Confidence scoring. `sources` stays whatever the model emitted
+        # (today: nothing). It used to be filled with the run's top three
+        # filenames on every insight, which asserted a citation nobody made
+        # (预注册 §3.0, 路线 A). One bad item drops that item, not the batch.
+        for item in raw:
+            try:
+                insights.append(Insight.from_dict(item))
+            except Exception as exc:
+                logger.warning("Skipping malformed insight: %s", exc)
+                _record_degradation(state, "insight_generation", "item_skipped", str(exc))
+        if raw and not insights:
+            _record_degradation(state, "insight_generation", "rule_based_fallback",
+                                "no usable insight in model output")
             insights = _rule_based_insights(successful, rag_chunks, rag_sources)
 
         # 附录 U.7: attach this run's cleaning disclosure to every insight.
@@ -210,10 +220,7 @@ class InsightAgent(BaseAgent):
         # simplest correct reading of a per-Insight field here — a future
         # non-cleaning caveat source could instead attach to a specific
         # insight without changing Insight's shape.
-        cleaning_caveats = _build_cleaning_caveats(
-            state.get("cleaning_execution_plan"),
-            (state.get("cleaning_intent") or {}).get("column_scope", {}).get("columns", []),
-        )
+        cleaning_caveats = _all_cleaning_caveats(state)
         if cleaning_caveats:
             for insight in insights:
                 insight.caveats = [*insight.caveats, *cleaning_caveats]
@@ -256,10 +263,7 @@ class InsightAgent(BaseAgent):
         # nested inside each insight's JSON) so "强制披露" reaches the
         # "## Data Quality Notes" section the report prompt already asks
         # for, rather than depending on the LLM to notice a nested field.
-        cleaning_caveats = _build_cleaning_caveats(
-            state.get("cleaning_execution_plan"),
-            (state.get("cleaning_intent") or {}).get("column_scope", {}).get("columns", []),
-        )
+        cleaning_caveats = _all_cleaning_caveats(state)
         caveats_text = (
             json.dumps(cleaning_caveats, indent=2) if cleaning_caveats
             else "None."
@@ -292,6 +296,7 @@ class InsightAgent(BaseAgent):
             return response.content.strip()
         except Exception as exc:
             logger.warning("Report generation LLM failed: %s — using rule-based fallback", exc)
+            _record_degradation(state, "report_generation", "rule_based_fallback", str(exc))
             return _rule_based_report(state, insights)
 
 
@@ -491,6 +496,37 @@ _LOSSY_TOOL_CAVEAT_CODES = {
 }
 
 
+def _record_degradation(state: MAEDAState, component: str, action: str, detail: str) -> None:
+    """附录 FE.13 组 A: a silent downgrade must leave a row a later reader can
+    find. Insight fallbacks used to replace the batch with no trace at all."""
+    state["degradation_log"] = [
+        *(state.get("degradation_log") or []),
+        {"component": component, "action": action, "detail": detail[:300]},
+    ]
+
+
+def _all_cleaning_caveats(state: MAEDAState) -> list[dict]:
+    """Step-level caveats from the execution plan, plus the round-level
+    `cleaning_caveat` the graph nodes write. That round-level statement has no
+    execution plan behind it under force_off, max_rounds or needs_review, so
+    without this it reached no consumer (附录 FE.4(3))."""
+    caveats = _build_cleaning_caveats(
+        state.get("cleaning_execution_plan"),
+        (state.get("cleaning_intent") or {}).get("column_scope", {}).get("columns", []),
+    )
+    run_level = state.get("cleaning_caveat")
+    if run_level:
+        caveats.append({
+            "code": "cleaning_run_status",
+            "severity": "info",
+            "columns": [],
+            "detail": run_level,
+            "source": "orchestrator",
+            "evidence": {"stop_reason": state.get("cleaning_stop_reason")},
+        })
+    return caveats
+
+
 def _build_cleaning_caveats(execution_plan: Optional[dict], column_scope: list[str]) -> list[dict]:
     """
     附录 U.7's disclosure chain: cleaner produces lineage (附录 U.5/U.6 —
@@ -670,10 +706,7 @@ def _rule_based_report(state: MAEDAState, insights: list[Insight]) -> str:
 
     # 附录 U.7/R.2: forced disclosure must reach the report even on the
     # non-LLM fallback path, not only when the LLM writer is available.
-    cleaning_caveats = _build_cleaning_caveats(
-        state.get("cleaning_execution_plan"),
-        (state.get("cleaning_intent") or {}).get("column_scope", {}).get("columns", []),
-    )
+    cleaning_caveats = _all_cleaning_caveats(state)
     for cv in cleaning_caveats:
         cols = f" ({', '.join(cv['columns'])})" if cv.get("columns") else ""
         lines.append(f"- [{cv['severity']}] {cv['code']}{cols}: {cv['detail']}")

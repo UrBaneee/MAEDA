@@ -160,6 +160,9 @@ class MAEDAState(TypedDict):
     # MAEDA_CLEANER_MODE=force_on when clean_dataset fell back or the planner
     # degraded from the requested mode.
     cleaning_arm_invalid_reason: Optional[str]
+    # 附录 FE.13 组 A: downgrades that do not invalidate an arm but must not be
+    # silent. One {component, action, detail} per event.
+    degradation_log: list[dict]
     insights: list[dict]       # [{finding, evidence, confidence, recommendation}]
     report: Optional[str]      # Final markdown report
 
@@ -263,6 +266,7 @@ def initial_state(
         rag_sources=[],
         rag_arm_invalid_reason=None,
         cleaning_arm_invalid_reason=None,
+        degradation_log=[],
         insights=[],
         report=None,
         guardrail_checks=[],

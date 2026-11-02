@@ -657,3 +657,46 @@ def test_graph_end_to_end_with_phase7():
     assert "insights" in result
     assert "report" in result
     assert isinstance(result["report"], str)
+
+
+def _insight_agent(*contents):
+    from src.agents.insight_agent import InsightAgent
+    responses = []
+    for content in contents:
+        r = MagicMock()
+        r.content = content
+        r.usage_metadata = {"input_tokens": 1, "output_tokens": 1}
+        responses.append(r)
+    llm = MagicMock()
+    llm.ainvoke = AsyncMock(side_effect=responses)
+    return InsightAgent(llm=llm)
+
+
+def _insight_state():
+    state = initial_state("q")
+    state["analysis_results"] = [{"step": 1, "method": "x", "result_summary": "up",
+                                  "confidence": 0.8, "failed": False}]
+    return state
+
+
+def test_insight_fallback_is_logged():
+    state = asyncio.run(_insight_agent("not json", "# Report").generate(_insight_state()))
+    assert any(d["component"] == "insight_generation" and d["action"] == "rule_based_fallback"
+               for d in state["degradation_log"])
+
+
+def test_one_bad_insight_item_does_not_lose_the_batch():
+    payload = json.dumps([{"finding": "good", "evidence": "e", "confidence": 0.7}, 5])
+    state = asyncio.run(_insight_agent(payload, "# Report").generate(_insight_state()))
+    assert [i["finding"] for i in state["insights"]] == ["good"]
+    assert [d["action"] for d in state["degradation_log"]] == ["item_skipped"]
+
+
+def test_round_level_cleaning_caveat_reaches_the_report_prompt():
+    agent = _insight_agent('[{"finding": "f", "evidence": "e", "confidence": 0.7}]', "# Report")
+    state = _insight_state()
+    state["cleaning_caveat"] = "cleaning was deliberately skipped"
+    result = asyncio.run(agent.generate(state))
+    assert "cleaning was deliberately skipped" in str(result["insights"][0]["caveats"])
+    report_prompt = agent._llm.ainvoke.await_args_list[1].args[0][1].content
+    assert "cleaning was deliberately skipped" in report_prompt
