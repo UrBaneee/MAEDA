@@ -810,3 +810,35 @@ def test_router_guardrails_fail_exhausted():
     state["guardrail_checks"] = [{"overall_verdict": "retry"}]
     state["guardrail_retry_count"] = 5
     assert route_after_guardrails(state) == "fail"
+
+
+# ─── 附录 FL: a PII failure must quote text the report contains ────────────────
+
+def test_pii_flag_without_matching_evidence_is_discarded():
+    from src.agents.guardrail_agent import _parse_llm_checks
+    raw = {"checks": [{"check": "PII leakage", "passed": False,
+                       "finding": "emails present", "evidence": "xi.chen@sales.internal"}]}
+    (check,) = _parse_llm_checks(raw, "# Report\nEast Partner revenue fell 18%.")
+    assert check.passed is True and check.severity == "info"
+
+
+def test_pii_flag_without_evidence_is_discarded():
+    from src.agents.guardrail_agent import _parse_llm_checks
+    raw = {"checks": [{"check": "PII leakage", "passed": False, "finding": "rep_id"}]}
+    (check,) = _parse_llm_checks(raw, "# Report")
+    assert check.passed is True
+
+
+def test_pii_flag_quoting_the_report_still_blocks():
+    from src.agents.guardrail_agent import _parse_llm_checks
+    raw = {"checks": [{"check": "PII leakage", "passed": False,
+                       "finding": "email", "evidence": "a.b@x.com"}]}
+    (check,) = _parse_llm_checks(raw, "Contact a.b@x.com for details.")
+    assert check.passed is False and check.severity == "critical"
+
+
+def test_non_pii_failures_are_untouched():
+    from src.agents.guardrail_agent import _parse_llm_checks
+    raw = {"checks": [{"check": "Hallucination", "passed": False, "finding": "15% figure"}]}
+    (check,) = _parse_llm_checks(raw, "# Report")
+    assert check.passed is False and check.severity == "critical"

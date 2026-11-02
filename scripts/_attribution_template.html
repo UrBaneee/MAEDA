@@ -1,0 +1,243 @@
+<title>Event Attribution Labels __SET_TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a narrow queue rail beside one report at a time; the label panel sits under the reference card. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --ink: #1d2320;
+  --muted: #5d6762;
+  --line: #d9ded9;
+  --accent: #1f6f5c;
+  --accent-soft: #e3f0ec;
+  --correct: #1f7a4d;
+  --wrong: #b3402e;
+  --none: #6b6f8a;
+  --warn-bg: #fff4dc;
+  --font-body: "IBM Plex Sans", "Noto Sans SC", system-ui, sans-serif;
+  --font-display: "IBM Plex Serif", "Noto Serif SC", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141816; --surface: #1c211f; --ink: #e6ebe8; --muted: #9aa49f; --line: #303834;
+    --accent: #5cc0a3; --accent-soft: #1f322c; --correct: #5cc28e; --wrong: #f08a75; --none: #a5a9c6;
+    --warn-bg: #3a3020; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141816; --surface: #1c211f; --ink: #e6ebe8; --muted: #9aa49f; --line: #303834;
+  --accent: #5cc0a3; --accent-soft: #1f322c; --correct: #5cc28e; --wrong: #f08a75; --none: #a5a9c6;
+  --warn-bg: #3a3020; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; }
+header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; margin: 0; text-wrap: balance; }
+.status { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.status b { color: var(--ink); }
+.banner { grid-column: 1 / -1; background: var(--warn-bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; font-size: 14px; }
+nav { display: flex; flex-direction: column; gap: 4px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); align-self: start; }
+nav button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 5px; font-family: var(--font-mono); font-size: 13px; }
+nav button:hover { background: var(--accent-soft); }
+nav button[aria-current="true"] { background: var(--accent); color: var(--surface); }
+nav button:focus-visible, .choice:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid currentColor; flex: none; opacity: .6; }
+.dot.correct { background: var(--correct); border-color: var(--correct); opacity: 1; }
+.dot.wrong { background: var(--wrong); border-color: var(--wrong); opacity: 1; }
+.dot.none { background: var(--none); border-color: var(--none); opacity: 1; }
+main { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.ref { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; display: grid; gap: 10px; }
+.ref dt { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ref dd { margin: 0 0 4px; }
+.ref .nocause { color: var(--muted); font-style: italic; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.choice { all: unset; cursor: pointer; padding: 8px 16px; border: 1.5px solid var(--line); border-radius: 6px; font-weight: 600; font-family: var(--font-mono); font-size: 14px; }
+.choice[aria-pressed="true"][data-v="correct"] { border-color: var(--correct); color: var(--correct); background: var(--accent-soft); }
+.choice[aria-pressed="true"][data-v="wrong"] { border-color: var(--wrong); color: var(--wrong); background: var(--accent-soft); }
+.choice[aria-pressed="true"][data-v="none"] { border-color: var(--none); color: var(--none); background: var(--accent-soft); }
+label.field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+textarea { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 8px; min-height: 56px; resize: vertical; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.btn { all: unset; cursor: pointer; padding: 7px 14px; border-radius: 5px; border: 1px solid var(--line); font-size: 14px; }
+.btn.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.need { color: var(--wrong); font-size: 13px; }
+article { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 22px 18px; min-width: 0; overflow-wrap: anywhere; }
+article .meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 12px; }
+article h1, article h2, article h3 { font-family: var(--font-display); line-height: 1.3; }
+article h1 { font-size: 1.35rem; } article h2 { font-size: 1.15rem; } article h3 { font-size: 1rem; }
+article table { border-collapse: collapse; display: block; overflow-x: auto; font-size: 13px; font-variant-numeric: tabular-nums; }
+article th, article td { border: 1px solid var(--line); padding: 4px 8px; }
+article pre { overflow-x: auto; background: var(--bg); padding: 8px; border-radius: 4px; }
+details.rubric { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; font-size: 14px; }
+details.rubric summary { cursor: pointer; font-weight: 600; }
+details.rubric table { border-collapse: collapse; margin-top: 8px; width: 100%; }
+details.rubric td { border-top: 1px solid var(--line); padding: 6px 4px; vertical-align: top; }
+details.rubric td:last-child { font-family: var(--font-mono); white-space: nowrap; }
+@media (max-width: 760px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); }
+  nav { position: static; flex-direction: row; flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Serif:wght@600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+
+<div class="wrap">
+  <header>
+    <h1>Event attribution · __SET_TITLE__</h1>
+    <div class="status" id="status">Connecting to storage…</div>
+  </header>
+  <div class="banner" id="banner" hidden></div>
+  <nav id="queue" aria-label="Reports"></nav>
+  <main>
+    <details class="rubric">
+      <summary>Rubric R5.1 (frozen with the pre-registration)</summary>
+      <table>
+        <tr><td>Names the documented cause, in any wording, including hedged ("possibly because of …")</td><td>correct</td></tr>
+        <tr><td>Names the documented cause plus a second, minor one</td><td>correct</td></tr>
+        <tr><td>Two causes side by side with no main one, the documented cause among them</td><td>correct</td></tr>
+        <tr><td>A different cause is the main one, even if the documented cause is also named</td><td>wrong</td></tr>
+        <tr><td>Decomposition only ("driven by Widget A", "fewer units sold lowered revenue")</td><td>none</td></tr>
+        <tr><td>Size, timing or location only</td><td>none</td></tr>
+        <tr><td>Only suggests checking a cause ("verify whether stock ran out")</td><td>none</td></tr>
+        <tr><td>Three or more guesses side by side with no main one</td><td>none</td></tr>
+        <tr><td>No documented cause exists, and the report asserts a specific cause</td><td>wrong</td></tr>
+        <tr><td>No documented cause exists, and the report says the cause is unknown or that there was no clear effect</td><td>none</td></tr>
+      </table>
+      <p>Read the whole report, every section. The arm that produced it is hidden.</p>
+    </details>
+    <dl class="ref" id="ref"></dl>
+    <section class="panel" aria-label="Label">
+      <div class="choices" role="group" aria-label="Label">
+        <button class="choice" id="choice-correct" data-v="correct" aria-pressed="false">correct</button>
+        <button class="choice" id="choice-wrong" data-v="wrong" aria-pressed="false">wrong</button>
+        <button class="choice" id="choice-none" data-v="none" aria-pressed="false">none</button>
+      </div>
+      <label class="field" for="quote">Sentence that decided the label (required for correct and wrong; paste it from the report)
+        <textarea id="quote"></textarea>
+      </label>
+      <label class="check"><input type="checkbox" id="uncertain"> Uncertain</label>
+      <label class="field" for="notes">Notes (optional)
+        <textarea id="notes"></textarea>
+      </label>
+      <div class="row">
+        <span class="need" id="need"></span>
+        <span style="display:flex;gap:8px">
+          <button class="btn" id="prev">Previous</button>
+          <button class="btn primary" id="next">Next</button>
+        </span>
+      </div>
+    </section>
+    <article id="report"></article>
+  </main>
+</div>
+
+<script>
+const SAMPLES = __SAMPLES__;
+const COLLECTION = "__COLLECTION__";
+const labels = {};
+let current = 0, db = null, saveTimer = null, saving = false;
+
+function complete(l) { return l && l.label && (l.label === "none" || (l.quote || "").trim()); }
+function setStatus() {
+  const done = SAMPLES.filter(s => complete(labels[s.id])).length;
+  const where = db ? (saving ? "Saving…" : "Saved to your private store") : "Not saved: storage unavailable";
+  document.getElementById("status").innerHTML = `<b>${done}</b> of ${SAMPLES.length} labelled · ${where}`;
+}
+function renderQueue() {
+  const nav = document.getElementById("queue");
+  nav.replaceChildren(...SAMPLES.map((s, i) => {
+    const b = document.createElement("button");
+    b.id = "q-" + s.id;
+    b.setAttribute("aria-current", i === current ? "true" : "false");
+    const l = labels[s.id];
+    const dot = document.createElement("span");
+    dot.className = "dot" + (complete(l) ? " " + l.label : "");
+    b.append(s.id, dot);
+    b.onclick = () => go(i);
+    return b;
+  }));
+}
+function renderSample() {
+  const s = SAMPLES[current], l = labels[s.id] || {};
+  const ref = document.getElementById("ref");
+  ref.innerHTML = "";
+  const add = (dt, text, cls) => {
+    const t = document.createElement("dt"); t.textContent = dt;
+    const d = document.createElement("dd"); d.textContent = text; if (cls) d.className = cls;
+    ref.append(t, d);
+  };
+  add("Question asked", s.query);
+  add("Anomaly", s.anomaly);
+  add("Documented cause", s.cause || "No documented cause exists", s.cause ? "" : "nocause");
+  const html = window.marked && window.DOMPurify
+    ? DOMPurify.sanitize(marked.parse(s.report)) : null;
+  const art = document.getElementById("report");
+  if (html) { art.innerHTML = `<div class="meta">${s.id}</div>` + html; }
+  else { art.textContent = s.report; art.style.whiteSpace = "pre-wrap"; }
+  for (const v of ["correct", "wrong", "none"])
+    document.getElementById("choice-" + v).setAttribute("aria-pressed", l.label === v ? "true" : "false");
+  document.getElementById("quote").value = l.quote || "";
+  document.getElementById("uncertain").checked = !!l.uncertain;
+  document.getElementById("notes").value = l.notes || "";
+  document.getElementById("prev").disabled = current === 0;
+  document.getElementById("next").textContent = current === SAMPLES.length - 1 ? "Done" : "Next";
+  showNeed();
+  renderQueue(); setStatus();
+}
+function showNeed() {
+  const l = labels[SAMPLES[current].id] || {};
+  const need = document.getElementById("need");
+  need.textContent = !l.label ? "Choose a label." :
+    (l.label !== "none" && !(l.quote || "").trim()) ? "Paste the deciding sentence." : "";
+}
+function edit(patch) {
+  const id = SAMPLES[current].id;
+  labels[id] = { ...(labels[id] || {}), ...patch, updated_at: new Date().toISOString() };
+  showNeed(); renderQueue(); setStatus();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => save(id), 500);
+}
+async function save(id) {
+  if (!db) return;
+  saving = true; setStatus();
+  try { await db.collection(COLLECTION).doc(id).set(labels[id]); }
+  catch (e) { showBanner("Your last change was not saved (" + (e.code || e.message) + "). Keep the page open and edit the field again."); }
+  saving = false; setStatus();
+}
+function go(i) { current = Math.max(0, Math.min(SAMPLES.length - 1, i)); renderSample(); window.scrollTo(0, 0); }
+function showBanner(t) { const b = document.getElementById("banner"); b.textContent = t; b.hidden = false; }
+
+for (const v of ["correct", "wrong", "none"])
+  document.getElementById("choice-" + v).onclick = () => { edit({ label: v }); renderSample(); };
+document.getElementById("quote").oninput = e => edit({ quote: e.target.value });
+document.getElementById("uncertain").onchange = e => edit({ uncertain: e.target.checked });
+document.getElementById("notes").oninput = e => edit({ notes: e.target.value });
+document.getElementById("prev").onclick = () => go(current - 1);
+document.getElementById("next").onclick = () => go(current + 1);
+
+renderSample();
+
+(async () => {
+  const timer = setTimeout(() => { if (!db) { setStatus(); showBanner("Storage did not answer. Labels you enter now will not be saved; reload the page before labelling."); } }, 10000);
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { clearTimeout(timer); setStatus(); showBanner("Storage is unavailable here, so labels would not be saved. Open this page signed in, from your own account."); return; }
+  try {
+    const snap = await db.collection(COLLECTION).get();
+    for (const d of snap.docs) labels[d.id] = d.data();
+    clearTimeout(timer);
+  } catch (e) {
+    clearTimeout(timer);
+    showBanner("Could not load saved labels (" + (e.code || e.message) + "). Do not label until this is resolved.");
+  }
+  renderSample();
+})();
+</script>

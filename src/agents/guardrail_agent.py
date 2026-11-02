@@ -253,7 +253,7 @@ class GuardrailAgent(BaseAgent):
                 call_label="llm_judge",
             )
             raw = _parse_json(response.content.strip())
-            return _parse_llm_checks(raw)
+            return _parse_llm_checks(raw, report_text)
 
         try:
             # A transient rate limit (see docs/noise_floor.md's incident
@@ -555,14 +555,28 @@ def _check_completeness(report: str, query: str) -> CheckResult:
 _CRITICAL_CHECK_KEYWORDS = ("pii", "safety", "hallucin", "fabricat", "claim_ground", "grounding", "factual", "accuracy")
 
 
-def _parse_llm_checks(raw: dict) -> list[CheckResult]:
-    """Convert the GUARDRAIL_SYSTEM JSON response into CheckResult list."""
+def _parse_llm_checks(raw: dict, report_text: Optional[str] = None) -> list[CheckResult]:
+    """Convert the GUARDRAIL_SYSTEM JSON response into CheckResult list.
+
+    A PII failure blocks the run, so it must point at text the report really
+    contains. The judge also sees the RAG context and analysis findings, and
+    was failing reports for names and emails found only there (附录 FL: 4 of 6
+    dry-run reports refused, none containing the flagged text).
+    """
     results = []
     checks = raw.get("checks", [])
     for c in checks:
         passed = bool(c.get("passed", True))
         check_name = c.get("check", "llm_check")
         finding = c.get("finding")
+        if not passed and "pii" in check_name.lower() and report_text is not None:
+            evidence = (c.get("evidence") or "").strip()
+            if not evidence or evidence not in report_text:
+                results.append(CheckResult(
+                    check_name, True, "info",
+                    f"PII flag discarded: quoted text not found in the report ({finding})",
+                ))
+                continue
         # Map check names to severity
         severity: Severity = "info"
         if not passed:

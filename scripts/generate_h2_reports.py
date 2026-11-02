@@ -112,7 +112,11 @@ async def main_async(args) -> int:
         if job["arm"] == "R" and (row["rag_arm_invalid_reason"] or row["n_rag_chunks"] == 0):
             print(f"STOP: R arm not live ({row['rag_arm_invalid_reason'] or 'no chunks'})")
             return 4
-        if row["error"] or not row["report"]:
+        if row["terminal_state"] == "safe_refusal":
+            # A guardrail refusal is a result, not a fault: E3 makes the H2
+            # metric not_applicable for it, so it is kept and never labelled.
+            print(f"  refused by guardrail, kept out of labelling: {row['error']}")
+        elif row["error"] or not row["report"]:
             print(f"STOP: run failed ({row['error']})")
             return 5
     return 0

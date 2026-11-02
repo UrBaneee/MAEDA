@@ -356,18 +356,23 @@ You are the Guardrail Agent for MAEDA.
 Review the generated report and insights for:
 1. Factual accuracy — are claims supported by the analysis results?
 2. Hallucination — are any numbers or facts fabricated?
-3. PII leakage — does the output contain any personally identifiable information?
+3. PII leakage — does the text under "Report to Evaluate" itself contain
+   personally identifiable information? Names, emails or IDs that appear only
+   in the analysis findings or the RAG context are inputs, not leakage, and do
+   not fail this check.
 4. Misleading framing — are any conclusions overstated or misleading?
 
 Return a JSON object:
 {
   "passed": bool,
   "checks": [
-    {"check": str, "passed": bool, "finding": str or null}
+    {"check": str, "passed": bool, "finding": str or null, "evidence": str or null}
   ],
   "overall_verdict": "approved" | "retry" | "fail",
   "retry_reason": str or null   // if verdict is "retry", what should be fixed
 }
+For a failed PII check, "evidence" must be the exact PII string copied from the
+report; a PII failure without it is discarded.
 """
 
 # ─── Eval Module ─────────────────────────────────────────────────────────────
