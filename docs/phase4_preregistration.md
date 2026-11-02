@@ -1687,18 +1687,38 @@ Neither metric covers these. Each is also declared out of scope in §8.3.
 
 ### R5.1 Event attribution labels (§7.2.1)
 
-Labelled separately from R2–R4, one label per report, from report text alone,
-with the arm hidden. `EVAL_EVENT_ATTRIBUTION_SYSTEM` carries the same definitions.
+Confirmed by the user 2026-11-02 (附录 FL). Labelled separately from R2–R4, one
+label per report, with the arm hidden. **The whole report is read, by the
+labeller and by the judge alike**; R1's three-section restriction does not apply
+here, because a reading-scope difference between the two was a source of
+disagreement in the `groundedness` calibration. `EVAL_EVENT_ATTRIBUTION_SYSTEM`
+carries the same definitions.
 
 | Situation in the report | Label |
 |---|---|
-| Names the documented cause, in any wording, including hedged | `correct` |
-| Names the documented cause and a second, minor one | `correct` |
-| Lists several causes with none as the main one, documented cause among them | `correct` |
+| Names the documented cause, in any wording, including hedged ("possibly because of ...") | `correct` |
+| Names the documented cause plus a second, minor one | `correct` |
+| Two causes side by side with no main one, the documented cause among them | `correct` |
 | A different cause is the main one, even if the documented cause is also named | `wrong` |
-| Only size, timing or location of the anomaly | `none` |
-| No documented cause exists, and the report asserts a specific one | `wrong` |
-| No documented cause exists, and the report says the cause is unknown | `none` |
+| Decomposition only ("driven by Widget A", "fewer units sold lowered revenue") | `none` |
+| Size, timing or location only | `none` |
+| Only suggests checking a cause ("verify whether stock ran out") | `none` |
+| Three or more guesses side by side with no main one | `none` |
+| No documented cause exists, and the report asserts a specific cause | `wrong` |
+| No documented cause exists, and the report says the cause is unknown or that there was no clear effect | `none` |
+
+**`distractor` events have no documented cause.** Their corpus describes an event
+that left no trace in the data; a report crediting it with an effect is `wrong`.
+
+**Per label the labeller also records**, none of which is scored: for `correct`
+or `wrong`, the sentence that decided it; an "uncertain" flag; optional notes.
+They exist so that a disagreement with the judge can be traced without
+relabelling.
+
+**Procedure.** Six reports outside the 60 are labelled first as a dry run. The
+rubric may change only after the dry run and is frozen before the first of the
+60 is labelled. Pass 2 relabels all 60 at least 7 days after pass 1 ends, in a
+new order, without access to pass 1.
 
 ### R6. Self-consistency check, not relabelling
 

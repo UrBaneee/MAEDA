@@ -1,0 +1,324 @@
+[
+  {
+    "id": "H2-2022-06-WEST-WIDGETB-LAUNCH-Q1",
+    "query": "西区六月出货量为何激增",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "normal"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2022-06-WEST-WIDGETB-LAUNCH",
+    "event_type": "normal",
+    "event_anomaly": "units up by about 40% in region=West, 2022-06-01 to 2022-06-10",
+    "event_cause": "西区 Widget B 新品首发,首批渠道备货带动出货量"
+  },
+  {
+    "id": "H2-2022-06-WEST-WIDGETB-LAUNCH-Q2",
+    "query": "West region shipment surge in early June, why",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "normal"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2022-06-WEST-WIDGETB-LAUNCH",
+    "event_type": "normal",
+    "event_anomaly": "units up by about 40% in region=West, 2022-06-01 to 2022-06-10",
+    "event_cause": "西区 Widget B 新品首发,首批渠道备货带动出货量"
+  },
+  {
+    "id": "H2-2023-03-SOUTH-ONLINE-POLICY-Q1",
+    "query": "南区线上渠道三月表现为何变差",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "normal"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2023-03-SOUTH-ONLINE-POLICY",
+    "event_type": "normal",
+    "event_anomaly": "revenue down by about 15% in region=South, channel=Online, 2023-03-01 to 2023-03-31",
+    "event_cause": "南区线上渠道退款审核周期拉长,导致确认收入延迟"
+  },
+  {
+    "id": "H2-2023-03-SOUTH-ONLINE-POLICY-Q2",
+    "query": "South Online channel underperformance in March",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "normal"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2023-03-SOUTH-ONLINE-POLICY",
+    "event_type": "normal",
+    "event_anomaly": "revenue down by about 15% in region=South, channel=Online, 2023-03-01 to 2023-03-31",
+    "event_cause": "南区线上渠道退款审核周期拉长,导致确认收入延迟"
+  },
+  {
+    "id": "H2-2023-04-SOUTH-DISCOUNT-CAMPAIGN-Q1",
+    "query": "南区四月的促销活动带来了多少增量收入",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "distractor"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2023-04-SOUTH-DISCOUNT-CAMPAIGN",
+    "event_type": "distractor",
+    "event_anomaly": "None in the data: the event below left no measurable effect. Event: 南区四月上线满减促销,但活动效果未达预期,籍此未观察到收入端的明显提升",
+    "event_cause": null
+  },
+  {
+    "id": "H2-2023-04-SOUTH-DISCOUNT-CAMPAIGN-Q2",
+    "query": "South April discount campaign, did revenue actually move",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "distractor"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2023-04-SOUTH-DISCOUNT-CAMPAIGN",
+    "event_type": "distractor",
+    "event_anomaly": "None in the data: the event below left no measurable effect. Event: 南区四月上线满减促销,但活动效果未达预期,籍此未观察到收入端的明显提升",
+    "event_cause": null
+  },
+  {
+    "id": "H2-2023-09-EAST-PARTNER-DISPUTE-Q1",
+    "query": "华东合作渠道九月收入为什么走低",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "normal"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2023-09-EAST-PARTNER-DISPUTE",
+    "event_type": "normal",
+    "event_anomaly": "revenue down by about 18% in region=East, channel=Partner, 2023-09-01 to 2023-09-21",
+    "event_cause": "华东合作伙伴渠道因结算纠纷暂停发货三周"
+  },
+  {
+    "id": "H2-2023-09-EAST-PARTNER-DISPUTE-Q2",
+    "query": "East Partner channel revenue dip in September",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "normal"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2023-09-EAST-PARTNER-DISPUTE",
+    "event_type": "normal",
+    "event_anomaly": "revenue down by about 18% in region=East, channel=Partner, 2023-09-01 to 2023-09-21",
+    "event_cause": "华东合作伙伴渠道因结算纠纷暂停发货三周"
+  },
+  {
+    "id": "H2-2023-Q3-GLOBAL-UNEXPLAINED-DIP-Q1",
+    "query": "2023年三季度全网收入为什么整体下滑",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "unexplained"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2023-Q3-GLOBAL-UNEXPLAINED-DIP",
+    "event_type": "unexplained",
+    "event_anomaly": "revenue down by about 30% in all regions, 2023-07-01 to 2023-09-30",
+    "event_cause": null
+  },
+  {
+    "id": "H2-2023-Q3-GLOBAL-UNEXPLAINED-DIP-Q2",
+    "query": "Why did overall revenue drop across every region in Q3 2023",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "unexplained"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2023-Q3-GLOBAL-UNEXPLAINED-DIP",
+    "event_type": "unexplained",
+    "event_anomaly": "revenue down by about 30% in all regions, 2023-07-01 to 2023-09-30",
+    "event_cause": null
+  },
+  {
+    "id": "H2-2024-05-NORTH-GADGETPRO-EOL-Q1",
+    "query": "北区五月某型号收入骤降的原因",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "normal"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2024-05-NORTH-GADGETPRO-EOL",
+    "event_type": "normal",
+    "event_anomaly": "revenue down by about 35% in region=North, 2024-05-01 to 2024-06-15",
+    "event_cause": "北区 Gadget Pro 停产清仓,收入明显回落"
+  },
+  {
+    "id": "H2-2024-05-NORTH-GADGETPRO-EOL-Q2",
+    "query": "为什么北区二季度有个产品线收入掉得厉害",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "normal"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2024-05-NORTH-GADGETPRO-EOL",
+    "event_type": "normal",
+    "event_anomaly": "revenue down by about 35% in region=North, 2024-05-01 to 2024-06-15",
+    "event_cause": "北区 Gadget Pro 停产清仓,收入明显回落"
+  },
+  {
+    "id": "H2-2024-08-CENTRAL-PRICE-REVIEW-Q1",
+    "query": "中区八月是否调整了产品定价",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "distractor"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2024-08-CENTRAL-PRICE-REVIEW",
+    "event_type": "distractor",
+    "event_anomaly": "None in the data: the event below left no measurable effect. Event: 中区八月启动了一轮定价评审,讨论是否上调部分型号价格,最终未执行调价",
+    "event_cause": null
+  },
+  {
+    "id": "H2-2024-08-CENTRAL-PRICE-REVIEW-Q2",
+    "query": "Did Central region change any product pricing in August",
+    "query_type": "diagnostic",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [],
+    "ground_truth": {},
+    "tags": [
+      "h2_attribution",
+      "distractor"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "split": "dev",
+    "event_id": "EVT-2024-08-CENTRAL-PRICE-REVIEW",
+    "event_type": "distractor",
+    "event_anomaly": "None in the data: the event below left no measurable effect. Event: 中区八月启动了一轮定价评审,讨论是否上调部分型号价格,最终未执行调价",
+    "event_cause": null
+  }
+]

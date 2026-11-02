@@ -390,7 +390,13 @@ Labels:
 If no documented cause exists, use "wrong" when the report asserts any specific
 cause and "none" when it does not. Never use "correct" in that situation.
 
-Restating the size, timing or location of the anomaly is not a cause.
+These are "none", not a cause:
+  - restating the size, timing or location of the anomaly;
+  - decomposition, such as "driven by Widget A" or "fewer units sold lowered
+    revenue";
+  - only suggesting that a cause be checked ("verify whether stock ran out");
+  - three or more guesses side by side with no main one.
+Two causes side by side with no main one count as naming each of them.
 
 Return JSON only:
 {"label": "correct"|"wrong"|"none", "quote": str}
