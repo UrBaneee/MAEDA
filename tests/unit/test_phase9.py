@@ -41,12 +41,18 @@ def test_factual_accuracy_passes_overlap():
     assert ms.metric == "factual_accuracy"
 
 
-def test_factual_accuracy_passes_no_numbers():
+def test_factual_accuracy_without_any_numbers_is_not_applicable():
     from src.eval.metrics import score_factual_accuracy
-    report = "Sales grew significantly."
-    results = []
-    ms = score_factual_accuracy(report, results)
-    assert ms.score >= 0.5
+    ms = score_factual_accuracy("Sales grew significantly.", [])
+    assert ms.valid is False
+
+
+def test_factual_accuracy_all_steps_failed_is_not_a_pass():
+    """附录 FE.4(7): a run whose analysis all failed must not earn 0.8."""
+    from src.eval.metrics import score_factual_accuracy
+    results = [{"result_summary": "revenue was 100", "failed": True}]
+    ms = score_factual_accuracy("Revenue was 100.", results)
+    assert ms.valid is False and ms.label != "pass"
 
 
 def test_factual_accuracy_empty_report():
@@ -124,6 +130,27 @@ def test_intent_accuracy_type_mismatch():
     intent = {"query_type": "diagnostic", "confidence": 0.8, "target_metrics": []}
     ms = score_intent_accuracy(intent, "descriptive", [])
     assert ms.score < 0.9  # loses points for wrong type
+
+
+def test_intent_accuracy_ignores_self_reported_confidence():
+    from src.eval.metrics import score_intent_accuracy
+    high = {"query_type": "diagnostic", "confidence": 1.0, "target_metrics": []}
+    low = {**high, "confidence": 0.0}
+    assert score_intent_accuracy(high, "descriptive", ["sales"]).score == 0.0
+    assert score_intent_accuracy(low, "descriptive", ["sales"]).score == 0.0
+
+
+def test_intent_accuracy_scores_dimensions_case_insensitively():
+    from src.eval.metrics import score_intent_accuracy
+    intent = {"query_type": "descriptive", "target_metrics": ["sales"], "dimensions": ["Region"]}
+    ms = score_intent_accuracy(intent, "descriptive", ["sales"], ["region", "quarter"])
+    assert abs(ms.score - 0.85) < 1e-9
+    assert "dimensions overlap: 50%" in ms.reasoning
+
+
+def test_intent_accuracy_with_no_expectations_is_not_applicable():
+    from src.eval.metrics import score_intent_accuracy
+    assert score_intent_accuracy({"query_type": "descriptive"}).valid is False
 
 
 def test_intent_accuracy_empty_intent():

@@ -299,10 +299,12 @@ class EvalRunner:
         # 9.5 Agent performance
         expected_type = test_case.query_type if test_case else None
         expected_metrics = test_case.expected_metrics if test_case else None
+        expected_dimensions = test_case.expected_dimensions if test_case else None
         expected_tools = test_case.expected_tools if test_case else None
         expected_chart_types = test_case.expected_chart_types if test_case else None
         scores.append(_guard("intent_accuracy",
-                             lambda: score_intent_accuracy(parsed_intent, expected_type, expected_metrics)))
+                             lambda: score_intent_accuracy(
+                                 parsed_intent, expected_type, expected_metrics, expected_dimensions)))
         scores.append(_guard("tool_selection",
                              lambda: score_tool_selection(analysis_results, expected_tools)))
         scores.append(_guard("step_success_rate",

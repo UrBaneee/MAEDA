@@ -233,14 +233,18 @@ def test_failed_run_scores_intent_accuracy_when_an_intent_was_parsed():
     """A run that parsed its intent and then died at profiling gives a REAL
     intent_accuracy measurement -- discarding it would lose signal E3 wants
     kept."""
-    from src.eval.runner import EvalRunner
+    from src.eval.runner import EvalRunner, GoldenTestCase
     from src.eval.trials import NOT_APPLICABLE
 
     runner = EvalRunner(llm=_judge_that_must_not_be_called())
     with_intent = _failed_state(parsed_intent={
         "query_type": "descriptive", "confidence": 0.9, "target_metrics": ["revenue"],
     })
-    scored = _by_metric(asyncio.run(runner.score(with_intent)))["intent_accuracy"]
+    case = GoldenTestCase(
+        id="T", query="q", query_type="descriptive", expected_metrics=["revenue"],
+        expected_dimensions=[], ground_truth={},
+    )
+    scored = _by_metric(asyncio.run(runner.score(with_intent, case)))["intent_accuracy"]
     assert scored.valid is True
     assert scored.score > 0.0
 
@@ -311,7 +315,10 @@ def test_successful_run_is_scored_exactly_as_before(monkeypatch):
     result = asyncio.run(EvalRunner().score(state))
     assert result.terminal_state == ts.SUCCESS
     assert isinstance(result.aggregate_score, float)
-    assert all(s.label != NOT_APPLICABLE for s in result.scores)
+    # This state states no expectations and carries no numbers, so B1/B4 make
+    # these two not_applicable from inside the metric, not through E3's gate.
+    exempt = {"factual_accuracy", "intent_accuracy"}
+    assert all(s.label != NOT_APPLICABLE for s in result.scores if s.metric not in exempt)
 
 
 def test_not_applicable_entries_cannot_move_the_aggregate():

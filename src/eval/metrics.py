@@ -531,7 +531,9 @@ async def score_answer_relevance(
 
     scores = [s["score"] for s in samples]
     score = statistics.median(scores)
-    reasoning = samples[0]["reasoning"]
+    # Same rule as score_groundedness: the sample closest to the reported
+    # median supplies the reasoning, so it cannot describe a different result.
+    reasoning = min(samples, key=lambda s: abs(s["score"] - score))["reasoning"]
     if len(samples) > 1:
         spread = max(scores) - min(scores)
         if spread >= 0.3:
@@ -725,7 +727,12 @@ def score_factual_accuracy(
                                f"Ground truth overlap: {overlap:.0%}")
 
     if not summary_nums:
-        return MetricScore("factual_accuracy", 0.8, "pass", "No numbers to cross-check")
+        # Not a pass: `summaries` skips failed steps, so a run whose analysis
+        # all failed lands here too, and H1/H3's primary metric must not
+        # credit it (附录 FE.4(7)).
+        return not_applicable_metric(
+            "factual_accuracy", "no numeric ground truth and no numbers in analysis findings"
+        )
 
     if not report_nums:
         return MetricScore("factual_accuracy", 0.5, "warn", "Report contains no numbers")
@@ -745,20 +752,23 @@ def score_intent_accuracy(
     parsed_intent: dict,
     expected_query_type: Optional[str] = None,
     expected_metrics: Optional[list] = None,
+    expected_dimensions: Optional[list] = None,
 ) -> MetricScore:
+    """Weighted over the expectations this case actually states: query_type
+    0.4, metrics 0.3, dimensions 0.3. The parser's own `confidence` is not an
+    input; it used to be half the score, which let the system under test
+    grade itself (附录 FE.3 #19)."""
     if not parsed_intent:
         return MetricScore("intent_accuracy", 0.0, "fail", "No parsed intent")
 
-    score = 0.0
+    earned = 0.0
+    possible = 0.0
     reasons = []
 
-    # Confidence from intent parser is a direct signal
-    confidence = float(parsed_intent.get("confidence", 0.5))
-    score += confidence * 0.5
-
     if expected_query_type:
+        possible += 0.4
         if parsed_intent.get("query_type") == expected_query_type:
-            score += 0.3
+            earned += 0.4
             reasons.append(f"query_type correct: {expected_query_type}")
         else:
             reasons.append(
@@ -771,10 +781,21 @@ def score_intent_accuracy(
         exp = set(expected_metrics)
         if exp:
             overlap = len(got & exp) / len(exp)
-            score += overlap * 0.2
+            possible += 0.3
+            earned += overlap * 0.3
             reasons.append(f"metrics overlap: {overlap:.0%}")
 
-    score = min(1.0, score)
+    if expected_dimensions:
+        got_dims = {str(d).lower() for d in parsed_intent.get("dimensions") or []}
+        exp_dims = {str(d).lower() for d in expected_dimensions}
+        overlap = len(got_dims & exp_dims) / len(exp_dims)
+        possible += 0.3
+        earned += overlap * 0.3
+        reasons.append(f"dimensions overlap: {overlap:.0%}")
+
+    if not possible:
+        return not_applicable_metric("intent_accuracy", "case states no intent expectations")
+    score = earned / possible
     return MetricScore("intent_accuracy", score, _label(score), "; ".join(reasons))
 
 

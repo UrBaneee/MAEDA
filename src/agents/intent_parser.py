@@ -220,8 +220,7 @@ class IntentParserAgent(BaseAgent):
         src/eval/runner.py's EvalRunner.score): before this method could
         ever run, that metric always scored the FIRST parse; now, on any
         run where refine actually executes, it scores the REFINED parse
-        instead (confidence included — src/eval/metrics.py's
-        score_intent_accuracy weights parsed_intent["confidence"] at 50%).
+        instead.
         That's the intended direction (阶段 4 cares about the intent that
         actually reached analysis, not a discarded first guess) but it
         means intent_accuracy is NOT directly comparable pre-/post-E2 on
