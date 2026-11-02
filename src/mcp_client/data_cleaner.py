@@ -6,7 +6,6 @@ sub-system. All raw dict responses are parsed into typed dataclasses.
 
 Tools exposed by the Data Cleaner MCP server:
   profile_dataset   {dataset_path} → DataQualityReport
-  get_cleaning_plan {dataset_path} → CleaningPlan
   clean_dataset     {dataset_path, plan?} → CleaningResult
   validate_quality  {dataset_path} → QualityValidation
 
@@ -143,15 +142,6 @@ class DataCleanerClient:
         _check_field_present(raw, "profile_dataset", "has_critical_issues")
         _check_contract_version(raw, "profile_dataset")
         return DataQualityReport.from_mcp_response(raw)
-
-    async def get_cleaning_plan(self, path: str) -> CleaningPlan:
-        """Get a recommended cleaning plan for a dataset."""
-        logger.debug("get_cleaning_plan | path=%s", path)
-        raw = await self._transport.call_tool(
-            "get_cleaning_plan", {"dataset_path": path}, timeout=30.0, deadline=60.0,
-        )
-        _raise_if_error_envelope(raw, "get_cleaning_plan")
-        return CleaningPlan.from_mcp_response(raw)
 
     async def clean_dataset(
         self,

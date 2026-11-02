@@ -256,7 +256,7 @@ class SubSystemWithFallback:
         report, log = await client.profile_dataset("/data/sales.csv")
         state["mcp_call_log"] = [*state["mcp_call_log"], log]
 
-    profile_dataset/get_cleaning_plan/clean_dataset/validate_quality/
+    profile_dataset/clean_dataset/validate_quality/
     retrieve_knowledge/list_collections may now raise SubSystemHardFailure
     per the matrix — callers must catch it (see src/graph/nodes.py).
     """
@@ -280,14 +280,6 @@ class SubSystemWithFallback:
             {"dataset_path": path, "run_id": run_id, "artifact_root": artifact_root, "intent": intent},
             call=lambda: self._dc.profile_dataset(path, run_id=run_id, artifact_root=artifact_root, intent=intent),
             fallback_factory=lambda: _basic_pandas_profile(path),
-        )
-
-    async def get_cleaning_plan(self, path: str) -> tuple[CleaningPlan, dict]:
-        """Get cleaning plan from Data Cleaner; fall back to empty plan."""
-        return await _call_with_matrix(
-            "data_cleaner", "get_cleaning_plan", {"dataset_path": path},
-            call=lambda: self._dc.get_cleaning_plan(path),
-            fallback_factory=lambda: CleaningPlan(steps=[]),
         )
 
     async def clean_dataset(
@@ -399,8 +391,7 @@ def _basic_pandas_profile(path: str) -> DataQualityReport:
     reported as warnings/info for the Insight Agent's quality caveat —
     has_critical_issues stays False because in fallback mode there is no
     cleaner to delegate to: setting it True would send the pipeline down the
-    get_cleaning_plan → clean_dataset path, both of which also fall back to
-    no-ops, ending with the state claiming "cleaning applied" while nothing
+    clean_dataset path, which also falls back to a no-op, ending with the state claiming "cleaning applied" while nothing
     was actually cleaned. Honest caveats beat a fake cleaning pass.
     """
     try:

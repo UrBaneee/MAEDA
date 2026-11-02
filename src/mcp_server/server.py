@@ -47,7 +47,7 @@ async def _analyze_data(query: str, data_source: str) -> dict:
 
     # Register data source if provided
     if data_source:
-        state["data_sources"] = [{"path": data_source, "source_type": _infer_type(data_source)}]
+        state["data_sources"] = [{"path": data_source, "type": _infer_type(data_source)}]
 
     progress: list[str] = []
 
@@ -100,7 +100,7 @@ async def _connect_data_source(source_type: str, path_or_uri: str) -> dict:
     source_id = str(uuid.uuid4())[:8]
     descriptor = {
         "id": source_id,
-        "source_type": source_type,
+        "type": source_type,
         "path": path_or_uri,
     }
     _registered_sources[source_id] = descriptor

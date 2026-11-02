@@ -33,8 +33,8 @@
 │  │  Agentic Data    │    │     RAG-MCP-Server            │    │
 │  │  Cleaner (MCP)   │    │     (MCP)                     │    │
 │  │  Data quality    │    │     Domain knowledge          │    │
-│  │  100% fallback   │    │     100% fallback             │    │
-│  │  in this env     │    │     in this env               │    │
+│  │  Pandas fallback │    │     Fallback if server is     │    │
+│  │  if unavailable  │    │     unavailable               │    │
 │  └──────────────────┘    └──────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────┘
 ```

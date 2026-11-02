@@ -2,6 +2,10 @@ version: "3.9"
 
 # MAEDA Ecosystem — start everything with:  docker-compose up
 #
+# The maeda-ecosystem/* images are not published. Build them from the two
+# sibling repositories first, or the full-ecosystem profile cannot start, and
+# `maeda` depends on both services.
+#
 # Services:
 #   maeda          — MAEDA Streamlit UI (this project)
 #   data-cleaner   — Agentic Data Cleaner MCP server (Project 1)

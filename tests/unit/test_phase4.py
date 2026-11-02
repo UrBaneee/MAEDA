@@ -490,8 +490,6 @@ class TestMCPQualityDelegation:
                               "mode": "mcp", "args": {}, "duration_ms": 3.0}
         mock_mcp = MagicMock(spec=SubSystemWithFallback)
         mock_mcp.profile_dataset = AsyncMock(return_value=(critical_report, _log("profile_dataset")))
-        # 定案 #3: get_cleaning_plan is no longer called from the node —
-        # left unconfigured here; calling it would raise on the mock.
         mock_mcp.clean_dataset = AsyncMock(return_value=(clean_result, _log("clean_dataset")))
 
         old_connector = nodes._data_connector
@@ -509,7 +507,6 @@ class TestMCPQualityDelegation:
         assert result["cleaning_summary"]["plan_steps"] == 2
         assert result["cleaning_stop_reason"] == "no_diff"
         assert len(result["mcp_call_log"]) == 2  # profile + clean
-        mock_mcp.get_cleaning_plan.assert_not_called()
 
 
 # ─── M8: _validate_cleaned_path (path/hash protection, 定案 #16) ──────────────
@@ -1497,3 +1494,13 @@ def test_extract_schema_reports_date_range_for_string_dates():
     cols = {c.name: c.to_dict() for c in extract_schema(df, "csv", "x.csv").columns}
     assert (cols["day"]["min_date"], cols["day"]["max_date"]) == ("2023-02-01", "2024-03-05")
     assert "min_date" not in cols["region"]
+
+
+def test_mcp_server_descriptor_uses_the_key_every_reader_expects(tmp_path):
+    import asyncio
+    from src.mcp_server import server
+    csv = tmp_path / "x.csv"
+    csv.write_text("a\n1\n")
+    asyncio.run(server._connect_data_source("csv", str(csv)))
+    descriptor = list(server._registered_sources.values())[-1]
+    assert descriptor["type"] == "csv"

@@ -312,18 +312,6 @@ class TestDataCleanerClient:
         assert isinstance(report, DataQualityReport)
         assert report.row_count == 300
 
-    def test_get_cleaning_plan(self):
-        transport = _mock_dc_transport({
-            "get_cleaning_plan": {
-                "steps": [{"operation": "drop_duplicates", "target_column": "id",
-                            "rationale": "duplicates found", "estimated_impact": "medium"}]
-            }
-        })
-        client = DataCleanerClient(transport)
-        plan = asyncio.run(client.get_cleaning_plan("/data/test.csv"))
-        assert isinstance(plan, CleaningPlan)
-        assert plan.steps[0].operation == "drop_duplicates"
-
     def test_clean_dataset(self):
         transport = _mock_dc_transport({
             "clean_dataset": {
@@ -513,12 +501,6 @@ class TestSubSystemWithFallback:
             timeout=15.0, deadline=30.0,
         )
 
-    def test_get_cleaning_plan_fallback(self):
-        fb = _build_fallback(dc_side_effect=MCPConnectionError("offline"))
-        plan, log = asyncio.run(fb.get_cleaning_plan("/data/x.csv"))
-        assert isinstance(plan, CleaningPlan)
-        assert plan.steps == []
-        assert log["mode"] == "fallback"
 
     def test_clean_dataset_fallback_returns_original_path(self):
         fb = _build_fallback(dc_side_effect=MCPConnectionError("offline"))
