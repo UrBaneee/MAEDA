@@ -1512,6 +1512,11 @@ async def run_eval_node(state: MAEDAState) -> MAEDAState:
     if not state.get("error"):
         state["current_phase"] = "complete"
 
+    if not settings.eval_enabled:
+        # EVAL_ENABLED was declared but never read. Report generation for
+        # labelling (附录 FL) scores separately and must not pay the judges here.
+        return _trace(state, "orchestrator", "run_eval", "skipped: EVAL_ENABLED=false")
+
     runner = _get_eval_runner()
     try:
         result = await runner.score(state, run_id=state.get("run_id"))

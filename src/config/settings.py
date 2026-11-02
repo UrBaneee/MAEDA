@@ -54,6 +54,13 @@ class MAEDASettings(BaseSettings):
     surfacing chunks from unrelated documents sharing the same RAG-MCP-Server
     instance (see eval_report.md #23)."""
 
+    rag_db_path: Optional[str] = Field(default=None, alias="MAEDA_RAG_DB_PATH")
+    rag_index_dir: Optional[str] = Field(default=None, alias="MAEDA_RAG_INDEX_DIR")
+    """Which corpus the RAG server searches. Unset, the server falls back to its
+    own defaults (`data/rag.db`, `data/indexes` in rag-framework), which hold an
+    unrelated document set, not the TB5 event corpus (附录 FL). An R-arm run
+    must set both, as absolute paths."""
+
     mcp_strict_mode: Literal["strict", "degraded"] = Field(
         default="degraded", alias="MCP_STRICT_MODE"
     )

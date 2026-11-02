@@ -606,3 +606,32 @@ class TestConditionalRouting:
     def test_streaming_label_exists_for_the_skip_node(self):
         from src.graph.streaming import NODE_LABELS
         assert "skip_retrieval" in NODE_LABELS
+
+
+class TestCorpusSelection:
+    """附录 FL: without these the server searches its default, unrelated corpus."""
+
+    def _client_and_transport(self):
+        from src.mcp_client.rag_server import RAGServerClient
+        transport = MagicMock()
+        transport.call_tool = AsyncMock(return_value={"chunks": []})
+        return RAGServerClient(transport), transport
+
+    def test_configured_corpus_is_sent(self, monkeypatch):
+        from src.config.settings import settings as _settings
+        monkeypatch.setattr(_settings, "rag_db_path", "/abs/tb5_hybrid.db")
+        monkeypatch.setattr(_settings, "rag_index_dir", "/abs/tb5_hybrid_indexes")
+        client, transport = self._client_and_transport()
+        asyncio.run(client.retrieve_with_metadata_tiered("q"))
+        sent = transport.call_tool.await_args.args[1]["input"]
+        assert sent["db_path"] == "/abs/tb5_hybrid.db"
+        assert sent["index_dir"] == "/abs/tb5_hybrid_indexes"
+
+    def test_unconfigured_corpus_sends_nothing(self, monkeypatch):
+        from src.config.settings import settings as _settings
+        monkeypatch.setattr(_settings, "rag_db_path", None)
+        monkeypatch.setattr(_settings, "rag_index_dir", None)
+        client, transport = self._client_and_transport()
+        asyncio.run(client.retrieve_tiered("q"))
+        sent = transport.call_tool.await_args.args[1]["input"]
+        assert "db_path" not in sent and "index_dir" not in sent

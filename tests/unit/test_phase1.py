@@ -629,3 +629,14 @@ def test_decision_trace_accumulated():
 
     # At minimum one record per node that ran
     assert len(result["decision_trace"]) >= 7
+
+
+def test_run_eval_node_honours_eval_disabled(monkeypatch):
+    import asyncio
+    from src.config.settings import settings
+    from src.graph import nodes
+    from src.state.graph_state import initial_state
+    monkeypatch.setattr(settings, "eval_enabled", False)
+    monkeypatch.setattr(nodes, "_get_eval_runner", lambda: (_ for _ in ()).throw(AssertionError("judge built")))
+    state = asyncio.run(nodes.run_eval_node(initial_state("q")))
+    assert state.get("eval_scores") is None

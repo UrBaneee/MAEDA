@@ -49,6 +49,19 @@ def _raise_if_error_field(raw: dict, tool: str) -> None:
         raise MCPToolError(f"{tool} reported an error: {error}", raw=raw)
 
 
+
+def _corpus_args() -> dict:
+    """Corpus location, only when configured: omitting it keeps the server's
+    own default, which is what every caller got before 附录 FL."""
+    from src.config.settings import settings
+    args = {}
+    if settings.rag_db_path:
+        args["db_path"] = settings.rag_db_path
+    if settings.rag_index_dir:
+        args["index_dir"] = settings.rag_index_dir
+    return args
+
+
 class RAGServerClient:
     """High-level client for the RAG-MCP-Server."""
 
@@ -72,7 +85,7 @@ class RAGServerClient:
         would just recreate the same blind spot the moment anything
         starts calling it."""
         logger.debug("retrieve | query=%s top_k=%d collection=%s", query[:60], top_k, collection)
-        input_args: dict = {"query": query, "top_k": top_k}
+        input_args: dict = {"query": query, "top_k": top_k, **_corpus_args()}
         if collection:
             input_args["collection"] = collection
         raw = await self._transport.call_tool(
@@ -118,7 +131,7 @@ class RAGServerClient:
             "retrieve_with_metadata | query=%s top_k=%d collection=%s",
             query[:60], top_k, collection,
         )
-        input_args: dict = {"query": query, "top_k": top_k}
+        input_args: dict = {"query": query, "top_k": top_k, **_corpus_args()}
         if collection:
             input_args["collection"] = collection
         raw = await self._transport.call_tool(
