@@ -18,10 +18,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 from src.config.settings import settings
 from src.eval.metrics import MetricScore
@@ -76,7 +79,68 @@ def _settings_snapshot() -> dict:
     it. What cannot be prevented must at least be identifiable afterwards
     (same construction as 附录 CU.8(4), CX.6's `row_alignment`, DB.2(2)).
     """
-    return {"intent_refine_trigger": settings.intent_refine_trigger}
+    # 附录 EJ.2: everything that must match between the σ run and the reveal.
+    # The resolved_* values depend on which API keys exist at runtime, so the
+    # same .env can select a different judge; only recording them shows it.
+    glossary = Path(settings.glossary_path)
+    return {
+        "intent_refine_trigger": settings.intent_refine_trigger,
+        "llm_provider": settings.llm_provider,
+        "llm_model": settings.llm_model,
+        "llm_temperature": settings.llm_temperature,
+        "mcp_strict_mode": settings.mcp_strict_mode,
+        "data_cleaner_planner_mode": settings.data_cleaner_planner_mode,
+        "data_cleaner_quality_contract_version": settings.data_cleaner_quality_contract_version,
+        "maeda_rag_expected_retrieval_mode": settings.maeda_rag_expected_retrieval_mode,
+        "eval_judge_samples": settings.eval_judge_samples,
+        "eval_golden_suite": settings.eval_golden_suite,
+        "glossary_path": settings.glossary_path,
+        "glossary_sha256": _sha256(glossary),
+        "resolved_eval_provider": settings.resolved_eval_provider,
+        "resolved_eval_model": settings.resolved_eval_model,
+        "resolved_groundedness_provider": settings.resolved_groundedness_provider,
+        "resolved_groundedness_model": settings.resolved_groundedness_model,
+        "resolved_planner_model": settings.resolved_planner_model,
+        "resolved_guardrail_model": settings.resolved_guardrail_model,
+    }
+
+
+def _sha256(path: Path) -> Optional[str]:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def _repo_commit(path: Path) -> Optional[dict]:
+    """HEAD plus whether the tree was dirty; None if `path` is not a repo."""
+    def git(*args: str) -> Optional[str]:
+        done = subprocess.run(["git", "-C", str(path), *args],
+                              capture_output=True, text=True, timeout=10)
+        return done.stdout.strip() if done.returncode == 0 else None
+    head = git("rev-parse", "HEAD")
+    return {"commit": head, "dirty": bool(git("status", "--porcelain"))} if head else None
+
+
+def _run_provenance(total_cost_usd: Optional[float]) -> dict:
+    """阶段 4 方法要求: cost, the three repos' commits, and input hashes."""
+    root = Path(__file__).resolve().parent.parent
+    return {
+        "total_cost_usd": total_cost_usd,
+        "repo_commits": {
+            "maeda": _repo_commit(root),
+            "rag_framework": _repo_commit(root.parent / "rag-framework"),
+            "data_cleaner": _repo_commit(root.parent / "agentic-data-cleaner-v2"),
+        },
+        "input_hashes": {
+            str(p.relative_to(root)): _sha256(p)
+            for p in sorted((root / "data" / "demo").iterdir()) if p.is_file()
+        } | {settings.eval_golden_suite: _sha256(root / settings.eval_golden_suite)},
+    }
+
+
+def _rows_cost(rows: list[dict]) -> float:
+    return sum(
+        s["raw_value"] for r in rows for s in r["eval_result"]["scores"]
+        if s["metric"] == "token_cost" and s.get("raw_value") is not None
+    )
 
 # Eval v2 Step 4: data source and data-mismatch status used to live here as
 # two separate hardcoded dicts (CASE_DATA_SOURCES, KNOWN_DATA_MISMATCH),
@@ -168,6 +232,7 @@ async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tu
         # it there); this one exists so a reader scanning `meta` can see
         # WHY a force_on row was dropped without cross-referencing.
         "rag_arm_invalid_reason": result_state.get("rag_arm_invalid_reason"),
+        "degradation_log": result_state.get("degradation_log") or [],
         "cleaning_arm_invalid_reason": result_state.get("cleaning_arm_invalid_reason"),
         "data_mismatch": "data_mismatch" in tc.tags,
         # D0 (阶段 3 / 附录 AQ/AS): eval_runner.score() is called with
@@ -414,6 +479,7 @@ async def main():
             "arm": _current_arm(),
             # 冻结前必办 (15) / 附录 DD.3 -- see _settings_snapshot().
             "settings_snapshot": _settings_snapshot(),
+            "provenance": _run_provenance(_rows_cost(rows)),
         }
         out_path = Path(args.out) if args.out else REPORT_DIR / f"eval_{int(timestamp)}.json"
         out_path.write_text(json.dumps(report, indent=2, default=str))
@@ -446,6 +512,7 @@ async def main():
             "arm": _current_arm(),
             # 冻结前必办 (15) / 附录 DD.3 -- see _settings_snapshot().
             "settings_snapshot": _settings_snapshot(),
+            "provenance": _run_provenance(sum(_rows_cost(rows) for rows in per_trial)),
         }
         out_path = (
             Path(args.out) if args.out

@@ -70,7 +70,7 @@ from src.state.graph_state import initial_state
 # Reuse scripts/run_eval.py's one-case runner rather than duplicating it.
 # Eval v2 Step 4 consolidated data-source wiring onto GoldenTestCase.data_source
 # (tests/eval/test_suite.json) so this no longer needs its own copy.
-from run_eval import _settings_snapshot, run_one_case  # noqa: E402
+from run_eval import _run_provenance, _settings_snapshot, run_one_case  # noqa: E402
 
 REPORT_DIR = Path("logs/noise_runs")
 JUDGE_CACHE_PATH = REPORT_DIR / "judge_fixed_states.json"
@@ -361,6 +361,7 @@ async def run_full_mode(cases: list[GoldenTestCase], repeats: int, concurrency: 
         # than the reveal describes a different code path; without this key
         # nothing in the saved report says which one it was.
         "settings_snapshot": _settings_snapshot(),
+        "provenance": _run_provenance(round(total_cost, 4)),
         "trials_raw": trials,
     }
 

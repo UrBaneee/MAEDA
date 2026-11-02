@@ -222,7 +222,7 @@ def test_single_trial_report_shape_is_unchanged(monkeypatch, tmp_path):
     # written down anywhere in the report.
     assert set(report.keys()) == {
         "timestamp", "n_cases", "overall_aggregate", "n_cases_without_aggregate",
-        "split", "cases", "arm", "settings_snapshot",
+        "split", "cases", "arm", "settings_snapshot", "provenance",
     }
     assert report["n_cases_without_aggregate"] == 0
     assert report["arm"] == {"cleaner_mode": "auto", "rag_mode": "auto", "mcp_strict_mode": "degraded"}
@@ -471,7 +471,7 @@ def test_single_trial_report_records_the_parsed_intent_refine_trigger(monkeypatc
     code = _run_main_with_args(monkeypatch, tmp_path, ["--split", "dev"], [_make_case("A")])
     assert code == 0
     report = json.loads(next(tmp_path.glob("eval_*.json")).read_text())
-    assert report["settings_snapshot"] == {"intent_refine_trigger": "if_unresolved"}
+    assert report["settings_snapshot"]["intent_refine_trigger"] == "if_unresolved"
     # It is deliberately NOT folded into "arm": these must be equal across
     # arms, and calling them an arm dimension would suggest otherwise.
     assert "intent_refine_trigger" not in report["arm"]
@@ -486,7 +486,7 @@ def test_multi_trial_report_records_the_parsed_intent_refine_trigger(monkeypatch
     )
     assert code == 0
     report = json.loads(next(tmp_path.glob("eval_trials2_*.json")).read_text())
-    assert report["settings_snapshot"] == {"intent_refine_trigger": "always"}
+    assert report["settings_snapshot"]["intent_refine_trigger"] == "always"
 
 
 def test_noise_run_report_records_the_parsed_intent_refine_trigger(monkeypatch):
@@ -503,7 +503,7 @@ def test_noise_run_report_records_the_parsed_intent_refine_trigger(monkeypatch):
     report = asyncio.run(
         measure_noise.run_full_mode([_make_case("A"), _make_case("B")], repeats=2, concurrency=1)
     )
-    assert report["settings_snapshot"] == {"intent_refine_trigger": "if_unresolved"}
+    assert report["settings_snapshot"]["intent_refine_trigger"] == "if_unresolved"
 
 
 def test_real_cli_refuses_test_split_end_to_end(tmp_path):
@@ -538,3 +538,25 @@ def test_real_cli_refuses_test_split_end_to_end(tmp_path):
     assert "'if_unresolved'" in proc.stderr
     assert not out_path.exists()
     assert "HOLDOUT TEST SPLIT" not in proc.stdout
+
+
+def test_settings_snapshot_covers_the_ej2_freeze_list():
+    import run_eval
+    required = {
+        "llm_provider", "llm_model", "llm_temperature", "mcp_strict_mode",
+        "data_cleaner_planner_mode", "data_cleaner_quality_contract_version",
+        "maeda_rag_expected_retrieval_mode", "intent_refine_trigger",
+        "eval_judge_samples", "eval_golden_suite", "glossary_path", "glossary_sha256",
+        "resolved_eval_provider", "resolved_eval_model",
+        "resolved_planner_model", "resolved_guardrail_model",
+    }
+    assert required <= set(run_eval._settings_snapshot())
+
+
+def test_run_provenance_records_cost_commits_and_hashes():
+    import run_eval
+    prov = run_eval._run_provenance(1.25)
+    assert prov["total_cost_usd"] == 1.25
+    assert prov["repo_commits"]["maeda"]["commit"]
+    assert set(prov["repo_commits"]) == {"maeda", "rag_framework", "data_cleaner"}
+    assert prov["input_hashes"]["data/demo/sales_data.csv"]
