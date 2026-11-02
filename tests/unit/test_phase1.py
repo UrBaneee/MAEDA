@@ -77,7 +77,7 @@ def test_graph_has_expected_nodes():
         # E2 (ECOSYSTEM_INTEGRATION_PLAN.md 附录 BQ): "connect_and_profile_data"
         # is now three nodes -- connect_schema, refine_intent, profile_and_clean
         # -- see src/graph/builder.py.
-        "parse_intent", "ask_clarification", "connect_schema", "refine_intent",
+        "parse_intent", "connect_schema", "refine_intent",
         "profile_and_clean",
         "plan_analysis", "execute_analysis", "generate_viz",
         "retrieve_domain_knowledge", "generate_insights",
@@ -158,20 +158,10 @@ def test_graph_runs_end_to_end():
     assert len(result["decision_trace"]) > 0
 
 
-def test_router_clarify_path():
-    from src.graph.router import route_after_intent
-    from src.state.graph_state import initial_state
-    state = initial_state("What?")
-    state["clarification_needed"] = True
-    assert route_after_intent(state) == "clarify"
-
-
-def test_router_proceed_path():
-    from src.graph.router import route_after_intent
-    from src.state.graph_state import initial_state
-    state = initial_state("Show revenue by region for Q1 2024")
-    state["clarification_needed"] = False
-    assert route_after_intent(state) == "proceed"
+def test_clarification_edge_is_gone():
+    """附录 FE.8 #1: no route may lead back to a question nobody can answer."""
+    from src.graph.builder import build_graph
+    assert "ask_clarification" not in build_graph().get_graph().nodes
 
 
 def test_router_profiling_ready():

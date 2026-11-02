@@ -488,7 +488,7 @@ def test_quality_note_clean_report():
 
 # ─── 7.6 Source attribution ───────────────────────────────────────────────────
 
-def test_source_attribution_from_rag_sources():
+def test_insight_sources_are_not_fabricated_from_rag_sources():
     from src.agents.insight_agent import InsightAgent
     mock_llm = MagicMock()
     # LLM returns insight without sources field
@@ -514,8 +514,8 @@ def test_source_attribution_from_rag_sources():
 
     result = asyncio.run(agent.generate(state))
     insight = result["insights"][0]
-    # Sources should reference the RAG doc
-    assert "cost_report.pdf" in insight.get("sources", [])
+    # 预注册 §3.0: the model cited nothing, so nothing may appear as cited.
+    assert insight.get("sources", []) == []
 
 
 # ─── Node integration ─────────────────────────────────────────────────────────

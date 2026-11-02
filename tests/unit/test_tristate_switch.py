@@ -362,14 +362,8 @@ class TestRetrieveKnowledgeNodeModes:
         assert result["mcp_call_log"][0]["system"] == "rag_server"
 
     @pytest.mark.parametrize("mode", ["auto", "force_on"])
-    def test_auto_and_force_on_both_call_retrieve_unconditionally(self, mode, monkeypatch):
-        """附录 CC.7 裁定 4: "auto" degenerates to unconditional retrieval.
-        Since 轮次 3 the conditional edge itself DOES exist
-        (route_after_viz, tests/unit/test_rag_tier_and_routing.py), but
-        裁定 4 kept `auto`'s own skip judgement out of scope, so auto and
-        force_on still both retrieve. This test locks that degeneration at
-        the node level so it isn't silently "fixed" without also updating
-        the settings docstring that documents it."""
+    def test_auto_and_force_on_both_call_retrieve(self, mode, monkeypatch):
+        """`auto` retrieves on an explanatory query_type (预注册 §7.3.2)."""
         import src.graph.nodes as nodes
         from src.config.settings import settings as _settings
         from src.mcp_client.fallback import SubSystemWithFallback
@@ -384,6 +378,7 @@ class TestRetrieveKnowledgeNodeModes:
         mock_mcp.retrieve_knowledge = AsyncMock(return_value=([chunk], _log))
         nodes, old_mcp, old_insight = self._wire(mock_mcp)
         state = initial_state("q")
+        state["parsed_intent"] = {"query_type": "diagnostic"}
         try:
             result = asyncio.run(nodes.retrieve_knowledge_node(state))
         finally:

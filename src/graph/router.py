@@ -45,11 +45,9 @@ def cleaner_should_attempt_clean(has_critical_issues: bool) -> bool:
 # text instead of three drifting copies.
 RAG_SKIP_FORCE_OFF = "MAEDA_RAG_MODE=force_off"
 RAG_RETRIEVE_FORCE_ON = "MAEDA_RAG_MODE=force_on"
-RAG_RETRIEVE_AUTO_DEGENERATE = (
-    "MAEDA_RAG_MODE=auto; 附录 CC.7 裁定 4: auto's own judgement "
-    "(skip retrieval for purely-computational queries) is NOT implemented — "
-    "auto deliberately degenerates to always-retrieve"
-)
+RAG_AUTO_QUERY_TYPES = frozenset({"diagnostic", "exploratory"})
+RAG_RETRIEVE_AUTO_QUERY_TYPE = "MAEDA_RAG_MODE=auto; query_type is diagnostic or exploratory"
+RAG_SKIP_AUTO_QUERY_TYPE = "MAEDA_RAG_MODE=auto; query_type is not diagnostic or exploratory"
 
 
 def rag_retrieval_decision(state: MAEDAState) -> tuple[bool, str]:
@@ -76,23 +74,21 @@ def rag_retrieval_decision(state: MAEDAState) -> tuple[bool, str]:
       "force_off" — never retrieve. The call is not made at all, not made
                     and discarded (附录 CC.3 裁定 1).
       "force_on"  — always retrieve.
-      "auto"      — **also always retrieves today.** 附录 CC.7 裁定 4
-                    explicitly froze this degeneration: the conditional
-                    edge is real (that is what 轮次 3 delivers, and what
-                    makes the skip path testable at all), but the
-                    query-type judgement that would let `auto` return
-                    False is a separate piece of work and is NOT done.
-                    This is a known, adjudicated, temporary degeneration
-                    — not an oversight, and not "auto routing exists".
-                    When it is implemented, this branch is the only place
-                    that changes; force_on/force_off keep their meaning.
+      "auto"      — retrieves when, and only when, the parsed intent's
+                    query_type is diagnostic or exploratory (预注册 §7.3.2,
+                    replacing 附录 CC.7 裁定 4's always-retrieve
+                    degeneration). Runtime state only: never reads an
+                    authoring-time label such as corpus_backed.
     """
     mode = settings.maeda_rag_mode
     if mode == "force_off":
         return False, RAG_SKIP_FORCE_OFF
     if mode == "force_on":
         return True, RAG_RETRIEVE_FORCE_ON
-    return True, RAG_RETRIEVE_AUTO_DEGENERATE
+    query_type = (state.get("parsed_intent") or {}).get("query_type")
+    if query_type in RAG_AUTO_QUERY_TYPES:
+        return True, RAG_RETRIEVE_AUTO_QUERY_TYPE
+    return False, RAG_SKIP_AUTO_QUERY_TYPE
 
 
 def route_after_viz(state: MAEDAState) -> str:
@@ -118,17 +114,6 @@ def route_after_viz(state: MAEDAState) -> str:
     """
     should_retrieve, _ = rag_retrieval_decision(state)
     return "retrieve" if should_retrieve else "skip"
-
-
-def route_after_intent(state: MAEDAState) -> str:
-    """
-    After parse_intent:
-      - "clarify"  → agent needs more info from the user (max 1 time)
-      - "proceed"  → intent is clear enough to move forward
-    """
-    if state.get("clarification_needed") and state.get("clarification_count", 0) < 1:
-        return "clarify"
-    return "proceed"
 
 
 def route_after_schema(state: MAEDAState) -> str:

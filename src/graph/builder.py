@@ -7,7 +7,6 @@ Import the singleton `graph` for use in the application.
 from langgraph.graph import END, StateGraph
 
 from src.graph.nodes import (
-    ask_clarification_node,
     connect_schema,
     execute_analysis_node,
     generate_insights_node,
@@ -25,7 +24,6 @@ from src.graph.nodes import (
 )
 from src.graph.router import (
     route_after_guardrails,
-    route_after_intent,
     route_after_profiling,
     route_after_schema,
     route_after_viz,
@@ -40,7 +38,6 @@ def build_graph() -> StateGraph:
     # ── Register nodes ──────────────────────────────────────────────────────
     # MAEDA's own agents
     g.add_node("parse_intent", parse_intent_node)
-    g.add_node("ask_clarification", ask_clarification_node)
     g.add_node("plan_analysis", plan_analysis_node)
     g.add_node("execute_analysis", execute_analysis_node)
     g.add_node("generate_viz", generate_viz_node)
@@ -72,14 +69,9 @@ def build_graph() -> StateGraph:
 
     # ── Edges ───────────────────────────────────────────────────────────────
 
-    # Intent → clarify or proceed to data profiling
-    g.add_conditional_edges(
-        "parse_intent",
-        route_after_intent,
-        {"proceed": "connect_schema", "clarify": "ask_clarification"},
-    )
-    # Clarification loops back to re-parse
-    g.add_edge("ask_clarification", "parse_intent")
+    # No clarification edge (附录 FE.8 #1): nothing ever answered the question,
+    # so it re-parsed the same query at the cost of two LLM calls.
+    g.add_edge("parse_intent", "connect_schema")
 
     # connect_schema may or may not refine before profiling (E2, 附录 BQ) --
     # route_after_schema's "profile" key skips refine_intent entirely
@@ -121,11 +113,7 @@ def build_graph() -> StateGraph:
     # existed that didn't retrieve. It is now a real conditional route
     # with two reachable destinations.
     #
-    # Read the route honestly: `auto` still always returns "retrieve"
-    # (route_after_viz → rag_retrieval_decision). 裁定 4 froze that
-    # degeneration on purpose; the edge is what 轮次 3 owed, the
-    # query-type judgement behind `auto` is separate work that has NOT
-    # been done. Only MAEDA_RAG_MODE=force_off takes the "skip" key today.
+    # `auto` skips by query_type (预注册 §7.3.2); force_on/force_off ignore it.
     g.add_conditional_edges(
         "generate_viz",
         route_after_viz,

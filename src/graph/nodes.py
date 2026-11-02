@@ -596,13 +596,6 @@ async def parse_intent_node(state: MAEDAState) -> MAEDAState:
     return await _get_intent_parser().process(state)
 
 
-async def ask_clarification_node(state: MAEDAState) -> MAEDAState:
-    """Phase 2: surface clarification question to user."""
-    logger.info("Node: ask_clarification")
-    state["clarification_count"] = state.get("clarification_count", 0) + 1
-    return await _get_intent_parser().generate_clarification_question(state)
-
-
 async def connect_schema(state: MAEDAState) -> MAEDAState:
     """
     Phase 4 step 1 (E2 BO.1 split, submission 1 — ECOSYSTEM_INTEGRATION_PLAN.md
@@ -1295,11 +1288,8 @@ async def skip_retrieval_node(state: MAEDAState) -> MAEDAState:
     the same empty log, which is exactly the ambiguity that would make
     Experiment 1's off-arm unreadable in the eval report.
 
-    Today only MAEDA_RAG_MODE=force_off routes here (附录 CC.7 裁定 4 —
-    `auto`'s own judgement is deliberately not implemented yet), but the
-    node is written against `rag_retrieval_decision`'s reason string, not
-    against force_off specifically, so an `auto` skip will record itself
-    correctly the day that judgement lands, with no edit here.
+    force_off and an `auto` skip both route here; the node records
+    `rag_retrieval_decision`'s reason string, so the two stay distinguishable.
     """
     logger.info("Node: skip_retrieval")
     _, reason = rag_retrieval_decision(state)
@@ -1401,10 +1391,7 @@ async def retrieve_knowledge_node(state: MAEDAState) -> MAEDAState:
 
     Reached via route_after_viz's "retrieve" key (阶段 3 收尾执行计划轮次
     3). The `generate_viz` → here edge is no longer unconditional; the
-    force_off skip lives in skip_retrieval_node above. `auto` still always
-    routes here — 附录 CC.7 裁定 4's documented, adjudicated degeneration,
-    not a missing feature: the conditional edge exists and is tested, the
-    query-type judgement that would let `auto` skip does not.
+    skip path lives in skip_retrieval_node above.
 
     附录 CI.3/CK.3, force_on only: the retrieval is additionally checked
     for being a *real* on-arm retrieval — right tier, not a fallback, not

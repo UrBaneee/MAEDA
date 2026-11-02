@@ -519,24 +519,39 @@ class TestConditionalRouting:
         monkeypatch.setattr(_settings, "maeda_rag_mode", "force_off")
         assert route_after_viz(initial_state("q")) == "skip"
 
-    @pytest.mark.parametrize("mode", ["auto", "force_on"])
-    def test_auto_and_force_on_route_to_retrieve(self, mode, monkeypatch):
-        """裁定 4: the conditional edge now exists, but `auto` still
-        always retrieves — its query-type judgement is deliberately NOT
-        implemented. This locks the documented degeneration so it can't
-        be silently "fixed" into a skip without revisiting 裁定 4."""
+    @pytest.mark.parametrize("query_type", ["diagnostic", "exploratory"])
+    def test_auto_retrieves_for_explanatory_query_types(self, query_type, monkeypatch):
         from src.config.settings import settings as _settings
-        from src.graph.router import RAG_RETRIEVE_AUTO_DEGENERATE, rag_retrieval_decision, route_after_viz
+        from src.graph.router import RAG_RETRIEVE_AUTO_QUERY_TYPE, rag_retrieval_decision, route_after_viz
         from src.state.graph_state import initial_state
 
-        monkeypatch.setattr(_settings, "maeda_rag_mode", mode)
-        state = initial_state("what is 2+2 on this column")  # purely computational
+        monkeypatch.setattr(_settings, "maeda_rag_mode", "auto")
+        state = initial_state("q")
+        state["parsed_intent"] = {"query_type": query_type}
         assert route_after_viz(state) == "retrieve"
-        should, reason = rag_retrieval_decision(state)
-        assert should is True
-        if mode == "auto":
-            assert reason == RAG_RETRIEVE_AUTO_DEGENERATE
-            assert "NOT implemented" in reason
+        assert rag_retrieval_decision(state) == (True, RAG_RETRIEVE_AUTO_QUERY_TYPE)
+
+    @pytest.mark.parametrize("query_type", ["descriptive", "comparative", "predictive", None])
+    def test_auto_skips_other_query_types(self, query_type, monkeypatch):
+        from src.config.settings import settings as _settings
+        from src.graph.router import RAG_SKIP_AUTO_QUERY_TYPE, rag_retrieval_decision, route_after_viz
+        from src.state.graph_state import initial_state
+
+        monkeypatch.setattr(_settings, "maeda_rag_mode", "auto")
+        state = initial_state("q")
+        state["parsed_intent"] = {"query_type": query_type}
+        assert route_after_viz(state) == "skip"
+        assert rag_retrieval_decision(state) == (False, RAG_SKIP_AUTO_QUERY_TYPE)
+
+    def test_force_on_ignores_query_type(self, monkeypatch):
+        from src.config.settings import settings as _settings
+        from src.graph.router import route_after_viz
+        from src.state.graph_state import initial_state
+
+        monkeypatch.setattr(_settings, "maeda_rag_mode", "force_on")
+        state = initial_state("q")
+        state["parsed_intent"] = {"query_type": "descriptive"}
+        assert route_after_viz(state) == "retrieve"
 
     def test_graph_has_both_destinations_wired(self):
         """Asserted against the COMPILED graph, not the builder source:

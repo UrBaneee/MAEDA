@@ -193,15 +193,12 @@ class InsightAgent(BaseAgent):
             raw = _parse_json(response.content.strip())
             if not isinstance(raw, list):
                 raw = [raw]
-            # 7.4 Confidence scoring + 7.6 Source attribution
+            # 7.4 Confidence scoring. `sources` stays whatever the model
+            # emitted (today: nothing). It used to be filled with the run's
+            # top three filenames on every insight, which asserted a citation
+            # nobody made (预注册 §3.0, 路线 A).
             for item in raw:
-                insight = Insight.from_dict(item)
-                # Attach RAG source references
-                if rag_sources and not insight.sources:
-                    insight.sources = [
-                        s.get("source_file", "") for s in rag_sources[:3] if s.get("source_file")
-                    ]
-                insights.append(insight)
+                insights.append(Insight.from_dict(item))
 
         except Exception as exc:
             logger.warning("Insight generation LLM failed: %s — using rule-based fallback", exc)

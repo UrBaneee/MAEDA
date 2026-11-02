@@ -134,22 +134,9 @@ class MAEDASettings(BaseSettings):
     """ECOSYSTEM_INTEGRATION_PLAN.md 定案 #15 / 阶段 3 收尾执行计划轮次 1 /
     附录 CB.3.1/CC.7. Whether retrieve_knowledge_node calls the RAG server
     at all:
-    "auto" -- 附录 CB.3.1/CC.7 裁定 4: STILL DEGRADES to "always retrieve",
-        i.e. byte-identical to pre-定案-#15 behavior. 轮次 3 has since
-        replaced `src/graph/builder.py`'s unconditional
-        "generate_viz" -> "retrieve_domain_knowledge" `add_edge` with a
-        real conditional route (route_after_viz, src/graph/router.py), so
-        the *edge* now exists and both destinations are reachable and
-        tested -- but the judgement that would make `auto` choose to skip
-        (purely-computational query_types) is deliberately NOT
-        implemented, per 裁定 4. Today only force_off takes the skip
-        branch. This degeneration is adjudicated and temporary, not an
-        oversight: do not read "auto exists" or "the conditional edge
-        exists" as "auto's routing judgement exists" -- it doesn't yet.
-        `rag_retrieval_decision`'s "auto" branch is the single place that
-        changes when it does.
-    "force_on" -- always retrieves; identical routing to "auto" today for
-        the reason just given. Additionally the ONLY mode under which a
+    "auto" -- retrieves only when the parsed query_type is diagnostic or
+        exploratory (预注册 §7.3.2, src/graph/router.py::rag_retrieval_decision).
+    "force_on" -- always retrieves. Additionally the ONLY mode under which a
         retrieval that didn't run at settings.
         maeda_rag_expected_retrieval_mode (or degraded to fallback, or
         hard-failed) invalidates the trial for aggregation -- 附录 CK.3,
