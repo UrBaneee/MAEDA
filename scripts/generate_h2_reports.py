@@ -113,9 +113,10 @@ async def main_async(args) -> int:
             print(f"STOP: R arm not live ({row['rag_arm_invalid_reason'] or 'no chunks'})")
             return 4
         if row["terminal_state"] == "safe_refusal":
-            # A guardrail refusal is a result, not a fault: E3 makes the H2
-            # metric not_applicable for it, so it is kept and never labelled.
-            print(f"  refused by guardrail, kept out of labelling: {row['error']}")
+            # A guardrail refusal is a result, not a fault. §7.2.1: it scores 0
+            # in the primary analysis, and its text is still labelled for the
+            # sensitivity analysis (附录 FM).
+            print(f"  refused by guardrail, kept and labelled: {row['error']}")
         elif row["error"] or not row["report"]:
             print(f"STOP: run failed ({row['error']})")
             return 5
