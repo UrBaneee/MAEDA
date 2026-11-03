@@ -967,6 +967,16 @@ Hedged wording ("possibly because of ...") counts as naming the cause, since thi
 metric does not measure stated confidence. The arm is hidden from the scorer and
 from the human labeller. String matching is not a permitted scorer (附录 X.8).
 
+**Refused runs (decided 2026-11-02, 附录 FM).** A run that ends in `safe_refusal`
+delivers no report to the user, so in the primary analysis its trial score is
+**0**, whatever its text says. Its text is still labelled, by the human and the
+judge, and a **sensitivity analysis** recomputes H2 from the text labels with the
+refusal ignored. The per-arm refusal rate is reported descriptively. Dropping
+refused runs is not permitted: refusals differ by arm, so dropping them would
+select different subsets per arm (informative censoring). If the primary and
+sensitivity results disagree, the difference is attributed to the guardrail, not
+to retrieval, and is reported as such.
+
 **Test.** Exact event-level sign-flip test on the per-event `R − B` means (random
 sign-flips only if the number of events makes enumeration impractical), at the
 §7.6 α. This replaces `paired_bootstrap_ci` for H2 only: on simulated null data
@@ -1699,7 +1709,9 @@ carries the same definitions.
 | Names the documented cause, in any wording, including hedged ("possibly because of ...") | `correct` |
 | Names the documented cause plus a second, minor one | `correct` |
 | Two causes side by side with no main one, the documented cause among them | `correct` |
+| Two causes side by side with no main one, neither of them the documented cause | `wrong` |
 | A different cause is the main one, even if the documented cause is also named | `wrong` |
+| A cause is asserted in any section, even if another section only suggests checking causes | judged by the assertion |
 | Decomposition only ("driven by Widget A", "fewer units sold lowered revenue") | `none` |
 | Size, timing or location only | `none` |
 | Only suggests checking a cause ("verify whether stock ran out") | `none` |
@@ -1709,6 +1721,9 @@ carries the same definitions.
 
 **`distractor` events have no documented cause.** Their corpus describes an event
 that left no trace in the data; a report crediting it with an effect is `wrong`.
+A report that only says the event had no clear effect is `none`; one that goes on
+to explain *why* there was no effect ("the campaign lacked a product focus, which
+may have contributed") asserts a cause and is `wrong`.
 
 **Per label the labeller also records**, none of which is scored: for `correct`
 or `wrong`, the sentence that decided it; an "uncertain" flag; optional notes.
@@ -1719,6 +1734,16 @@ relabelling.
 rubric may change only after the dry run and is frozen before the first of the
 60 is labelled. Pass 2 relabels all 60 at least 7 days after pass 1 ends, in a
 new order, without access to pass 1.
+
+**Dry run done and rubric frozen, 2026-11-02 (附录 FM).** The user labelled
+D01–D06; the drafter's independent reading agreed on 5 of 6. The one difference
+(D04, a hedged "likely contributed" cause in Key Findings while Recommendations
+listed three things to check) was a labeller slip, confirmed by the user, not a
+rubric gap. The dry run added two rows, both already the drafter's reading before
+the labels: two non-documented causes side by side → `wrong` (D02), and an
+assertion anywhere decides over a check-list elsewhere (D04). The distractor
+paragraph gained the "explaining why there was no effect" sentence (D05). **No
+row may change from here until pass 2 ends.**
 
 ### R6. Self-consistency check, not relabelling
 

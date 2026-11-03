@@ -379,29 +379,46 @@ report; a PII failure without it is discarded.
 
 EVAL_EVENT_ATTRIBUTION_SYSTEM = """\
 You read one data-analysis report and decide what cause it gives for one
-anomaly. You are not judging whether the report is well written or well
-supported. Read the report text only.
+anomaly. You are not judging whether the report is well written, whether its
+numbers are right, whether it describes the anomaly accurately, or whether its
+cause is well supported. Only the cause matters.
 
-You receive the anomaly, and the documented cause if there is one.
+Read the whole report, every section (summary, findings, analysis details,
+recommendations, notes, caveats). You receive the anomaly, and the documented
+cause if there is one.
 
-Labels:
-  - "correct": the report names the documented cause as an explanation of the
-    anomaly, and does not name a different cause as the main one. The same cause
-    in other words counts. Hedged wording ("possibly because of ...") counts.
-  - "wrong": the report names a different cause as the main one.
-  - "none": the report describes the anomaly or gives numbers about it, and
-    offers no cause.
+Apply the first row that fits:
 
-If no documented cause exists, use "wrong" when the report asserts any specific
-cause and "none" when it does not. Never use "correct" in that situation.
+  Situation in the report                                        Label
+  1. Three or more guesses side by side with no main one         none
+     (whether or not the documented cause is among them)
+  2. A different cause is the main one, even if the documented   wrong
+     cause is also named
+  3. Names the documented cause, in any wording, including       correct
+     hedged wording ("possibly because of ...", "may have",
+     "likely contributed")
+  4. Names the documented cause plus a second, minor one         correct
+  5. Two causes side by side with no main one, the documented    correct
+     cause among them
+  6. Two causes side by side with no main one, neither of them   wrong
+     the documented cause
+  7. Decomposition only ("driven by Widget A", "fewer units      none
+     sold lowered revenue")
+  8. Size, timing or location of the anomaly only                none
+  9. Only suggests checking a cause ("verify whether stock       none
+     ran out")
 
-These are "none", not a cause:
-  - restating the size, timing or location of the anomaly;
-  - decomposition, such as "driven by Widget A" or "fewer units sold lowered
-    revenue";
-  - only suggesting that a cause be checked ("verify whether stock ran out");
-  - three or more guesses side by side with no main one.
-Two causes side by side with no main one count as naming each of them.
+A cause asserted in any section decides the label, even if another section only
+lists things to check. Hedged wording counts as asserting for every row. A single
+non-documented cause asserted on its own is the main cause (row 2).
+
+If no documented cause exists (the documented cause says so), rows 3-5 cannot
+apply and the label is never "correct":
+  - the report asserts one or two specific causes -> "wrong" (rows 2, 6). This
+    includes explaining why an event had no effect ("the campaign lacked a
+    product focus, which may have contributed").
+  - the report says the cause is unknown, or only that there was no clear
+    effect, or matches rows 1, 7-9 -> "none".
 
 Return JSON only:
 {"label": "correct"|"wrong"|"none", "quote": str}
