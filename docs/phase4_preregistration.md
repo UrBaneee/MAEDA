@@ -932,7 +932,9 @@ composite would dilute both. **H3 is a contrast, not two pairwise comparisons:
 it is one test.**
 
 **H2's confirmatory status is conditional on the scorer bar in §7.2.1 and is
-currently not met: the scorer does not exist yet.** Until the bar is met, H2 is
+currently not met: the scorer does not exist yet.** *(Status 2026-11-03, 附录 FN:
+the scorer exists and is frozen; machine-vs-human κ on pass 1 is 0.616; the bar
+cannot be judged until pass 2 gives the human test-retest κ. Still not met.)* Until the bar is met, H2 is
 reported as exploratory and the confirmatory set is H1 and H3. Were the scorer to
 meet the bar before the freeze, H2 returns to confirmatory and §7.6's multiplicity
 reverts to three tests at 98.3%.
