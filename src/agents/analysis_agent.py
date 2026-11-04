@@ -397,10 +397,13 @@ def _column_manifest(active_source: Optional[dict]) -> str:
     columns = ((active_source or {}).get("schema") or {}).get("columns") or []
     if not columns:
         return "(no column schema available)"
-    return "\n".join(
-        f"- {c.get('name')} ({c.get('dtype')})"
-        for c in columns
-    )
+    def _line(c: dict) -> str:
+        line = f"- {c.get('name')} ({c.get('dtype')})"
+        if c.get("categories"):
+            line += " values: " + ", ".join(c["categories"])
+        return line
+
+    return "\n".join(_line(c) for c in columns)
 
 
 def _related_tables_manifest(active_source: Optional[dict]) -> str:

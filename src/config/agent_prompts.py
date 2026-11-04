@@ -108,6 +108,13 @@ column silently matches zero rows instead of raising an error, so this
 mistake is easy to miss: double-check the value type matches what the
 derive step actually produces before filtering on it.
 
+When Available Columns lists a column's values ("values: North, South,
+..."), every filter on that column MUST use one of those listed values
+exactly, whatever language or wording the query or Parsed Intent used.
+Translate the user's term into the listed value (e.g. "西区" -> "West",
+"华东" -> "East", "partner channel" -> "Partner"). Never copy a filter value
+from Parsed Intent that is not in the list.
+
 ## Cross-table joins
 
 The Available Columns list above is ONLY the single "active" table. If the
@@ -209,6 +216,10 @@ Common fixes:
   the key names implied by the error message.
 - An unrecognized operation/test/aggregation value: replace it with one
   of the valid values the error message lists.
+- A filter value is not among a column's values: replace it with the listed
+  value that means the same thing (translate across languages, e.g. "西区"
+  -> "West"). If none of the listed values means the same thing, return
+  {"parameters": null}.
 
 If the error message does not give you enough information to produce a
 confident fix (e.g. the failure is structural, not a parameter problem),

@@ -44,9 +44,15 @@ class ColumnInfo:
     # asks for time coverage, which sample_values cannot show.
     min_date: Optional[str] = None
     max_date: Optional[str] = None
+    # Every distinct value, sorted, set only for text columns with at most
+    # CATEGORY_LIMIT values. Without it the planner sees three samples and
+    # copies the user's wording ("西区") into a filter that matches no row.
+    categories: Optional[list[str]] = None
 
     def to_dict(self) -> dict:
         extra = {"min_date": self.min_date, "max_date": self.max_date} if self.min_date else {}
+        if self.categories is not None:
+            extra["categories"] = list(self.categories)
         return {
             "name": self.name,
             "dtype": self.dtype,
@@ -131,6 +137,21 @@ def _date_range(series: pd.Series) -> tuple[Optional[str], Optional[str]]:
     return values.min().date().isoformat(), values.max().date().isoformat()
 
 
+CATEGORY_LIMIT = 20
+
+
+def _categories(series: pd.Series, is_date: bool) -> Optional[list[str]]:
+    """All distinct values of a low-cardinality text column, else None."""
+    if is_date or pd.api.types.is_numeric_dtype(series) or pd.api.types.is_bool_dtype(series):
+        return None
+    if pd.api.types.is_datetime64_any_dtype(series):
+        return None
+    values = series.dropna().unique()
+    if len(values) == 0 or len(values) > CATEGORY_LIMIT:
+        return None
+    return sorted(str(v) for v in values)
+
+
 def extract_schema(df: pd.DataFrame, source_type: str, path: str,
                    table_name: Optional[str] = None) -> SchemaInfo:
     columns = []
@@ -153,6 +174,7 @@ def extract_schema(df: pd.DataFrame, source_type: str, path: str,
             min_date=min_date,
             max_date=max_date,
             is_datetime=is_datetime,
+            categories=_categories(series, is_date=min_date is not None),
         ))
 
     preview = df.head(_PREVIEW_ROWS).fillna("").to_dict(orient="records")

@@ -516,6 +516,35 @@ _FILTER_OPS = {
 }
 
 
+# Same bound as data_connector.CATEGORY_LIMIT, the columns whose values the
+# planner is shown.
+_CATEGORY_LIMIT = 20
+
+
+def _check_category_values(series: pd.Series, col: str, op: str, val) -> None:
+    """An equality-type filter on a small text value set must name values
+    that exist. Otherwise "region == 西区" matches no row and every later
+    step reports an empty region as a finding; "!=" with such a value
+    silently keeps everything. Raising sends the step to repair, which sees
+    the listed values."""
+    if op not in ("==", "!=", "in", "not_in"):
+        return
+    if pd.api.types.is_numeric_dtype(series) or pd.api.types.is_bool_dtype(series) \
+            or pd.api.types.is_datetime64_any_dtype(series):
+        return
+    existing = series.dropna().unique()
+    if len(existing) == 0 or len(existing) > _CATEGORY_LIMIT:
+        return
+    wanted = list(val) if op in ("in", "not_in") and isinstance(val, (list, tuple, set)) else [val]
+    present = {str(v) for v in existing}
+    missing = [v for v in wanted if str(v) not in present]
+    if missing:
+        raise ValueError(
+            f"filter: value(s) {missing!r} not found in column {col!r}. "
+            f"Its values are: {sorted(present)}. Use one of these exactly."
+        )
+
+
 def pandas_filter(
     df: pd.DataFrame,
     filters: list[dict],
@@ -541,6 +570,7 @@ def pandas_filter(
                 f"filter: unsupported op {op!r} for column {col!r}. "
                 f"Must be one of {sorted(_FILTER_OPS)}."
             )
+        _check_category_values(df[col], col, op, val)
         result = result[_FILTER_OPS[op](result[col], val)]
     return {"result": result.to_dict(orient="records"), "result_df": result, "row_count": len(result)}
 
