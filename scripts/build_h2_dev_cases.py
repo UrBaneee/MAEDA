@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Write the H2 dev attribution cases (预注册 §7.2.1, 附录 FL) from the frozen event
-script: every dev-split event, one case per probe query. Test-split events are
+Write the H2 dev attribution cases (预注册 §7.2.1, 附录 FL) from the PUBLIC frozen
+event script (git tag event-script-v2, 附录 FZ): every dev-split event, one case
+per `h2_probes` entry (附录 GB). Test-split events are
 never read into the output. Makes no API call.
 
     python scripts/build_h2_dev_cases.py
@@ -35,7 +36,7 @@ def build(events: list[dict]) -> list[dict]:
             continue
         cause = event["business_description"] if event["event_type"] == "normal" else None
         metric = (event.get("data_signal") or {}).get("metric", "revenue")
-        for n, query in enumerate(event["probe_queries"], 1):
+        for n, query in enumerate(event["h2_probes"], 1):
             cases.append({
                 "id": f"H2-{event['event_id'].removeprefix('EVT-')}-Q{n}",
                 "query": query,

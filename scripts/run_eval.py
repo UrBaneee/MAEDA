@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Optional
 
 from src.config.settings import settings
+from src.eval.data_provenance import data_version
 from src.eval.metrics import MetricScore
 from src.eval.trials import NOT_APPLICABLE
 from src.eval.runner import EvalResult, EvalRunner, GoldenTestCase, detect_regressions, load_golden_suite
@@ -99,6 +100,10 @@ def _settings_snapshot() -> dict:
         "eval_golden_suite": settings.eval_golden_suite,
         "glossary_path": settings.glossary_path,
         "glossary_sha256": _sha256(glossary),
+        # 附录 FQ.2(3) / GA.2 / GB: event-script tag + manifest hashes, the
+        # rendered sales_data.csv hash, and tb5 DB content hash (None when
+        # rag_db_path is unset or not a file).
+        "data_version": data_version(Path(__file__).resolve().parent.parent, settings.rag_db_path),
         "resolved_eval_provider": settings.resolved_eval_provider,
         "resolved_eval_model": settings.resolved_eval_model,
         "resolved_groundedness_provider": settings.resolved_groundedness_provider,

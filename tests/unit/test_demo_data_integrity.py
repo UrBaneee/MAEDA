@@ -63,8 +63,17 @@ _DEMO_DIR = Path(__file__).resolve().parents[2] / "data" / "demo"
 # assumed, both here and via `git diff --stat data/` showing no change
 # to that file across the re-render (附录 BF.2's prediction, confirmed
 # live against the real re-render, not just a scratch one).
+#
+# 附录 GB (2026-11-05): sales_data.csv is now the v2 render received from
+# rag-framework (附录 FZ.4/FZ.6: event-script-v2 incl. sealed test events,
+# sha256 b863b601...). Previous value a0da755e... is the v1 render
+# (reproduced by rag's `--v1-only`, 附录 FZ.5). Same sanctioned-reason
+# discipline as above: test_suite.json ground truth was recomputed from the
+# new file in the same commit (11 cases changed), and the DG03 premise
+# (North is the highest-revenue region) was re-checked against it.
+# churn/marketing/ecommerce hashes are unchanged (isolated RNGs).
 _EXPECTED_CSV_SHA256 = {
-    "sales_data.csv": "a0da755ec4c046de058280e4642f950697963baa8ec2f8b27d36f90021815ed2",
+    "sales_data.csv": "b863b60173f3c0bf30c4582738b85ba3304a7a212794d66ab14aa35dce422719",
     "churn_data.csv": "dfc7b528f144dc1ff6025b693a6847daff6b9cc053c0866aa84966786cd1c9f3",
     "marketing_campaigns.csv": "e6f0c8e523f15406e81c7eb93726529953639ed07019379d76479aa0fd9db460",
 }

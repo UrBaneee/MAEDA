@@ -1773,3 +1773,126 @@ so any change would record the drafter's reading rather than theirs.
 
 **The ambiguity is itself the finding**: the reference has limited resolution in
 this band region, and that limit is reported rather than papered over.
+
+---
+
+## 10. Amendment 2026-11-05 (附录 GB): the v2 event script, and what it discloses
+
+Appended; nothing above is rewritten. Where this section conflicts with earlier
+text, the earlier text stays as written and this section says which sentence it
+supersedes. Decided in 附录 FQ, FR, FS and delivered in 附录 FZ; received here in
+附录 GB. No test-split event content appears in this section, only counts and
+hashes.
+
+### 10.1 What changed in the data
+
+`event-script-v2` (rag local tag, hash chain in 10.6) adds 18 `normal` events to
+the 12 v1 events: 30 in total (`normal` 25, `distractor` 3, `unexplained` 2),
+dev 13 and test 17. The v2 dev events (6) are public in the tag's
+`event_script.yaml`. The v2 test events (12) are in a local-only sealed file in
+rag and are not readable from this repository. `data/demo/sales_data.csv` is now
+the v2 render (sha256 `b863b60173f3c0bf30c4582738b85ba3304a7a212794d66ab14aa35dce422719`,
+48960 data rows), copied by hash from rag. Every earlier mention in this file of
+the 12-event script, of `sales_data.csv` hash `a0da755e…`, or of "the 3 `normal`
+events now in the test split" describes the v1 state.
+
+### 10.2 H2 test pool, and the exception to "no case before N" (附录 FQ.2 item 1)
+
+**Pool definition.** The H2 test pool is the events with `split == test`,
+`event_type == normal` and `batch == v2`: **12 events**. The 3 v1 `normal` test
+events are **excluded** from the H2 pool. They keep `split == test` and remain
+part of the TB5 retrieval holdout, whose reveal is unspent (§1.7). The reason is
+the one given in 附录 FS.2 item 1: those three events' probes and corpus define
+that holdout, and the H2 probes for them would have to be added to events whose
+text a retrieval reveal depends on. The dev `normal` events are 10 (v1 4, v2 6).
+
+**Exception.** The open-items table at the top of this file says no case may be authored into
+the new MAEDA holdout before N is fixed. That rule was written for the H1/H3
+case suite and stays in force for it. The H2 pool is not a case suite: its
+independent unit is an event, test events can only be written when G3 writes
+them into the data, and the dev pilot comes after G3, so by the time a pilot
+could inform N the pool is already fixed. The pool size was therefore set at G3
+from the planning value in 附录 FI (about 12, 附录 FR.6.2), and the dev pilot can
+only **check** that size's power, not set it. If the pilot says 12 is
+underpowered, the only options are to accept lower power and report it, or to
+write a v3 and render again; neither is a default chosen here. The v2 events were
+written and frozen before any arm's report existed for any v2 event (the only
+reports so far, 附录 FM, cover v1 dev events), so the exception does not open a path
+for results to shape the pool.
+
+### 10.3 The data signal of test events is visible in the CSV (附录 FR.4 item 6)
+
+Each test event's data signal (region, window, magnitude) is rendered into
+`sales_data.csv`. Anyone analysing the data can find where the anomalies are.
+What is sealed is their cause text, corpus, probes and ids. H2 measures whether a
+system attributes an already-found anomaly to the correct cause in the corpus;
+the location alone does not give the cause, so this is not judged to invalidate
+the holdout. It is a disclosed residual, not a proven absence of effect. The
+system under test sees the CSV in both arms; the disclosure matters for any
+human or model that has seen both the CSV and the cause text.
+
+### 10.4 The TB5 retrieval holdout is not comparable to v1-corpus numbers (附录 FR.6.1)
+
+The TB5 retrieval holdout is still the same 8 derived entries from the 10 frozen
+v1 probe digests (`test.json` unchanged byte for byte through G3). But the corpus
+it is retrieved against grows at reveal from the 10 v1 event directories to a
+larger library that includes v2 events, so there are more distractors. Retrieval
+numbers measured on the v1 corpus (including every dev retrieval number taken
+before G3) are **not comparable** to the holdout's reveal number. Read the §1.1
+TB5 retrieval row with this sentence attached. The v2 test probes serve H2 only
+and are not added to `test.json`.
+
+### 10.5 R-arm retrieval store for the H2 dev pilot and σ runs
+
+The H2 dev pilot and σ runs use `tb5_dev.db` (16 event directories: 10 v1 with
+corpus plus 6 v2 dev; 28 documents, 38 chunks; embedding model
+`text-embedding-3-small`, 附录 FZ.3). They must **not** use a store that contains
+v2 test corpus (`tb5_full.db`, not built; it is built at reveal by the user's
+command). Because the dev store and the reveal store differ, the dev-to-reveal
+step has a corpus-size change on top of the data change (10.4); this is a known
+difference between σ and reveal conditions.
+
+The database file contains timestamps and is not byte-reproducible, so it is
+recorded by **content hash** (附录 GA.2): sha256 over every chunk ordered by
+chunk id, each as (document source path, chunk id, chunk text), together with the
+embedding model name. Value recorded on 2026-11-05:
+`bc7f85fc47cf0d57bdfd6c3bc17c009cef1339b5b4e5868ad6a090998238045e`. The source
+path is the absolute path on this machine, so the hash is a same-machine
+identity, not a portable one. `scripts/run_eval.py` now writes it into
+`settings_snapshot.data_version` (`src/eval/data_provenance.py`) when
+`MAEDA_RAG_DB_PATH` points at the file; it must be equal before and after a σ run
+and a pilot.
+
+### 10.6 Added to the EJ.2 freeze list (附录 FQ.2 item 3)
+
+Recorded per run in `settings_snapshot.data_version` and checked by hand at
+freeze:
+
+| Item | Value now |
+|---|---|
+| event script git tag | `event-script-v2` (rag, local, not pushed) |
+| manifest `sha256` = `public_sha256` | `46e7f23b489e35961af33317046e073e2740b5fff9608520acce6565948f3083` |
+| `sealed_sha256` | `4d3eae4096a165cb763cfe614b70059233fa5ec2085ac3cc42b0767d1ed0ad9a` |
+| `combined_sha256` | `efc9e5acabf3a636321add28b4dc600eadc39d227aa10cadf5dc81219a97db9e` |
+| `slot_plan_sha256` | `359eb5ed04a9730a570dc491f2e5ed2b8f7027f046eb9cd5cc0e13eaee73dfd5` |
+| `sales_data.csv` sha256 | `b863b60173f3c0bf30c4582738b85ba3304a7a212794d66ab14aa35dce422719` |
+| `tb5_dev.db` content sha256 | `bc7f85fc47cf0d57bdfd6c3bc17c009cef1339b5b4e5868ad6a090998238045e` |
+
+The `input_hashes` block in `provenance` already covers all of `data/demo/` and
+the golden suite file; `data_version` adds the three items that live outside this
+repository.
+
+### 10.7 Consequences for earlier measurements in this file
+
+- Fixtures: `tests/eval/test_suite.json` ground truth was recomputed on the new
+  CSV (11 of 76 checkable cases changed, all sales-derived), and the golden-hash
+  guard now pins the new CSV hash. The churn, marketing and e-commerce hashes did
+  not change.
+- Any number in this file derived from the v1 sales render (§2, §3, §4 and the
+  FM report set) describes the v1 data. The 60 reports of 附录 FM were generated
+  on the v1 render with the v1 `probe_queries` wording; the H2 dev cases now use
+  the year-bearing `h2_probes`. Those reports remain judge-calibration material
+  only (附录 FQ.2) and are not planning values for H2.
+- C1b (附录 FQ.1) changed report generation: non-sum aggregations are rendered
+  as `<col>_<func>`. Reports generated before this change and after it are not
+  comparable (EJ.2); generate H2 pilot and σ reports only after it.

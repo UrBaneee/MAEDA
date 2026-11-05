@@ -10,8 +10,8 @@
       "region"
     ],
     "ground_truth": {
-      "north_region_revenue": 5222201.56,
-      "central_region_revenue": 3283966.65
+      "north_region_revenue": 5149608.55,
+      "central_region_revenue": 3244264.68
     },
     "expected_tools": [
       "pandas_transform"
@@ -102,7 +102,7 @@
       "product"
     ],
     "ground_truth": {
-      "top_product_revenue": 4361918.95,
+      "top_product_revenue": 4312946.65,
       "n_products": 5
     },
     "expected_tools": [
@@ -166,8 +166,8 @@
     ],
     "ground_truth": {
       "q3_2023_revenue": 1227426.03,
-      "q2_2023_revenue": 1779681.96,
-      "q4_2023_revenue": 2065637.49
+      "q2_2023_revenue": 1730832.8,
+      "q4_2023_revenue": 2019523.17
     },
     "expected_tools": [
       "pandas_transform"
@@ -227,7 +227,7 @@
       "region"
     ],
     "ground_truth": {
-      "north_region_revenue": 5222201.56,
+      "north_region_revenue": 5149608.55,
       "_note": "North is actually the HIGHEST-revenue region, not underperforming"
     },
     "expected_tools": [
@@ -286,9 +286,9 @@
     ],
     "ground_truth": {
       "q1_2023_revenue": 1781428.27,
-      "q2_2023_revenue": 1779681.96,
+      "q2_2023_revenue": 1730832.8,
       "q3_2023_revenue": 1227426.03,
-      "q4_2023_revenue": 2065637.49
+      "q4_2023_revenue": 2019523.17
     },
     "expected_tools": [
       "comparison",
@@ -517,8 +517,8 @@
     ],
     "expected_dimensions": [],
     "ground_truth": {
-      "revenue_outliers_iqr": 614,
-      "units_outliers_iqr": 524
+      "revenue_outliers_iqr": 600,
+      "units_outliers_iqr": 511
     },
     "expected_tools": [
       "anomaly_detection"
@@ -920,9 +920,9 @@
       "year"
     ],
     "ground_truth": {
-      "north_2022_revenue": 1784443.68,
-      "north_2024_revenue": 1727422.61,
-      "south_2022_revenue": 1341338.04,
+      "north_2022_revenue": 1754103.08,
+      "north_2024_revenue": 1697377.77,
+      "south_2022_revenue": 1289294.11,
       "south_2024_revenue": 1345163.91
     },
     "tags": [
@@ -1205,7 +1205,7 @@
     ],
     "ground_truth": {
       "top_rep_id": 1011,
-      "top_rep_revenue": 475260.59
+      "top_rep_revenue": 469945.02
     },
     "tags": [
       "descriptive"
@@ -1234,8 +1234,8 @@
       "product"
     ],
     "ground_truth": {
-      "widget_b_units": 108991,
-      "widget_a_units": 91274
+      "widget_b_units": 107777,
+      "widget_a_units": 90315
     },
     "tags": [
       "descriptive"
@@ -1505,8 +1505,8 @@
       "channel"
     ],
     "ground_truth": {
-      "online_units": 118632,
-      "retail_units": 120521
+      "online_units": 117298,
+      "retail_units": 119244
     },
     "tags": [
       "comparative"
@@ -2130,7 +2130,7 @@
     ],
     "ground_truth": {
       "west_2023_revenue": 1478044.79,
-      "east_2023_revenue": 1366014.87
+      "east_2023_revenue": 1369978.88
     },
     "tags": [
       "comparative"

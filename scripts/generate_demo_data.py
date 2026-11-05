@@ -67,7 +67,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 # repo's `main` can't silently change what gets rendered here.
 
 _RAG_FRAMEWORK_REPO = Path.home() / "rag-framework"
-_EVENT_SCRIPT_TAG = "event-script-v1"
+_EVENT_SCRIPT_TAG = "event-script-v2"
 _EVENT_SCRIPT_YAML_PATH = "eval/fixtures/event_script/event_script.yaml"
 _EVENT_SCRIPT_MANIFEST_PATH = "eval/fixtures/event_script/event_script.manifest.json"
 
@@ -88,18 +88,24 @@ def _git_show(path: str) -> str:
 
 
 def load_frozen_events() -> list[dict]:
-    """Load the 12 TB5 events, pinned to the frozen tag and hash-verified
-    against event_script.manifest.json (附录 X.5 canonicalization, 附录
-    AI.2's recorded sha256) before anything here trusts its content."""
+    """Load the PUBLIC TB5 events (v2: 19 events, v1's 12 plus the 7 v2 dev
+    slots; the v2 test events live in rag's local-only sealed file and are
+    not here), pinned to the frozen tag and hash-verified against
+    event_script.manifest.json's `public_sha256` (附录 X.5 canonicalization,
+    附录 FZ.2) before anything here trusts its content.
+
+    附录 GB: generate_sales() no longer calls this (it copies the rendered
+    CSV, 附录 FZ.6 item 1); the remaining caller is build_h2_dev_cases.py."""
     yaml_text = _git_show(_EVENT_SCRIPT_YAML_PATH)
     manifest = json.loads(_git_show(_EVENT_SCRIPT_MANIFEST_PATH))
     data = yaml.safe_load(yaml_text)
     canonical = json.dumps(data, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     actual_sha = hashlib.sha256(canonical).hexdigest()
-    if actual_sha != manifest["sha256"]:
+    expected_sha = manifest.get("public_sha256", manifest["sha256"])
+    if actual_sha != expected_sha:
         raise RuntimeError(
             f"event_script.yaml at tag {_EVENT_SCRIPT_TAG!r} does not match "
-            f"its manifest sha256 (manifest={manifest['sha256']}, "
+            f"its manifest sha256 (manifest={expected_sha}, "
             f"recomputed={actual_sha}) -- refusing to render off a script "
             "whose integrity can't be confirmed."
         )
@@ -199,96 +205,43 @@ _PRODUCT_PRICE = {
 }
 
 
-def generate_sales(n: int = 48_000, seed: int = SEED) -> pd.DataFrame:
+# 附录 GB / FZ.6 item 1: sales_data.csv is no longer generated here. Since the
+# v2 event script (sealed test events, FR.4) the CSV is rendered by
+# rag-framework's render_v2.py from the frozen public + sealed content, and
+# MAEDA only receives it by hash. This keeps v2 test-split event content out
+# of this repo: the sealed half is never readable from here.
+_RENDERED_SALES_CSV = Path.home() / "rag-framework" / "artifacts" / "g3" / "sales_data.csv"
+_RENDERED_SALES_SHA256 = "b863b60173f3c0bf30c4582738b85ba3304a7a212794d66ab14aa35dce422719"
+_RENDERED_SALES_ROWS = 48_960  # data rows, header excluded
+
+
+def generate_sales(source: Path | None = None, expected_sha256: str = _RENDERED_SALES_SHA256,
+                   expected_rows: int = _RENDERED_SALES_ROWS) -> pd.DataFrame:
     """
-    附录 BF: `generate_sales()` runs first in `__main__` (nothing precedes
-    it), so under the OLD shared-stream design it was already, in effect,
-    drawing from a virgin seed=SEED state -- no other generator's calls came
-    before it to shift its position. Isolating it (own `random.Random(seed)`
-    + own `np.random.RandomState(seed)`, both algorithm-compatible with what
-    the old global state used -- see the module-level comment above) is
-    therefore output-PRESERVING for this one function specifically:
-    `generate_sales(seed=SEED)` under this isolated version reproduces
-    `data/demo/sales_data.csv` byte-for-byte (verified -- see 附录 BF).
-    churn/marketing/ecommerce are NOT preserved by the same argument (each
-    used to start mid-stream, at a position only the old coupled call order
-    could reproduce) -- isolating them necessarily changes their output.
+    附录 GB: verify the sha256 and row count of the rendered CSV, then copy it
+    byte-for-byte to data/demo/sales_data.csv. Raises (and writes nothing)
+    on any mismatch. Does not read the event script.
+
+    The pre-v2 generator (isolated RNGs, 附录 BF) is in git history at
+    d557e52; its output hash a0da755e... equals rag's `--v1-only` render
+    (附录 FZ.5).
     """
-    rng, np_state = _seeded_rngs(seed)
-    regions = ["North", "South", "East", "West", "Central"]
-    products = ["Widget A", "Widget B", "Gadget Pro", "Gadget Lite", "Service Pack"]
-    channels = ["Direct", "Partner", "Online", "Retail"]
-
-    dates = pd.date_range("2022-01-01", "2024-12-31", periods=n)
-    region_base = {"North": 500, "South": 380, "East": 420, "West": 460, "Central": 310}
-
-    events = load_frozen_events()
-    # X-V3/AC.3: business signal and quality noise are two independent
-    # paths. Every event here is applied on top of the base
-    # region/seasonal/noise model; the 3%/2%/1% quality-noise injection
-    # below is unrelated and untouched by this loop.
-    revenue_events = [e for e in events if (e.get("data_signal") or {}).get("metric") == "revenue"]
-    units_events = [e for e in events if (e.get("data_signal") or {}).get("metric") == "units"]
-
-    rows = []
-    for d in dates:
-        region = rng.choice(regions)
-        product = rng.choice(products)
-        channel = rng.choice(channels)
-        d_date = d.date()
-        base = region_base[region]
-        # Q4 seasonality boost. 1.15, down from the original 1.3 -- not a
-        # TB5 event, but its old strength stacked with EVT-2022-11-NORTH-
-        # PROMO (North, November, +28% on top of an already-boosted Q4
-        # baseline) to push that event's window mean past the whole-table
-        # IQR ceiling that handle_outliers would clip at (附录 AA.2/AE.1's
-        # predicted noise-coefficient/IQR tension, confirmed on a real
-        # render). Lowering the row-noise coefficient further to compensate
-        # would have tightened that same ceiling instead of loosening it
-        # (AE.1); this lever doesn't, since it's independent of both.
-        seasonal = 1.15 if d.month in (10, 11, 12) else 1.0
-        # X-V1: the old hardcoded "Q3 2023 dip" is gone. It's now
-        # EVT-2023-Q3-GLOBAL-UNEXPLAINED-DIP in the frozen event script
-        # (segment={}, direction=down, magnitude=0.30, shape=step, same
-        # window and magnitude as the multiplier this replaces) and is
-        # applied below through the same machinery as every other event.
-        revenue = max(0.0, np_state.normal(base * seasonal, base * _NOISE_COEFF))
-        for event in revenue_events:
-            revenue *= _event_multiplier(event, d_date, region, product, channel)
-        revenue = round(revenue, 2)
-
-        implied_price = _PRODUCT_PRICE[product] * rng.uniform(0.9, 1.1)
-        units_f = revenue / implied_price
-        for event in units_events:
-            units_f *= _event_multiplier(event, d_date, region, product, channel)
-        units = max(1, round(units_f))
-
-        rows.append({
-            "date": d.strftime("%Y-%m-%d"),
-            "region": region,
-            "product": product,
-            "channel": channel,
-            "revenue": revenue,
-            "units": units,
-            "rep_id": rng.randint(1001, 1050),
-        })
-
-    df = pd.DataFrame(rows)
-
-    # Intentional quality issues for Data Cleaner demo -- unchanged path,
-    # independent of the business-signal path above (X-V3/AC.3).
-    n_rows = len(df)
-    # 3% missing revenue
-    df.loc[df.sample(frac=0.03, random_state=1).index, "revenue"] = np.nan
-    # 2% duplicate rows
-    dup_idx = df.sample(frac=0.02, random_state=2).index
-    df = pd.concat([df, df.loc[dup_idx]], ignore_index=True)
-    # 1% outlier revenues
-    outlier_idx = df.sample(frac=0.01, random_state=3).index
-    df.loc[outlier_idx, "revenue"] = df.loc[outlier_idx, "revenue"] * 10
-
-    df.to_csv(OUT / "sales_data.csv", index=False)
-    print(f"✅ sales_data.csv  ({len(df):,} rows)")
+    src = Path(source) if source is not None else _RENDERED_SALES_CSV
+    if not src.is_file():
+        raise RuntimeError(f"Rendered sales CSV not found at {src} (附录 FZ.4)")
+    raw = src.read_bytes()
+    actual = hashlib.sha256(raw).hexdigest()
+    if actual != expected_sha256:
+        raise RuntimeError(
+            f"{src} sha256 {actual} != expected {expected_sha256}; refusing to "
+            "copy an unverified sales CSV (附录 FZ.6 item 1)."
+        )
+    df = pd.read_csv(src)
+    if len(df) != expected_rows:
+        raise RuntimeError(f"{src} has {len(df)} data rows, expected {expected_rows}")
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "sales_data.csv").write_bytes(raw)
+    print(f"✅ sales_data.csv  ({len(df):,} rows, sha256 {actual[:12]}…, copied from rag artifacts/g3)")
     return df
 
 
