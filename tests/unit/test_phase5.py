@@ -1203,3 +1203,46 @@ class TestGroupbyCountRendering:
         r = pandas_tool(df, {"operation": "groupby", "group_by": ["region"],
                              "agg_col": "revenue", "agg_func": "sum"}, {})
         assert r["result"] == [{"region": "a", "revenue": 3.0}]
+
+
+class TestGroupbyNonSumRendering:
+    """附录 GB / FQ.1 (C1b): mean/median/min/max/std must not read as totals."""
+
+    def _df(self):
+        return pd.DataFrame({"region": ["a", "a", "b"], "revenue": [1.0, 3.0, 10.0]})
+
+    @pytest.mark.parametrize("func,expected", [
+        ("mean", {"b": 10.0, "a": 2.0}), ("median", {"b": 10.0, "a": 2.0}),
+        ("min", {"b": 10.0, "a": 1.0}), ("max", {"b": 10.0, "a": 3.0}),
+    ])
+    def test_non_sum_is_suffixed(self, func, expected):
+        r = pandas_tool(self._df(), {"operation": "groupby", "group_by": ["region"],
+                                     "agg_col": "revenue", "agg_func": func}, {})
+        assert {x["region"]: x[f"revenue_{func}"] for x in r["result"]} == expected
+        assert all("revenue" not in x for x in r["result"])
+        assert f"revenue_{func}=" in r["result_summary"]
+        assert r["agg_func"] == func
+
+    def test_std_is_suffixed(self):
+        r = pandas_tool(self._df(), {"operation": "groupby", "group_by": ["region"],
+                                     "agg_col": "revenue", "agg_func": "std"}, {})
+        assert "revenue_std" in r["result"][0]
+
+    @pytest.mark.parametrize("func", ["mean", "median", "min", "max", "std", "count"])
+    def test_result_df_keeps_source_name(self, func):
+        r = pandas_tool(self._df(), {"operation": "groupby", "group_by": ["region"],
+                                     "agg_col": "revenue", "agg_func": func}, {})
+        assert "revenue" in r["result_df"].columns
+        assert f"revenue_{func}" not in r["result_df"].columns
+
+    def test_sum_and_unknown_func_keep_source_name(self):
+        for fn in ("sum", "bogus"):
+            r = pandas_tool(self._df(), {"operation": "groupby", "group_by": ["region"],
+                                         "agg_col": "revenue", "agg_func": fn}, {})
+            assert r["result"][0] == {"region": "b", "revenue": 10.0}
+            assert r["agg_func"] == "sum"
+
+    def test_sort_still_uses_source_column(self):
+        r = pandas_tool(self._df(), {"operation": "groupby", "group_by": ["region"],
+                                     "agg_col": "revenue", "agg_func": "mean"}, {})
+        assert [x["region"] for x in r["result"]] == ["b", "a"]

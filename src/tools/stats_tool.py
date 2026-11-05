@@ -413,8 +413,19 @@ def pandas_groupby(
     # the rendered records are renamed. result_df keeps the source name on
     # purpose: analysis_agent._select_input_dataframe chains it into later
     # steps whose parameters were planned against source column names (附录 FF).
-    # sum/mean/etc. keep the name because the unit is unchanged.
-    rendered = result.rename(columns={agg_col: f"{agg_col}_count"}) if func == "count" else result
+    # 附录 GB (C1b, 附录 FQ.1): the earlier claim that sum/mean keep the name
+    # "because the unit is unchanged" is true of the unit but not of the
+    # quantity: `revenue=5222201.56` (a total) and `revenue=546.2` (a mean)
+    # were indistinguishable in text, and a report reading a mean as a total
+    # is a factual error. So every aggregation except sum is rendered as
+    # `<col>_<func>`; sum, the default and the one that matches the source
+    # column's meaning, keeps the source name. Same rendered-only rule as
+    # count: result_df keeps the source name for chained steps.
+    new_name = f"{agg_col}_{func}"
+    if func != "sum" and new_name not in group_by:
+        rendered = result.rename(columns={agg_col: new_name})
+    else:
+        rendered = result
     return {
         "result": rendered.to_dict(orient="records"),
         "result_df": result,
