@@ -1916,3 +1916,20 @@ exclusion, not a technical limitation.
 **The pool definition is unchanged:** `split == test`, `event_type == normal`,
 `batch == v2`, 12 events. The three v1 events keep `split == test` and remain
 part of the TB5 retrieval holdout.
+
+### 10.9 Disclosure: median fill of missing revenue cells, and a standing data rule (附录 GG)
+
+**Median fill (附录 GE.4 item 5).** The cleaner's `handle_missing` fills about 3%
+of revenue cells with the full-table median. Inside an event window those filled
+rows lose the event signal, which attenuates the window's lift by roughly 3% in
+magnitude. This happens outside the clipping gate (附录 FW.2, GE), and it also
+existed in v1. Only its magnitude was estimated; there is no exact per-event
+attenuation figure. For an event whose window level is far from the full-table
+median it can matter more than the average suggests. Both arms see the same
+cleaned data, so it does not favour either arm, but it is a real signal loss in
+the R arm's input.
+
+**Standing rule (附录 GF).** Any `sales_data.csv` whose sha256 differs from
+`b863b60173f3c0bf30c4582738b85ba3304a7a212794d66ab14aa35dce422719` requires
+redoing 附录 GE.1 to GE.3 (the clipping re-check) before any run. A σ run, a
+pilot or the reveal that finds a different hash stops until that is done.
