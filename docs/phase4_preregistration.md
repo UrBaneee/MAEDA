@@ -1933,3 +1933,18 @@ the R arm's input.
 `b863b60173f3c0bf30c4582738b85ba3304a7a212794d66ab14aa35dce422719` requires
 redoing 附录 GE.1 to GE.3 (the clipping re-check) before any run. A σ run, a
 pilot or the reveal that finds a different hash stops until that is done.
+
+### 10.10 Correction to §10.9 (附录 GI)
+
+§10.9 contains a sentence added by its drafter that is not in 附录 GE.4 and does
+not hold: "Both arms see the same cleaned data, so it does not favour either arm,
+but it is a real signal loss in the R arm's input." It is **retracted**.
+
+H2 reports run with the cleaner off in both arms: `scripts/generate_h2_reports.py`
+line 6 ("Arms B and R only, both with the cleaner forced off") and line 80
+(`settings.maeda_cleaner_mode = "force_off"`). Neither `handle_missing` nor the
+IQR clipping touches the input of an H2 report, so the median fill and the
+clipping gate do not apply to H2. The §10.9 disclosure applies to arms where
+cleaning actually runs: the H1/H3 cleaner arms, and cleaner-on arms in σ runs.
+The standing CSV-hash rule in §10.9 is unchanged and applies to every run, since
+the same CSV is the input everywhere.
