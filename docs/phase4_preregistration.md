@@ -1896,3 +1896,23 @@ repository.
 - C1b (附录 FQ.1) changed report generation: non-sum aggregations are rendered
   as `<col>_<func>`. Reports generated before this change and after it are not
   comparable (EJ.2); generate H2 pilot and σ reports only after it.
+
+### 10.8 Correction to §10.2 (附录 GD, 2026-11-05)
+
+§10.2 gave the wrong reason for excluding the 3 v1 `normal` test events from the
+H2 pool. That sentence said adding H2 probes to them would alter the events the
+TB5 retrieval reveal depends on. That is not the ruling, and it is contradicted
+by 附录 FR.3, which keeps the v1 `probe_queries` byte-identical and puts the v1
+test events' `h2_probes` in the sealed overlay. The sentence is left as written
+above; this subsection replaces its reason.
+
+**Correct reason.** The MAEDA side reviewed those three events' causes, segments
+and windows item by item in 附录 AC (2026-08-16), and the MAEDA renderer later
+read them. Under the user's confidentiality rule they are therefore no longer
+blind to MAEDA, so they cannot serve as H2 test events. Sources: 附录 FQ.3 item
+5, 附录 FR.1 item 5, 附录 FS.2 item 1, 附录 AC. The exclusion is a contamination
+exclusion, not a technical limitation.
+
+**The pool definition is unchanged:** `split == test`, `event_type == normal`,
+`batch == v2`, 12 events. The three v1 events keep `split == test` and remain
+part of the TB5 retrieval holdout.
