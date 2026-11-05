@@ -24,6 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from run_eval import _run_provenance, _settings_snapshot  # noqa: E402
+from src.eval.data_provenance import data_version  # noqa: E402
 from src.config.settings import settings  # noqa: E402
 from src.eval.runner import GoldenTestCase  # noqa: E402
 from src.graph.builder import build_graph  # noqa: E402
@@ -76,19 +77,35 @@ async def run_job(job: dict, case: GoldenTestCase, graph) -> dict:
     }
 
 
+def _known_doc_ids(db_path: str) -> set[str]:
+    import sqlite3
+    conn = sqlite3.connect(f"file:{Path(db_path).resolve()}?mode=ro", uri=True)
+    try:
+        return {r[0] for r in conn.execute("SELECT doc_id FROM documents")}
+    finally:
+        conn.close()
+
+
 async def main_async(args) -> int:
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     settings.maeda_cleaner_mode = "force_off"
     settings.eval_enabled = False
     if not (settings.rag_db_path and settings.rag_index_dir):
         raise SystemExit("MAEDA_RAG_DB_PATH and MAEDA_RAG_INDEX_DIR must point at the TB5 corpus (附录 FL)")
     cases = {c["id"]: GoldenTestCase.from_dict(c) for c in json.loads(CASES.read_text())}
-    out_path = OUT_DIR / f"reports_{args.plan}.jsonl"
+    out_path = out_dir / f"reports_{args.plan}.jsonl"
+    # 附录 GJ: every retrieved doc must be in the dev store, and a report whose
+    # profile call fell back is void (cleaner MCP must be live).
+    known_docs = _known_doc_ids(settings.rag_db_path)
+    root = Path(__file__).resolve().parent.parent
+    n_new = n_void = 0
     done = {}
     if out_path.exists():
         for line in out_path.read_text().splitlines():
             row = json.loads(line)
             done[row["job_id"]] = row
-    header = OUT_DIR / f"reports_{args.plan}.header.json"
+    header = out_dir / f"reports_{args.plan}.header.json"
     if not header.exists():
         header.write_text(json.dumps({"settings_snapshot": _settings_snapshot(),
                                       "provenance": _run_provenance(None),
@@ -103,12 +120,24 @@ async def main_async(args) -> int:
             print(f"STOP: next job would pass the budget (${spent:.4f} + ~${per_run:.4f})")
             return 3
         row = await run_job(job, cases[job["case_id"]], graph)
+        row["void_fallback"] = "fallback" in row["mcp_modes"]
+        row["data_version"] = data_version(root, settings.rag_db_path)
+        foreign = [d for d in row["rag_sources"] if d not in known_docs]
+        row["foreign_sources"] = foreign
         with out_path.open("a") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
         done[job["job_id"]] = row
+        n_new += 1
+        n_void += row["void_fallback"]
         spent += row["cost_usd"]
         print(f"{job['job_id']}: {len(row['report'])} chars, rag_chunks={row['n_rag_chunks']}, "
               f"modes={row['mcp_modes']}, ${row['cost_usd']:.4f}, total ${spent:.4f}")
+        if foreign:
+            print(f"STOP: {len(foreign)} retrieved doc id(s) not in the dev store (content not printed)")
+            return 6
+        if n_new >= 5 and n_void / n_new > 0.10:
+            print(f"STOP: {n_void}/{n_new} reports void (mcp fallback), over the 10% limit")
+            return 7
         if job["arm"] == "R" and (row["rag_arm_invalid_reason"] or row["n_rag_chunks"] == 0):
             print(f"STOP: R arm not live ({row['rag_arm_invalid_reason'] or 'no chunks'})")
             return 4
@@ -127,6 +156,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", choices=["dry", "formal"], required=True)
     parser.add_argument("--budget", type=float, required=True, help="USD cap for MAEDA-side cost")
+    parser.add_argument("--out-dir", default=str(OUT_DIR),
+                        help="where reports go; use a fresh dir so the FM calibration reports are never appended to")
     parser.add_argument("--already-spent", type=float, default=0.0)
     parser.add_argument("--first-estimate", type=float, default=0.1)
     return asyncio.run(main_async(parser.parse_args()))
