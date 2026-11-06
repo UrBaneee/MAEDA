@@ -1,5 +1,5 @@
 """
-The 28 new H1 dev sales cases (附录 GR.3 item 5, GS). Each entry is the case
+The 30 new H1 dev sales cases (附录 GR.3 item 5, GS). Each entry is the case
 metadata plus a `compute(sales)` that derives its numeric ground truth from the
 CLEAN sales table (data/truth/sales_data_clean.csv, 附录 GO.6/GQ). The pipeline
 input for every case stays data/demo/sales_data.csv. `compute_ground_truth.py`
@@ -178,6 +178,18 @@ def _s28(s):
             "avg_monthly_revenue_2024": R(_y(s, 2024)["revenue"].sum() / 12)}
 
 
+def _s29(s):
+    g = s.groupby("product")["revenue"].mean()
+    return {"top_avg_product_revenue": R(g.max()), "lowest_avg_product_revenue": R(g.min())}
+
+
+def _s30(s):
+    t = _y(s, 2024)
+    h1 = t[t["quarter"] <= 2]["revenue"].sum()
+    h2 = t[t["quarter"] >= 3]["revenue"].sum()
+    return {"h1_2024_revenue": R(h1), "h2_2024_revenue": R(h2)}
+
+
 # (id, query, query_type, metrics, dimensions, tags, tools, charts, compute)
 _B = ["pandas_transform"]
 _BC = ["pandas_transform", "comparison"]
@@ -210,8 +222,10 @@ SPEC = [
     ("S26", "What share of total revenue comes from the North region?", "descriptive", ["revenue"], ["region"], ["descriptive"], _B, ["bar"], _s26),
     ("S27", "How much did total revenue grow from 2022 to 2024, in percent?", "comparative", ["revenue"], ["year"], ["comparative", "time_series"], _BC, ["line", "bar"], _s27),
     ("S28", "What was the average monthly revenue in 2023 and in 2024?", "comparative", ["revenue"], ["year"], ["comparative", "time_series"], _BC, ["bar"], _s28),
+    ("S29", "Which product has the highest average revenue per transaction, and which has the lowest? Give both averages", "descriptive", ["revenue"], ["product"], ["descriptive"], _B, ["bar", "horizontal_bar"], _s29),
+    ("S30", "Compare total revenue in the first half of 2024 with the second half", "comparative", ["revenue"], ["quarter", "year"], ["comparative", "time_series"], _BC, ["bar"], _s30),
 ]
-assert len(SPEC) == 28
+assert len(SPEC) == 30
 
 
 def entry(spec: tuple, sales: pd.DataFrame) -> dict:

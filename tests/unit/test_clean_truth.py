@@ -67,10 +67,10 @@ def test_sales_truth_is_computed_on_the_clean_table():
     assert d01["north_region_revenue"] == round(c[c.region == "North"].revenue.sum(), 2)
 
 
-def test_28_new_dev_sales_cases():
+def test_30_new_dev_sales_cases():
     from h1_sales_cases import SPEC
     suite = {c["id"]: c for c in json.loads((ROOT / "tests/eval/test_suite.json").read_text())}
-    assert len(SPEC) == 28 and len({s[0] for s in SPEC}) == 28
+    assert len(SPEC) == 30 and len({s[0] for s in SPEC}) == 30
     for s in SPEC:
         c = suite[s[0]]
         assert c["split"] == "dev"
@@ -81,3 +81,15 @@ def test_28_new_dev_sales_cases():
 
 def test_suite_has_no_holdout_case_added():
     assert {c["split"] for c in json.loads((ROOT / "tests/eval/test_suite.json").read_text())} == {"dev"}
+
+
+def test_h1_sample_is_40_dev_cases_without_e01_e02():
+    sample = json.loads((ROOT / "tests/eval/h1_sample.json").read_text())
+    ids = sample["case_ids"]
+    suite = {c["id"]: c for c in json.loads((ROOT / "tests/eval/test_suite.json").read_text())}
+    assert len(ids) == 40 and len(set(ids)) == 40
+    assert "E01" not in ids and "E02" not in ids and set(sample["excluded"]) == {"E01", "E02"}
+    for i in ids:
+        c = suite[i]
+        assert c["split"] == "dev" and c["data_source"]["path"] == "data/demo/sales_data.csv"
+        assert any(isinstance(v, (int, float)) for k, v in c["ground_truth"].items() if k != "_note")

@@ -3815,5 +3815,67 @@
       "bar"
     ],
     "split": "dev"
+  },
+  {
+    "id": "S29",
+    "query": "Which product has the highest average revenue per transaction, and which has the lowest? Give both averages",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "top_avg_product_revenue": 413.72,
+      "lowest_avg_product_revenue": 408.0
+    },
+    "tags": [
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar",
+      "horizontal_bar"
+    ],
+    "split": "dev"
+  },
+  {
+    "id": "S30",
+    "query": "Compare total revenue in the first half of 2024 with the second half",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "quarter",
+      "year"
+    ],
+    "ground_truth": {
+      "h1_2024_revenue": 3205190.97,
+      "h2_2024_revenue": 3515746.35
+    },
+    "tags": [
+      "comparative",
+      "time_series"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "dev"
   }
 ]

@@ -2011,3 +2011,20 @@ file.
 **New cases.** 28 new dev sales cases (S01 to S28) with truths from the clean table
 were added for the σ sample (`scripts/h1_sales_cases.py`). All are `split: dev`; no
 holdout case was written or changed.
+
+### 10.12 E01 and E02 are excluded from the H1 sample (附录 GU, GV)
+
+Ruled by the user on 2026-11-06. E01 (row count of the delivered file) and E02
+(IQR outlier counts on the delivered file) ask about defects of the file the
+systems are given. On the clean basis (§10.11) their truth (48000 rows; 135
+revenue outliers) describes a table no arm sees, so they do not measure whether
+cleaning moves an answer toward the truth. They are excluded from the σ sample
+and from the H1 test sample. Their ground truth stays in `tests/eval/test_suite.json`
+as history; rewriting them was considered and rejected (E01 would reduce to a
+constant column count, E02 would need an unrelated truth).
+
+The H1 sample is 40 dev sales cases with numeric clean-table truth, listed in
+`tests/eval/h1_sample.json`: ten existing cases (D01, D04, D10, D11, DG01, DG03,
+C01, C07, C11, C16) and thirty new ones (S01 to S30; §10.11 said 28, two were added
+to make up for the exclusion). All are `split: dev`; no holdout case was written.
+The new holdout must follow the question-type mix of these 40 for σ to carry over.
