@@ -13,7 +13,7 @@ a finished run (EJ.5).
 Arms are applied per batch (repeat, arm) because settings are process-global; cases
 inside a batch run concurrently. Dev split only: refuses any case not split=dev.
 
-    PYTHONPATH=. python scripts/run_sigma.py --out-dir data/sigma_v1 --budget 50
+    PYTHONPATH=. caffeinate -i -s python scripts/run_sigma.py --out-dir data/sigma_v1 --budget 50
     PYTHONPATH=. python scripts/run_sigma.py --out-dir data/sigma_v1 --budget 50 --max-batches 4
 """
 from __future__ import annotations
@@ -21,7 +21,9 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hashlib
+import contextvars
 import json
+import logging
 import sqlite3
 import sys
 import time
@@ -101,9 +103,33 @@ def load_sample() -> list:
     return cases
 
 
-def row_void(meta: dict, eval_result: dict) -> str | None:
+#: 附录 GZ: which run the current asyncio task belongs to, so a log handler can
+#: attribute an LLM-fallback warning to its run even with concurrent runs.
+CURRENT_KEY: contextvars.ContextVar[str] = contextvars.ContextVar("sigma_run_key", default="")
+LLM_FALLBACKS: dict[str, list[str]] = {}
+_REPORT_FALLBACK_SIGNATURE = "Analysis completed for query: *"  # insight_agent._rule_based_report header
+
+
+class _FallbackHandler(logging.Handler):
+    def emit(self, record: logging.LogRecord) -> None:
+        msg = record.getMessage()
+        if "using rule-based fallback" in msg and ("Report generation" in msg or "Insight generation" in msg):
+            key = CURRENT_KEY.get()
+            if key:
+                LLM_FALLBACKS.setdefault(key, []).append(msg.split(":")[0])
+
+
+def row_void(meta: dict, eval_result: dict, report: str = "", key: str = "",
+             run_timeout: float | None = None) -> str | None:
     if "fallback" in (meta.get("mcp_modes") or []):
         return "mcp_fallback"
+    # The insight/report LLM falling back to the rule-based writer is not in
+    # degradation_log, so it is detected from the log record and, as a second
+    # independent check, from the fallback report's fixed header (附录 GZ).
+    if key in LLM_FALLBACKS or _REPORT_FALLBACK_SIGNATURE in (report or ""):
+        return "llm_report_fallback"
+    if run_timeout is not None and (meta.get("elapsed_s") or 0) > run_timeout:
+        return "timeout"
     if eval_result.get("rag_arm_invalid_reason"):
         return "rag_arm_invalid"
     if eval_result.get("cleaning_arm_invalid_reason"):
@@ -146,6 +172,7 @@ async def main_async(args) -> int:
     print(f"{len(done)} saved, ${spent:.4f} spent (tracked + cleaner estimate), cap ${args.budget}")
     graph = CapturingGraph(build_graph())
     eval_runner = EvalRunner()
+    logging.getLogger().addHandler(_FallbackHandler(level=logging.WARNING))
     sem = asyncio.Semaphore(args.concurrency)
     batches = 0
     stop = None
@@ -177,16 +204,26 @@ async def main_async(args) -> int:
                     "key": f"{arm}|{tc.id}|{rep}", "arm": arm, "case_id": tc.id, "repeat": rep,
                     "eval_result": er, "meta": meta, "cost_usd": round(state_cost(st), 6),
                     "cleaner_cost_est": args.cleaner_cost if cleaned else 0.0,
-                    "void": row_void(meta, er), "foreign_sources": foreign,
+                    "void": row_void(meta, er, st.get("report") or "", f"{arm}|{tc.id}|{rep}", args.run_timeout),
+                    "foreign_sources": foreign,
                     "n_rag_chunks": len(st.get("rag_context") or []),
                     "report": st.get("report") or "",
                 }
 
             async def one(tc):
                 async with sem:
+                    CURRENT_KEY.set(f"{arm}|{tc.id}|{rep}")
                     try:
-                        er, meta = await asyncio.wait_for(run_one_case(tc, graph, eval_runner),
-                                                          timeout=args.run_timeout)
+                        # wall-clock timeout (time.time), not asyncio.wait_for: the loop's
+                        # monotonic clock stops while the machine sleeps (附录 GZ).
+                        task = asyncio.ensure_future(run_one_case(tc, graph, eval_runner))
+                        t_start = time.time()
+                        while not task.done():
+                            await asyncio.wait({task}, timeout=5)
+                            if not task.done() and time.time() - t_start > args.run_timeout:
+                                task.cancel()
+                                raise asyncio.TimeoutError()
+                        er, meta = task.result()
                         return build_row(tc, er.to_dict(), meta)
                     except asyncio.TimeoutError:
                         # a hung run is recorded as void, never retried (EJ.5)
