@@ -29,6 +29,7 @@ from typing import Optional
 from src.config.settings import settings
 from src.eval.data_provenance import data_version
 from src.eval.metrics import MetricScore
+from src.eval.reveal_guard import require_reveal_authorization
 from src.eval.trials import NOT_APPLICABLE
 from src.eval.runner import EvalResult, EvalRunner, GoldenTestCase, detect_regressions, load_golden_suite
 from src.graph.builder import build_graph
@@ -174,6 +175,8 @@ def _rows_cost(rows: list[dict]) -> float:
 
 
 async def run_one_case(tc: GoldenTestCase, graph, eval_runner: EvalRunner) -> tuple[EvalResult, dict]:
+    # 附录 HA.5/HB: the single choke point every runner uses to run a case.
+    require_reveal_authorization([tc])
     state = initial_state(tc.query)
     if tc.data_source:
         state["data_sources"] = [dict(tc.data_source)]

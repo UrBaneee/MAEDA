@@ -561,4 +561,8 @@ def load_golden_suite(path: Optional[str] = None) -> list[GoldenTestCase]:
         )
     with open(p) as f:
         data = json.load(f)
-    return [GoldenTestCase.from_dict(d) for d in data]
+    cases = [GoldenTestCase.from_dict(d) for d in data]
+    # 附录 HA.5/HB: loading the H1 holdout is itself refused before the reveal.
+    from src.eval.reveal_guard import require_reveal_authorization
+    require_reveal_authorization(cases)
+    return cases

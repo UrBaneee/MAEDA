@@ -1,0 +1,3623 @@
+[
+  {
+    "query": "Compare the average revenue per transaction of Gadget Pro and Gadget Lite (product)",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "gadget_pro_avg_revenue": 408.0,
+      "gadget_lite_avg_revenue": 413.0
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-001"
+  },
+  {
+    "query": "What is the average number of units per transaction for West (region)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "west_avg_units": 11.03
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-002"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2024 for the North region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "north_2024_h1_revenue": 768438.73,
+      "north_2024_h2_revenue": 835559.56
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-003"
+  },
+  {
+    "query": "What share of total revenue in 2024 came from Gadget Pro (product)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "gadget_pro_2024_revenue": 1339649.57,
+      "gadget_pro_2024_share_pct": 19.9
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-004"
+  },
+  {
+    "query": "Compare units sold for North and South (region) in 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "north_2022_units": 37976,
+      "south_2022_units": 28021
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-005"
+  },
+  {
+    "query": "How much revenue did Partner (channel) bring in during Q2 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "quarter"
+    ],
+    "ground_truth": {
+      "partner_2024_q2_revenue": 398831.79
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-006"
+  },
+  {
+    "query": "Which product had the highest total revenue in 2022, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "highest_product_2022_revenue": 1404019.02
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-007"
+  },
+  {
+    "query": "Compare total revenue of North and Central (region) in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "north_2023_revenue": 1534317.93,
+      "central_2023_revenue": 964782.74
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-008"
+  },
+  {
+    "query": "What was the average revenue per transaction for North (region) in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2022_avg_revenue": 510.14
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-009"
+  },
+  {
+    "query": "What was total revenue for each channel in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "direct_2022_revenue": 1676349.19,
+      "partner_2022_revenue": 1693118.17,
+      "online_2022_revenue": 1682792.86,
+      "retail_2022_revenue": 1759929.23
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-010"
+  },
+  {
+    "query": "Show the average number of units per transaction by region",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "north_avg_units": 11.49,
+      "south_avg_units": 8.71,
+      "east_avg_units": 9.7,
+      "west_avg_units": 11.03,
+      "central_avg_units": 7.17
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-011"
+  },
+  {
+    "query": "Compare total revenue of Direct and Retail (channel) in 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "direct_2022_revenue": 1676349.19,
+      "retail_2022_revenue": 1759929.23
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-012"
+  },
+  {
+    "query": "Which sales rep generated the most revenue in 2024? Give the rep id and the revenue",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "rep_id"
+    ],
+    "ground_truth": {
+      "top_rep_id": 1027,
+      "top_rep_revenue": 147166.39
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-013"
+  },
+  {
+    "query": "Show the average revenue per transaction by region in 2024",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2024_avg_revenue": 489.92,
+      "south_2024_avg_revenue": 394.37,
+      "east_2024_avg_revenue": 423.65,
+      "west_2024_avg_revenue": 482.73,
+      "central_2024_avg_revenue": 312.1
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-014"
+  },
+  {
+    "query": "By how many percent did revenue for Widget B (product) grow from 2022 to 2024?",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_b_2022_revenue": 1404019.02,
+      "widget_b_2024_revenue": 1348559.66,
+      "widget_b_2022_2024_growth_pct": -4.0
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "test",
+    "id": "H1T-015"
+  },
+  {
+    "query": "Compare total revenue of East and Central (region) in 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "east_2022_revenue": 1384754.62,
+      "central_2022_revenue": 1001239.89
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-016"
+  },
+  {
+    "query": "What was total revenue for each region in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2023_revenue": 1534317.93,
+      "south_2023_revenue": 1077657.18,
+      "east_2023_revenue": 1260848.1,
+      "west_2023_revenue": 1403843.31,
+      "central_2023_revenue": 964782.74
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-017"
+  },
+  {
+    "query": "Compare the number of transactions for Online and Retail (channel) in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "transactions"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "online_2023_transactions": 3947,
+      "retail_2023_transactions": 4039
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-018"
+  },
+  {
+    "query": "What is the total revenue for South (region) within Widget A (product)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "product"
+    ],
+    "ground_truth": {
+      "south_widget_a_revenue": 720530.16
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-019"
+  },
+  {
+    "query": "Which region had the lowest total revenue in 2023, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "lowest_region_2023_revenue": 964782.74
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-020"
+  },
+  {
+    "query": "How many units of West (region) were sold within Partner (channel)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "region",
+      "channel"
+    ],
+    "ground_truth": {
+      "west_partner_units": 26937
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-021"
+  },
+  {
+    "query": "How many transactions were recorded for Direct (channel) in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "transactions"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "direct_2024_transactions": 3997
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-022"
+  },
+  {
+    "query": "How much revenue did Retail (channel) bring in during Q4 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "quarter"
+    ],
+    "ground_truth": {
+      "retail_2022_q4_revenue": 492926.1
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-023"
+  },
+  {
+    "query": "What was total revenue for each product in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_a_2022_revenue": 1367375.06,
+      "widget_b_2022_revenue": 1404019.02,
+      "gadget_pro_2022_revenue": 1329274.64,
+      "gadget_lite_2022_revenue": 1352913.49,
+      "service_pack_2022_revenue": 1358607.24
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-024"
+  },
+  {
+    "query": "Which sales rep generated the most revenue in 2023? Give the rep id and the revenue",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "rep_id"
+    ],
+    "ground_truth": {
+      "top_rep_id": 1011,
+      "top_rep_revenue": 140794.91
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-025"
+  },
+  {
+    "query": "What was the total number of units sold for Gadget Pro (product) in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "gadget_pro_2024_units": 21842
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-026"
+  },
+  {
+    "query": "What is the total revenue for Service Pack (product) within Online (channel)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "channel"
+    ],
+    "ground_truth": {
+      "service_pack_online_revenue": 977059.54
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-027"
+  },
+  {
+    "query": "What is the average number of units per transaction for Partner (channel)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "partner_avg_units": 9.64
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-028"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2024 for the West region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "west_2024_h1_revenue": 735244.42,
+      "west_2024_h2_revenue": 774248.43
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-029"
+  },
+  {
+    "query": "Show the average revenue per transaction by channel in 2023",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "direct_2023_avg_revenue": 389.92,
+      "partner_2023_avg_revenue": 392.35,
+      "online_2023_avg_revenue": 388.86,
+      "retail_2023_avg_revenue": 389.21
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-030"
+  },
+  {
+    "query": "How much revenue did Central (region) bring in during Q3 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "central_2023_q3_revenue": 175312.0
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-031"
+  },
+  {
+    "query": "Show the average revenue per transaction by region in 2023",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2023_avg_revenue": 477.09,
+      "south_2023_avg_revenue": 339.95,
+      "east_2023_avg_revenue": 393.28,
+      "west_2023_avg_revenue": 442.29,
+      "central_2023_avg_revenue": 298.32
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-032"
+  },
+  {
+    "query": "Which region had the highest total revenue in 2024, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "highest_region_2024_revenue": 1603998.29
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-033"
+  },
+  {
+    "query": "What was the average revenue per transaction for Widget A (product) in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_a_2022_avg_revenue": 428.38
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-034"
+  },
+  {
+    "query": "What was the average revenue per transaction for Gadget Pro (product) in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "gadget_pro_2022_avg_revenue": 426.6
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-035"
+  },
+  {
+    "query": "What was total revenue for each product in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_a_2023_revenue": 1245042.3,
+      "widget_b_2023_revenue": 1244233.3,
+      "gadget_pro_2023_revenue": 1244174.78,
+      "gadget_lite_2023_revenue": 1254715.19,
+      "service_pack_2023_revenue": 1253283.69
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-036"
+  },
+  {
+    "query": "Compare the number of transactions for Partner and Online (channel) in 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "transactions"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "partner_2022_transactions": 3968,
+      "online_2022_transactions": 3945
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-037"
+  },
+  {
+    "query": "Compare units sold for Direct and Online (channel) in 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "direct_2022_units": 39059,
+      "online_2022_units": 39507
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-038"
+  },
+  {
+    "query": "Compare total revenue of Partner and Retail (channel) in 2024",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "partner_2024_revenue": 1686498.33,
+      "retail_2024_revenue": 1681266.53
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-039"
+  },
+  {
+    "query": "Compare the number of transactions for South and Central (region) in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "transactions"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "south_2023_transactions": 3170,
+      "central_2023_transactions": 3234
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-040"
+  },
+  {
+    "query": "Which region had the lowest total revenue in 2024, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "lowest_region_2024_revenue": 1024638.13
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-041"
+  },
+  {
+    "query": "Compare total revenue of South and Central (region) in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "south_2023_revenue": 1077657.18,
+      "central_2023_revenue": 964782.74
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-042"
+  },
+  {
+    "query": "Compare total revenue of Widget B and Gadget Lite (product) in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "widget_b_2023_revenue": 1244233.3,
+      "gadget_lite_2023_revenue": 1254715.19
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-043"
+  },
+  {
+    "query": "Compare the average revenue per transaction of Direct and Retail (channel)",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "direct_avg_revenue": 411.63,
+      "retail_avg_revenue": 411.32
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-044"
+  },
+  {
+    "query": "How much revenue did Central (region) bring in during Q2 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "central_2022_q2_revenue": 211431.94
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-045"
+  },
+  {
+    "query": "Compare the average revenue per transaction of Partner and Online (channel)",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "partner_avg_revenue": 412.91,
+      "online_avg_revenue": 412.03
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-046"
+  },
+  {
+    "query": "Which product had the lowest total revenue in 2023, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "lowest_product_2023_revenue": 1244174.78
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-047"
+  },
+  {
+    "query": "Which channel had the highest total revenue in 2022, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "highest_channel_2022_revenue": 1759929.23
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-048"
+  },
+  {
+    "query": "What was the average revenue per transaction for West (region) in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "west_2022_avg_revenue": 486.43
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-049"
+  },
+  {
+    "query": "How many units were sold for each product in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_a_2022_units": 30472,
+      "widget_b_2022_units": 37195,
+      "gadget_pro_2022_units": 21479,
+      "gadget_lite_2022_units": 45302,
+      "service_pack_2022_units": 24829
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-050"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2024 for the South region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "south_2024_h1_revenue": 602514.68,
+      "south_2024_h2_revenue": 649610.25
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-051"
+  },
+  {
+    "query": "Compare the number of transactions for West and Central (region) in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "transactions"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "west_2023_transactions": 3174,
+      "central_2023_transactions": 3234
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-052"
+  },
+  {
+    "query": "How many units of Widget A (product) were sold within Direct (channel)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "product",
+      "channel"
+    ],
+    "ground_truth": {
+      "widget_a_direct_units": 22220
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-053"
+  },
+  {
+    "query": "What was total revenue for each channel in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "direct_2023_revenue": 1551487.62,
+      "partner_2023_revenue": 1583120.86,
+      "online_2023_revenue": 1534834.67,
+      "retail_2023_revenue": 1572006.11
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-054"
+  },
+  {
+    "query": "Who are the top 3 sales reps by units sold in the North region?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "rep_id"
+    ],
+    "ground_truth": {
+      "top1_rep_id": 1039,
+      "top1_rep_units": 2628,
+      "top2_rep_id": 1009,
+      "top2_rep_units": 2609,
+      "top3_rep_id": 1044,
+      "top3_rep_units": 2557
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-055"
+  },
+  {
+    "query": "How much revenue did Retail (channel) bring in during Q2 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "quarter"
+    ],
+    "ground_truth": {
+      "retail_2024_q2_revenue": 397109.19
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-056"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2024 for the Central region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "central_2024_h1_revenue": 466994.73,
+      "central_2024_h2_revenue": 557643.4
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-057"
+  },
+  {
+    "query": "What was the total revenue of Widget A (product) in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_a_2024_revenue": 1350994.25
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-058"
+  },
+  {
+    "query": "What was the total number of units sold for Direct (channel) in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "direct_2022_units": 39059
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-059"
+  },
+  {
+    "query": "What share of total revenue in 2023 came from South (region)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "south_2023_revenue": 1077657.18,
+      "south_2023_share_pct": 17.3
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-060"
+  },
+  {
+    "query": "How much revenue did South (region) bring in during Q3 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "south_2022_q3_revenue": 287328.34
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-061"
+  },
+  {
+    "query": "What is the total revenue for Service Pack (product) within Direct (channel)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "channel"
+    ],
+    "ground_truth": {
+      "service_pack_direct_revenue": 969685.73
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-062"
+  },
+  {
+    "query": "Which product had the lowest total revenue in 2022, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "lowest_product_2022_revenue": 1329274.64
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-063"
+  },
+  {
+    "query": "What is the total revenue for South (region) within Service Pack (product)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "product"
+    ],
+    "ground_truth": {
+      "south_service_pack_revenue": 694387.47
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-064"
+  },
+  {
+    "query": "Compare units sold for Gadget Lite and Service Pack (product) in 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "gadget_lite_2022_units": 45302,
+      "service_pack_2022_units": 24829
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-065"
+  },
+  {
+    "query": "Compare total revenue of Widget A and Gadget Lite (product) in 2024",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "widget_a_2024_revenue": 1350994.25,
+      "gadget_lite_2024_revenue": 1316724.29
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-066"
+  },
+  {
+    "query": "What was total revenue for each region in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2022_revenue": 1632968.11,
+      "south_2022_revenue": 1198719.84,
+      "east_2022_revenue": 1384754.62,
+      "west_2022_revenue": 1594506.99,
+      "central_2022_revenue": 1001239.89
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-067"
+  },
+  {
+    "query": "What was the total number of units sold for Widget A (product) in 2022?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_a_2022_units": 30472
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-068"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2023 for the East region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "east_2023_h1_revenue": 660222.79,
+      "east_2023_h2_revenue": 600625.31
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-069"
+  },
+  {
+    "query": "What was the total revenue of Widget B (product) in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_b_2023_revenue": 1244233.3
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-070"
+  },
+  {
+    "query": "Which channel had the lowest total revenue in 2023, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "lowest_channel_2023_revenue": 1534834.67
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-071"
+  },
+  {
+    "query": "What was the total revenue of West (region) in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "west_2023_revenue": 1403843.31
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-072"
+  },
+  {
+    "query": "How much revenue did North (region) bring in during Q1 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "north_2024_q1_revenue": 422528.92
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-073"
+  },
+  {
+    "query": "Compare total revenue of Widget A and Widget B (product) in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "widget_a_2023_revenue": 1245042.3,
+      "widget_b_2023_revenue": 1244233.3
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-074"
+  },
+  {
+    "query": "Compare units sold for Widget A and Service Pack (product) in 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "widget_a_2022_units": 30472,
+      "service_pack_2022_units": 24829
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-075"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2023 for the Central region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "central_2023_h1_revenue": 486549.86,
+      "central_2023_h2_revenue": 478232.88
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-076"
+  },
+  {
+    "query": "Which sales rep generated the most revenue in the South region? Give the rep id and the revenue",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "rep_id"
+    ],
+    "ground_truth": {
+      "top_rep_id": 1007,
+      "top_rep_revenue": 80552.33
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-077"
+  },
+  {
+    "query": "How many units were sold for each region in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2024_units": 37535,
+      "south_2024_units": 29598,
+      "east_2024_units": 30804,
+      "west_2024_units": 35209,
+      "central_2024_units": 23766
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-078"
+  },
+  {
+    "query": "Compare total revenue of North and West (region) in 2024",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "north_2024_revenue": 1603998.29,
+      "west_2024_revenue": 1509492.85
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-079"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2023 for the South region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "south_2023_h1_revenue": 574804.04,
+      "south_2023_h2_revenue": 502853.14
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-080"
+  },
+  {
+    "query": "What was total revenue for each channel in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "direct_2024_revenue": 1682510.49,
+      "partner_2024_revenue": 1686498.33,
+      "online_2024_revenue": 1670661.97,
+      "retail_2024_revenue": 1681266.53
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-081"
+  },
+  {
+    "query": "Which region had the highest total revenue in 2022, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "highest_region_2022_revenue": 1632968.11
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-082"
+  },
+  {
+    "query": "Who are the top 3 sales reps by units sold in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "rep_id"
+    ],
+    "ground_truth": {
+      "top1_rep_id": 1027,
+      "top1_rep_units": 3440,
+      "top2_rep_id": 1024,
+      "top2_rep_units": 3397,
+      "top3_rep_id": 1001,
+      "top3_rep_units": 3396
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-083"
+  },
+  {
+    "query": "What was the total revenue of East (region) in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "east_2024_revenue": 1330683.12
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-084"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2022 for the Central region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "central_2022_h1_revenue": 449673.68,
+      "central_2022_h2_revenue": 551566.21
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-085"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2022 for the North region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "north_2022_h1_revenue": 793461.48,
+      "north_2022_h2_revenue": 839506.63
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-086"
+  },
+  {
+    "query": "Compare the average revenue per transaction of Partner and Retail (channel)",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "partner_avg_revenue": 412.91,
+      "retail_avg_revenue": 411.32
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-087"
+  },
+  {
+    "query": "By how many percent did revenue for Retail (channel) grow from 2022 to 2024?",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "retail_2022_revenue": 1759929.23,
+      "retail_2024_revenue": 1681266.53,
+      "retail_2022_2024_growth_pct": -4.5
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "test",
+    "id": "H1T-088"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2022 for the South region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "south_2022_h1_revenue": 558410.37,
+      "south_2022_h2_revenue": 640309.47
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-089"
+  },
+  {
+    "query": "How many units were sold for each product in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_a_2024_units": 30253,
+      "widget_b_2024_units": 35746,
+      "gadget_pro_2024_units": 21842,
+      "gadget_lite_2024_units": 44114,
+      "service_pack_2024_units": 24957
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-090"
+  },
+  {
+    "query": "How much revenue did East (region) bring in during Q4 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "east_2024_q4_revenue": 350607.42
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-091"
+  },
+  {
+    "query": "How many units were sold for each region in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2023_units": 35874,
+      "south_2023_units": 25111,
+      "east_2023_units": 29277,
+      "west_2023_units": 32880,
+      "central_2023_units": 22412
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-092"
+  },
+  {
+    "query": "What was total revenue for each region in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2024_revenue": 1603998.29,
+      "south_2024_revenue": 1252124.93,
+      "east_2024_revenue": 1330683.12,
+      "west_2024_revenue": 1509492.85,
+      "central_2024_revenue": 1024638.13
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-093"
+  },
+  {
+    "query": "Compare total revenue of Widget A and Gadget Lite (product) in 2023",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "widget_a_2023_revenue": 1245042.3,
+      "gadget_lite_2023_revenue": 1254715.19
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-094"
+  },
+  {
+    "query": "Who are the top 3 sales reps by units sold in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "rep_id"
+    ],
+    "ground_truth": {
+      "top1_rep_id": 1011,
+      "top1_rep_units": 3308,
+      "top2_rep_id": 1006,
+      "top2_rep_units": 3238,
+      "top3_rep_id": 1043,
+      "top3_rep_units": 3224
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-095"
+  },
+  {
+    "query": "How many units of South (region) were sold within Widget B (product)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "region",
+      "product"
+    ],
+    "ground_truth": {
+      "south_widget_b_units": 18812
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-096"
+  },
+  {
+    "query": "What was the total number of units sold for Online (channel) in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "online_2023_units": 35952
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-097"
+  },
+  {
+    "query": "Compare revenue in the first half and the second half of 2023 for the West region",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "west_2023_h1_revenue": 721846.26,
+      "west_2023_h2_revenue": 681997.05
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-098"
+  },
+  {
+    "query": "What was total revenue for each product in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "widget_a_2024_revenue": 1350994.25,
+      "widget_b_2024_revenue": 1348559.66,
+      "gadget_pro_2024_revenue": 1339649.57,
+      "gadget_lite_2024_revenue": 1316724.29,
+      "service_pack_2024_revenue": 1365009.55
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-099"
+  },
+  {
+    "query": "Which channel had the lowest total revenue in 2024, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "lowest_channel_2024_revenue": 1670661.97
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-100"
+  },
+  {
+    "query": "By how many percent did revenue for Gadget Lite (product) grow from 2023 to 2024?",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "gadget_lite_2023_revenue": 1254715.19,
+      "gadget_lite_2024_revenue": 1316724.29,
+      "gadget_lite_2023_2024_growth_pct": 4.9
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "line"
+    ],
+    "split": "test",
+    "id": "H1T-101"
+  },
+  {
+    "query": "What is the total revenue for Central (region) within Service Pack (product)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "product"
+    ],
+    "ground_truth": {
+      "central_service_pack_revenue": 602316.77
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-102"
+  },
+  {
+    "query": "Compare total revenue of Direct and Partner (channel) in 2024",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel"
+    ],
+    "ground_truth": {
+      "direct_2024_revenue": 1682510.49,
+      "partner_2024_revenue": 1686498.33
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-103"
+  },
+  {
+    "query": "How much revenue did Widget B (product) bring in during Q2 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "quarter"
+    ],
+    "ground_truth": {
+      "widget_b_2024_q2_revenue": 333589.66
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-104"
+  },
+  {
+    "query": "What was the total revenue of North (region) in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "north_2023_revenue": 1534317.93
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-105"
+  },
+  {
+    "query": "How much revenue did Service Pack (product) bring in during Q4 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "quarter"
+    ],
+    "ground_truth": {
+      "service_pack_2023_q4_revenue": 374781.83
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-106"
+  },
+  {
+    "query": "What was the total revenue of East (region) in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "east_2023_revenue": 1260848.1
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-107"
+  },
+  {
+    "query": "How much revenue did Gadget Pro (product) bring in during Q1 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "quarter"
+    ],
+    "ground_truth": {
+      "gadget_pro_2024_q1_revenue": 317382.78
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-108"
+  },
+  {
+    "query": "What is the total revenue for Widget A (product) within Partner (channel)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "channel"
+    ],
+    "ground_truth": {
+      "widget_a_partner_revenue": 1006733.5
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-109"
+  },
+  {
+    "query": "Compare total revenue of Widget A and Gadget Lite (product) in 2022",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product"
+    ],
+    "ground_truth": {
+      "widget_a_2022_revenue": 1367375.06,
+      "gadget_lite_2022_revenue": 1352913.49
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-110"
+  },
+  {
+    "query": "How much revenue did Central (region) bring in during Q4 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region",
+      "quarter"
+    ],
+    "ground_truth": {
+      "central_2024_q4_revenue": 292231.24
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-111"
+  },
+  {
+    "query": "What was the average revenue per transaction for Gadget Pro (product) in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "gadget_pro_2023_avg_revenue": 388.8
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-112"
+  },
+  {
+    "query": "Compare the number of transactions for North and East (region) in 2024",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "transactions"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "north_2024_transactions": 3274,
+      "east_2024_transactions": 3141
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-113"
+  },
+  {
+    "query": "How many units were sold for each channel in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "direct_2024_units": 39260,
+      "partner_2024_units": 39268,
+      "online_2024_units": 39118,
+      "retail_2024_units": 39266
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-114"
+  },
+  {
+    "query": "What share of total revenue in 2024 came from Online (channel)?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "online_2024_revenue": 1670661.97,
+      "online_2024_share_pct": 24.9
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-115"
+  },
+  {
+    "query": "Which product had the lowest total revenue in 2024, and how much was it?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "product",
+      "year"
+    ],
+    "ground_truth": {
+      "lowest_product_2024_revenue": 1316724.29
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-116"
+  },
+  {
+    "query": "What was the total number of units sold for Direct (channel) in 2023?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "channel",
+      "year"
+    ],
+    "ground_truth": {
+      "direct_2023_units": 35906
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-117"
+  },
+  {
+    "query": "Compare total revenue of South and West (region) in 2024",
+    "query_type": "comparative",
+    "expected_metrics": [
+      "revenue"
+    ],
+    "expected_dimensions": [
+      "region"
+    ],
+    "ground_truth": {
+      "south_2024_revenue": 1252124.93,
+      "west_2024_revenue": 1509492.85
+    },
+    "tags": [
+      "h1_holdout",
+      "comparative"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform",
+      "comparison"
+    ],
+    "expected_chart_types": [
+      "bar"
+    ],
+    "split": "test",
+    "id": "H1T-118"
+  },
+  {
+    "query": "What was the total number of units sold for South (region) in 2024?",
+    "query_type": "descriptive",
+    "expected_metrics": [
+      "units"
+    ],
+    "expected_dimensions": [
+      "region",
+      "year"
+    ],
+    "ground_truth": {
+      "south_2024_units": 29598
+    },
+    "tags": [
+      "h1_holdout",
+      "descriptive"
+    ],
+    "data_source": {
+      "type": "csv",
+      "path": "data/demo/sales_data.csv"
+    },
+    "expected_tools": [
+      "pandas_transform"
+    ],
+    "expected_chart_types": [],
+    "split": "test",
+    "id": "H1T-119"
+  }
+]

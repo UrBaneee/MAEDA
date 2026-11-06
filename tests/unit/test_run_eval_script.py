@@ -440,6 +440,7 @@ def test_test_split_runs_when_the_trigger_is_always(monkeypatch, tmp_path):
     from src.config.settings import settings as _settings
 
     monkeypatch.setattr(_settings, "intent_refine_trigger", "always")
+    monkeypatch.setenv("MAEDA_REVEAL_AUTHORIZED", "1")  # 附录 HB: the reveal flag is a second, separate opt-in
     suite = [_make_case("T1", split="test")]
     code = _run_main_with_args(monkeypatch, tmp_path, ["--split", "test"], suite)
     assert code == 0

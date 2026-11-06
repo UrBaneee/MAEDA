@@ -2059,3 +2059,43 @@ produces any C or R or CR result.
 6. What the reduced run measures that the offline prediction (附录 GX) does not:
    guardrail refusals (9 of 40 in B repeat 1) and repeat-to-repeat randomness,
    including the planner's choice between filling and not filling missing revenue.
+
+### 10.14 N = 119 for H1, and the H1 holdout (附录 HA.4, HA.5, HB)
+
+**N.** By the user's ruling on 2026-11-06 (附录 HA.4), **N = 119** independent cases for
+H1. Basis: §10.13's rule applied to the reduced σ run (附录 GZ): mean C − B = +0.121,
+one-sided 80% lower bound 0.081 (above the 0.028 threshold), case-level SD 0.296,
+one-sided α = 0.0167, power 80%, giving N = 119 (the owner's exact noncentral-t
+computation; the lead's normal approximation gave 115). N = 119 exceeds the 100
+ceiling in §10.13, so it is the user's decision and not the owner's. Approximate power
+at N = 119 is 0.80 if the true effect equals the lower bound and about 0.99 if it equals the
+point estimate (附录 HA.2). k, the number of trials per case at the reveal, is fixed when
+this document is frozen; the paid reveal run is authorized separately.
+
+**Holdout.** `tests/eval/h1_holdout_test.json`: 119 sales questions, `split: "test"`, truths
+from the clean table (sha256 `6c95334422ccfefd4a3a4815944418dd995c3bcdd9513b3aa4db0be76f7d771d`),
+pipeline input `data/demo/sales_data.csv` (`b863b601…`). The question-type mix is the 40-case
+dev sample's mix (§10.12) scaled to 119 by largest remainder (revenue totals 68, revenue means
+12, unit totals 18, unit means 3, transaction counts 6, rep rankings by units 3 and by revenue
+3, revenue share 3, revenue growth 3).
+
+**How it was made.** `scripts/generate_h1_holdout.py` draws questions from fixed templates with
+seed **20261106**; the script, seed and output hash are committed, and the generation is
+reproducible (a unit test regenerates and compares). Nothing was hand-picked, edited or
+reordered. A candidate is dropped only for a truth-computation failure, an ambiguous truth (a
+tie, a zero, or two truth fields with the same value), or duplication of a dev case or of
+another holdout case; the next candidate in the seeded order replaces it, and every drop is
+listed with its reason in `tests/eval/h1_holdout_manifest.json`. No dev question or its truth
+values appear in the holdout (tested).
+
+**Nothing has been run on it.** No pipeline run, judge call or smoke test touched a test case.
+From now on `src/eval/reveal_guard.py` refuses any `split: "test"` case, at load time
+(`load_golden_suite`) and at the single choke point every runner uses (`run_one_case`), unless
+`MAEDA_REVEAL_AUTHORIZED=1` is set in the process environment by the reveal command (not in
+`.env`). The holdout is not merged into `tests/eval/test_suite.json`.
+
+**Disclosure.** The holdout's questions are public in this repository from now on, and so are
+their truths (they are computed from a table that is also public here). That is expected for
+H1: the property protected is that no system run or tuning has seen these cases, not that
+their text is secret. Any change to the planner, the cleaner prompt, the scorer or the
+pipeline after this point must be recorded, because the holdout is now fixed.

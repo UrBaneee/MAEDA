@@ -253,6 +253,7 @@ def test_full_split_test_proceeds_when_explicitly_opted_in(tmp_path, monkeypatch
     """The escape hatch is declaration-style, not a permanent switch: with
     the env var set for this invocation only, `--split test` must reach
     and complete the (fake) pipeline rather than being refused."""
+    monkeypatch.setenv("MAEDA_REVEAL_AUTHORIZED", "1")  # 附录 HB: the reveal flag is a second, separate opt-in
     code = _run_main(
         monkeypatch, tmp_path, ["full", "--split", "test"],
         env={"MAEDA_ALLOW_TEST_SPLIT_NOISE_MEASUREMENT": "1"},

@@ -1,0 +1,673 @@
+{
+  "seed": 20261106,
+  "target": 119,
+  "quotas": {
+    "收入合计": 68,
+    "收入均值": 12,
+    "销量合计": 18,
+    "销量均值": 3,
+    "计数": 6,
+    "排名(销售员销量)": 3,
+    "排名(销售员收入)": 3,
+    "占比": 3,
+    "增长率": 3
+  },
+  "generated": {
+    "收入合计": 68,
+    "收入均值": 12,
+    "销量合计": 18,
+    "销量均值": 3,
+    "计数": 6,
+    "排名(销售员销量)": 3,
+    "排名(销售员收入)": 3,
+    "占比": 3,
+    "增长率": 3
+  },
+  "final_count": 119,
+  "exclusions": [
+    {
+      "type": "收入合计",
+      "candidate": "T_rev_entity_year[[\"region\", \"North\"], 2022]",
+      "reason": "duplicates another holdout candidate"
+    },
+    {
+      "type": "收入合计",
+      "candidate": "T_rev_entity_year[[\"region\", \"Central\"], 2023]",
+      "reason": "duplicates another holdout candidate"
+    },
+    {
+      "type": "收入合计",
+      "candidate": "T_rev_pair_year[\"region\", \"South\", \"East\", 2022]",
+      "reason": "duplicates a dev case (same truth values or query)"
+    },
+    {
+      "type": "收入均值",
+      "candidate": "T_avg_pair[\"channel\", \"Direct\", \"Partner\"]",
+      "reason": "duplicates a dev case (same truth values or query)"
+    }
+  ],
+  "cases_sha256": "9885666d3549c36b9ae5dffc49c5e74a056b111056f284c5ca4eca62c0d1371b",
+  "script_sha256": "bdcfaf2ed6642de3384d7af10a6adf810bad8e4a6e69c9bfcf4b02adc89db8e1",
+  "clean_table_sha256": "6c95334422ccfefd4a3a4815944418dd995c3bcdd9513b3aa4db0be76f7d771d",
+  "template_use": {
+    "T_avg_pair": 4,
+    "T_avgunits_entity": 2,
+    "T_rev_halves": 11,
+    "T_share": 3,
+    "T_units_pair_year": 4,
+    "T_rev_entity_quarter": 12,
+    "T_rev_best": 11,
+    "T_rev_pair_year": 13,
+    "T_avg_entity_year": 5,
+    "T_rev_dim_year": 9,
+    "T_avgunits_dim": 1,
+    "T_rank_rev": 3,
+    "T_avg_dim_year": 3,
+    "T_growth": 3,
+    "T_count_pair_year": 5,
+    "T_rev_cross": 6,
+    "T_units_cross": 3,
+    "T_count_entity_year": 1,
+    "T_units_entity_year": 6,
+    "T_units_dim_year": 5,
+    "T_rank_units": 3,
+    "T_rev_entity_year": 6
+  },
+  "case_provenance": {
+    "H1T-001": {
+      "type": "收入均值",
+      "template": "T_avg_pair",
+      "params": "T_avg_pair[\"product\", \"Gadget Pro\", \"Gadget Lite\"]"
+    },
+    "H1T-002": {
+      "type": "销量均值",
+      "template": "T_avgunits_entity",
+      "params": "T_avgunits_entity[\"region\", \"West\"]"
+    },
+    "H1T-003": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"North\", 2024]"
+    },
+    "H1T-004": {
+      "type": "占比",
+      "template": "T_share",
+      "params": "T_share[[\"product\", \"Gadget Pro\"], 2024]"
+    },
+    "H1T-005": {
+      "type": "销量合计",
+      "template": "T_units_pair_year",
+      "params": "T_units_pair_year[\"region\", \"North\", \"South\", 2022]"
+    },
+    "H1T-006": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"channel\", \"Partner\"], 2024, 2]"
+    },
+    "H1T-007": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"product\", 2022, \"highest\"]"
+    },
+    "H1T-008": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"region\", \"North\", \"Central\", 2023]"
+    },
+    "H1T-009": {
+      "type": "收入均值",
+      "template": "T_avg_entity_year",
+      "params": "T_avg_entity_year[[\"region\", \"North\"], 2022]"
+    },
+    "H1T-010": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"channel\", 2022]"
+    },
+    "H1T-011": {
+      "type": "销量均值",
+      "template": "T_avgunits_dim",
+      "params": "T_avgunits_dim\"region\""
+    },
+    "H1T-012": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"channel\", \"Direct\", \"Retail\", 2022]"
+    },
+    "H1T-013": {
+      "type": "排名(销售员收入)",
+      "template": "T_rank_rev",
+      "params": "T_rank_rev[\"year\", 2024]"
+    },
+    "H1T-014": {
+      "type": "收入均值",
+      "template": "T_avg_dim_year",
+      "params": "T_avg_dim_year[\"region\", 2024]"
+    },
+    "H1T-015": {
+      "type": "增长率",
+      "template": "T_growth",
+      "params": "T_growth[[\"product\", \"Widget B\"], 2022, 2024]"
+    },
+    "H1T-016": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"region\", \"East\", \"Central\", 2022]"
+    },
+    "H1T-017": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"region\", 2023]"
+    },
+    "H1T-018": {
+      "type": "计数",
+      "template": "T_count_pair_year",
+      "params": "T_count_pair_year[\"channel\", \"Online\", \"Retail\", 2023]"
+    },
+    "H1T-019": {
+      "type": "收入合计",
+      "template": "T_rev_cross",
+      "params": "T_rev_cross[\"region\", \"South\", \"product\", \"Widget A\"]"
+    },
+    "H1T-020": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"region\", 2023, \"lowest\"]"
+    },
+    "H1T-021": {
+      "type": "销量合计",
+      "template": "T_units_cross",
+      "params": "T_units_cross[\"region\", \"West\", \"channel\", \"Partner\"]"
+    },
+    "H1T-022": {
+      "type": "计数",
+      "template": "T_count_entity_year",
+      "params": "T_count_entity_year[[\"channel\", \"Direct\"], 2024]"
+    },
+    "H1T-023": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"channel\", \"Retail\"], 2022, 4]"
+    },
+    "H1T-024": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"product\", 2022]"
+    },
+    "H1T-025": {
+      "type": "排名(销售员收入)",
+      "template": "T_rank_rev",
+      "params": "T_rank_rev[\"year\", 2023]"
+    },
+    "H1T-026": {
+      "type": "销量合计",
+      "template": "T_units_entity_year",
+      "params": "T_units_entity_year[[\"product\", \"Gadget Pro\"], 2024]"
+    },
+    "H1T-027": {
+      "type": "收入合计",
+      "template": "T_rev_cross",
+      "params": "T_rev_cross[\"product\", \"Service Pack\", \"channel\", \"Online\"]"
+    },
+    "H1T-028": {
+      "type": "销量均值",
+      "template": "T_avgunits_entity",
+      "params": "T_avgunits_entity[\"channel\", \"Partner\"]"
+    },
+    "H1T-029": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"West\", 2024]"
+    },
+    "H1T-030": {
+      "type": "收入均值",
+      "template": "T_avg_dim_year",
+      "params": "T_avg_dim_year[\"channel\", 2023]"
+    },
+    "H1T-031": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"region\", \"Central\"], 2023, 3]"
+    },
+    "H1T-032": {
+      "type": "收入均值",
+      "template": "T_avg_dim_year",
+      "params": "T_avg_dim_year[\"region\", 2023]"
+    },
+    "H1T-033": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"region\", 2024, \"highest\"]"
+    },
+    "H1T-034": {
+      "type": "收入均值",
+      "template": "T_avg_entity_year",
+      "params": "T_avg_entity_year[[\"product\", \"Widget A\"], 2022]"
+    },
+    "H1T-035": {
+      "type": "收入均值",
+      "template": "T_avg_entity_year",
+      "params": "T_avg_entity_year[[\"product\", \"Gadget Pro\"], 2022]"
+    },
+    "H1T-036": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"product\", 2023]"
+    },
+    "H1T-037": {
+      "type": "计数",
+      "template": "T_count_pair_year",
+      "params": "T_count_pair_year[\"channel\", \"Partner\", \"Online\", 2022]"
+    },
+    "H1T-038": {
+      "type": "销量合计",
+      "template": "T_units_pair_year",
+      "params": "T_units_pair_year[\"channel\", \"Direct\", \"Online\", 2022]"
+    },
+    "H1T-039": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"channel\", \"Partner\", \"Retail\", 2024]"
+    },
+    "H1T-040": {
+      "type": "计数",
+      "template": "T_count_pair_year",
+      "params": "T_count_pair_year[\"region\", \"South\", \"Central\", 2023]"
+    },
+    "H1T-041": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"region\", 2024, \"lowest\"]"
+    },
+    "H1T-042": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"region\", \"South\", \"Central\", 2023]"
+    },
+    "H1T-043": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"product\", \"Widget B\", \"Gadget Lite\", 2023]"
+    },
+    "H1T-044": {
+      "type": "收入均值",
+      "template": "T_avg_pair",
+      "params": "T_avg_pair[\"channel\", \"Direct\", \"Retail\"]"
+    },
+    "H1T-045": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"region\", \"Central\"], 2022, 2]"
+    },
+    "H1T-046": {
+      "type": "收入均值",
+      "template": "T_avg_pair",
+      "params": "T_avg_pair[\"channel\", \"Partner\", \"Online\"]"
+    },
+    "H1T-047": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"product\", 2023, \"lowest\"]"
+    },
+    "H1T-048": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"channel\", 2022, \"highest\"]"
+    },
+    "H1T-049": {
+      "type": "收入均值",
+      "template": "T_avg_entity_year",
+      "params": "T_avg_entity_year[[\"region\", \"West\"], 2022]"
+    },
+    "H1T-050": {
+      "type": "销量合计",
+      "template": "T_units_dim_year",
+      "params": "T_units_dim_year[\"product\", 2022]"
+    },
+    "H1T-051": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"South\", 2024]"
+    },
+    "H1T-052": {
+      "type": "计数",
+      "template": "T_count_pair_year",
+      "params": "T_count_pair_year[\"region\", \"West\", \"Central\", 2023]"
+    },
+    "H1T-053": {
+      "type": "销量合计",
+      "template": "T_units_cross",
+      "params": "T_units_cross[\"product\", \"Widget A\", \"channel\", \"Direct\"]"
+    },
+    "H1T-054": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"channel\", 2023]"
+    },
+    "H1T-055": {
+      "type": "排名(销售员销量)",
+      "template": "T_rank_units",
+      "params": "T_rank_units[\"region\", \"North\"]"
+    },
+    "H1T-056": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"channel\", \"Retail\"], 2024, 2]"
+    },
+    "H1T-057": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"Central\", 2024]"
+    },
+    "H1T-058": {
+      "type": "收入合计",
+      "template": "T_rev_entity_year",
+      "params": "T_rev_entity_year[[\"product\", \"Widget A\"], 2024]"
+    },
+    "H1T-059": {
+      "type": "销量合计",
+      "template": "T_units_entity_year",
+      "params": "T_units_entity_year[[\"channel\", \"Direct\"], 2022]"
+    },
+    "H1T-060": {
+      "type": "占比",
+      "template": "T_share",
+      "params": "T_share[[\"region\", \"South\"], 2023]"
+    },
+    "H1T-061": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"region\", \"South\"], 2022, 3]"
+    },
+    "H1T-062": {
+      "type": "收入合计",
+      "template": "T_rev_cross",
+      "params": "T_rev_cross[\"product\", \"Service Pack\", \"channel\", \"Direct\"]"
+    },
+    "H1T-063": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"product\", 2022, \"lowest\"]"
+    },
+    "H1T-064": {
+      "type": "收入合计",
+      "template": "T_rev_cross",
+      "params": "T_rev_cross[\"region\", \"South\", \"product\", \"Service Pack\"]"
+    },
+    "H1T-065": {
+      "type": "销量合计",
+      "template": "T_units_pair_year",
+      "params": "T_units_pair_year[\"product\", \"Gadget Lite\", \"Service Pack\", 2022]"
+    },
+    "H1T-066": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"product\", \"Widget A\", \"Gadget Lite\", 2024]"
+    },
+    "H1T-067": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"region\", 2022]"
+    },
+    "H1T-068": {
+      "type": "销量合计",
+      "template": "T_units_entity_year",
+      "params": "T_units_entity_year[[\"product\", \"Widget A\"], 2022]"
+    },
+    "H1T-069": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"East\", 2023]"
+    },
+    "H1T-070": {
+      "type": "收入合计",
+      "template": "T_rev_entity_year",
+      "params": "T_rev_entity_year[[\"product\", \"Widget B\"], 2023]"
+    },
+    "H1T-071": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"channel\", 2023, \"lowest\"]"
+    },
+    "H1T-072": {
+      "type": "收入合计",
+      "template": "T_rev_entity_year",
+      "params": "T_rev_entity_year[[\"region\", \"West\"], 2023]"
+    },
+    "H1T-073": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"region\", \"North\"], 2024, 1]"
+    },
+    "H1T-074": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"product\", \"Widget A\", \"Widget B\", 2023]"
+    },
+    "H1T-075": {
+      "type": "销量合计",
+      "template": "T_units_pair_year",
+      "params": "T_units_pair_year[\"product\", \"Widget A\", \"Service Pack\", 2022]"
+    },
+    "H1T-076": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"Central\", 2023]"
+    },
+    "H1T-077": {
+      "type": "排名(销售员收入)",
+      "template": "T_rank_rev",
+      "params": "T_rank_rev[\"region\", \"South\"]"
+    },
+    "H1T-078": {
+      "type": "销量合计",
+      "template": "T_units_dim_year",
+      "params": "T_units_dim_year[\"region\", 2024]"
+    },
+    "H1T-079": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"region\", \"North\", \"West\", 2024]"
+    },
+    "H1T-080": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"South\", 2023]"
+    },
+    "H1T-081": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"channel\", 2024]"
+    },
+    "H1T-082": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"region\", 2022, \"highest\"]"
+    },
+    "H1T-083": {
+      "type": "排名(销售员销量)",
+      "template": "T_rank_units",
+      "params": "T_rank_units[\"year\", 2024]"
+    },
+    "H1T-084": {
+      "type": "收入合计",
+      "template": "T_rev_entity_year",
+      "params": "T_rev_entity_year[[\"region\", \"East\"], 2024]"
+    },
+    "H1T-085": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"Central\", 2022]"
+    },
+    "H1T-086": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"North\", 2022]"
+    },
+    "H1T-087": {
+      "type": "收入均值",
+      "template": "T_avg_pair",
+      "params": "T_avg_pair[\"channel\", \"Partner\", \"Retail\"]"
+    },
+    "H1T-088": {
+      "type": "增长率",
+      "template": "T_growth",
+      "params": "T_growth[[\"channel\", \"Retail\"], 2022, 2024]"
+    },
+    "H1T-089": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"South\", 2022]"
+    },
+    "H1T-090": {
+      "type": "销量合计",
+      "template": "T_units_dim_year",
+      "params": "T_units_dim_year[\"product\", 2024]"
+    },
+    "H1T-091": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"region\", \"East\"], 2024, 4]"
+    },
+    "H1T-092": {
+      "type": "销量合计",
+      "template": "T_units_dim_year",
+      "params": "T_units_dim_year[\"region\", 2023]"
+    },
+    "H1T-093": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"region\", 2024]"
+    },
+    "H1T-094": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"product\", \"Widget A\", \"Gadget Lite\", 2023]"
+    },
+    "H1T-095": {
+      "type": "排名(销售员销量)",
+      "template": "T_rank_units",
+      "params": "T_rank_units[\"year\", 2023]"
+    },
+    "H1T-096": {
+      "type": "销量合计",
+      "template": "T_units_cross",
+      "params": "T_units_cross[\"region\", \"South\", \"product\", \"Widget B\"]"
+    },
+    "H1T-097": {
+      "type": "销量合计",
+      "template": "T_units_entity_year",
+      "params": "T_units_entity_year[[\"channel\", \"Online\"], 2023]"
+    },
+    "H1T-098": {
+      "type": "收入合计",
+      "template": "T_rev_halves",
+      "params": "T_rev_halves[\"West\", 2023]"
+    },
+    "H1T-099": {
+      "type": "收入合计",
+      "template": "T_rev_dim_year",
+      "params": "T_rev_dim_year[\"product\", 2024]"
+    },
+    "H1T-100": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"channel\", 2024, \"lowest\"]"
+    },
+    "H1T-101": {
+      "type": "增长率",
+      "template": "T_growth",
+      "params": "T_growth[[\"product\", \"Gadget Lite\"], 2023, 2024]"
+    },
+    "H1T-102": {
+      "type": "收入合计",
+      "template": "T_rev_cross",
+      "params": "T_rev_cross[\"region\", \"Central\", \"product\", \"Service Pack\"]"
+    },
+    "H1T-103": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"channel\", \"Direct\", \"Partner\", 2024]"
+    },
+    "H1T-104": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"product\", \"Widget B\"], 2024, 2]"
+    },
+    "H1T-105": {
+      "type": "收入合计",
+      "template": "T_rev_entity_year",
+      "params": "T_rev_entity_year[[\"region\", \"North\"], 2023]"
+    },
+    "H1T-106": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"product\", \"Service Pack\"], 2023, 4]"
+    },
+    "H1T-107": {
+      "type": "收入合计",
+      "template": "T_rev_entity_year",
+      "params": "T_rev_entity_year[[\"region\", \"East\"], 2023]"
+    },
+    "H1T-108": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"product\", \"Gadget Pro\"], 2024, 1]"
+    },
+    "H1T-109": {
+      "type": "收入合计",
+      "template": "T_rev_cross",
+      "params": "T_rev_cross[\"product\", \"Widget A\", \"channel\", \"Partner\"]"
+    },
+    "H1T-110": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"product\", \"Widget A\", \"Gadget Lite\", 2022]"
+    },
+    "H1T-111": {
+      "type": "收入合计",
+      "template": "T_rev_entity_quarter",
+      "params": "T_rev_entity_quarter[[\"region\", \"Central\"], 2024, 4]"
+    },
+    "H1T-112": {
+      "type": "收入均值",
+      "template": "T_avg_entity_year",
+      "params": "T_avg_entity_year[[\"product\", \"Gadget Pro\"], 2023]"
+    },
+    "H1T-113": {
+      "type": "计数",
+      "template": "T_count_pair_year",
+      "params": "T_count_pair_year[\"region\", \"North\", \"East\", 2024]"
+    },
+    "H1T-114": {
+      "type": "销量合计",
+      "template": "T_units_dim_year",
+      "params": "T_units_dim_year[\"channel\", 2024]"
+    },
+    "H1T-115": {
+      "type": "占比",
+      "template": "T_share",
+      "params": "T_share[[\"channel\", \"Online\"], 2024]"
+    },
+    "H1T-116": {
+      "type": "收入合计",
+      "template": "T_rev_best",
+      "params": "T_rev_best[\"product\", 2024, \"lowest\"]"
+    },
+    "H1T-117": {
+      "type": "销量合计",
+      "template": "T_units_entity_year",
+      "params": "T_units_entity_year[[\"channel\", \"Direct\"], 2023]"
+    },
+    "H1T-118": {
+      "type": "收入合计",
+      "template": "T_rev_pair_year",
+      "params": "T_rev_pair_year[\"region\", \"South\", \"West\", 2024]"
+    },
+    "H1T-119": {
+      "type": "销量合计",
+      "template": "T_units_entity_year",
+      "params": "T_units_entity_year[[\"region\", \"South\"], 2024]"
+    }
+  }
+}
