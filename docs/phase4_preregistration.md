@@ -2028,3 +2028,34 @@ The H1 sample is 40 dev sales cases with numeric clean-table truth, listed in
 C01, C07, C11, C16) and thirty new ones (S01 to S30; §10.11 said 28, two were added
 to make up for the exclusion). All are `split: dev`; no holdout case was written.
 The new holdout must follow the question-type mix of these 40 for σ to carry over.
+
+### 10.13 How N is set for H1, and the reduced σ run (附录 GY, GZ)
+
+Ruled by the user on 2026-11-06 (附录 GY.3). Written before the reduced σ run
+produces any C or R or CR result.
+
+1. **The threshold and the power target are different things.** The decision rule
+   in §7.6 is unchanged: H1 holds when the interval excludes 0 and the point
+   estimate exceeds 0.028. The 0.028 is a decision threshold. It is **not** the
+   effect N is sized to detect; sizing N to detect an effect that sits exactly on
+   the threshold would demand a sample far larger than the question needs.
+2. **Rule for N (H1).** Power target = the one-sided 80% lower confidence bound of
+   the mean C − B measured in the σ run (on `factual_accuracy`, per case, averaged
+   over repeats). N is the smallest number of independent cases for which a
+   one-sided test at α = 0.0167 has 80% power against that effect, using the σ
+   run's case-level SD of the per-case C − B differences. Refused runs are scored 0
+   as in §7.2.1/§7.6 (not dropped), so the SD includes them. The lower bound is
+   used instead of the point estimate so that a dev-sample estimate is not taken at
+   face value.
+3. **Stop rule.** If that N exceeds 100, or the lower bound is not above 0.028, the
+   owner does not choose N: the result goes to the user.
+4. **H3.** H3 is two-sided with no expected direction (its ideal effect on the
+   sales questions is 0, 附录 GX.2). It does not drive N. Only its minimum
+   detectable effect at the N chosen for H1 is reported.
+5. **The σ run is reduced** to four arms (B, C, R, CR) × the 40 cases of
+   `tests/eval/h1_sample.json` × 3 repeats, reusing the finished B repeat 1; stop
+   line for this run is $20, inside the $50 authorization (附录 GO.1). The earlier
+   plan of 8 repeats is dropped; k in the reveal is a separate decision.
+6. What the reduced run measures that the offline prediction (附录 GX) does not:
+   guardrail refusals (9 of 40 in B repeat 1) and repeat-to-repeat randomness,
+   including the planner's choice between filling and not filling missing revenue.
