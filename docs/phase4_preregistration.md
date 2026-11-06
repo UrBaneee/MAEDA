@@ -1948,3 +1948,66 @@ clipping gate do not apply to H2. The §10.9 disclosure applies to arms where
 cleaning actually runs: the H1/H3 cleaner arms, and cleaner-on arms in σ runs.
 The standing CSV-hash rule in §10.9 is unchanged and applies to every run, since
 the same CSV is the input everywhere.
+
+### 10.11 H1 ground truth is computed on a clean table (附录 GS; decided in 附录 GO.6)
+
+**What changed.** Until now the sales ground truth in `tests/eval/test_suite.json`
+was computed by `scripts/compute_ground_truth.py` on `data/demo/sales_data.csv`,
+the table with injected defects (3% missing revenue, 2% duplicate rows, 1% revenue
+multiplied by 10). On that basis a cleaner arm that cleans correctly is scored as
+wrong and an arm that does not clean is scored as right (附录 GO.3: for example the
+North region's revenue moves by −7.19% under rule-style cleaning, far outside the
+1% tolerance), which is the opposite of what H1 claims to test. The user ruled
+that truth is computed on the table before the defects are injected.
+
+**The clean table.** The v2 render with the quality-noise block switched off and
+every event kept: `data/truth/sales_data_clean.csv`, sha256
+`6c95334422ccfefd4a3a4815944418dd995c3bcdd9513b3aa4db0be76f7d771d`, 48000 rows, no
+missing values and no duplicates. Source: rag-framework
+`artifacts/g3/sales_data_clean.csv` with receipt `render_receipt_clean.json`
+(renderer `d557e52`, renderer sha256 `ed223821…`; 附录 GQ). Consistency with the
+pipeline input was measured (GQ.2): the first 48000 rows of
+`data/demo/sales_data.csv` equal the clean table in every column except revenue,
+and in revenue differ only where the value is missing (1440 cells) or exactly ten
+times larger (462 cells); the appended 960 rows are duplicates of clean rows. The
+file sits outside `data/demo/` on purpose and is **a truth basis only**.
+
+**The pipeline input does not change.** Every arm still reads
+`data/demo/sales_data.csv` (sha256 `b863b601…2719`). Only the numbers the answers
+are compared with change. `scripts/compute_ground_truth.py` verifies the clean
+table's hash before computing anything.
+
+**What H1 now means.** H1 asks whether the answer produced from the cleaned data is
+closer to the truth on the clean table than the answer produced from the dirty
+data. It does not ask whether cleaning reproduces the clean table. The cleaner
+fills missing revenue with the full-table median, removes exact duplicates and
+clips by IQR, so a cleaner arm will not match the clean truth exactly in every
+case (clipping can cut real event peaks, 附录 GE); some of the distance between a
+cleaned answer and the truth is the cleaner's own approximation error. That is part
+of what is measured, and it is fixed here so it cannot be read as a definition
+problem after the reveal. The scoring tolerance (1%) is unchanged.
+
+**Ground truth changed for the existing cases.** All 12 sales cases with numeric
+truth were recomputed (D01, D04, D10, D11, DG01, DG03, C01, C07, C11, C16, E01,
+E02); the e-commerce, churn and marketing cases are unaffected. Revenue truths
+fell by roughly 5 to 8%, units truths by roughly 2%, and in D10 the top sales rep
+changed (rep 1011 on the dirty table, rep 1027 on the clean one), because the
+multiplied rows had inflated rep 1011. E01 and E02 are discussed separately below.
+
+**E01 and E02 are not settled by this entry.** E01 (row count) and E02 (IQR outlier
+counts) ask about defects of the delivered file; their clean-basis truth (48000
+rows; 135 revenue outliers) is a property of a table no arm sees. The treatment
+(exclude them from the H1 sample, or rewrite them) awaits the user's ruling and is
+recorded when made.
+
+**Confidentiality note (附录 GQ.4).** The clean table lacks the multiplied rows
+that make the dirty table noisy, so the data signal of the test events (region,
+window, size) is slightly easier to detect in it than in the dirty table. The same
+signal was already visible in the dirty table (§10.3); no new kind of information
+is exposed (cause text, corpus, probes and ids stay sealed), but the disclosure in
+§10.3 should be read with this in mind. Nothing in this repository reads the sealed
+file.
+
+**New cases.** 28 new dev sales cases (S01 to S28) with truths from the clean table
+were added for the σ sample (`scripts/h1_sales_cases.py`). All are `split: dev`; no
+holdout case was written or changed.

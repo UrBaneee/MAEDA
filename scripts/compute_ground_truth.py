@@ -49,6 +49,7 @@ underlying derivation before treating the suite as consistent again.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sqlite3
@@ -60,6 +61,8 @@ import pandas as pd
 
 SUITE_PATH = Path("tests/eval/test_suite.json")
 DEMO_DIR = Path("data/demo")
+TRUTH_DIR = Path("data/truth")
+CLEAN_SALES_SHA256 = "6c95334422ccfefd4a3a4815944418dd995c3bcdd9513b3aa4db0be76f7d771d"
 
 COMPUTERS: dict[str, Callable[["_Data"], dict]] = {}
 
@@ -85,7 +88,15 @@ class _Data:
     @property
     def sales(self) -> pd.DataFrame:
         if self._sales is None:
-            df = pd.read_csv(DEMO_DIR / "sales_data.csv")
+            # 附录 GO.6/GR: sales truth is computed on the CLEAN table (the v2
+            # render with quality noise off, every event kept), not on the
+            # dirty pipeline input data/demo/sales_data.csv. Verified by hash.
+            path = TRUTH_DIR / "sales_data_clean.csv"
+            actual = hashlib.sha256(path.read_bytes()).hexdigest()
+            if actual != CLEAN_SALES_SHA256:
+                raise RuntimeError(f"{path} sha256 {actual} != {CLEAN_SALES_SHA256}; "
+                                   "run scripts/receive_clean_truth.py")
+            df = pd.read_csv(path)
             df["date"] = pd.to_datetime(df["date"])
             df["quarter"] = df["date"].dt.quarter
             df["year"] = df["date"].dt.year
@@ -837,6 +848,19 @@ def _e24(d: _Data) -> dict:
 
 
 # ─── main ─────────────────────────────────────────────────────────────────
+
+# 附录 GS: the 28 new H1 dev sales cases (scripts/h1_sales_cases.py), derived from
+# the same clean table. Registered so a normal check run audits them.
+def _register_h1_sales_cases():
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from h1_sales_cases import SPEC
+    for spec in SPEC:
+        COMPUTERS[spec[0]] = (lambda fn: (lambda d: fn(d.sales)))(spec[8])
+
+
+_register_h1_sales_cases()
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
