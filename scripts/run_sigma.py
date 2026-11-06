@@ -166,21 +166,14 @@ async def main_async(args) -> int:
                 print(f"STOP: batch {arm}/{rep} (~${per_run * len(todo):.2f}) would pass the cap (${spent:.2f} spent)")
                 return 3
 
-            async def one(tc):
-                async with sem:
-                    er, meta = await run_one_case(tc, graph, eval_runner)
-                    return tc, er.to_dict(), meta
-
-            results = await asyncio.gather(*[one(tc) for tc in todo])
-            batch_cost = 0.0
-            for tc, er, meta in results:
+            def build_row(tc, er, meta):
                 st = graph.states.pop(meta.get("run_id"), {})
                 foreign = [d for d in (r.get("source_file") if isinstance(r, dict) else r
                                        for r in (st.get("rag_sources") or [])) if d and d not in docs]
                 cleaned = cl == "force_on" and any(
                     c.get("mode") == "mcp" and "clean" in str(c.get("tool", c.get("name", "")))
                     for c in (st.get("mcp_call_log") or []))
-                row = {
+                return {
                     "key": f"{arm}|{tc.id}|{rep}", "arm": arm, "case_id": tc.id, "repeat": rep,
                     "eval_result": er, "meta": meta, "cost_usd": round(state_cost(st), 6),
                     "cleaner_cost_est": args.cleaner_cost if cleaned else 0.0,
@@ -188,13 +181,34 @@ async def main_async(args) -> int:
                     "n_rag_chunks": len(st.get("rag_context") or []),
                     "report": st.get("report") or "",
                 }
+
+            async def one(tc):
+                async with sem:
+                    try:
+                        er, meta = await asyncio.wait_for(run_one_case(tc, graph, eval_runner),
+                                                          timeout=args.run_timeout)
+                        return build_row(tc, er.to_dict(), meta)
+                    except asyncio.TimeoutError:
+                        # a hung run is recorded as void, never retried (EJ.5)
+                        return {"key": f"{arm}|{tc.id}|{rep}", "arm": arm, "case_id": tc.id, "repeat": rep,
+                                "eval_result": {"test_case_id": tc.id, "scores": [], "terminal_state": "timeout"},
+                                "meta": {"mcp_modes": [], "terminal_state": "timeout"}, "cost_usd": 0.0,
+                                "cleaner_cost_est": 0.0, "void": "timeout", "foreign_sources": [],
+                                "n_rag_chunks": 0, "report": ""}
+
+            batch_cost = 0.0
+            n_results = 0
+            for fut in asyncio.as_completed([one(tc) for tc in todo]):
+                row = await fut
+                n_results += 1
                 with runs_path.open("a") as fh:
                     fh.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
                 done[row["key"]] = row
                 batch_cost += row["cost_usd"] + row["cleaner_cost_est"]
                 n_void += bool(row["void"])
-                if foreign:
-                    stop = f"retrieved doc outside the dev store ({len(foreign)}), content not printed"
+                if row["foreign_sources"]:
+                    stop = f"retrieved doc outside the dev store ({len(row['foreign_sources'])}), content not printed"
+            results = range(n_results)
             spent += batch_cost
             print(f"batch {arm}/rep{rep}: {len(results)} runs, ${batch_cost:.3f}, total ${spent:.3f}, "
                   f"void {n_void}/{len(done)}")
@@ -223,6 +237,7 @@ def main() -> int:
     p.add_argument("--arms", nargs="+", default=["B", "C", "R", "CR"], choices=list(ARMS))
     p.add_argument("--concurrency", type=int, default=4)
     p.add_argument("--cases", nargs="+", default=None, help="subset of the sample (smoke runs only)")
+    p.add_argument("--run-timeout", type=float, default=900.0, help="seconds before a hung run is recorded void")
     p.add_argument("--max-batches", type=int, default=0)
     p.add_argument("--first-estimate", type=float, default=0.04)
     p.add_argument("--cleaner-cost", type=float, default=0.0,
