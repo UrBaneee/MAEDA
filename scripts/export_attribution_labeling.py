@@ -19,6 +19,9 @@ TEMPLATE = Path(__file__).resolve().parent / "_attribution_template.html"
 CASES = Path("tests/eval/h2_dev_attribution_cases.json")
 SETS = {"dry": ("reports_dry.jsonl", "Dry run"), "pass1": ("reports_formal.jsonl", "Pass 1"),
         "pass2": ("reports_formal.jsonl", "Pass 2")}
+# Blind-id prefix per set. pass1 and pass2 share a first letter, so pass2 gets
+# its own prefix: the same id must never name two different reports across passes.
+PREFIX = {"dry": "D", "pass1": "P", "pass2": "Q"}
 
 
 def main() -> int:
@@ -33,7 +36,7 @@ def main() -> int:
     rows.sort(key=lambda r: hashlib.sha256(f"{seed}:{r['job_id']}".encode()).hexdigest())
     samples, mapping = [], {}
     for i, row in enumerate(rows, 1):
-        blind = f"{args.set[0].upper()}{i:02d}"
+        blind = f"{PREFIX[args.set]}{i:02d}"
         case = cases[row["case_id"]]
         mapping[blind] = row["job_id"]
         samples.append({"id": blind, "query": case["query"], "anomaly": case["event_anomaly"],
