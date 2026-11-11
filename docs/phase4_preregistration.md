@@ -934,7 +934,19 @@ it is one test.**
 **H2's confirmatory status is conditional on the scorer bar in §7.2.1 and is
 currently not met: the scorer does not exist yet.** *(Status 2026-11-03, 附录 FN:
 the scorer exists and is frozen; machine-vs-human κ on pass 1 is 0.616; the bar
-cannot be judged until pass 2 gives the human test-retest κ. Still not met.)* Until the bar is met, H2 is
+cannot be judged until pass 2 gives the human test-retest κ. Still not met.)* *(Status 2026-11-11, 附录 HH: pass 2 done. Human test-retest κ (pass 1 vs
+pass 2, n = 60) = 0.544, 95% bootstrap CI 0.334 to 0.724. Judge vs pass 1 κ = 0.616,
+CI 0.430 to 0.783. **Bar met on the point estimate**; the paired difference
+(judge minus ceiling) has CI −0.200 to 0.351, so the two are not statistically
+distinguishable at n = 60. **Reference pass, disclosed:** this section did not say
+which human pass the judge is compared against. The 2026-11-03 status note above
+named judge-vs-pass-1 before pass 2 existed; the user confirmed pass 1 on
+2026-11-11, after both numbers were known. Against pass 2 the judge's κ is 0.258
+(CI 0.024 to 0.475). Of the 17 items where the two human passes differ, the judge
+matches pass 1 on 15; the judge prompt was frozen (`64fcc4f`) before pass 1
+began, and pass 2's departures concentrate on two R5.1 rows (hedged cause plus a
+check-list, and non-causal sentences cited as causes). **H2 is therefore
+confirmatory again and §7.6 reverts to three tests at 98.3%.**)* Until the bar is met, H2 is
 reported as exploratory and the confirmatory set is H1 and H3. Were the scorer to
 meet the bar before the freeze, H2 returns to confirmatory and §7.6's multiplicity
 reverts to three tests at 98.3%.
@@ -1216,6 +1228,11 @@ folding strata into the confirmatory set silently doubles it:
 
 ### 7.6 Multiplicity and the decision rule
 
+- **Amended 2026-11-11 (附录 HH, user):** H2's scorer met the §7.2.1 bar, so the
+  confirmatory set is **H1, H2 and H3**: Bonferroni α = 0.05 / 3 = 0.0167,
+  **98.3% paired bootstrap CIs** for H1 and H3, and the exact sign-flip test at
+  α = 0.0167 for H2 (§7.2.1). H1's N = 119 (§10.14) was already computed at
+  α = 0.0167 and is unchanged. The bullet below is kept as the earlier state.
 - **Two confirmatory tests.** H1 and H3. **H2 is exploratory**: the metric it is
   bound to (`event_attribution_accuracy`) has no validated scorer yet (§7.2.1).
   Bonferroni: α = 0.05 / 2 = 0.025, i.e. report **97.5% paired bootstrap
