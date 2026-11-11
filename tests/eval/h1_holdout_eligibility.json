@@ -1,0 +1,859 @@
+{
+  "source": "预注册 §7.4; 附录 HO",
+  "script_sha256": "81d5a8f0d961ad85b4ee40c11951e6a071b96a0ecc5f6e352cca5287309539e7",
+  "dirty_table_sha256": "b863b60173f3c0bf30c4582738b85ba3304a7a212794d66ab14aa35dce422719",
+  "holdout_sha256": "9885666d3549c36b9ae5dffc49c5e74a056b111056f284c5ca4eca62c0d1371b",
+  "declared_iqr_fences": {
+    "revenue": [
+      116.8813,
+      709.0112
+    ],
+    "units": [
+      -0.5,
+      19.5
+    ]
+  },
+  "defect_rows": 2546,
+  "n_cases": 119,
+  "counts": {
+    "cleaning_relevant": 119,
+    "cleaning_material": 116,
+    "cleaning_material_with_dedup": 116,
+    "corpus_backed": 0
+  },
+  "cases": {
+    "H1T-001": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-002": {
+      "cleaning_relevant": true,
+      "cleaning_material": false,
+      "cleaning_material_with_dedup": false,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-003": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-004": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-005": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-006": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-007": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-008": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-009": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-010": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-011": {
+      "cleaning_relevant": true,
+      "cleaning_material": false,
+      "cleaning_material_with_dedup": false,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-012": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-013": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-014": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-015": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-016": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-017": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-018": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-019": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-020": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-021": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-022": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-023": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-024": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-025": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-026": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-027": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-028": {
+      "cleaning_relevant": true,
+      "cleaning_material": false,
+      "cleaning_material_with_dedup": false,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-029": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-030": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-031": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-032": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-033": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-034": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-035": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-036": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-037": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-038": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-039": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-040": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-041": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-042": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-043": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-044": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-045": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-046": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-047": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-048": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-049": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-050": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-051": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-052": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-053": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-054": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-055": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-056": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-057": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-058": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-059": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-060": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-061": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-062": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-063": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-064": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-065": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-066": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-067": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-068": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-069": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-070": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-071": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-072": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-073": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-074": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-075": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-076": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-077": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-078": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-079": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-080": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-081": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-082": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-083": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-084": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-085": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-086": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-087": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-088": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-089": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-090": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-091": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-092": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-093": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-094": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-095": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-096": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-097": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-098": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-099": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-100": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-101": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-102": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-103": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-104": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-105": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-106": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-107": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-108": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-109": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-110": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-111": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-112": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-113": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-114": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-115": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-116": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-117": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-118": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    },
+    "H1T-119": {
+      "cleaning_relevant": true,
+      "cleaning_material": true,
+      "cleaning_material_with_dedup": true,
+      "event_id": null,
+      "corpus_backed": false
+    }
+  }
+}
