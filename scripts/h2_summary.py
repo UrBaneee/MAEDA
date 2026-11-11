@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.eval.h2_summary import summarise_h2  # noqa: E402
 
-OUT_DIR = Path("data/h2_attribution")
+DEFAULT_DIR = Path("data/h2_attribution")
 
 
 def _human_labels(label_dir: Path, mapping_path: Path) -> dict[str, str]:
@@ -42,10 +42,12 @@ def main() -> int:
     p.add_argument("--human-dir", type=Path)
     p.add_argument("--mapping", type=Path)
     p.add_argument("--out", type=Path)
+    p.add_argument("--dir", type=Path, default=DEFAULT_DIR,
+                   help="directory holding reports_<set>.jsonl and judge_<set>.jsonl (附录 HJ)")
     a = p.parse_args()
-    runs = [json.loads(line) for line in (OUT_DIR / f"reports_{a.set}.jsonl").open()]
+    runs = [json.loads(line) for line in (a.dir / f"reports_{a.set}.jsonl").open()]
     if a.labels == "judge":
-        rows = map(json.loads, (OUT_DIR / f"judge_{a.set}.jsonl").open())
+        rows = map(json.loads, (a.dir / f"judge_{a.set}.jsonl").open())
         labels = {r["job_id"]: r["label"] for r in rows if r.get("valid") and r.get("label")}
     else:
         if not (a.human_dir and a.mapping):

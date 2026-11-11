@@ -14,6 +14,10 @@ The output is not shown to the human labeller before pass 2 ends: per-report
 verdicts would leak into the retest (R5.1 procedure).
 
     python scripts/judge_h2_reports.py --set formal --budget-usd 1
+    python scripts/judge_h2_reports.py --set formal --dir data/h2_pilot_v2 --budget-usd 0.2
+
+--dir only chooses where reports_<set>.jsonl is read and judge_<set>.jsonl is
+written (附录 HJ); the judge prompt and scoring are unchanged.
 """
 from __future__ import annotations
 
@@ -34,7 +38,7 @@ from src.eval.metrics import (  # noqa: E402
 )
 
 CASES = Path("tests/eval/h2_dev_attribution_cases.json")
-OUT_DIR = Path("data/h2_attribution")
+DEFAULT_DIR = Path("data/h2_attribution")
 CNY_PER_USD = 7.1  # budget check only; the CNY figure is what is recorded
 
 
@@ -53,8 +57,9 @@ class _UsageRecorder:
 
 async def main(args) -> int:
     cases = {c["id"]: c for c in json.loads(CASES.read_text())}
-    reports = [json.loads(line) for line in (OUT_DIR / f"reports_{args.set}.jsonl").open()]
-    out_path = OUT_DIR / f"judge_{args.set}.jsonl"
+    out_dir = Path(args.dir)
+    reports = [json.loads(line) for line in (out_dir / f"reports_{args.set}.jsonl").open()]
+    out_path = out_dir / f"judge_{args.set}.jsonl"
     done = {}
     if out_path.exists():
         done = {r["job_id"]: r for r in map(json.loads, out_path.open())}
@@ -91,4 +96,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--set", choices=["dry", "formal"], required=True)
     parser.add_argument("--budget-usd", type=float, required=True)
+    parser.add_argument("--dir", default=str(DEFAULT_DIR),
+                        help="directory holding reports_<set>.jsonl; judge_<set>.jsonl is written there")
     sys.exit(asyncio.run(main(parser.parse_args())))
