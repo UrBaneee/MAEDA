@@ -11,7 +11,16 @@ store; any hash mismatch (sales CSV, clean table, tb5_dev.db content). Never rer
 a finished run (EJ.5).
 
 Arms are applied per batch (repeat, arm) because settings are process-global; cases
-inside a batch run concurrently. Dev split only: refuses any case not split=dev.
+inside a batch run concurrently.
+
+--sample dev (default): the 40-case dev sample, refuses any case not split=dev, R arm on
+tb5_dev.db whose content hash must equal EXPECTED.
+
+--sample holdout (附录 HK, HL.5, HM.5): the H1 reveal on the 119 split=test cases in
+tests/eval/h1_holdout_test.json, arms B C R CR plus 实验 2's arm A (auto/auto) at k = 2
+(预注册 §7.3.3). Refuses before loading any case unless MAEDA_REVEAL_AUTHORIZED=1,
+settings.intent_refine_trigger == "always" (§1.2 (A), §3.2) and the R-arm store is
+tb5_full.db; the store's content hash is taken at start and must not change.
 
     PYTHONPATH=. caffeinate -i -s python scripts/run_sigma.py --out-dir data/sigma_v1 --budget 50
     PYTHONPATH=. python scripts/run_sigma.py --out-dir data/sigma_v1 --budget 50 --max-batches 4
@@ -39,14 +48,19 @@ from src.graph.builder import build_graph  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLE = ROOT / "tests" / "eval" / "h1_sample.json"
+HOLDOUT = ROOT / "tests" / "eval" / "h1_holdout_test.json"
 EXPECTED = {
     "sales_csv": "b863b60173f3c0bf30c4582738b85ba3304a7a212794d66ab14aa35dce422719",
     "clean_csv": "6c95334422ccfefd4a3a4815944418dd995c3bcdd9513b3aa4db0be76f7d771d",
     "tb5_dev_content": "bc7f85fc47cf0d57bdfd6c3bc17c009cef1339b5b4e5868ad6a090998238045e",
 }
-#: arm -> (cleaner_mode, rag_mode)
+#: arm -> (cleaner_mode, rag_mode). A is 实验 2's routing arm (预注册 §0, §7.3).
 ARMS = {"B": ("force_off", "force_off"), "C": ("force_on", "force_off"),
-        "R": ("force_off", "force_on"), "CR": ("force_on", "force_on")}
+        "R": ("force_off", "force_on"), "CR": ("force_on", "force_on"),
+        "A": ("auto", "auto")}
+DEFAULT_ARMS = {"dev": ["B", "C", "R", "CR"], "holdout": ["B", "C", "R", "CR", "A"]}
+ARM_A_REPEATS = 2  # 预注册 §7.3.3
+REQUIRED_REVEAL_TRIGGER = "always"  # 预注册 §1.2 (A), §3.2; 附录 HM.5
 
 
 def _sha(p: Path) -> str:
@@ -61,10 +75,31 @@ def current_hashes() -> dict:
     }
 
 
-def hash_problem() -> str | None:
+def hash_problem(expected: dict | None = None) -> str | None:
     now = current_hashes()
-    bad = [k for k, v in EXPECTED.items() if now[k] != v]
+    bad = [k for k, v in (expected or EXPECTED).items() if now[k] != v]
     return f"hash mismatch: {bad}" if bad else None
+
+
+def preflight(sample: str) -> str | None:
+    """Refusals checked before any case is loaded or any call is made."""
+    store = Path(settings.rag_db_path or "").name
+    if sample == "dev":
+        return None if store == "tb5_dev.db" else "R-arm store must be tb5_dev.db (附录 GJ/GU)"
+    from src.eval.reveal_guard import REVEAL_ENV, reveal_authorized
+    if not reveal_authorized():
+        return f"holdout reveal needs {REVEAL_ENV}=1 set by the reveal command (附录 HA.5)"
+    if settings.intent_refine_trigger != REQUIRED_REVEAL_TRIGGER:
+        return (f"holdout reveal needs MAEDA_INTENT_REFINE_TRIGGER={REQUIRED_REVEAL_TRIGGER}, "
+                f"got {settings.intent_refine_trigger!r} (预注册 §1.2 (A), 附录 HM.5)")
+    if store != "tb5_full.db":
+        return "holdout reveal: R-arm store must be tb5_full.db (预注册 §10.5)"
+    return None
+
+
+def repeats_for(arm: str, repeats: int, sample: str) -> int:
+    """Arm A runs at k = 2 on the holdout (§7.3.3); every other arm at --repeats."""
+    return min(repeats, ARM_A_REPEATS) if (arm == "A" and sample == "holdout") else repeats
 
 
 def known_doc_ids(db_path: str) -> set[str]:
@@ -93,7 +128,13 @@ def state_cost(state: dict) -> float:
     return sum((v or {}).get("cost_usd", 0.0) for v in (state.get("token_usage") or {}).values())
 
 
-def load_sample() -> list:
+def load_sample(sample: str = "dev") -> list:
+    if sample == "holdout":
+        cases = load_golden_suite(str(HOLDOUT))  # reveal guard refuses here without the flag
+        bad = [c.id for c in cases if c.split != "test"]
+        if bad:
+            raise SystemExit(f"holdout file holds non-test cases: {bad}")
+        return cases
     ids = json.loads(SAMPLE.read_text())["case_ids"]
     suite = {c.id: c for c in load_golden_suite()}
     cases = [suite[i] for i in ids]
@@ -143,14 +184,22 @@ async def main_async(args) -> int:
     runs_path = out_dir / "runs.jsonl"
     settings.eval_enabled = True
     if not (settings.rag_db_path and settings.rag_index_dir):
-        raise SystemExit("MAEDA_RAG_DB_PATH and MAEDA_RAG_INDEX_DIR must point at tb5_dev")
-    if Path(settings.rag_db_path).name != "tb5_dev.db":
-        raise SystemExit("R-arm store must be tb5_dev.db (附录 GJ/GU)")
-    problem = hash_problem()
+        raise SystemExit("MAEDA_RAG_DB_PATH and MAEDA_RAG_INDEX_DIR must be set")
+    refusal = preflight(args.sample)
+    if refusal:
+        raise SystemExit(f"REFUSING: {refusal}. Nothing was run and nothing was billed.")
+    arms = args.arms or DEFAULT_ARMS[args.sample]
+    if args.sample == "holdout":
+        # tb5_full.db is built at the reveal (§10.5): its hash is fixed at start, then held.
+        expected = {**{k: v for k, v in EXPECTED.items() if k != "tb5_dev_content"},
+                    "tb5_dev_content": current_hashes()["tb5_dev_content"]}
+    else:
+        expected = EXPECTED
+    problem = hash_problem(expected)
     if problem:
         print(f"STOP before start: {problem}")
         return 6
-    cases = load_sample()
+    cases = load_sample(args.sample)
     if args.cases:
         cases = [c for c in cases if c.id in set(args.cases)]
     docs = known_doc_ids(settings.rag_db_path)
@@ -162,8 +211,10 @@ async def main_async(args) -> int:
     header = out_dir / "header.json"
     if not header.exists():
         header.write_text(json.dumps({
-            "started": time.strftime("%Y-%m-%dT%H:%M:%S"), "expected_hashes": EXPECTED,
-            "hashes_at_start": current_hashes(), "arms": ARMS, "repeats": args.repeats,
+            "started": time.strftime("%Y-%m-%dT%H:%M:%S"), "sample": args.sample,
+            "expected_hashes": expected, "hashes_at_start": current_hashes(),
+            "arms": {a: ARMS[a] for a in arms}, "repeats": args.repeats,
+            "repeats_per_arm": {a: repeats_for(a, args.repeats, args.sample) for a in arms},
             "budget_usd": args.budget, "cleaner_llm_cost_per_clean_usd_assumed": args.cleaner_cost,
             "settings_snapshot": _settings_snapshot(), "provenance": _run_provenance(None),
         }, indent=2, default=str))
@@ -177,7 +228,9 @@ async def main_async(args) -> int:
     batches = 0
     stop = None
     for rep in range(1, args.repeats + 1):
-        for arm in args.arms:
+        for arm in arms:
+            if rep > repeats_for(arm, args.repeats, args.sample):
+                continue
             todo = [c for c in cases if f"{arm}|{c.id}|{rep}" not in done]
             if not todo:
                 continue
@@ -244,12 +297,12 @@ async def main_async(args) -> int:
                 batch_cost += row["cost_usd"] + row["cleaner_cost_est"]
                 n_void += bool(row["void"])
                 if row["foreign_sources"]:
-                    stop = f"retrieved doc outside the dev store ({len(row['foreign_sources'])}), content not printed"
+                    stop = f"retrieved doc outside the store ({len(row['foreign_sources'])}), content not printed"
             results = range(n_results)
             spent += batch_cost
             print(f"batch {arm}/rep{rep}: {len(results)} runs, ${batch_cost:.3f}, total ${spent:.3f}, "
                   f"void {n_void}/{len(done)}")
-            problem = hash_problem()
+            problem = hash_problem(expected)
             if problem:
                 stop = problem
             if len(done) >= 20 and n_void / len(done) > 0.10:
@@ -271,7 +324,9 @@ def main() -> int:
     p.add_argument("--out-dir", required=True)
     p.add_argument("--budget", type=float, required=True)
     p.add_argument("--repeats", type=int, default=8)
-    p.add_argument("--arms", nargs="+", default=["B", "C", "R", "CR"], choices=list(ARMS))
+    p.add_argument("--sample", choices=["dev", "holdout"], default="dev")
+    p.add_argument("--arms", nargs="+", default=None, choices=list(ARMS),
+                   help="default: B C R CR on dev; B C R CR A on the holdout")
     p.add_argument("--concurrency", type=int, default=4)
     p.add_argument("--cases", nargs="+", default=None, help="subset of the sample (smoke runs only)")
     p.add_argument("--run-timeout", type=float, default=900.0, help="seconds before a hung run is recorded void")
