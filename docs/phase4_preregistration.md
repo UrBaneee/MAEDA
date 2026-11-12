@@ -1,6 +1,12 @@
-# 阶段 4 Pre-registration — **DRAFT, NOT FROZEN**
+# 阶段 4 Pre-registration — **FROZEN 2026-11-11** (§10.15)
 
-Status: **draft**. This file is the pre-registration artifact the
+> **Frozen 2026-11-11 by user instruction (附录 HT).** §10.15 is the freeze record: it states
+> what governs where earlier sections still carry "open" or "NOT YET" wording, the repository
+> commits the reveal must run on, and the reveal commands. Text below is kept as written; the
+> status notes added at the freeze point to §10.15. After this line nothing may change except
+> appended, dated corrections that state what they correct.
+
+Status (historical, superseded by the line above): **draft**. This file is the pre-registration artifact the
 `ECOSYSTEM_INTEGRATION_PLAN.md` "冻结前必办清单" writes into. It is frozen only
 when that checklist is empty; until then every section below is editable and
 nothing here is a commitment.
@@ -39,6 +45,8 @@ Two experiments, both defined in `ECOSYSTEM_INTEGRATION_PLAN.md` 阶段 4:
 |---|---|---|
 | Number of paired trials `k` at the reveal | σ_hetero measured on the dev split; **and the size N of the new holdout, which σ_hetero also sets** (清单 (5)) | Candidate draft, not a pre-registered value |
 | Size N of the new MAEDA holdout | σ_hetero (清单 (5)); the suite must then be authored (附录 DQ) | Not yet determined. No case may be authored into it before N is fixed |
+
+*(Closed at the freeze, §10.15: N = 119 (§10.14); k = 2 for B, C, R, CR and 2 for arm A.)*
 
 **Closed:**
 
@@ -96,6 +104,7 @@ re-draw budget one. See §1.6.
 |---|---|---|---|
 | **Retired MAEDA holdout** | `tests/eval/test_suite.json`, `split == "test"` | 41 of 100 | **Not a holdout.** Reveal adjudicated CONSUMED 2026-08-23 (§1.6) |
 | **New MAEDA holdout** | not yet constructed | N — **NOT YET DETERMINED**, set by σ_hetero (清单 (5)) | Holdout, one reveal, re-draw budget spent |
+| *(freeze note)* | `tests/eval/h1_holdout_test.json`, `split == "test"` | **N = 119** (§10.14) | Holdout, one reveal; see §10.15 |
 | **TB5 retrieval holdout** | rag `eval/fixtures/tb5_retrieval/test.json`, from the frozen test-split `probe_queries` in `event_script.yaml` | 8 derived entries; the guard's digest set holds 10 frozen test-split probe queries | Holdout, **reveal unspent** (§1.5, 附录 CP.2) |
 
 Conflating any two of these is the error §1.6 records. The rag split guard
@@ -164,6 +173,10 @@ silently dead and must be changed with it. The block below is retained as the
 record of what the retired reveal would have been, not as an instruction.
 
 **(B) below is unaffected and remains in force.**
+
+*(Freeze note, §10.15: the new MAEDA holdout reuses `split == "test"`; its reveal command is
+written in §10.15 item 9 and is the one in force. The block that follows stays as the record
+of the retired reveal.)*
 
 > Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 DW.5; transcribed verbatim.
 
@@ -874,7 +887,7 @@ on the cleaner arm of experiment 1.
 | (2) split guard sunk below every entry point | Closed in the rag repo (附录 CZ/DB); its **boundary** is stated in §1.3 |
 | (3) CP.5 four clauses | **Yes** — #2/#4 在 §4,#1/#3 在 §4.1(DE.3; premise #1 corrected per 附录 DH.3, 冻结前必办 (17)) |
 | (4) CM.7 on-arm tier | **Yes** — §0 "Closed" (user adjudication 2026-08-22, 附录 DG.4/DJ.4, 冻结前必办 (19)) |
-| (5) `k` and N | **No** — `k` still candidate only (§0); **N (new MAEDA holdout size) is a newly introduced open item, NOT YET DETERMINED**, both wait on σ_hetero, which 附录 DV records as never measured (pilot completed 2026-08-23, repeats=1, no σ obtained) |
+| (5) `k` and N | **No** —*(closed at the freeze, §10.15: N = 119, k = 2)*  `k` still candidate only (§0); **N (new MAEDA holdout size) is a newly introduced open item, NOT YET DETERMINED**, both wait on σ_hetero, which 附录 DV records as never measured (pilot completed 2026-08-23, repeats=1, no σ obtained) |
 | (6) behaviour changes | **Yes** — §3 (CQ.4 ×2, CT.5, CX.6) |
 | (7) CQ.0 disclosure | **Yes** — §5.1(DE.4) |
 | (8) paid-test intent gate | **Yes** — implemented, §5 |
@@ -883,8 +896,8 @@ on the cleaner arm of experiment 1.
 | (12) CS.6 reading traps | **Yes** — §4.2(DE.6) |
 | (14) CU.8 / CV.6 five items | **Yes** — §4 |
 | (15) `--split test` refuses a non-`always` `intent_refine_trigger` (附录 DD.3) | **Yes** — implemented in `scripts/run_eval.py`; stated in §1.2 and §3.2. **Now targets a retired holdout** (§1.6) — still mechanically active (protects the `test` label), but see (21) |
-| (20) part 2 — pre-registration holdout identity rebuild (附录 DU.3/DW) | **Partially done.** §1.6 rewritten in full (附录 DW.3); §1.1 rewritten in full as a three-set table (附录 DW.4); §1.2 (A) marked SUSPENDED with the retired command retained as record only, (B) untouched (附录 DW.5); §0 `k` row rewritten, N row added, arm-count/硬约束-1 "Closed" block appended (附录 DW.6). **Still open, genuinely, not just unwritten**: the new MAEDA holdout's size N (blocked on σ_hetero, 清单 (5) — 附录 DV: dev-split pilot completed 2026-08-23 but measured `repeats=1`, so σ_hetero was never obtained) and the new reveal command for §1.2 (A) (blocked on 清单 (21)'s labelling decision). Both markers are left as **NOT YET DETERMINED** / **NOT YET WRITTEN** deliberately — they are unresolved facts, not missing prose. §1.7 has restored the CP.2 disclosure that 附录 DW.3 had deleted from this file, so the gap that this row's earlier phrasing implicitly left open is repaired. |
-| (21) new holdout label vs. guard consistency (附录 DU.4) | **Not started.** If the new MAEDA holdout reuses `split == "test"`, gates (15) and (16) continue to protect it unchanged; if it is labelled differently, both gates go silently dead (§1.2 (A) annotation, 附录 DW.5) and must be updated together with a test proving the new label is still caught (判据 CK.6). |
+| (20) part 2 — pre-registration holdout identity rebuild (附录 DU.3/DW) | **Partially done.** *(Closed at the freeze, §10.15: N fixed, new reveal command written.)* §1.6 rewritten in full (附录 DW.3); §1.1 rewritten in full as a three-set table (附录 DW.4); §1.2 (A) marked SUSPENDED with the retired command retained as record only, (B) untouched (附录 DW.5); §0 `k` row rewritten, N row added, arm-count/硬约束-1 "Closed" block appended (附录 DW.6). **Still open, genuinely, not just unwritten**: the new MAEDA holdout's size N (blocked on σ_hetero, 清单 (5) — 附录 DV: dev-split pilot completed 2026-08-23 but measured `repeats=1`, so σ_hetero was never obtained) and the new reveal command for §1.2 (A) (blocked on 清单 (21)'s labelling decision). Both markers are left as **NOT YET DETERMINED** / **NOT YET WRITTEN** deliberately — they are unresolved facts, not missing prose. §1.7 has restored the CP.2 disclosure that 附录 DW.3 had deleted from this file, so the gap that this row's earlier phrasing implicitly left open is repaired. |
+| (21) new holdout label vs. guard consistency (附录 DU.4) | **Not started.** *(Closed at the freeze, §10.15 item 8: the holdout reuses `split == "test"`; the reveal guard and the `always` gate sit on the new reveal entries, with tests.)* If the new MAEDA holdout reuses `split == "test"`, gates (15) and (16) continue to protect it unchanged; if it is labelled differently, both gates go silently dead (§1.2 (A) annotation, 附录 DW.5) and must be updated together with a test proving the new label is still caught (判据 CK.6). |
 | (22) pre-registered comparisons and decision rules (附录 DW.6(3)(ii), EB, EC.3, ED.2) | **Yes** — §7. Arms, the three confirmatory hypotheses (H1/H2/H3), the routing-accuracy analysis, sample-eligibility fields, stratification rule, and multiplicity correction are all written. **7.6's decision rule is conditional on N**, the new MAEDA holdout's size, **which is not yet determined** (blocked on σ_hetero, 清单 (5)) — if N comes in materially smaller than the retired holdout's 41, 7.6 must be recomputed rather than carried over as written. **Amended 2026-10-30**: `groundedness` does not meet §8.1's bar, so **H2 is exploratory and the confirmatory set is H1 and H3** (§8.3(1)); §7.6's multiplicity is recomputed at two tests, 97.5%. §7.3 is expanded with 实验 2's labels, a pre-derived prediction for the cleaner half, the RAG routing predicate, and a per-arm k. §7.4 gains `cleaning_material`. |
 | (23) judge validity threshold, its pre-committed consequences, and the human labelling rubric | **Yes** — §8 and §9. The threshold is relative to the human reference's own test-retest reliability, measured at `answer_relevance` 0.4032 / `groundedness` 0.7167, replacing the absolute 0.60 bar (**stricter** for groundedness, **looser** for relevance). Four consequences pre-committed in §8.3; offline re-scoring bounded in §8.5; judge output specification and offline scoring rules in §8.6; the rubric, derived from the annotator's contemporaneous notes, in §9. **Provenance**: user adjudications 2026-10-28 and 2026-10-30; §8.1 carries its own disclosure that the rule was formulated after the machine scores were known. |
 
@@ -1013,8 +1026,14 @@ below the off arm's is a foreseeable result (附录 CO, CP.5).
 at all (2/2^7 = 0.0156), so the 3 `normal` events now in the test split cannot
 support H2 whatever the effect. The planning value is **about 12**; the final
 number is set from a dev pilot of the two arms' rates (附录 FI).
+*(Freeze note, §10.15: the pool is 12 test `normal` events with 2 probes each, 24 cases; dev
+pilot power at 12 events about 0.89, with the limits stated there.)*
 
 ### 7.3 实验 2: routing accuracy, and a prediction made before the reveal
+
+*(Amended 2026-11-11, user, 附录 HL.5; detail in §10.15 item 3: arm A runs on the 119 H1
+holdout cases **and** the 24 H2 test-pool probe cases. On the H1 holdout alone both halves
+would be fixed by design: no case is corpus-backed and the cleaner cannot fire.)*
 
 Arm A's result is the **precision / recall / confusion matrix of its routing
 decisions against the labelled "should have fired" ground truth**, reported in
@@ -1281,6 +1300,7 @@ folding strata into the confirmatory set silently doubles it:
   k and MDE derivation. N is NOT YET DETERMINED** (清单 (5); σ_hetero was never
   obtained — 附录 DV). **If N turns out materially smaller than the retired
   holdout's 41, 7.6 must be recomputed rather than carried over.**
+  *(Freeze note: N = 119 (§10.14), larger than 41; §7.6 as amended 2026-11-11 governs.)*
 
 > Text authored by the orchestrator in ECOSYSTEM_INTEGRATION_PLAN.md 附录 ED.2;
 > transcribed verbatim.
@@ -2116,3 +2136,99 @@ their truths (they are computed from a table that is also public here). That is 
 H1: the property protected is that no system run or tuning has seen these cases, not that
 their text is secret. Any change to the planner, the cleaner prompt, the scorer or the
 pipeline after this point must be recorded, because the holdout is now fixed.
+
+### 10.15 Freeze record (2026-11-11, 附录 HH to HT)
+
+Frozen by the user's instruction "推送 然后冻结" (附录 HT). Where an earlier section still says
+"open", "candidate" or "NOT YET", this section governs. Every item cites the appendix where it
+was decided.
+
+**1. H2 scorer bar met (附录 HH, HI).** Human test-retest κ (pass 1 vs pass 2, n = 60) 0.544,
+95% bootstrap CI 0.334 to 0.724; judge vs pass 1 κ 0.616, CI 0.430 to 0.783; paired difference
+CI −0.200 to 0.351. The reference pass (pass 1) was confirmed by the user after both numbers
+were known; judge vs pass 2 κ is 0.258. See the 2026-11-11 status note in §7.2. **H2 is
+confirmatory; three tests, α = 0.0167** (§7.6 as amended).
+
+**2. k (附录 HR).** **k = 2** for arms B, C, R, CR on the H1 holdout (repeat noise 0.036 against
+case SD 0.296, 附录 HA.1, so power depends on the number of cases; 2 rather than 1 so that a
+single void run does not remove a case from an arm). Arm A: k = 2 (§7.3.3). H2: arms B and R
+at 3 trials per probe case, arm A at 2. This replaces the "3" used in 附录 HA.4's estimate.
+
+**3. 实验 2 sample (附录 HL).** Arm A (cleaner `auto`, rag `auto`) runs on the 119 H1 holdout
+cases and on the 24 H2 test-pool probe cases. Labels (§7.4): for the 119,
+`tests/eval/h1_holdout_eligibility.json` (sha256 `6246cdffa6bab39fb019ca26946a1ca8cfab4219780ad092267c7a6a3c2bcc70`,
+附录 HO): `cleaning_relevant` 119/119, `cleaning_material` 116/119, `corpus_backed` 0/119.
+For the 24 probes: `corpus_backed` true (all 12 pool events have corpus, file-level check 附录
+HP.4, to be re-checked in the built store's `documents` table before arm A's numbers are read);
+`cleaning_material` not applicable (no numeric truth), so probes enter the RAG half only.
+
+**4. Declared IQR fences (附录 HO).** §7.4 said "declared" without values. Declared here:
+1.5 × IQR over the full dirty `data/demo/sales_data.csv`, per column: revenue [116.8813,
+709.0112], units [−0.5, 19.5]. §7.4's defect list omits the injected duplicate rows; adding
+deduplication to the repair changes no label (116/119 either way).
+
+**5. Refine setting (附录 HM).** The reveal runs with `intent_refine_trigger = always`, as
+§1.2 (A) and §3.2 require, for H1/H3, arm A and H2 alike. **Disclosure:** the σ run that set
+N (§10.13, 附录 GZ) ran under `if_unresolved`, as did the H2 dev pilot and the judge
+calibration reports. §3.2's own warning applies: the noise floor was measured on a different
+code path from the one the reveal runs. N is not recomputed (user, 附录 HM.5).
+
+**6. H2 cases and power (附录 HP, HR, HJ).** 12 test-pool events × 2 `h2_probes` = 24 cases;
+the event remains the unit. Dev pilot (10 dev `normal` events, judge-labelled, 附录 HJ): mean
+R − B 0.40, every B-arm event 0. Resampling 12 events from the 10 dev deltas gives power about
+0.89 for the exact two-sided sign-flip test at α = 0.0167. This is optimistic: the sign-flip test
+ignores scale, so power is set by the share of events with R − B ≤ 0 (3 of 10 zero, none
+negative, in dev); one negative event in the test pool lowers it markedly.
+
+**7. Repository commits for the reveal (附录 HC.3).** The reveal must run on:
+
+| Repository | Commit | Note |
+|---|---|---|
+| MAEDA | `368436fdac152cde9f6e09d33e26baec657dee96` | last code commit before this freeze; later commits may touch only `docs/` |
+| rag-framework | `fe908d4929c3dc5fa9ab533153e02c043ee7d9bf` | `rag/` unchanged since the σ run's `5021693` |
+| agentic-data-cleaner-v2 | `c3639dcee4342ea3e1417957e2a2b31ef4459df7` | same as the σ run |
+
+Cleaner planner mode: **`llm`** (gpt-4o), as in the σ run (附录 GV) and §2.3. Before the reveal,
+each repository's HEAD is checked: MAEDA `git diff --stat 368436f HEAD -- . ':!docs'` must be
+empty, rag and cleaner HEAD must equal the commit above. Any mismatch stops the reveal. MAEDA
+`src/` changed between the σ run's code (`d610705`) and this freeze only by the reveal guard
+(`src/eval/reveal_guard.py`, `src/eval/runner.py`).
+
+**8. Guards (附录 HN, HS).** `scripts/run_sigma.py --sample holdout` and
+`scripts/generate_h2_reports.py --plan reveal` refuse before any call unless
+`MAEDA_REVEAL_AUTHORIZED=1`, `intent_refine_trigger = always`, and the store is `tb5_full.db`.
+Every case load in both scripts and in `scripts/judge_h2_reports.py` passes the reveal guard, so
+a `split == "test"` case never runs without the flag. rag's probe-digest guard does not see
+MAEDA's retrieval queries (they are rebuilt from the analysis, `src/graph/nodes.py:1417`), which
+is §1.3's boundary; the MAEDA-side guard is the protection.
+
+**9. Reveal commands, in order.** Each paid step is authorized by the user separately.
+```
+# 1. Build the reveal store (rag; paid embeddings, about $0.0003; 附录 HP.2)
+cd ~/rag-framework && python scripts/tb5_build_full_store.py --reveal-confirmed
+#    then record tb5_full.db's content hash (§10.5 algorithm); run_sigma holds it fixed.
+# 2. Export the 24 H2 test cases (rag; no cost)
+python scripts/h2_reveal_export.py --reveal-confirmed \
+  --out ~/MAEDA/data/h2_reveal/h2_test_attribution_cases.json
+# 3. Start rag's MCP server with RAG_TEST_SPLIT_REVEAL=1 and the cleaner MCP (planner llm).
+# 4. H1/H3 and arm A on the H1 holdout (MAEDA)
+cd ~/MAEDA && export MAEDA_REVEAL_AUTHORIZED=1 MAEDA_INTENT_REFINE_TRIGGER=always \
+  MAEDA_RAG_DB_PATH=~/rag-framework/data/tb5_full.db \
+  MAEDA_RAG_INDEX_DIR=~/rag-framework/data/tb5_full_indexes
+PYTHONPATH=. caffeinate -i -s python scripts/run_sigma.py --sample holdout --repeats 2 \
+  --out-dir data/reveal_h1 --budget <authorized>
+# 5. H2 and arm A on the probes
+PYTHONPATH=. python scripts/generate_h2_reports.py --plan reveal \
+  --cases data/h2_reveal/h2_test_attribution_cases.json --out-dir data/h2_reveal --budget <authorized>
+# 6. Attribution judge on the H2 reveal reports
+PYTHONPATH=. python scripts/judge_h2_reports.py --set reveal --dir data/h2_reveal \
+  --cases data/h2_reveal/h2_test_attribution_cases.json --budget-usd <authorized>
+```
+Estimated cost at k = 2 (附录 HR.3): about $47 in total; the `always` setting may raise the
+per-run price above the σ run's $0.036.
+
+**10. Frozen identities carried forward unchanged.** Clean truth table `6c953344…` (§10.11);
+pipeline input `b863b601…2719`; H1 holdout `9885666d3549c36b…` with manifest and seed
+20261106 (§10.14); event script `event-script-v2` with the hashes in §10.6; judge
+dmxapi/deepseek-v4-flash-0731, 3 samples, prompt as of `64fcc4f` (§7.2.1, 附录 FN).
+
