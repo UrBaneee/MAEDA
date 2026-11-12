@@ -11,6 +11,13 @@ job when the running cost would pass the budget, and stops at once if an R-arm
 run is invalid (that is a setup fault, not a datum).
 
     python scripts/generate_h2_reports.py --plan dry --budget 9
+
+--plan reveal (附录 HP, HQ, HR): the H2 reveal on the 24 test-pool probe cases exported
+by rag's scripts/h2_reveal_export.py into a gitignored file passed as --cases. Arms B and
+R at 3 trials (as formal), plus 实验 2's arm A (cleaner auto, rag auto) at 2 trials
+(预注册 §7.3.3, HL.5). Refuses before building the graph unless MAEDA_REVEAL_AUTHORIZED=1,
+intent_refine_trigger == "always" (附录 HM.5) and the store is tb5_full.db. Every plan
+passes its cases through the reveal guard, so a split=test case never runs without the flag.
 """
 from __future__ import annotations
 
@@ -32,7 +39,10 @@ from src.state.graph_state import initial_state  # noqa: E402
 
 CASES = Path("tests/eval/h2_dev_attribution_cases.json")
 OUT_DIR = Path("data/h2_attribution")
-ARMS = {"B": "force_off", "R": "force_on"}
+#: arm -> (cleaner_mode, rag_mode). A is 实验 2's routing arm, reveal plan only.
+ARMS = {"B": ("force_off", "force_off"), "R": ("force_off", "force_on"), "A": ("auto", "auto")}
+ARM_A_TRIALS = 2  # 预注册 §7.3.3
+REQUIRED_REVEAL_TRIGGER = "always"  # 附录 HM.5
 
 # Dry run: two normal events and one distractor, the probe query the formal
 # plan uses least, one trial per arm. Six reports, none of them in the 60.
@@ -46,8 +56,34 @@ def jobs(plan: str, cases: list[dict]) -> list[dict]:
     else:
         chosen = [(c["id"], f"t{t}") for c in cases
                   for t in range(1, (3 if c["event_type"] == "normal" else 1) + 1)]
-    return [{"job_id": f"{cid}|{arm}|{trial}", "case_id": cid, "arm": arm, "trial": trial}
-            for cid, trial in chosen for arm in ARMS]
+    out = [{"job_id": f"{cid}|{arm}|{trial}", "case_id": cid, "arm": arm, "trial": trial}
+           for cid, trial in chosen for arm in ("B", "R")]
+    if plan == "reveal":
+        out += [{"job_id": f"{c['id']}|A|t{t}", "case_id": c["id"], "arm": "A", "trial": f"t{t}"}
+                for c in cases for t in range(1, ARM_A_TRIALS + 1)]
+    return out
+
+
+def preflight(plan: str) -> str | None:
+    """Refusals checked before the graph is built or any call is made."""
+    if plan != "reveal":
+        return None
+    from src.eval.reveal_guard import REVEAL_ENV, reveal_authorized
+    if not reveal_authorized():
+        return f"reveal plan needs {REVEAL_ENV}=1 set by the reveal command (附录 HA.5)"
+    if settings.intent_refine_trigger != REQUIRED_REVEAL_TRIGGER:
+        return (f"reveal plan needs MAEDA_INTENT_REFINE_TRIGGER={REQUIRED_REVEAL_TRIGGER}, "
+                f"got {settings.intent_refine_trigger!r} (附录 HM.5)")
+    if Path(settings.rag_db_path or "").name != "tb5_full.db":
+        return "reveal plan: store must be tb5_full.db (预注册 §10.5)"
+    return None
+
+
+def load_cases(path: Path) -> list[dict]:
+    from src.eval.reveal_guard import require_reveal_authorization
+    rows = json.loads(path.read_text())
+    require_reveal_authorization(rows)  # refuses split=test without the flag, whatever the plan
+    return rows
 
 
 def run_cost(state: dict) -> float:
@@ -55,7 +91,7 @@ def run_cost(state: dict) -> float:
 
 
 async def run_job(job: dict, case: GoldenTestCase, graph) -> dict:
-    settings.maeda_rag_mode = ARMS[job["arm"]]
+    settings.maeda_cleaner_mode, settings.maeda_rag_mode = ARMS[job["arm"]]
     state = initial_state(case.query)
     state["data_sources"] = [dict(case.data_source)]
     t0 = time.time()
@@ -72,6 +108,8 @@ async def run_job(job: dict, case: GoldenTestCase, graph) -> dict:
         "n_rag_chunks": len(out.get("rag_context") or []),
         "rag_sources": [s.get("source_file") for s in out.get("rag_sources") or []],
         "mcp_modes": [c.get("mode") for c in out.get("mcp_call_log") or []],
+        "mcp_calls": [{"system": c.get("system"), "tool": c.get("tool"), "mode": c.get("mode")}
+                      for c in out.get("mcp_call_log") or []],
         "degradation_log": out.get("degradation_log") or [],
         "cost_usd": round(run_cost(out), 6), "elapsed_s": round(time.time() - t0, 1),
     }
@@ -93,7 +131,14 @@ async def main_async(args) -> int:
     settings.eval_enabled = False
     if not (settings.rag_db_path and settings.rag_index_dir):
         raise SystemExit("MAEDA_RAG_DB_PATH and MAEDA_RAG_INDEX_DIR must point at the TB5 corpus (附录 FL)")
-    cases = {c["id"]: GoldenTestCase.from_dict(c) for c in json.loads(CASES.read_text())}
+    refusal = preflight(args.plan)
+    if refusal:
+        raise SystemExit(f"REFUSING: {refusal}. Nothing was run and nothing was billed.")
+    if args.plan == "reveal" and not args.cases:
+        raise SystemExit("--plan reveal needs --cases <exported test cases file>")
+    cases_path = Path(args.cases) if args.cases else CASES
+    case_rows = load_cases(cases_path)
+    cases = {c["id"]: GoldenTestCase.from_dict(c) for c in case_rows}
     out_path = out_dir / f"reports_{args.plan}.jsonl"
     # 附录 GJ: every retrieved doc must be in the dev store, and a report whose
     # profile call fell back is void (cleaner MCP must be live).
@@ -109,9 +154,10 @@ async def main_async(args) -> int:
     if not header.exists():
         header.write_text(json.dumps({"settings_snapshot": _settings_snapshot(),
                                       "provenance": _run_provenance(None),
-                                      "cases_file": str(CASES)}, indent=2, default=str))
+                                      "cases_file": str(cases_path), "plan": args.plan},
+                                     indent=2, default=str))
     spent = args.already_spent + sum(r["cost_usd"] for r in done.values())
-    todo = [j for j in jobs(args.plan, list(json.loads(CASES.read_text()))) if j["job_id"] not in done]
+    todo = [j for j in jobs(args.plan, case_rows) if j["job_id"] not in done]
     print(f"{len(done)} saved, {len(todo)} to run, ${spent:.4f} spent so far (budget ${args.budget})")
     graph = build_graph()
     for job in todo:
@@ -133,7 +179,7 @@ async def main_async(args) -> int:
         print(f"{job['job_id']}: {len(row['report'])} chars, rag_chunks={row['n_rag_chunks']}, "
               f"modes={row['mcp_modes']}, ${row['cost_usd']:.4f}, total ${spent:.4f}")
         if foreign:
-            print(f"STOP: {len(foreign)} retrieved doc id(s) not in the dev store (content not printed)")
+            print(f"STOP: {len(foreign)} retrieved doc id(s) not in the store (content not printed)")
             return 6
         if n_new >= 5 and n_void / n_new > 0.10:
             print(f"STOP: {n_void}/{n_new} reports void (mcp fallback), over the 10% limit")
@@ -154,7 +200,8 @@ async def main_async(args) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--plan", choices=["dry", "formal"], required=True)
+    parser.add_argument("--plan", choices=["dry", "formal", "reveal"], required=True)
+    parser.add_argument("--cases", default=None, help="cases JSON; required for --plan reveal (gitignored path)")
     parser.add_argument("--budget", type=float, required=True, help="USD cap for MAEDA-side cost")
     parser.add_argument("--out-dir", default=str(OUT_DIR),
                         help="where reports go; use a fresh dir so the FM calibration reports are never appended to")

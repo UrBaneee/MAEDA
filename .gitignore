@@ -56,3 +56,7 @@ logs/noise_runs/judge_fixed_states.json
 # Cursor, etc.) — kept locally, not tracked, so it doesn't have to be
 # hand-synced with CLAUDE.md on every edit.
 AGENTS.md
+
+# 阶段 4 reveal outputs and exported test cases (附录 HQ.3): never tracked
+data/h2_reveal/
+data/reveal_h1/

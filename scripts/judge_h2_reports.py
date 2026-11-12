@@ -56,7 +56,11 @@ class _UsageRecorder:
 
 
 async def main(args) -> int:
-    cases = {c["id"]: c for c in json.loads(CASES.read_text())}
+    cases_path = Path(args.cases) if args.cases else CASES
+    rows = json.loads(cases_path.read_text())
+    from src.eval.reveal_guard import require_reveal_authorization
+    require_reveal_authorization(rows)  # split=test cases need the reveal flag (附录 HQ.2)
+    cases = {c["id"]: c for c in rows}
     out_dir = Path(args.dir)
     reports = [json.loads(line) for line in (out_dir / f"reports_{args.set}.jsonl").open()]
     out_path = out_dir / f"judge_{args.set}.jsonl"
@@ -96,6 +100,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--set", choices=["dry", "formal"], required=True)
     parser.add_argument("--budget-usd", type=float, required=True)
+    parser.add_argument("--cases", default=None,
+                        help="cases JSON (default: the dev attribution cases); the reveal export for the H2 reveal")
     parser.add_argument("--dir", default=str(DEFAULT_DIR),
                         help="directory holding reports_<set>.jsonl; judge_<set>.jsonl is written there")
     sys.exit(asyncio.run(main(parser.parse_args())))
