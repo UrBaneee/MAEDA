@@ -37,7 +37,7 @@ def _human_labels(label_dir: Path, mapping_path: Path) -> dict[str, str]:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    p.add_argument("--set", choices=["dry", "formal"], required=True)
+    p.add_argument("--set", choices=["dry", "formal", "reveal"], required=True)
     p.add_argument("--labels", choices=["judge", "human"], required=True)
     p.add_argument("--human-dir", type=Path)
     p.add_argument("--mapping", type=Path)

@@ -98,7 +98,7 @@ async def main(args) -> int:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--set", choices=["dry", "formal"], required=True)
+    parser.add_argument("--set", choices=["dry", "formal", "reveal"], required=True)
     parser.add_argument("--budget-usd", type=float, required=True)
     parser.add_argument("--cases", default=None,
                         help="cases JSON (default: the dev attribution cases); the reveal export for the H2 reveal")
