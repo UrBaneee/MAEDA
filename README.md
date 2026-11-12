@@ -4,7 +4,7 @@
 
 > A LangGraph-orchestrated plan-and-execute pipeline that takes a natural language question about enterprise data, connects to a data source, has an LLM planner emit a typed, dependency-ordered analysis plan, executes it, and delivers a charted insight report — with every output passing through a 9-check guardrail and a self-scored eval before it's returned.
 
-**On the name**: this project is called MAEDA and the code is organized into five single-purpose LLM-calling classes ("agents") — but it is not an autonomous multi-agent system in the sense of agents that call tools in a loop, decide when they're done, or negotiate with each other. There is no `bind_tools`/`ToolNode`/`create_react_agent` anywhere in this codebase. The Analysis Planner emits its full step plan once; a separate, non-LLM executor runs it. What *is* real and demonstrated: a LangGraph state machine with 3 bounded retry loops (clarification, data-cleaning, guardrail-triggered re-execution), a typed step-plan the Planner writes and the Executor runs without further LLM involvement, and every output scored by an eval harness with measured human-agreement numbers (see [Evaluation](#evaluation) below) — see [docs/roadmap.md](docs/roadmap.md) for the full, current list of what's built vs. not.
+**On the name**: this project is called MAEDA and the code is organized into five single-purpose LLM-calling classes ("agents") — but it is not an autonomous multi-agent system in the sense of agents that call tools in a loop, decide when they're done, or negotiate with each other. There is no `bind_tools`/`ToolNode`/`create_react_agent` anywhere in this codebase. The Analysis Planner emits its full step plan once; a separate, non-LLM executor runs it. What *is* real and demonstrated: a LangGraph state machine with 2 bounded retry loops (data-cleaning, guardrail-triggered re-execution), a typed step-plan the Planner writes and the Executor runs without further LLM involvement, and every output scored by an eval harness with measured human-agreement numbers (see [Evaluation](#evaluation) below) — see [docs/roadmap.md](docs/roadmap.md) for the full, current list of what's built vs. not.
 
 **Headline result**: in a pre-registered A/B test, the data-cleaning sub-system raised numeric accuracy by +0.189 and the retrieval sub-system raised cause-attribution accuracy by +0.653, both significant after multiple-comparison correction ([details](#do-the-two-sub-systems-actually-help-a-pre-registered-ab-test-phase-4)).
 
@@ -15,7 +15,7 @@
 
 ## Architecture
 
-12 LangGraph nodes, 3 conditional branches, 3 bounded retry loops, one typed
+14 LangGraph nodes, 4 conditional branches, 2 bounded retry loops, one typed
 `MAEDAState` threaded through all of it:
 
 ```
@@ -23,13 +23,14 @@
 │                    MAEDA (This Project)                      │
 │  LangGraph state machine · Eval · Guardrails · Viz          │
 │                                                              │
-│  parse_intent → connect_and_profile_data → plan_analysis     │
-│       ↓ (↻ clarify, max 1)      ↓ (↻ clean, max 3)          │
-│  execute_analysis → generate_viz → retrieve_domain_knowledge │
-│       ↑ (↻ guardrail retry, max 2)         ↓                │
-│  run_guardrails ←──────────────── generate_insights          │
+│  parse_intent → connect_schema → (refine_intent) →           │
+│       profile_and_clean (↻ clean, max 3) → plan_analysis     │
 │       ↓                                                      │
-│  run_eval → persist_run → END                                 │
+│  execute_analysis → generate_viz → retrieve_domain_knowledge │
+│       ↑ (↻ guardrail retry, max 2)   or skip_retrieval       │
+│  run_guardrails ←──────────────── generate_insights          │
+│       ↓                    (failure → handle_error)          │
+│  run_eval → persist_run → END                                │
 │                                                              │
 │  ┌──────────────────┐    ┌──────────────────────────────┐    │
 │  │  Agentic Data    │    │     RAG-MCP-Server            │    │
@@ -42,7 +43,7 @@
 ```
 
 **Key Design Decisions:**
-- **LangGraph state graph** — all flow via conditional edges, typed `MAEDAState` as single source of truth; see [docs/roadmap.md](docs/roadmap.md) for the exact node/edge/loop inventory
+- **LangGraph state graph** — all flow via conditional edges, typed `MAEDAState` as single source of truth; the exact node/edge/loop wiring is in [`src/graph/builder.py`](src/graph/builder.py)
 - **Plan-and-execute, not an agentic tool-calling loop** — the Analysis Planner (LLM) emits a full typed step plan (tool, parameters, dependencies) once; a separate, non-LLM Executor runs it topologically. A failed step gets one LLM-assisted repair attempt using the tool's real error message, not a re-plan.
 - **MCP protocol** for sub-system communication — designed so MAEDA delegates rather than reimplements data-quality profiling and domain retrieval. Verified end-to-end against real Data Cleaner + RAG-MCP-Server processes (not mocks): a live dirty dataset goes profile → clean → re-profile → validate and converges in-graph, cleaned files and quality reports are genuinely consumed by later rounds, and real OpenAI-embedded hybrid retrieval with a Voyage/CrossEncoder reranker returns re-ranked, source-attributed chunks. The strict/degraded error matrix (connection, data-input, format, contract-version, RAG zero-hit vs internal failure) has also been exercised live, not just unit-tested. The pandas/empty-context fallback path still exists and is exercised whenever a sub-system is genuinely unreachable, but it is no longer the *only* path that's been run.
 - **Every LLM call tracked** — per-request cost tracker, decision trace on every node, eval scores on every run
@@ -117,7 +118,7 @@ python scripts/demo_scenarios.py --all
 ```
 src/
 ├── agents/         Intent parser, Analysis, Viz, Insight, Guardrail
-├── eval/           EvalRunner, metrics, 100-case golden suite (59 dev / 41 held-out test), regression detection
+├── eval/           EvalRunner, metrics, noise/significance tests, H2 summary, regression detection
 ├── graph/          LangGraph builder, nodes, router, streaming
 ├── mcp_client/     Data Cleaner + RAG Server MCP clients with fallbacks
 ├── mcp_server/     MAEDA-as-MCP-server (FastMCP)
@@ -130,8 +131,9 @@ src/
 ui/                 Streamlit app (Phase 11)
 scripts/            Demo data generator, demo scenarios, eval harness
 tests/
-├── unit/           547 tests, all phases covered
-└── eval/           Golden test suite JSON
+├── unit/           1,078 tests, all phases covered
+├── integration/    Live MCP integration tests
+└── eval/           130-case dev golden suite, phase 4 H1 holdout (119, revealed) and H2 cases
 data/demo/          Sales, churn, marketing, ecommerce datasets
 ```
 
@@ -142,18 +144,23 @@ data/demo/          Sales, churn, marketing, ecommerce datasets
 Plan-and-execute, not an agentic loop: the Planner decides the *what* once;
 the Executor is a plain topological-sort runner with no further LLM
 involvement per step (only a targeted, error-message-driven repair on
-failure). `(LLM)` marks the four stages where a model actually decides
+failure). `(LLM)` marks the stages where a model actually decides
 something; everything else is deterministic code.
 
 ```
 User Query
     │
     ▼
-Intent Parser      (LLM) → parsed_intent, clarification if needed (↻ max 1)
+Intent Parser      (LLM) → parsed_intent
     │
     ▼
-Connect + Profile  → schema, NL summary  ──→  Data Cleaner MCP, or local
-                                              pandas fallback (↻ clean, max 3)
+Connect schema     → schema extraction + table selection; optional schema-aware
+                     second intent pass (Refine Intent, LLM)
+    │
+    ▼
+Profile + Clean    → Data Cleaner MCP (profile → clean → re-profile → validate),
+                     or local pandas fallback (↻ clean, max 3). In auto mode,
+                     cleaning runs only if the profile reports critical issues.
     │
     ▼
 Analysis Planner   (LLM) → typed step plan: tool, parameters, depends_on
@@ -166,21 +173,24 @@ Analysis Executor  → runs the plan topologically: pandas / SQL / stats /
 Viz Agent          → recommend chart → static PNG + Plotly JSON → LLM caption
     │
     ▼
-Retrieve Knowledge → RAG-MCP-Server, or skipped if unreachable
+Retrieve Knowledge → RAG-MCP-Server. In auto mode, only for diagnostic or
+                     exploratory questions; otherwise skipped (and logged).
+                     Degrades to empty context if the server is unreachable.
     │
     ▼
 Insight Agent      (LLM) → grounded insights + markdown report
     │
     ▼
-Guardrail Agent    → 9 checks: 5 rule-based (PII, SQL safety, numerical
-                     consistency, completeness, population-claim grounding)
+Guardrail Agent    → 10 checks: 6 rule-based (PII, SQL safety, numerical
+                     consistency, completeness, population-claim and
+                     superlative-claim grounding)
                      + 4 LLM-as-judge (factual accuracy, hallucination, PII
                      leakage, misleading framing) (↻ retry execute_analysis,
                      max 2, on a critical failure)
     │
     ▼
-Eval Module        → answer_relevance, groundedness (independent LLM judges),
-                     factual_accuracy, intent_accuracy, tool_selection, ...
+Eval Module        → answer_relevance, groundedness (LLM judges on a separate
+                     provider), factual_accuracy, intent_accuracy, ...
     │
     ▼
 Final Report + Charts + Eval Scores
@@ -222,22 +232,36 @@ reproduction files: **[docs/phase4_results.md](docs/phase4_results.md)**.
 
 ### The eval harness
 
-Every run is automatically scored against a 100-case golden suite
-(59 dev / 41 held-out test, stratified by query type and difficulty) via
-`scripts/run_eval.py --split dev` (the 41-case test split is a one-time
-official reveal, gated behind `--split test`, not for iterating against).
+Every run is scored automatically. The everyday suite is
+`tests/eval/test_suite.json`: 130 dev cases, stratified by query type and
+difficulty, run with `scripts/run_eval.py`. It is for iterating against, not
+a holdout: the original 41-case test split was consumed in August 2026 and
+retired to dev, and phase 4's one-time holdout (119 H1 cases) was revealed
+on 2026-11-12 (see above).
 
-| Metric | Weight | Method |
-|--------|--------|--------|
-| answer_relevance | 3.0 | LLM-as-judge, independent call |
-| groundedness | 3.0 | LLM-as-judge: extracts a claim list, scored as supported/total in code (not asked as a bare float) |
-| factual_accuracy | 2.0 | Number overlap between report and analysis results |
-| intent_accuracy | 1.5 | Confidence + type match |
-| tool_selection | 1.0 | Checked against each case's expected tool(s) |
-| chart_appropriateness | 0.5 | Checked against each case's expected chart type(s) |
-| token_cost, retry_count, error_rate, total_latency, step_success_rate, safe_refusal | 0.0 | Reported and tracked for regression detection, deliberately excluded from the aggregate — a healthy system's error_rate/step_success_rate *should* sit at a constant 1.0, so folding a non-discriminating metric into a quality average only dilutes it |
+| Metric | Method | Human agreement | Aggregate weight |
+|--------|--------|-----------------|------------------|
+| factual_accuracy | Code: numbers in the report vs the case's ground truth (1% tolerance); falls back to overlap with the analysis results when a case has no ground truth | no judge involved | 2.0 |
+| answer_relevance | LLM judge, median of 3 calls | met the pre-registered bar (QWK 0.73 vs human retest 0.40) | 3.0 |
+| groundedness | LLM judge extracts a claim list; supported/total computed in code | **did not meet** the bar (QWK 0.50 vs human retest 0.72) | 3.0 |
+| event_attribution_accuracy | LLM judge: correct / wrong / none against the event's documented cause (H2 only) | met its bar before the freeze | 0 (exists on event cases only) |
+| intent_accuracy | Code: query type 0.4, metrics 0.3, dimensions 0.3, against each case's expectations | no judge involved | 1.5 |
+| tool_selection | Code: against each case's expected tool(s) | no judge involved | 1.0 |
+| chart_appropriateness | Code: against each case's expected chart type(s) | no judge involved | 0.5 |
+| token_cost, retry_count, error_rate, total_latency, step_success_rate, safe_refusal | Operational measurements | not applicable | 0 |
 
-Regression detection alerts on any metric drop > 5% vs baseline.
+**About the weights.** `aggregate_score` (`src/eval/runner.py::_aggregate_score`)
+still exists: it gives one number per run for the console summary and for
+regression detection, which alerts on any metric or the aggregate dropping by
+more than 0.05 vs a baseline (more than 0.20 is critical). The weights were
+chosen by hand and have never been validated, and the largest one goes to
+`groundedness`, the judge that did not meet the human-agreement bar. So the
+aggregate is a quick-look number only. **No conclusion in this project rests
+on it**: phase 4 bound each hypothesis to exactly one primary metric and
+reported everything else descriptively, precisely to avoid a hand-weighted
+composite. Operational metrics stay at weight 0 because a healthy system's
+error_rate and step_success_rate sit at a constant 1.0 and would only dilute
+a quality average.
 
 ### Failed runs are scored too, on less
 
@@ -325,7 +349,7 @@ Prioritized gap analysis and what was deliberately *not* built:
 ## Tests
 
 ```bash
-pytest tests/unit/ -v          # 547 tests, all phases
+pytest tests/unit/ -v          # 1,078 tests, all phases
 pytest tests/unit/test_phase9.py -v   # eval module only
 ```
 
