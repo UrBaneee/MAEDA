@@ -6,6 +6,8 @@
 
 **On the name**: this project is called MAEDA and the code is organized into five single-purpose LLM-calling classes ("agents") — but it is not an autonomous multi-agent system in the sense of agents that call tools in a loop, decide when they're done, or negotiate with each other. There is no `bind_tools`/`ToolNode`/`create_react_agent` anywhere in this codebase. The Analysis Planner emits its full step plan once; a separate, non-LLM executor runs it. What *is* real and demonstrated: a LangGraph state machine with 3 bounded retry loops (clarification, data-cleaning, guardrail-triggered re-execution), a typed step-plan the Planner writes and the Executor runs without further LLM involvement, and every output scored by an eval harness with measured human-agreement numbers (see [Evaluation](#evaluation) below) — see [docs/roadmap.md](docs/roadmap.md) for the full, current list of what's built vs. not.
 
+**Headline result**: in a pre-registered A/B test, the data-cleaning sub-system raised numeric accuracy by +0.189 and the retrieval sub-system raised cause-attribution accuracy by +0.653, both significant after multiple-comparison correction ([details](#do-the-two-sub-systems-actually-help-a-pre-registered-ab-test-phase-4)).
+
 <!-- Demo recording: save as docs/demo.gif (or .mp4) and uncomment the line below -->
 <!-- ![MAEDA demo](docs/demo.gif) -->
 
@@ -187,6 +189,38 @@ Final Report + Charts + Eval Scores
 ---
 
 ## Evaluation
+
+### Do the two sub-systems actually help? A pre-registered A/B test (phase 4)
+
+MAEDA's two MCP sub-systems were tested in a pre-registered experiment: the
+hypotheses, samples, metrics, decision rules and code were frozen on
+2026-11-11 ([`docs/phase4_preregistration.md`](docs/phase4_preregistration.md) §10.15),
+and the sealed test sets were revealed once, on 2026-11-12. Five arms switch
+only the cleaner and retrieval: B (both off), C (cleaning on), R (retrieval on),
+CR (both on), A (auto).
+
+| Hypothesis | Comparison | Primary metric | Effect | Test (α = 0.0167, Bonferroni over 3) | Verdict |
+|---|---|---|---|---|---|
+| H1: cleaning net gain | C − B | `factual_accuracy` (scored by code) | +0.189 | 98.3% CI [+0.114, +0.272] | **Holds** |
+| H2: retrieval net gain | R − B | `event_attribution_accuracy` (LLM judge, calibrated against humans) | +0.653 | exact sign-flip over 12 events, p = 0.002 | **Holds** |
+| H3: interaction | (CR − R) − (C − B) | `factual_accuracy` | −0.009 | 98.3% CI [−0.047, +0.028] | Not detected |
+
+What it means, and its limits:
+
+- Cleaning fixes numbers, retrieval supplies causes, and they don't interfere.
+  With retrieval off, no report named an event's true cause.
+- The absolute level is still low: with cleaning on, about 26% of numeric
+  questions are answered correctly, because the cleaner does not repair ×10
+  revenue outliers.
+- Auto mode never triggered cleaning, so it gets none of the H1 gain. This was
+  predicted before the reveal: the cleaner's gate cannot fire on this data.
+- All data is synthetic (one demo sales table with injected defects, one
+  scripted event set), so these results do not carry over directly to real data.
+
+1,382 runs, 0 voided, about $42 in API cost. Full results, deviations and
+reproduction files: **[docs/phase4_results.md](docs/phase4_results.md)**.
+
+### The eval harness
 
 Every run is automatically scored against a 100-case golden suite
 (59 dev / 41 held-out test, stratified by query type and difficulty) via
