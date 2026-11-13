@@ -1,0 +1,1568 @@
+{
+ "metadata": {
+  "model": "gemini-decision-1",
+  "primary": "choice"
+ },
+ "results": {
+  "D01": {
+   "choice": "descriptive",
+   "probs": {
+    "diagnostic": 0.01946420702907558,
+    "exploratory": 0.07836284635497724,
+    "predictive": 0.005693729232994923,
+    "descriptive": 0.6880661067632302,
+    "comparative": 0.20841311061972204
+   },
+   "confidence": 0.6880661067632302,
+   "input_tokens": 113
+  },
+  "D02": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.07125056933575408,
+    "diagnostic": 0.04412621035628348,
+    "predictive": 0.006364177509147271,
+    "descriptive": 0.5874445720365485,
+    "comparative": 0.29081447076226663
+   },
+   "confidence": 0.5874445720365485,
+   "input_tokens": 118
+  },
+  "D03": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.038315556878172265,
+    "exploratory": 0.07970278880034769,
+    "descriptive": 0.8609535232974276,
+    "predictive": 0.0034780257660795787,
+    "diagnostic": 0.017550105257972626
+   },
+   "confidence": 0.8609535232974276,
+   "input_tokens": 117
+  },
+  "D04": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.7879878609593254,
+    "diagnostic": 0.012327572594392067,
+    "predictive": 0.014249401531145626,
+    "comparative": 0.028440930820669605,
+    "exploratory": 0.1569942340944673
+   },
+   "confidence": 0.7879878609593254,
+   "input_tokens": 119
+  },
+  "D05": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.8937570121491073,
+    "comparative": 0.016698612156615302,
+    "exploratory": 0.059778818153057044,
+    "diagnostic": 0.012377985847276974,
+    "predictive": 0.017387571693943445
+   },
+   "confidence": 0.8937570121491073,
+   "input_tokens": 119
+  },
+  "DG01": {
+   "choice": "diagnostic",
+   "probs": {
+    "comparative": 0.0046970957909791364,
+    "exploratory": 0.005271888166583308,
+    "diagnostic": 0.9808888335295286,
+    "predictive": 0.0009202867077387564,
+    "descriptive": 0.008221895805170139
+   },
+   "confidence": 0.9808888335295286,
+   "input_tokens": 116
+  },
+  "DG02": {
+   "choice": "diagnostic",
+   "probs": {
+    "diagnostic": 0.9763172848625525,
+    "predictive": 0.0023985700148391152,
+    "descriptive": 0.009310586683553744,
+    "comparative": 0.00425529679305647,
+    "exploratory": 0.007718261645998132
+   },
+   "confidence": 0.9763172848625525,
+   "input_tokens": 118
+  },
+  "DG03": {
+   "choice": "diagnostic",
+   "probs": {
+    "comparative": 0.009057619708499201,
+    "descriptive": 0.0104058670649441,
+    "predictive": 0.0036501006285136785,
+    "diagnostic": 0.9658562711262214,
+    "exploratory": 0.011030141471821634
+   },
+   "confidence": 0.9658562711262214,
+   "input_tokens": 116
+  },
+  "DG04": {
+   "choice": "diagnostic",
+   "probs": {
+    "diagnostic": 0.48179692712785915,
+    "predictive": 0.1237144454761128,
+    "exploratory": 0.35116281512295766,
+    "descriptive": 0.022338888021808806,
+    "comparative": 0.020986924251261613
+   },
+   "confidence": 0.48179692712785915,
+   "input_tokens": 117
+  },
+  "C01": {
+   "choice": "comparative",
+   "probs": {
+    "comparative": 0.966119293361296,
+    "descriptive": 0.01425106630627738,
+    "predictive": 0.003264465107431703,
+    "exploratory": 0.012413084718619374,
+    "diagnostic": 0.0039520905063756785
+   },
+   "confidence": 0.966119293361296,
+   "input_tokens": 123
+  },
+  "C02": {
+   "choice": "comparative",
+   "probs": {
+    "predictive": 0.01006343310382559,
+    "descriptive": 0.027698622085149643,
+    "comparative": 0.8601910925229811,
+    "diagnostic": 0.06235602683927292,
+    "exploratory": 0.03969082544877056
+   },
+   "confidence": 0.8601910925229811,
+   "input_tokens": 117
+  },
+  "C03": {
+   "choice": "comparative",
+   "probs": {
+    "predictive": 0.0027990992004934593,
+    "comparative": 0.9556695063951085,
+    "descriptive": 0.013970852620843757,
+    "diagnostic": 0.01899120517547221,
+    "exploratory": 0.008569336608082394
+   },
+   "confidence": 0.9556695063951085,
+   "input_tokens": 117
+  },
+  "C04": {
+   "choice": "comparative",
+   "probs": {
+    "comparative": 0.6737175415441097,
+    "predictive": 0.0038323659158748017,
+    "descriptive": 0.2223728010555993,
+    "exploratory": 0.05705312397533764,
+    "diagnostic": 0.043024167509078545
+   },
+   "confidence": 0.6737175415441097,
+   "input_tokens": 118
+  },
+  "P01": {
+   "choice": "predictive",
+   "probs": {
+    "comparative": 0.0011649564575118186,
+    "descriptive": 0.0020279743237623647,
+    "exploratory": 0.0029561945367971502,
+    "predictive": 0.9916957646269497,
+    "diagnostic": 0.002155110054979012
+   },
+   "confidence": 0.9916957646269497,
+   "input_tokens": 120
+  },
+  "P02": {
+   "choice": "predictive",
+   "probs": {
+    "predictive": 0.9978307132806002,
+    "diagnostic": 0.0008448588870474572,
+    "comparative": 0.00023223850716540075,
+    "exploratory": 0.00047527166425597887,
+    "descriptive": 0.00061691766093095
+   },
+   "confidence": 0.9978307132806002,
+   "input_tokens": 118
+  },
+  "P03": {
+   "choice": "predictive",
+   "probs": {
+    "exploratory": 0.015355351876675381,
+    "comparative": 0.0035447522882001525,
+    "descriptive": 0.012732802116462381,
+    "predictive": 0.9427472398122522,
+    "diagnostic": 0.025619853906409855
+   },
+   "confidence": 0.9427472398122522,
+   "input_tokens": 118
+  },
+  "E01": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.5860073474440539,
+    "diagnostic": 0.007111010501077614,
+    "exploratory": 0.3975650396212318,
+    "predictive": 0.003974015878109779,
+    "comparative": 0.005342586555526941
+   },
+   "confidence": 0.5860073474440539,
+   "input_tokens": 115
+  },
+  "E02": {
+   "choice": "exploratory",
+   "probs": {
+    "diagnostic": 0.36183718676878984,
+    "comparative": 0.013202588006379547,
+    "exploratory": 0.482990725175012,
+    "predictive": 0.017208750133600837,
+    "descriptive": 0.12476074991621776
+   },
+   "confidence": 0.482990725175012,
+   "input_tokens": 119
+  },
+  "E03": {
+   "choice": "exploratory",
+   "probs": {
+    "comparative": 0.016505666076000052,
+    "exploratory": 0.6313202726760225,
+    "descriptive": 0.17256373834395955,
+    "diagnostic": 0.09840920931601149,
+    "predictive": 0.0812011135880064
+   },
+   "confidence": 0.6313202726760225,
+   "input_tokens": 116
+  },
+  "E04": {
+   "choice": "exploratory",
+   "probs": {
+    "descriptive": 0.009512828183518446,
+    "comparative": 0.010251661672294826,
+    "predictive": 0.00900342155648298,
+    "exploratory": 0.9328486368720357,
+    "diagnostic": 0.03838345171566813
+   },
+   "confidence": 0.9328486368720357,
+   "input_tokens": 116
+  },
+  "D06": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.01723599164663766,
+    "comparative": 0.008192691588699477,
+    "predictive": 0.002611897317479363,
+    "diagnostic": 0.02615907711085207,
+    "descriptive": 0.9458003423363315
+   },
+   "confidence": 0.9458003423363315,
+   "input_tokens": 119
+  },
+  "D07": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.009637657810408056,
+    "descriptive": 0.6594644020043536,
+    "exploratory": 0.06743229974165889,
+    "diagnostic": 0.036497855558951874,
+    "comparative": 0.2269677848846278
+   },
+   "confidence": 0.6594644020043536,
+   "input_tokens": 119
+  },
+  "D08": {
+   "choice": "comparative",
+   "probs": {
+    "descriptive": 0.035327546621352526,
+    "diagnostic": 0.06668664189672202,
+    "predictive": 0.004921412528438091,
+    "exploratory": 0.010037421657329217,
+    "comparative": 0.8830269772961582
+   },
+   "confidence": 0.8830269772961582,
+   "input_tokens": 128
+  },
+  "D09": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.04790042022257063,
+    "descriptive": 0.8273535469156821,
+    "predictive": 0.007706598648956833,
+    "exploratory": 0.07417844406772905,
+    "diagnostic": 0.04286099014506156
+   },
+   "confidence": 0.8273535469156821,
+   "input_tokens": 124
+  },
+  "DG05": {
+   "choice": "diagnostic",
+   "probs": {
+    "diagnostic": 0.8969133898569409,
+    "comparative": 0.010915293796744817,
+    "descriptive": 0.015321092261075359,
+    "exploratory": 0.057108878755779406,
+    "predictive": 0.01974134532945979
+   },
+   "confidence": 0.8969133898569409,
+   "input_tokens": 122
+  },
+  "DG06": {
+   "choice": "diagnostic",
+   "probs": {
+    "exploratory": 0.018553725225818142,
+    "diagnostic": 0.7984462832995084,
+    "predictive": 0.00585196833750461,
+    "comparative": 0.16516390149631158,
+    "descriptive": 0.011984121640857322
+   },
+   "confidence": 0.7984462832995084,
+   "input_tokens": 123
+  },
+  "DG07": {
+   "choice": "diagnostic",
+   "probs": {
+    "predictive": 0.0016514562667397986,
+    "exploratory": 0.005470121151781656,
+    "descriptive": 0.01386730299077072,
+    "comparative": 0.00677328876448931,
+    "diagnostic": 0.9722378308262184
+   },
+   "confidence": 0.9722378308262184,
+   "input_tokens": 119
+  },
+  "DG08": {
+   "choice": "diagnostic",
+   "probs": {
+    "exploratory": 0.02355807439000202,
+    "descriptive": 0.012933898026820224,
+    "predictive": 0.002839894625691492,
+    "diagnostic": 0.8702684317525782,
+    "comparative": 0.0903997012049082
+   },
+   "confidence": 0.8702684317525782,
+   "input_tokens": 120
+  },
+  "C05": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.009759524966926768,
+    "descriptive": 0.0143237406987697,
+    "comparative": 0.9454303921799335,
+    "predictive": 0.00656165239907284,
+    "diagnostic": 0.023924689755297164
+   },
+   "confidence": 0.9454303921799335,
+   "input_tokens": 132
+  },
+  "C06": {
+   "choice": "comparative",
+   "probs": {
+    "comparative": 0.9527078955935281,
+    "diagnostic": 0.014265505808464456,
+    "descriptive": 0.020081632422179457,
+    "exploratory": 0.010903436762440903,
+    "predictive": 0.002041529413387007
+   },
+   "confidence": 0.9527078955935281,
+   "input_tokens": 115
+  },
+  "C07": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.0034920435177197597,
+    "diagnostic": 0.011599996013375222,
+    "predictive": 0.001646183516460806,
+    "descriptive": 0.010195669615911496,
+    "comparative": 0.9730661073365328
+   },
+   "confidence": 0.9730661073365328,
+   "input_tokens": 129
+  },
+  "C08": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.0026327931793041367,
+    "descriptive": 0.011915312104060563,
+    "predictive": 0.002358513071897722,
+    "comparative": 0.9769883015610483,
+    "diagnostic": 0.006105080083689403
+   },
+   "confidence": 0.9769883015610483,
+   "input_tokens": 130
+  },
+  "P04": {
+   "choice": "predictive",
+   "probs": {
+    "descriptive": 0.0028583264788389516,
+    "exploratory": 0.004656516766488148,
+    "comparative": 0.0018949440717219439,
+    "predictive": 0.9880257079085862,
+    "diagnostic": 0.0025645047743647386
+   },
+   "confidence": 0.9880257079085862,
+   "input_tokens": 122
+  },
+  "P05": {
+   "choice": "predictive",
+   "probs": {
+    "exploratory": 0.0014876639951578506,
+    "predictive": 0.9952558864406953,
+    "descriptive": 0.0012174936385639687,
+    "diagnostic": 0.001351256321799202,
+    "comparative": 0.0006876996037837434
+   },
+   "confidence": 0.9952558864406953,
+   "input_tokens": 116
+  },
+  "P06": {
+   "choice": "predictive",
+   "probs": {
+    "predictive": 0.9988176297587502,
+    "diagnostic": 0.0002805684447459732,
+    "comparative": 0.0001233602610266477,
+    "descriptive": 0.0002923477318364055,
+    "exploratory": 0.00048609380364069674
+   },
+   "confidence": 0.9988176297587502,
+   "input_tokens": 116
+  },
+  "P07": {
+   "choice": "predictive",
+   "probs": {
+    "predictive": 0.9622698697879675,
+    "diagnostic": 0.009833653136280448,
+    "descriptive": 0.0044578606964035886,
+    "exploratory": 0.010888931741978839,
+    "comparative": 0.012549684637369753
+   },
+   "confidence": 0.9622698697879675,
+   "input_tokens": 121
+  },
+  "E05": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.13303069889454736,
+    "comparative": 0.008752863331273028,
+    "diagnostic": 0.013164313201888881,
+    "predictive": 0.006882188527909731,
+    "descriptive": 0.8381699360443811
+   },
+   "confidence": 0.8381699360443811,
+   "input_tokens": 113
+  },
+  "E06": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.3273973728338583,
+    "descriptive": 0.6406242959445113,
+    "predictive": 0.01044677626868671,
+    "comparative": 0.005171499668513522,
+    "diagnostic": 0.01636005528443019
+   },
+   "confidence": 0.6406242959445113,
+   "input_tokens": 117
+  },
+  "E07": {
+   "choice": "diagnostic",
+   "probs": {
+    "exploratory": 0.29113024893665285,
+    "descriptive": 0.1532700840373716,
+    "comparative": 0.018428782327247994,
+    "diagnostic": 0.5252086992598859,
+    "predictive": 0.011962185438841694
+   },
+   "confidence": 0.5252086992598859,
+   "input_tokens": 118
+  },
+  "E08": {
+   "choice": "diagnostic",
+   "probs": {
+    "diagnostic": 0.5750787527393397,
+    "predictive": 0.13713850278742054,
+    "exploratory": 0.2431996278200571,
+    "comparative": 0.023614769689520025,
+    "descriptive": 0.02096834696366265
+   },
+   "confidence": 0.5750787527393397,
+   "input_tokens": 120
+  },
+  "D10": {
+   "choice": "comparative",
+   "probs": {
+    "comparative": 0.5024170639242935,
+    "diagnostic": 0.07263450619656707,
+    "predictive": 0.009192265869703273,
+    "exploratory": 0.07792842271246782,
+    "descriptive": 0.33782774129696835
+   },
+   "confidence": 0.5024170639242935,
+   "input_tokens": 117
+  },
+  "D11": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.0031010675521377057,
+    "comparative": 0.047190422467042796,
+    "descriptive": 0.8891824372506935,
+    "diagnostic": 0.013220569202828875,
+    "exploratory": 0.047305503527297225
+   },
+   "confidence": 0.8891824372506935,
+   "input_tokens": 122
+  },
+  "D12": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.005294397756518368,
+    "diagnostic": 0.03476572674324626,
+    "comparative": 0.013783899300554367,
+    "descriptive": 0.8180074646191244,
+    "exploratory": 0.12814851158055646
+   },
+   "confidence": 0.8180074646191244,
+   "input_tokens": 115
+  },
+  "D13": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.9567885723931686,
+    "predictive": 0.0031127345473765515,
+    "diagnostic": 0.02325966257209749,
+    "exploratory": 0.010824858781444345,
+    "comparative": 0.006014171705912827
+   },
+   "confidence": 0.9567885723931686,
+   "input_tokens": 118
+  },
+  "DG09": {
+   "choice": "diagnostic",
+   "probs": {
+    "exploratory": 0.02339335749674362,
+    "comparative": 0.15519511037760883,
+    "predictive": 0.003427236279361886,
+    "descriptive": 0.01291899279311493,
+    "diagnostic": 0.8050653030531708
+   },
+   "confidence": 0.8050653030531708,
+   "input_tokens": 126
+  },
+  "DG10": {
+   "choice": "diagnostic",
+   "probs": {
+    "diagnostic": 0.7744090664474655,
+    "predictive": 0.006103087222720739,
+    "exploratory": 0.02040570566380056,
+    "descriptive": 0.018449194530413573,
+    "comparative": 0.18063294613559955
+   },
+   "confidence": 0.7744090664474655,
+   "input_tokens": 125
+  },
+  "DG11": {
+   "choice": "diagnostic",
+   "probs": {
+    "comparative": 0.018153684543848306,
+    "predictive": 0.004651433234790451,
+    "descriptive": 0.009093039738360443,
+    "exploratory": 0.01125550841403551,
+    "diagnostic": 0.9568463340689651
+   },
+   "confidence": 0.9568463340689651,
+   "input_tokens": 121
+  },
+  "DG12": {
+   "choice": "diagnostic",
+   "probs": {
+    "diagnostic": 0.9105861300806067,
+    "comparative": 0.039963139146890835,
+    "predictive": 0.006377480875066549,
+    "exploratory": 0.02925461508480128,
+    "descriptive": 0.013818634812634574
+   },
+   "confidence": 0.9105861300806067,
+   "input_tokens": 122
+  },
+  "C09": {
+   "choice": "comparative",
+   "probs": {
+    "predictive": 0.00203217566133172,
+    "exploratory": 0.004613041141876218,
+    "descriptive": 0.0037350135968234506,
+    "diagnostic": 0.01335663057150847,
+    "comparative": 0.97626313902846
+   },
+   "confidence": 0.97626313902846,
+   "input_tokens": 120
+  },
+  "C10": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.004374692867770085,
+    "descriptive": 0.014534202292294796,
+    "predictive": 0.0020069223574624697,
+    "diagnostic": 0.007518530747274337,
+    "comparative": 0.9715656517351982
+   },
+   "confidence": 0.9715656517351982,
+   "input_tokens": 120
+  },
+  "C11": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.00453363547035811,
+    "descriptive": 0.006685381479163219,
+    "comparative": 0.9804425588708279,
+    "diagnostic": 0.007125230451116534,
+    "predictive": 0.0012131937285343717
+   },
+   "confidence": 0.9804425588708279,
+   "input_tokens": 119
+  },
+  "C12": {
+   "choice": "comparative",
+   "probs": {
+    "comparative": 0.9671325840587746,
+    "descriptive": 0.01970992388228523,
+    "exploratory": 0.004556441571691606,
+    "diagnostic": 0.005669144839662471,
+    "predictive": 0.0029319056475859235
+   },
+   "confidence": 0.9671325840587746,
+   "input_tokens": 124
+  },
+  "P08": {
+   "choice": "predictive",
+   "probs": {
+    "exploratory": 0.003001544425873633,
+    "predictive": 0.9827122604477364,
+    "descriptive": 0.00863239115840135,
+    "comparative": 0.0025014254001948476,
+    "diagnostic": 0.003152378567793844
+   },
+   "confidence": 0.9827122604477364,
+   "input_tokens": 121
+  },
+  "P09": {
+   "choice": "predictive",
+   "probs": {
+    "predictive": 0.9972162564348922,
+    "comparative": 0.000711308282875697,
+    "exploratory": 0.0005739107475009236,
+    "diagnostic": 0.000591019474337371,
+    "descriptive": 0.0009075050603937132
+   },
+   "confidence": 0.9972162564348922,
+   "input_tokens": 116
+  },
+  "P11": {
+   "choice": "predictive",
+   "probs": {
+    "comparative": 0.03379776751981449,
+    "exploratory": 0.03365810526304356,
+    "descriptive": 0.005192731706847367,
+    "predictive": 0.9182967946902044,
+    "diagnostic": 0.00905460082009017
+   },
+   "confidence": 0.9182967946902044,
+   "input_tokens": 119
+  },
+  "E09": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.022231293792742114,
+    "diagnostic": 0.015574418461395432,
+    "exploratory": 0.0734052290849513,
+    "descriptive": 0.8808413092966986,
+    "predictive": 0.007947749364212484
+   },
+   "confidence": 0.8808413092966986,
+   "input_tokens": 118
+  },
+  "E10": {
+   "choice": "exploratory",
+   "probs": {
+    "descriptive": 0.04730315728862356,
+    "exploratory": 0.6945502908789059,
+    "diagnostic": 0.23210490705827694,
+    "predictive": 0.013354969352647251,
+    "comparative": 0.012686675421546521
+   },
+   "confidence": 0.6945502908789059,
+   "input_tokens": 117
+  },
+  "E11": {
+   "choice": "exploratory",
+   "probs": {
+    "descriptive": 0.04770224333827866,
+    "exploratory": 0.485647751107976,
+    "diagnostic": 0.290264118700238,
+    "comparative": 0.04871467126544954,
+    "predictive": 0.12767121558805783
+   },
+   "confidence": 0.485647751107976,
+   "input_tokens": 119
+  },
+  "E12": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.605727097064084,
+    "exploratory": 0.3767485321763407,
+    "diagnostic": 0.006976976860541133,
+    "predictive": 0.004003011742171794,
+    "comparative": 0.00654438215686233
+   },
+   "confidence": 0.605727097064084,
+   "input_tokens": 116
+  },
+  "E13": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.14911345766480755,
+    "diagnostic": 0.057585914089851906,
+    "descriptive": 0.729792463283384,
+    "comparative": 0.04706286777274326,
+    "predictive": 0.01644529718921326
+   },
+   "confidence": 0.729792463283384,
+   "input_tokens": 113
+  },
+  "D14": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.010860613641952906,
+    "predictive": 0.0011608608362859002,
+    "exploratory": 0.03484150672005689,
+    "descriptive": 0.9458452974007155,
+    "diagnostic": 0.00729172140098884
+   },
+   "confidence": 0.9458452974007155,
+   "input_tokens": 123
+  },
+  "D15": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.00706555505299902,
+    "comparative": 0.025463904022418663,
+    "descriptive": 0.8858838807935585,
+    "exploratory": 0.06233610868096661,
+    "diagnostic": 0.01925055145005723
+   },
+   "confidence": 0.8858838807935585,
+   "input_tokens": 117
+  },
+  "D16": {
+   "choice": "comparative",
+   "probs": {
+    "predictive": 0.008660129760180971,
+    "diagnostic": 0.06490832772109008,
+    "descriptive": 0.24320402268113667,
+    "comparative": 0.5852204585228779,
+    "exploratory": 0.09800706131471446
+   },
+   "confidence": 0.5852204585228779,
+   "input_tokens": 118
+  },
+  "D17": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.02993461463462144,
+    "diagnostic": 0.01856698262556184,
+    "predictive": 0.0023368159072364343,
+    "descriptive": 0.8794082915442183,
+    "exploratory": 0.0697532952883619
+   },
+   "confidence": 0.8794082915442183,
+   "input_tokens": 117
+  },
+  "DG13": {
+   "choice": "diagnostic",
+   "probs": {
+    "exploratory": 0.030721364914205386,
+    "comparative": 0.1464614356386409,
+    "descriptive": 0.018140084240722252,
+    "predictive": 0.005275250695600231,
+    "diagnostic": 0.7994018645108313
+   },
+   "confidence": 0.7994018645108313,
+   "input_tokens": 128
+  },
+  "DG14": {
+   "choice": "diagnostic",
+   "probs": {
+    "comparative": 0.012281959705431299,
+    "exploratory": 0.04739765299216845,
+    "diagnostic": 0.9124195098536546,
+    "predictive": 0.013261815967196184,
+    "descriptive": 0.01463906148154935
+   },
+   "confidence": 0.9124195098536546,
+   "input_tokens": 128
+  },
+  "DG15": {
+   "choice": "diagnostic",
+   "probs": {
+    "predictive": 0.0009506272862021407,
+    "descriptive": 0.01185804414320418,
+    "exploratory": 0.004214918786444714,
+    "comparative": 0.005106135412712809,
+    "diagnostic": 0.9778702743714359
+   },
+   "confidence": 0.9778702743714359,
+   "input_tokens": 119
+  },
+  "DG16": {
+   "choice": "diagnostic",
+   "probs": {
+    "exploratory": 0.030273507809643767,
+    "comparative": 0.043481495403877995,
+    "diagnostic": 0.9059249638630024,
+    "predictive": 0.0080697752430163,
+    "descriptive": 0.012250257680459453
+   },
+   "confidence": 0.9059249638630024,
+   "input_tokens": 122
+  },
+  "C13": {
+   "choice": "comparative",
+   "probs": {
+    "predictive": 0.0015505441317303968,
+    "descriptive": 0.007421072727725243,
+    "diagnostic": 0.005175153807020939,
+    "comparative": 0.9784378304194637,
+    "exploratory": 0.007415398914059542
+   },
+   "confidence": 0.9784378304194637,
+   "input_tokens": 118
+  },
+  "C14": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.003117645589677689,
+    "diagnostic": 0.0047698724695395475,
+    "descriptive": 0.014383685213661505,
+    "predictive": 0.0019416178711033508,
+    "comparative": 0.975787178856018
+   },
+   "confidence": 0.975787178856018,
+   "input_tokens": 120
+  },
+  "C15": {
+   "choice": "comparative",
+   "probs": {
+    "descriptive": 0.007304659985562165,
+    "diagnostic": 0.009466482645957603,
+    "predictive": 0.002676803649998232,
+    "exploratory": 0.004234932815584593,
+    "comparative": 0.9763171209028974
+   },
+   "confidence": 0.9763171209028974,
+   "input_tokens": 119
+  },
+  "C16": {
+   "choice": "comparative",
+   "probs": {
+    "predictive": 0.0011574632459410794,
+    "comparative": 0.9731357654301844,
+    "descriptive": 0.012257241717557115,
+    "diagnostic": 0.010634965898955956,
+    "exploratory": 0.0028145637073615525
+   },
+   "confidence": 0.9731357654301844,
+   "input_tokens": 123
+  },
+  "P12": {
+   "choice": "predictive",
+   "probs": {
+    "predictive": 0.9897693909210306,
+    "comparative": 0.0011991070798796567,
+    "descriptive": 0.0032598094164177868,
+    "exploratory": 0.004227237888649018,
+    "diagnostic": 0.0015444546940230402
+   },
+   "confidence": 0.9897693909210306,
+   "input_tokens": 118
+  },
+  "P13": {
+   "choice": "predictive",
+   "probs": {
+    "descriptive": 0.007820551268369152,
+    "exploratory": 0.01724375824588006,
+    "diagnostic": 0.01365830059100045,
+    "comparative": 0.01181515725796641,
+    "predictive": 0.9494622326367839
+   },
+   "confidence": 0.9494622326367839,
+   "input_tokens": 120
+  },
+  "P14": {
+   "choice": "predictive",
+   "probs": {
+    "exploratory": 0.006415161277853259,
+    "descriptive": 0.00592082257232755,
+    "comparative": 0.00272899013014889,
+    "diagnostic": 0.0017371713289594166,
+    "predictive": 0.9831978546907109
+   },
+   "confidence": 0.9831978546907109,
+   "input_tokens": 115
+  },
+  "E14": {
+   "choice": "exploratory",
+   "probs": {
+    "predictive": 0.042674674959539804,
+    "descriptive": 0.09956909467855649,
+    "diagnostic": 0.3038970276575281,
+    "exploratory": 0.532123308680991,
+    "comparative": 0.021735894023384557
+   },
+   "confidence": 0.532123308680991,
+   "input_tokens": 117
+  },
+  "E15": {
+   "choice": "exploratory",
+   "probs": {
+    "exploratory": 0.4782833083919235,
+    "predictive": 0.059294965441914115,
+    "descriptive": 0.06753368836015369,
+    "comparative": 0.18357769874623697,
+    "diagnostic": 0.21131033905977176
+   },
+   "confidence": 0.4782833083919235,
+   "input_tokens": 125
+  },
+  "E17": {
+   "choice": "exploratory",
+   "probs": {
+    "descriptive": 0.04885513491941158,
+    "predictive": 0.11940817798221137,
+    "exploratory": 0.5369447202381374,
+    "comparative": 0.04504567653864897,
+    "diagnostic": 0.24974629032159068
+   },
+   "confidence": 0.5369447202381374,
+   "input_tokens": 120
+  },
+  "E18": {
+   "choice": "exploratory",
+   "probs": {
+    "comparative": 0.014060813113051915,
+    "descriptive": 0.10787489828177728,
+    "exploratory": 0.5155068307331498,
+    "predictive": 0.01831778246045352,
+    "diagnostic": 0.34423967541156747
+   },
+   "confidence": 0.5155068307331498,
+   "input_tokens": 117
+  },
+  "E19": {
+   "choice": "predictive",
+   "probs": {
+    "descriptive": 0.09640433176892249,
+    "diagnostic": 0.051110481688093054,
+    "predictive": 0.5292034371124695,
+    "comparative": 0.010217768590086771,
+    "exploratory": 0.31306398084042814
+   },
+   "confidence": 0.5292034371124695,
+   "input_tokens": 113
+  },
+  "D18": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.006528754504355717,
+    "diagnostic": 0.016731711663966527,
+    "predictive": 0.0026636452411400646,
+    "descriptive": 0.9663120721825386,
+    "exploratory": 0.007763816407999071
+   },
+   "confidence": 0.9663120721825386,
+   "input_tokens": 119
+  },
+  "D19": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.21316142268417396,
+    "diagnostic": 0.055025360260223206,
+    "descriptive": 0.5871750407116983,
+    "predictive": 0.00930774782806925,
+    "exploratory": 0.13533042851583513
+   },
+   "confidence": 0.5871750407116983,
+   "input_tokens": 116
+  },
+  "D20": {
+   "choice": "descriptive",
+   "probs": {
+    "diagnostic": 0.03562279742322408,
+    "predictive": 0.00892843256546413,
+    "descriptive": 0.7283400791935309,
+    "exploratory": 0.07662048638964114,
+    "comparative": 0.15048820442813954
+   },
+   "confidence": 0.7283400791935309,
+   "input_tokens": 118
+  },
+  "D21": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.00632514148524583,
+    "exploratory": 0.09985033533269297,
+    "diagnostic": 0.026680375845563258,
+    "descriptive": 0.8569504450675902,
+    "comparative": 0.010193702268907477
+   },
+   "confidence": 0.8569504450675902,
+   "input_tokens": 120
+  },
+  "DG17": {
+   "choice": "diagnostic",
+   "probs": {
+    "comparative": 0.01829754180338881,
+    "predictive": 0.018738352163371264,
+    "descriptive": 0.021887681286356132,
+    "diagnostic": 0.8752447438013087,
+    "exploratory": 0.06583168094557507
+   },
+   "confidence": 0.8752447438013087,
+   "input_tokens": 118
+  },
+  "DG18": {
+   "choice": "diagnostic",
+   "probs": {
+    "exploratory": 0.026076999001160277,
+    "diagnostic": 0.8598126253660153,
+    "predictive": 0.003669492823838547,
+    "descriptive": 0.01694809153192131,
+    "comparative": 0.09349279127706456
+   },
+   "confidence": 0.8598126253660153,
+   "input_tokens": 119
+  },
+  "DG19": {
+   "choice": "diagnostic",
+   "probs": {
+    "comparative": 0.022646518693070154,
+    "exploratory": 0.020313725786949555,
+    "diagnostic": 0.9341395923667224,
+    "predictive": 0.00609383143749372,
+    "descriptive": 0.016806331715764157
+   },
+   "confidence": 0.9341395923667224,
+   "input_tokens": 119
+  },
+  "DG20": {
+   "choice": "diagnostic",
+   "probs": {
+    "predictive": 0.007786025619512033,
+    "diagnostic": 0.9182853828886611,
+    "comparative": 0.012672725956599016,
+    "exploratory": 0.05051364018176284,
+    "descriptive": 0.010742225353464908
+   },
+   "confidence": 0.9182853828886611,
+   "input_tokens": 120
+  },
+  "C17": {
+   "choice": "comparative",
+   "probs": {
+    "diagnostic": 0.004522537872195447,
+    "comparative": 0.9821083967306127,
+    "descriptive": 0.008206364008254901,
+    "predictive": 0.002009848079768503,
+    "exploratory": 0.003152853309168582
+   },
+   "confidence": 0.9821083967306127,
+   "input_tokens": 118
+  },
+  "C18": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.005951116303843556,
+    "diagnostic": 0.006654619658416914,
+    "comparative": 0.9792165665497743,
+    "descriptive": 0.006336187078213226,
+    "predictive": 0.0018415104097522527
+   },
+   "confidence": 0.9792165665497743,
+   "input_tokens": 117
+  },
+  "C19": {
+   "choice": "comparative",
+   "probs": {
+    "descriptive": 0.010969981336003083,
+    "diagnostic": 0.007342651505946865,
+    "exploratory": 0.005380489217470647,
+    "predictive": 0.001380182897015832,
+    "comparative": 0.9749266950435634
+   },
+   "confidence": 0.9749266950435634,
+   "input_tokens": 117
+  },
+  "C20": {
+   "choice": "comparative",
+   "probs": {
+    "diagnostic": 0.016568412728078005,
+    "exploratory": 0.007455686225974777,
+    "comparative": 0.9587170301349315,
+    "descriptive": 0.013570234327182944,
+    "predictive": 0.003688636583832861
+   },
+   "confidence": 0.9587170301349315,
+   "input_tokens": 118
+  },
+  "P15": {
+   "choice": "predictive",
+   "probs": {
+    "descriptive": 0.005000645493537141,
+    "comparative": 0.001002988818846652,
+    "exploratory": 0.003491465990204639,
+    "predictive": 0.9890994328282328,
+    "diagnostic": 0.0014054668691789146
+   },
+   "confidence": 0.9890994328282328,
+   "input_tokens": 120
+  },
+  "P16": {
+   "choice": "predictive",
+   "probs": {
+    "exploratory": 0.002172432400760458,
+    "descriptive": 0.0022822373111593764,
+    "diagnostic": 0.0007188778725318962,
+    "comparative": 0.0010794084735390092,
+    "predictive": 0.9937470439420093
+   },
+   "confidence": 0.9937470439420093,
+   "input_tokens": 116
+  },
+  "P17": {
+   "choice": "predictive",
+   "probs": {
+    "predictive": 0.9812252667910247,
+    "diagnostic": 0.011033146536844278,
+    "descriptive": 0.00229642277160421,
+    "exploratory": 0.003925145387656452,
+    "comparative": 0.0015200185128702883
+   },
+   "confidence": 0.9812252667910247,
+   "input_tokens": 116
+  },
+  "E20": {
+   "choice": "exploratory",
+   "probs": {
+    "exploratory": 0.45434268498963126,
+    "predictive": 0.02119706430064987,
+    "descriptive": 0.09636076781432344,
+    "diagnostic": 0.405693961639832,
+    "comparative": 0.02240552125556334
+   },
+   "confidence": 0.45434268498963126,
+   "input_tokens": 117
+  },
+  "E21": {
+   "choice": "exploratory",
+   "probs": {
+    "predictive": 0.0735164462063663,
+    "exploratory": 0.632511513540151,
+    "diagnostic": 0.1928296944915686,
+    "comparative": 0.06802623238703626,
+    "descriptive": 0.03311611337487804
+   },
+   "confidence": 0.632511513540151,
+   "input_tokens": 120
+  },
+  "E22": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.00602532960325559,
+    "descriptive": 0.7351230192658442,
+    "exploratory": 0.24647642698301656,
+    "diagnostic": 0.006150300713640262,
+    "comparative": 0.00622492343424329
+   },
+   "confidence": 0.7351230192658442,
+   "input_tokens": 116
+  },
+  "E23": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.003506637191391055,
+    "descriptive": 0.824619335266657,
+    "diagnostic": 0.007978721452283491,
+    "predictive": 0.012501565524994932,
+    "exploratory": 0.15139374056467356
+   },
+   "confidence": 0.824619335266657,
+   "input_tokens": 117
+  },
+  "E24": {
+   "choice": "diagnostic",
+   "probs": {
+    "diagnostic": 0.39160329586926873,
+    "exploratory": 0.3750135091858734,
+    "descriptive": 0.17140967838114068,
+    "comparative": 0.028929797802722944,
+    "predictive": 0.03304371876099426
+   },
+   "confidence": 0.39160329586926873,
+   "input_tokens": 116
+  },
+  "S01": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.013962216903148696,
+    "descriptive": 0.5990711325276069,
+    "comparative": 0.31404337562233964,
+    "exploratory": 0.05303315003118863,
+    "diagnostic": 0.01989012491571605
+   },
+   "confidence": 0.5990711325276069,
+   "input_tokens": 117
+  },
+  "S02": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.06515499355692562,
+    "comparative": 0.06674782439699625,
+    "diagnostic": 0.011441051164918887,
+    "predictive": 0.002999871820069421,
+    "descriptive": 0.8536562590610899
+   },
+   "confidence": 0.8536562590610899,
+   "input_tokens": 113
+  },
+  "S03": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.4902206864522947,
+    "comparative": 0.4240556723005611,
+    "predictive": 0.004004176347343427,
+    "exploratory": 0.06318660895521011,
+    "diagnostic": 0.01853285594459061
+   },
+   "confidence": 0.4902206864522947,
+   "input_tokens": 119
+  },
+  "S04": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.06856597634654049,
+    "descriptive": 0.8136810382578292,
+    "predictive": 0.004084766617004661,
+    "diagnostic": 0.033470991238062894,
+    "comparative": 0.08019722754056269
+   },
+   "confidence": 0.8136810382578292,
+   "input_tokens": 117
+  },
+  "S05": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.0064501184230708105,
+    "diagnostic": 0.012110985222432084,
+    "comparative": 0.10788308524764217,
+    "descriptive": 0.8602145541271707,
+    "exploratory": 0.013341256979684357
+   },
+   "confidence": 0.8602145541271707,
+   "input_tokens": 128
+  },
+  "S06": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.003971037510193469,
+    "diagnostic": 0.01026850626419521,
+    "exploratory": 0.022531814247191636,
+    "descriptive": 0.949771406703187,
+    "comparative": 0.01345723527523283
+   },
+   "confidence": 0.949771406703187,
+   "input_tokens": 118
+  },
+  "S07": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.76035093933806,
+    "diagnostic": 0.019114473592774992,
+    "predictive": 0.006247124698197288,
+    "exploratory": 0.1015654477566462,
+    "comparative": 0.11272201461432142
+   },
+   "confidence": 0.76035093933806,
+   "input_tokens": 118
+  },
+  "S08": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.07826869285020255,
+    "descriptive": 0.5029043874943648,
+    "predictive": 0.0044370034043551,
+    "diagnostic": 0.01827477771457296,
+    "comparative": 0.39611513853650465
+   },
+   "confidence": 0.5029043874943648,
+   "input_tokens": 121
+  },
+  "S09": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.007840402099551426,
+    "comparative": 0.5727364884550997,
+    "diagnostic": 0.008055287398223655,
+    "descriptive": 0.40566492319977243,
+    "predictive": 0.005702898847352745
+   },
+   "confidence": 0.5727364884550997,
+   "input_tokens": 129
+  },
+  "S10": {
+   "choice": "comparative",
+   "probs": {
+    "descriptive": 0.012281883116190306,
+    "diagnostic": 0.0035872970825150865,
+    "predictive": 0.001328149643005665,
+    "comparative": 0.980154680816162,
+    "exploratory": 0.002647989342127213
+   },
+   "confidence": 0.980154680816162,
+   "input_tokens": 123
+  },
+  "S11": {
+   "choice": "comparative",
+   "probs": {
+    "comparative": 0.9855321540522096,
+    "descriptive": 0.009032724334091911,
+    "predictive": 0.0013340280283675842,
+    "diagnostic": 0.0028950994741393345,
+    "exploratory": 0.001205994111191435
+   },
+   "confidence": 0.9855321540522096,
+   "input_tokens": 124
+  },
+  "S12": {
+   "choice": "comparative",
+   "probs": {
+    "predictive": 0.0017264563643613379,
+    "diagnostic": 0.010428479812383366,
+    "descriptive": 0.00962091878982855,
+    "exploratory": 0.00424629863401311,
+    "comparative": 0.9739778463994136
+   },
+   "confidence": 0.9739778463994136,
+   "input_tokens": 119
+  },
+  "S13": {
+   "choice": "comparative",
+   "probs": {
+    "descriptive": 0.016811047748777695,
+    "exploratory": 0.00327148214568031,
+    "predictive": 0.001211773267740579,
+    "diagnostic": 0.0035880414456830934,
+    "comparative": 0.9751176553921184
+   },
+   "confidence": 0.9751176553921184,
+   "input_tokens": 123
+  },
+  "S14": {
+   "choice": "comparative",
+   "probs": {
+    "exploratory": 0.0026947044938670315,
+    "diagnostic": 0.003152562636023251,
+    "comparative": 0.9868961757092038,
+    "descriptive": 0.0057270388284098,
+    "predictive": 0.001529518332495785
+   },
+   "confidence": 0.9868961757092038,
+   "input_tokens": 126
+  },
+  "S15": {
+   "choice": "comparative",
+   "probs": {
+    "diagnostic": 0.037256563458519736,
+    "comparative": 0.4554110063704566,
+    "exploratory": 0.07645075393133687,
+    "predictive": 0.01928886004937021,
+    "descriptive": 0.41159281619031657
+   },
+   "confidence": 0.4554110063704566,
+   "input_tokens": 121
+  },
+  "S16": {
+   "choice": "descriptive",
+   "probs": {
+    "comparative": 0.06853165382471497,
+    "descriptive": 0.7196141439761179,
+    "predictive": 0.019599961971035213,
+    "diagnostic": 0.024191230614090477,
+    "exploratory": 0.16806300961404133
+   },
+   "confidence": 0.7196141439761179,
+   "input_tokens": 119
+  },
+  "S17": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.5497745616262666,
+    "diagnostic": 0.020426775806806904,
+    "predictive": 0.005727626202675936,
+    "comparative": 0.3881605676269331,
+    "exploratory": 0.035910468737317416
+   },
+   "confidence": 0.5497745616262666,
+   "input_tokens": 120
+  },
+  "S18": {
+   "choice": "descriptive",
+   "probs": {
+    "diagnostic": 0.03389209092494379,
+    "predictive": 0.01226037132557235,
+    "descriptive": 0.5738494316714848,
+    "comparative": 0.28129982957215405,
+    "exploratory": 0.09869827650584498
+   },
+   "confidence": 0.5738494316714848,
+   "input_tokens": 120
+  },
+  "S19": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.6696657125427927,
+    "diagnostic": 0.03372224921845229,
+    "predictive": 0.01125532477701559,
+    "exploratory": 0.1320076741559656,
+    "comparative": 0.1533490393057736
+   },
+   "confidence": 0.6696657125427927,
+   "input_tokens": 128
+  },
+  "S20": {
+   "choice": "descriptive",
+   "probs": {
+    "descriptive": 0.565945065457795,
+    "exploratory": 0.05566639639169742,
+    "comparative": 0.3366616294992058,
+    "predictive": 0.014063878135772478,
+    "diagnostic": 0.027663030515529298
+   },
+   "confidence": 0.565945065457795,
+   "input_tokens": 124
+  },
+  "S21": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.015830946775659355,
+    "comparative": 0.012898631914272608,
+    "descriptive": 0.952299032167291,
+    "diagnostic": 0.01690558978712106,
+    "predictive": 0.0020657993556559774
+   },
+   "confidence": 0.952299032167291,
+   "input_tokens": 122
+  },
+  "S22": {
+   "choice": "descriptive",
+   "probs": {
+    "diagnostic": 0.045509305359356565,
+    "comparative": 0.009919667204103845,
+    "descriptive": 0.9245555652175143,
+    "predictive": 0.001884741956019352,
+    "exploratory": 0.018130720263006047
+   },
+   "confidence": 0.9245555652175143,
+   "input_tokens": 120
+  },
+  "S23": {
+   "choice": "descriptive",
+   "probs": {
+    "exploratory": 0.007288215762326532,
+    "comparative": 0.009507674314420397,
+    "predictive": 0.0015763495483712376,
+    "diagnostic": 0.011914655010377508,
+    "descriptive": 0.9697131053645045
+   },
+   "confidence": 0.9697131053645045,
+   "input_tokens": 125
+  },
+  "S24": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.004818614666797196,
+    "exploratory": 0.02035787109084628,
+    "comparative": 0.011096345354030921,
+    "diagnostic": 0.014645108992667882,
+    "descriptive": 0.9490820598956576
+   },
+   "confidence": 0.9490820598956576,
+   "input_tokens": 126
+  },
+  "S25": {
+   "choice": "comparative",
+   "probs": {
+    "diagnostic": 0.007628786402001986,
+    "exploratory": 0.0028905503137888777,
+    "comparative": 0.9646145957350323,
+    "predictive": 0.002050892020847761,
+    "descriptive": 0.022815175528329224
+   },
+   "confidence": 0.9646145957350323,
+   "input_tokens": 129
+  },
+  "S26": {
+   "choice": "descriptive",
+   "probs": {
+    "predictive": 0.0021960014030071536,
+    "diagnostic": 0.029515632046825363,
+    "comparative": 0.055431819470140545,
+    "descriptive": 0.8953874159403058,
+    "exploratory": 0.017469131139721157
+   },
+   "confidence": 0.8953874159403058,
+   "input_tokens": 119
+  },
+  "S27": {
+   "choice": "comparative",
+   "probs": {
+    "diagnostic": 0.038565424513649596,
+    "exploratory": 0.011915174505763569,
+    "comparative": 0.7627130484182086,
+    "descriptive": 0.18008740817003202,
+    "predictive": 0.00671894439234636
+   },
+   "confidence": 0.7627130484182086,
+   "input_tokens": 130
+  },
+  "S28": {
+   "choice": "comparative",
+   "probs": {
+    "descriptive": 0.35322299721581424,
+    "comparative": 0.6276963130501935,
+    "exploratory": 0.008094621346086251,
+    "diagnostic": 0.007493801167522867,
+    "predictive": 0.003492267220383027
+   },
+   "confidence": 0.6276963130501935,
+   "input_tokens": 128
+  },
+  "S29": {
+   "choice": "comparative",
+   "probs": {
+    "descriptive": 0.23037001009434802,
+    "exploratory": 0.01738830316474651,
+    "predictive": 0.004208860490917582,
+    "comparative": 0.7316202637719627,
+    "diagnostic": 0.016412562478025312
+   },
+   "confidence": 0.7316202637719627,
+   "input_tokens": 127
+  },
+  "S30": {
+   "choice": "comparative",
+   "probs": {
+    "comparative": 0.9798674779261497,
+    "predictive": 0.0014460092620687032,
+    "descriptive": 0.011557372389827243,
+    "diagnostic": 0.0044602025128757114,
+    "exploratory": 0.002668937909078597
+   },
+   "confidence": 0.9798674779261497,
+   "input_tokens": 125
+  }
+ }
+}
