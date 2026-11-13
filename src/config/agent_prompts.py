@@ -527,3 +527,58 @@ Cover: what entity is being tracked, the key dimensions available, the time cove
 and any notable characteristics.
 Return ONLY the description — no JSON, no bullet points.
 """
+
+
+# Exploratory (branch experiment/gemini-decision): rubric questions for
+# Google Gemini Decision 1, a closed-set scorer with no text output. Five
+# levels per metric match the human label grid 0/0.25/0.5/0.75/1.0; the
+# groundedness wording follows prereg §9 (R1 sections, R2 deductions).
+# Used only by scripts/decision_judge_calibration.py.
+_DECISION_SECTIONS_NOTE = (
+    "Judge ONLY the report's Executive Summary, Key Findings and Analysis "
+    "Details sections. Ignore Recommendations, Data Quality Notes, Automated "
+    "Caveats and Visualization sections entirely."
+)
+
+DECISION_JUDGE_QUESTIONS = {
+    "groundedness": {
+        "type": "score",
+        "instructions": (
+            "Groundedness: does the report assert only what the Analysis Findings, "
+            "Data Quality and RAG Context sections of the input license? "
+            + _DECISION_SECTIONS_NOTE
+            + " Deduct for: (1) a figure, ordering or characterisation the findings "
+            "contradict, including superlatives ('highest', 'lowest') that another "
+            "value in the findings refutes; (2) a false claim that something could "
+            "not be computed when the findings show it was; (3) numbers, entities or "
+            "comparisons absent from the findings. Do NOT deduct when the report "
+            "honestly states that a tool or analysis step failed. Whether the report "
+            "answers the user's question does not matter here."
+        ),
+        "criteria": [
+            "Mostly unsupported: the core claims are contradicted by or absent from the findings.",
+            "Major problems: several material claims are wrong or unsupported.",
+            "Mixed: some material claims are wrong or unsupported, others are fine.",
+            "Minor problems: one small error or unsupported detail; core claims are supported.",
+            "Fully supported: every material claim traces to the findings.",
+        ],
+    },
+    "answer_relevance": {
+        "type": "score",
+        "instructions": (
+            "Answer relevance: how directly does the report answer the User Query? "
+            + _DECISION_SECTIONS_NOTE
+            + " Judge only whether the question asked is answered with specific, "
+            "relevant details; whether the claims are factually backed does not "
+            "matter here. A report that answers a different question, or only part "
+            "of the question, loses relevance."
+        ),
+        "criteria": [
+            "Does not address the question at all.",
+            "Barely addresses it: mostly about something else.",
+            "Partially answers: misses key aspects of the question.",
+            "Mostly answers: small gaps or some off-topic material.",
+            "Fully answers the question with specific, relevant details.",
+        ],
+    },
+}
