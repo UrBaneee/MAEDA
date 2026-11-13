@@ -582,3 +582,24 @@ DECISION_JUDGE_QUESTIONS = {
         ],
     },
 }
+
+
+# Exploratory (branch experiment/gemini-decision): query_type routing with
+# Gemini Decision 1. Option descriptions are deliberately empty, so Decision
+# 1 sees the same information as INTENT_PARSER_SYSTEM (the five labels and
+# the query, no definitions). Used only by scripts/decision_router_trial.py.
+DECISION_ROUTER_QUESTIONS = {
+    "query_type": {
+        "type": "choice",
+        "instructions": (
+            "Classify the user's data-analysis question into one query type."
+        ),
+        "criteria": {
+            "descriptive": "",
+            "diagnostic": "",
+            "predictive": "",
+            "comparative": "",
+            "exploratory": "",
+        },
+    },
+}
