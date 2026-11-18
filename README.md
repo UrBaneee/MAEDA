@@ -25,6 +25,26 @@ C (cleaning forced on), R (retrieval forced on), CR (both on), A (auto).
 | H2: retrieval helps | R − B | `event_attribution_accuracy`, LLM judge | +0.653 | exact sign-flip over 12 events, p = 0.002 | **Holds** |
 | H3: interaction | (CR − R) − (C − B) | `factual_accuracy` | −0.009 | 98.3% CI [−0.047, +0.028] | Not detected |
 
+**The null hypotheses (H0) and how each test decides:**
+
+- **H1.** H0: cleaning does not change numeric accuracy (mean C − B = 0). The expected
+  direction was declared positive in advance. H0 is rejected if the 98.3% paired
+  bootstrap CI excludes 0.
+- **H2.** H0: retrieval does not change attribution accuracy, so each event's R − B
+  difference is equally likely to be positive or negative. The exact sign-flip test
+  enumerates every sign pattern. 2 of the 12 events tied at 0 and drop out; all 10 others
+  were positive, so p = 2/2^10 = 0.002. H0 is rejected if p < 0.0167.
+- **H3.** H0: no interaction, meaning cleaning helps by the same amount whether
+  retrieval is on or off ((CR − R) − (C − B) = 0). This one is two-sided, with no
+  expected direction. The CI includes 0, so H0 is not rejected.
+
+Rejecting H0 is not enough on its own. To call a sub-system "worth it", the point
+estimate must also exceed 0.028, the project's measured noise floor, so that a
+statistically significant but practically invisible effect doesn't count. H1 and H2
+both clear it by a wide margin. "Not detected" for H3 does not prove the interaction is
+zero; it means any interaction is probably smaller than the CI bounds, about −0.05 to
++0.03. All three tests share a Bonferroni correction: α = 0.05 / 3 = 0.0167.
+
 What the numbers mean:
 
 - **Cleaning fixes numbers, retrieval supplies causes, and the two do not interfere.**
