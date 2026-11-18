@@ -1,87 +1,165 @@
-# MAEDA — Multi-Agent Enterprise Data Analyst
+# MAEDA
 
 [![CI](https://github.com/UrBaneee/MAEDA/actions/workflows/ci.yml/badge.svg)](https://github.com/UrBaneee/MAEDA/actions/workflows/ci.yml)
 
-> A LangGraph-orchestrated plan-and-execute pipeline that takes a natural language question about enterprise data, connects to a data source, has an LLM planner emit a typed, dependency-ordered analysis plan, executes it, and delivers a charted insight report — with every output passing through a 9-check guardrail and a self-scored eval before it's returned.
+MAEDA answers natural-language questions about tabular business data and returns a
+written report with charts. It is built as a LangGraph pipeline that calls two
+independent services over MCP: a data cleaner
+([agentic-data-cleaner-v2](https://github.com/UrBaneee/agentic-data-cleaner-v2)) and a
+retrieval server ([rag-framework](https://github.com/UrBaneee/rag-framework)).
 
-**On the name**: this project is called MAEDA and the code is organized into five single-purpose LLM-calling classes ("agents") — but it is not an autonomous multi-agent system in the sense of agents that call tools in a loop, decide when they're done, or negotiate with each other. There is no `bind_tools`/`ToolNode`/`create_react_agent` anywhere in this codebase. The Analysis Planner emits its full step plan once; a separate, non-LLM executor runs it. What *is* real and demonstrated: a LangGraph state machine with 2 bounded retry loops (data-cleaning, guardrail-triggered re-execution), a typed step-plan the Planner writes and the Executor runs without further LLM involvement, and every output scored by an eval harness with measured human-agreement numbers (see [Evaluation](#evaluation) below) — see [docs/roadmap.md](docs/roadmap.md) for the full, current list of what's built vs. not.
+The main point of the project is the evaluation around it. I ran a pre-registered A/B
+experiment to find out whether those two services actually make the reports better,
+and I checked the LLM judges against human labels before trusting their scores.
 
-**Headline result**: in a pre-registered A/B test, the data-cleaning sub-system raised numeric accuracy by +0.189 and the retrieval sub-system raised cause-attribution accuracy by +0.653, both significant after multiple-comparison correction ([details](#do-the-two-sub-systems-actually-help-a-pre-registered-ab-test-phase-4)).
+## Results
 
-<!-- Demo recording: save as docs/demo.gif (or .mp4) and uncomment the line below -->
-<!-- ![MAEDA demo](docs/demo.gif) -->
+Hypotheses, samples, metrics, decision rules and code were frozen on 2026-11-11
+([pre-registration](docs/phase4_preregistration.md), §10.15). The sealed test sets were
+revealed once, on 2026-11-12. The arms differ only in the two services: B (both off),
+C (cleaning forced on), R (retrieval forced on), CR (both on), A (auto).
 
----
+| Hypothesis | Comparison | Primary metric | Effect | Test (α = 0.0167, Bonferroni over 3) | Verdict |
+|---|---|---|---|---|---|
+| H1: cleaning helps | C − B | `factual_accuracy`, scored by code | +0.189 | 98.3% CI [+0.114, +0.272], 119 questions | **Holds** |
+| H2: retrieval helps | R − B | `event_attribution_accuracy`, LLM judge | +0.653 | exact sign-flip over 12 events, p = 0.002 | **Holds** |
+| H3: interaction | (CR − R) − (C − B) | `factual_accuracy` | −0.009 | 98.3% CI [−0.047, +0.028] | Not detected |
 
-## Architecture
+What the numbers mean:
 
-14 LangGraph nodes, 4 conditional branches, 2 bounded retry loops, one typed
-`MAEDAState` threaded through all of it:
+- **Cleaning fixes numbers, retrieval supplies causes, and the two do not interfere.**
+  With retrieval off, none of the 72 reports named an event's true cause.
+- **The absolute level is still low.** With cleaning on, about 26% of numeric questions
+  are answered correctly (0.067 with it off), because the cleaner does not repair the
+  ×10 revenue outliers.
+- **Auto mode never triggered cleaning**, so it gets none of the H1 gain. This was
+  predicted before the reveal: the cleaner's trigger thresholds cannot be reached on
+  this dataset.
+- **The data is synthetic.** It is one generated sales table with injected defects
+  (missing values, duplicate rows, ×10 outliers, negative revenue) plus a scripted set
+  of business events and documents. The results say nothing directly about real data.
+- **The H2 judge only just cleared its bar.** Its agreement with human pass 1
+  (κ = 0.616) is above the human test-retest agreement (κ = 0.544), but the difference
+  is not significant at n = 60, and against human pass 2 the judge's κ is only 0.258.
+  Which pass to compare against was settled after both numbers were known. The
+  pre-registration (§7.2.1) discloses all of this.
+
+1,382 runs, 0 voided, about $42 in API cost. Full results, deviations and the files
+needed to recompute every number offline: **[docs/phase4_results.md](docs/phase4_results.md)**.
+
+## How it works
+
+MAEDA is plan-and-execute, not an autonomous agent loop. An LLM planner writes the
+whole analysis plan once, and plain Python code runs it. There is no tool-calling loop
+anywhere in the code. "Agents" here means single-purpose classes that each make one
+kind of LLM call.
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    MAEDA (This Project)                      │
-│  LangGraph state machine · Eval · Guardrails · Viz          │
-│                                                              │
-│  parse_intent → connect_schema → (refine_intent) →           │
-│       profile_and_clean (↻ clean, max 3) → plan_analysis     │
-│       ↓                                                      │
-│  execute_analysis → generate_viz → retrieve_domain_knowledge │
-│       ↑ (↻ guardrail retry, max 2)   or skip_retrieval       │
-│  run_guardrails ←──────────────── generate_insights          │
-│       ↓                    (failure → handle_error)          │
-│  run_eval → persist_run → END                                │
-│                                                              │
-│  ┌──────────────────┐    ┌──────────────────────────────┐    │
-│  │  Agentic Data    │    │     RAG-MCP-Server            │    │
-│  │  Cleaner (MCP)   │    │     (MCP)                     │    │
-│  │  Data quality    │    │     Domain knowledge          │    │
-│  │  Pandas fallback │    │     Fallback if server is     │    │
-│  │  if unavailable  │    │     unavailable               │    │
-│  └──────────────────┘    └──────────────────────────────┘    │
-└──────────────────────────────────────────────────────────────┘
+question
+  │
+  ▼
+parse_intent ........ LLM: query type, metrics, dimensions, filters
+connect_schema ...... load the data source, read its schema
+  (refine_intent) ... LLM: optional second intent pass, now aware of the schema
+profile_and_clean ... cleaner over MCP: profile → clean → re-profile → validate
+                      (retries up to 3 times; local pandas fallback if unreachable)
+plan_analysis ....... LLM: typed step plan (tool, parameters, depends_on)
+execute_analysis .... code: runs the plan in dependency order
+generate_viz ........ chart (PNG + Plotly JSON) and an LLM caption
+retrieve_domain_knowledge or skip_retrieval
+                      retrieval server over MCP
+generate_insights ... LLM: written report grounded in the results
+run_guardrails ...... 10 checks; a critical failure re-runs execute_analysis (max 2)
+run_eval ............ scores the run
+persist_run ......... trace, MCP call log and scores go to SQLite
 ```
 
-**Key Design Decisions:**
-- **LangGraph state graph** — all flow via conditional edges, typed `MAEDAState` as single source of truth; the exact node/edge/loop wiring is in [`src/graph/builder.py`](src/graph/builder.py)
-- **Plan-and-execute, not an agentic tool-calling loop** — the Analysis Planner (LLM) emits a full typed step plan (tool, parameters, dependencies) once; a separate, non-LLM Executor runs it topologically. A failed step gets one LLM-assisted repair attempt using the tool's real error message, not a re-plan.
-- **MCP protocol** for sub-system communication — designed so MAEDA delegates rather than reimplements data-quality profiling and domain retrieval. Verified end-to-end against real Data Cleaner + RAG-MCP-Server processes (not mocks): a live dirty dataset goes profile → clean → re-profile → validate and converges in-graph, cleaned files and quality reports are genuinely consumed by later rounds, and real OpenAI-embedded hybrid retrieval with a Voyage/CrossEncoder reranker returns re-ranked, source-attributed chunks. The strict/degraded error matrix (connection, data-input, format, contract-version, RAG zero-hit vs internal failure) has also been exercised live, not just unit-tested. The pandas/empty-context fallback path still exists and is exercised whenever a sub-system is genuinely unreachable, but it is no longer the *only* path that's been run.
-- **Every LLM call tracked** — per-request cost tracker, decision trace on every node, eval scores on every run
-- **Per-agent model tiering** — planner and guardrail judge run on a stronger model; high-volume generation stays on the cheap default
-- **Every run persisted** — decision trace / MCP call log / eval scores land in SQLite via a terminal graph node, auditable after the process exits
-- **Multi-turn conversation memory** — follow-ups like "now break that down by quarter" resolve against the prior turn's intent
-- **Real streaming progress** — the UI reflects which graph node actually just finished, not a canned animation
+That is 14 nodes in [`src/graph/builder.py`](src/graph/builder.py), with one typed state
+object (`MAEDAState`) passed through all of them.
 
----
+**Sub-system switches.** Each service runs as `auto`, `force_on` or `force_off`
+(`MAEDA_CLEANER_MODE`, `MAEDA_RAG_MODE`). In `auto`, cleaning runs only when the profile
+reports critical issues, and retrieval runs only for diagnostic or exploratory
+questions. The forced modes are what the A/B experiment uses.
 
-## Quick Start
+**Guardrails.** Six rule-based checks: PII, SQL safety, numerical consistency,
+completeness, population-claim grounding and superlative-claim grounding. Four
+LLM-judged checks: factual accuracy, hallucination, PII leakage and misleading framing.
+A run that fails a critical check ends as a `safe_refusal` rather than returning the
+report.
 
-### 1. Install
+**Failure handling.** Every run ends in one of five terminal states: `success`,
+`safe_refusal`, `pipeline_error`, `mcp_error` or `environment_error`. When a service is
+unreachable, MAEDA falls back (pandas profiling, empty retrieval context) and records
+the fallback. A strict mode turns fallbacks into hard failures instead.
+
+## Evaluation
+
+Every run is scored. The everyday suite is `tests/eval/test_suite.json`, 130 dev cases
+run with `scripts/run_eval.py`. It is for iterating against, not a holdout. The phase 4
+holdout of 119 cases has already been revealed and is not reused for tuning.
+
+| Metric | How it is scored | Checked against humans? |
+|---|---|---|
+| `factual_accuracy` | Code: numbers in the report vs computed ground truth, 1% tolerance | No judge involved |
+| `event_attribution_accuracy` | LLM judge: correct / wrong / none against the event's documented cause | Met its bar on the point estimate (see Results) |
+| `answer_relevance` | LLM judge, median of 3 calls | Met: QWK 0.73 vs human test-retest 0.40 |
+| `groundedness` | LLM judge lists the claims; supported / total is computed in code | **Not met**: QWK 0.50 vs human test-retest 0.72 |
+| `intent_accuracy`, `tool_selection`, `chart_appropriateness` | Code, against each case's expected values | No judge involved |
+| cost, latency, retries, error rate, refusals | Measured | Not applicable |
+
+The bar for a judge is relative, not absolute: its agreement with my labels must reach
+my own agreement with myself when I relabel the same reports blind. Because
+`groundedness` did not pass, no conclusion in this project depends on it.
+
+A run that did not succeed is still scored on what it can support (cost, latency,
+refusal). Metrics that would grade an answer it never produced are marked not
+applicable instead of being scored 0.
+
+There is also a weighted `aggregate_score`, used only for the console summary and for
+regression alerts. Its weights were chosen by hand and never validated, and the largest
+one goes to `groundedness`, so treat it as a quick-look number. Phase 4 deliberately
+tied each hypothesis to a single metric instead.
+
+More detail:
+[judge calibration](docs/judge_calibration.md) ·
+[noise floor](docs/noise_floor.md) ·
+[eval v2 plan](docs/eval_v2_plan.md) ·
+[eval-driven bug fixes](docs/eval_report.md) ·
+[roadmap and known gaps](docs/roadmap.md)
+
+## Quick start
+
+Requires Python 3.11+ and an OpenAI or Anthropic API key.
+
 ```bash
 git clone https://github.com/UrBaneee/MAEDA.git
 cd MAEDA
 pip install poetry && poetry install
-cp .env.example .env   # add your API key
+cp .env.example .env      # add your API key(s)
 ```
 
-### 2. Generate demo data
+The demo datasets are already in `data/demo/`. Don't run
+`scripts/generate_demo_data.py` on a fresh clone: since phase 4 the sales table is
+rendered by rag-framework and only copied in after a hash check, so the script fails
+without that repository next to this one.
+
 ```bash
-python scripts/generate_demo_data.py
+streamlit run ui/app.py                       # web UI
+python scripts/demo_scenarios.py --scenario 1 # one demo scenario (1 to 5, or --all)
+python scripts/run_eval.py --limit 5          # score the first 5 dev cases (paid LLM calls)
+pytest tests/unit/                            # 1,078 unit tests, all LLM calls mocked
 ```
 
-### 3. Run the Streamlit UI
-```bash
-streamlit run ui/app.py
-```
+Without the two services running, MAEDA uses its fallbacks. To use them, start each
+from its own repository (cleaner on `:8001`, retrieval on `:8002`) and set
+`DATA_CLEANER_MCP_URL` and `RAG_SERVER_MCP_URL`. The `full-ecosystem` profile in
+`docker-compose.yml` expects images built from those two repositories; they are not
+published.
 
-### 4. Full ecosystem (Docker)
-```bash
-docker-compose up maeda                          # MAEDA standalone
-docker-compose --profile full-ecosystem up       # with Data Cleaner + RAG Server
-```
+**As an MCP server.** MAEDA exposes `analyze_data`, `connect_data_source` and
+`get_eval_report`:
 
-### 5. Use as an MCP server (Claude Desktop)
-Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
@@ -94,276 +172,48 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
----
+## MCP tools MAEDA calls
 
-## Demo Scenarios
+| Service | Tools |
+|---|---|
+| Data cleaner (`:8001`) | `profile_dataset`, `clean_dataset`, `validate_quality` |
+| Retrieval server (`:8002`) | `retrieve`, `retrieve_with_metadata`, `list_collections` |
 
-| # | Scenario | Dataset | Showcases |
-|---|----------|---------|-----------|
-| 1 | The Full Stack | `sales_data.csv` | End-to-end pipeline, Data Cleaner integration |
-| 2 | Q3 Revenue Drop | `sales_data.csv` | Diagnostic multi-step analysis |
-| 3 | Churn Spike | `churn_data.csv` | Root cause analysis + RAG enrichment |
-| 4 | Marketing ROI | `marketing_campaigns.csv` | Comparative analysis + charts |
-| 5 | Graceful Degradation | `ecommerce_orders.db` | MAEDA without sub-systems |
+Responses are checked for required fields and a contract version. A mismatch is an
+error, not something to guess around.
 
-```bash
-python scripts/demo_scenarios.py --scenario 1
-python scripts/demo_scenarios.py --all
-```
-
----
-
-## Project Structure
+## Repository layout
 
 ```
 src/
-├── agents/         Intent parser, Analysis, Viz, Insight, Guardrail
-├── eval/           EvalRunner, metrics, noise/significance tests, H2 summary, regression detection
-├── graph/          LangGraph builder, nodes, router, streaming
-├── mcp_client/     Data Cleaner + RAG Server MCP clients with fallbacks
-├── mcp_server/     MAEDA-as-MCP-server (FastMCP)
-├── persistence/    SQLite run store — every run's trace survives the process
-├── state/          MAEDAState TypedDict
-├── tools/          Chart tool, data connector, SQL, stats, anomaly, time-series
-├── config/         Settings (Pydantic), all agent prompts
-└── utils/          Logger, cost tracker
-
-ui/                 Streamlit app (Phase 11)
-scripts/            Demo data generator, demo scenarios, eval harness
-tests/
-├── unit/           1,078 tests, all phases covered
-├── integration/    Live MCP integration tests
-└── eval/           130-case dev golden suite, phase 4 H1 holdout (119, revealed) and H2 cases
-data/demo/          Sales, churn, marketing, ecommerce datasets
+  agents/        intent parser, analysis planner/executor, viz, insight, guardrail
+  graph/         LangGraph builder, nodes, router, streaming progress
+  mcp_client/    cleaner and retrieval clients, fallbacks, error classes
+  mcp_server/    MAEDA as an MCP server (FastMCP)
+  eval/          runner, metrics, agreement, noise and trial statistics, reveal guard
+  tools/         data connector, SQL, stats/pandas, charts, glossary
+  state/         MAEDAState and terminal states
+  persistence/   SQLite run store
+  config/        settings and all prompts
+scripts/         eval runners, phase 4 run/analysis scripts, labeling export tools
+tests/unit/      unit tests (no network, no API key)
+tests/eval/      dev suite, phase 4 holdout and H2 cases
+docs/            pre-registration, results, calibration, roadmap
+ui/              Streamlit app
 ```
 
----
+## Limitations
 
-## Pipeline
+- One synthetic dataset and one scripted event set. The evaluation is careful, but its
+  scope is narrow.
+- The H2 test pool contains only events whose cause is documented in the corpus. How
+  often the system blames a documented event that had no effect was not measured
+  confirmatorily.
+- The cleaner's auto trigger misses the defects that matter on this data, so auto mode
+  gains nothing from cleaning. Changing the trigger is a contract change for a future
+  round.
+- The `groundedness` judge does not agree with humans well enough to rely on.
 
-Plan-and-execute, not an agentic loop: the Planner decides the *what* once;
-the Executor is a plain topological-sort runner with no further LLM
-involvement per step (only a targeted, error-message-driven repair on
-failure). `(LLM)` marks the stages where a model actually decides
-something; everything else is deterministic code.
+## License
 
-```
-User Query
-    │
-    ▼
-Intent Parser      (LLM) → parsed_intent
-    │
-    ▼
-Connect schema     → schema extraction + table selection; optional schema-aware
-                     second intent pass (Refine Intent, LLM)
-    │
-    ▼
-Profile + Clean    → Data Cleaner MCP (profile → clean → re-profile → validate),
-                     or local pandas fallback (↻ clean, max 3). In auto mode,
-                     cleaning runs only if the profile reports critical issues.
-    │
-    ▼
-Analysis Planner   (LLM) → typed step plan: tool, parameters, depends_on
-    │
-    ▼
-Analysis Executor  → runs the plan topologically: pandas / SQL / stats /
-                     anomaly / time-series / comparison tools
-    │
-    ▼
-Viz Agent          → recommend chart → static PNG + Plotly JSON → LLM caption
-    │
-    ▼
-Retrieve Knowledge → RAG-MCP-Server. In auto mode, only for diagnostic or
-                     exploratory questions; otherwise skipped (and logged).
-                     Degrades to empty context if the server is unreachable.
-    │
-    ▼
-Insight Agent      (LLM) → grounded insights + markdown report
-    │
-    ▼
-Guardrail Agent    → 10 checks: 6 rule-based (PII, SQL safety, numerical
-                     consistency, completeness, population-claim and
-                     superlative-claim grounding)
-                     + 4 LLM-as-judge (factual accuracy, hallucination, PII
-                     leakage, misleading framing) (↻ retry execute_analysis,
-                     max 2, on a critical failure)
-    │
-    ▼
-Eval Module        → answer_relevance, groundedness (LLM judges on a separate
-                     provider), factual_accuracy, intent_accuracy, ...
-    │
-    ▼
-Final Report + Charts + Eval Scores
-```
-
----
-
-## Evaluation
-
-### Do the two sub-systems actually help? A pre-registered A/B test (phase 4)
-
-MAEDA's two MCP sub-systems were tested in a pre-registered experiment: the
-hypotheses, samples, metrics, decision rules and code were frozen on
-2026-11-11 ([`docs/phase4_preregistration.md`](docs/phase4_preregistration.md) §10.15),
-and the sealed test sets were revealed once, on 2026-11-12. Five arms switch
-only the cleaner and retrieval: B (both off), C (cleaning on), R (retrieval on),
-CR (both on), A (auto).
-
-| Hypothesis | Comparison | Primary metric | Effect | Test (α = 0.0167, Bonferroni over 3) | Verdict |
-|---|---|---|---|---|---|
-| H1: cleaning net gain | C − B | `factual_accuracy` (scored by code) | +0.189 | 98.3% CI [+0.114, +0.272] | **Holds** |
-| H2: retrieval net gain | R − B | `event_attribution_accuracy` (LLM judge, calibrated against humans) | +0.653 | exact sign-flip over 12 events, p = 0.002 | **Holds** |
-| H3: interaction | (CR − R) − (C − B) | `factual_accuracy` | −0.009 | 98.3% CI [−0.047, +0.028] | Not detected |
-
-What it means, and its limits:
-
-- Cleaning fixes numbers, retrieval supplies causes, and they don't interfere.
-  With retrieval off, no report named an event's true cause.
-- The absolute level is still low: with cleaning on, about 26% of numeric
-  questions are answered correctly, because the cleaner does not repair ×10
-  revenue outliers.
-- Auto mode never triggered cleaning, so it gets none of the H1 gain. This was
-  predicted before the reveal: the cleaner's gate cannot fire on this data.
-- All data is synthetic (one demo sales table with injected defects, one
-  scripted event set), so these results do not carry over directly to real data.
-
-1,382 runs, 0 voided, about $42 in API cost. Full results, deviations and
-reproduction files: **[docs/phase4_results.md](docs/phase4_results.md)**.
-
-### The eval harness
-
-Every run is scored automatically. The everyday suite is
-`tests/eval/test_suite.json`: 130 dev cases, stratified by query type and
-difficulty, run with `scripts/run_eval.py`. It is for iterating against, not
-a holdout: the original 41-case test split was consumed in August 2026 and
-retired to dev, and phase 4's one-time holdout (119 H1 cases) was revealed
-on 2026-11-12 (see above).
-
-| Metric | Method | Human agreement | Aggregate weight |
-|--------|--------|-----------------|------------------|
-| factual_accuracy | Code: numbers in the report vs the case's ground truth (1% tolerance); falls back to overlap with the analysis results when a case has no ground truth | no judge involved | 2.0 |
-| answer_relevance | LLM judge, median of 3 calls | met the pre-registered bar (QWK 0.73 vs human retest 0.40) | 3.0 |
-| groundedness | LLM judge extracts a claim list; supported/total computed in code | **did not meet** the bar (QWK 0.50 vs human retest 0.72) | 3.0 |
-| event_attribution_accuracy | LLM judge: correct / wrong / none against the event's documented cause (H2 only) | met its bar before the freeze | 0 (exists on event cases only) |
-| intent_accuracy | Code: query type 0.4, metrics 0.3, dimensions 0.3, against each case's expectations | no judge involved | 1.5 |
-| tool_selection | Code: against each case's expected tool(s) | no judge involved | 1.0 |
-| chart_appropriateness | Code: against each case's expected chart type(s) | no judge involved | 0.5 |
-| token_cost, retry_count, error_rate, total_latency, step_success_rate, safe_refusal | Operational measurements | not applicable | 0 |
-
-**About the weights.** `aggregate_score` (`src/eval/runner.py::_aggregate_score`)
-still exists: it gives one number per run for the console summary and for
-regression detection, which alerts on any metric or the aggregate dropping by
-more than 0.05 vs a baseline (more than 0.20 is critical). The weights were
-chosen by hand and have never been validated, and the largest one goes to
-`groundedness`, the judge that did not meet the human-agreement bar. So the
-aggregate is a quick-look number only. **No conclusion in this project rests
-on it**: phase 4 bound each hypothesis to exactly one primary metric and
-reported everything else descriptively, precisely to avoid a hand-weighted
-composite. Operational metrics stay at weight 0 because a healthy system's
-error_rate and step_success_rate sit at a constant 1.0 and would only dilute
-a quality average.
-
-### Failed runs are scored too, on less
-
-Every run that reaches a terminal node is classified into one of five
-terminal states (`src/state/terminal_state.py`): `success`, `safe_refusal`,
-`pipeline_error`, `mcp_error`, `environment_error`. `mcp_error` and
-`environment_error` are split out from the old catch-all `pipeline_error`
-so sub-system availability can be read separately from agent reasoning
-failures; the sub-classification carried alongside is the MCP client's own
-`error_class`, not a second taxonomy.
-
-A run that did not end in `success` is still scored — on the metrics it can
-support. Its `error_rate`, `safe_refusal`, latency and cost are real
-measurements; the metrics that score an answer it never produced are marked
-`not_applicable` (`valid=False`) rather than scored zero, and the LLM judge
-is not invoked for them at all. Such a run therefore has **no aggregate
-score**: `aggregate_score` is `null`, not `0.0`, because its surviving
-metrics are a different set than a successful run's. `overall_aggregate` in
-a saved report is a mean over the successful cases only, with
-`n_cases_without_aggregate` recording how many were left out.
-
-### Human-vs-judge calibration (eval v2)
-
-The harness rebuild above answers "does the pipeline work." A separate,
-later effort answers a question that matters more for an eval-focused
-role: **does the LLM judge scoring it actually agree with a human?**
-120 human labels across 5 independent sessions (4 batches + a
-self-consistency retest) found the judge's `groundedness` score agrees
-with itself when re-labeling blind two days later (QWK = 0.775,
-"acceptable") but agrees with the judge only weakly (QWK = 0.04–0.26
-across every one of 5 comparisons) — ruling out human-rating noise as the
-explanation and confirming a real, reproducible judge-calibration gap.
-The specific mechanism — the judge verifies a cited number is real but
-never checks whether a *comparative* claim built on it ("X is the
-highest") is actually true against other values in the same
-findings — was independently found in 4 separate labeled cases, fixed
-(`EVAL_GROUNDEDNESS_SYSTEM`), and re-measured (pooled groundedness
-QWK 0.141 → 0.185 — a real, partial improvement, reported honestly as
-not a full fix, and explicitly caveated as *not* a blind-holdout
-measurement). Two further pipeline bugs (a Planner defect and a
-Guardrail truncation bug) were found the same way and fixed with a
-noise-calibrated before/after (refusal rate 33.9% → 11.9%, checked
-against a measured noise floor before being trusted as signal, not just
-eyeballed). Full methodology, every batch's numbers, and the specific
-evidence behind each finding: **[docs/judge_calibration.md](docs/judge_calibration.md)**
-and **[docs/eval_v2_plan.md](docs/eval_v2_plan.md)**.
-
-### The eval-first debugging pass (earlier, pre-eval-v2 history)
-
-The system was originally iterated exclusively through its own eval harness,
-predating the calibration work above: establish a baseline on the (then)
-20-case golden suite, root-cause one failure, fix it, re-run, record the
-delta. The specific numbers below are historical — the golden suite, its
-scoring, and the baseline have all since changed (see above) — kept as a
-record of the debugging methodology itself. **35 documented fixes** came out
-of this pass — each with root
-cause, code location, and before/after verification in
-**[docs/eval_report.md](docs/eval_report.md)** — spanning silent
-tool-parameter mismatches, a guardrail severity misclassification that let
-hallucinated reports through, an MCP transport bug that had never actually
-spoken the protocol, an eval judge that couldn't match numbers formatted
-differently, a 33× cost-pricing overcount, and a cross-request cost leak in
-the singleton agents.
-
-The early arc, as a taste of why raw aggregate can't be read naively:
-
-| Baseline | Aggregate score | Cases blocked by guardrail |
-|---|---|---|
-| Before fixes | 0.71 | 0 / 20 *(inflated — guardrail wasn't actually catching fabrication)* |
-| After guardrail severity fix | 0.67 | 7 / 20 *(score drop = guardrail correctly blocking hallucinated reports for the first time)* |
-| After the first 10 fixes | 0.76 | 2 / 20 *(both benign — a completeness complaint and a judge false-positive)* |
-
-The same pattern repeated at the end: upgrading the guardrail's judge to a
-stronger model moved the aggregate 0.751 → 0.725 while safe-refusals rose
-4 → 6 — cross-referencing per-case reasoning traces showed all six were real
-fabrications the cheaper judge had silently passed. Score deltas were only
-ever trusted after reading the traces behind them.
-
-Full run history and archived reports: `logs/eval_runs/`.
-Prioritized gap analysis and what was deliberately *not* built:
-**[docs/roadmap.md](docs/roadmap.md)**.
-
----
-
-## Tests
-
-```bash
-pytest tests/unit/ -v          # 1,078 tests, all phases
-pytest tests/unit/test_phase9.py -v   # eval module only
-```
-
----
-
-## Sub-System MCP Interfaces
-
-**Agentic Data Cleaner** (`http://localhost:8001`):
-- `profile_dataset(path)` → quality report
-- `get_cleaning_plan(path)` → cleaning steps
-- `clean_dataset(path, plan)` → cleaned file
-- `validate_quality(path)` → pass/fail score
-
-**RAG-MCP-Server** (`http://localhost:8002`):
-- `retrieve(query, top_k)` → chunks with scores
-- `retrieve_with_metadata(query, top_k)` → chunks with source attribution
-- `list_collections()` → available knowledge bases
+MIT
